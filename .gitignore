@@ -1,0 +1,5 @@
+replit.nix
+.replit
+node_modules
+dist
+.env
