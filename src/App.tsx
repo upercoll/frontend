@@ -37,6 +37,7 @@ import AdminProfilePage from "@/admin/pages/Profile";
 import Promos from "@/admin/pages/Promos";
 import Settings from "@/admin/pages/Settings";
 import RoleView from "@/admin/pages/RoleView";
+import OpenChats from "@/admin/pages/OpenChats";
 
 import AgentDashboard from "@/admin/pages/agent/AgentDashboard";
 import Queue from "@/admin/pages/agent/Queue";
@@ -63,8 +64,8 @@ function DiscordFloat() {
       aria-label="Join our Discord"
       style={{
         position: "fixed",
-        bottom: "24px",
-        left: "24px",
+        bottom: "88px",
+        right: "16px",
         zIndex: 9999,
         width: "52px",
         height: "52px",
@@ -123,6 +124,7 @@ function AdminRouter() {
     <Switch>
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/invite/:token" component={InviteAccept} />
+      <Route path="/admin/invite/:token" component={InviteAccept} />
       <Route path="/admin/profile-setup" component={AdminProfileSetup} />
       <Route path="/panel/profile-setup" component={AdminProfileSetup} />
 
@@ -164,6 +166,11 @@ function AdminRouter() {
       <Route path="/admin/monitor">
         <AdminLayout>
           <Monitor />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/open-chats">
+        <AdminLayout>
+          <OpenChats />
         </AdminLayout>
       </Route>
       <Route path="/admin/site-content">
