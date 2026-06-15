@@ -10,20 +10,9 @@ const BACKEND = import.meta.env.VITE_BACKEND_URL || "";
 
 async function lookupRobloxAvatar(username: string): Promise<string | null> {
   try {
-    const usersRes = await fetch("https://users.roblox.com/v1/usernames/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
-    });
-    const usersData = await usersRes.json();
-    const userId = usersData?.data?.[0]?.id;
-    if (!userId) return null;
-
-    const thumbRes = await fetch(
-      `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`
-    );
-    const thumbData = await thumbRes.json();
-    return thumbData?.data?.[0]?.imageUrl || null;
+    const res = await fetch(`${BACKEND}/api/customer-auth/roblox-avatar?username=${encodeURIComponent(username)}`);
+    const data = await res.json();
+    return data.avatarUrl || null;
   } catch {
     return null;
   }
@@ -127,7 +116,7 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
   );
 }
 
-type Step = "login" | "register" | "verify";
+type Step = "login" | "register" | "verify" | "edit";
 
 export default function AuthModal() {
   const { authModalOpen, authModalMode, closeAuthModal, login, register, user, onSuccessCallback, updateUser } = useAuth();
@@ -150,12 +139,17 @@ export default function AuthModal() {
 
   useEffect(() => {
     if (authModalOpen) {
-      setStep(authModalMode);
+      setStep(authModalMode as Step);
       setError("");
       setFieldErrors({});
       setVerifyCode("");
+      if (authModalMode === "edit" && user) {
+        setDisplayName(user.displayName);
+        setRobloxUsername(user.robloxUsername);
+        setRobloxAvatar(user.robloxAvatarUrl);
+      }
     }
-  }, [authModalOpen, authModalMode]);
+  }, [authModalOpen, authModalMode, user]);
 
   useEffect(() => {
     if (!robloxUsername.trim() || robloxUsername.length < 3) {
@@ -273,6 +267,33 @@ export default function AuthModal() {
     }
   }
 
+  async function handleEditProfile() {
+    clearErrors();
+    const errs: Record<string, string> = {};
+    if (!displayName.trim()) errs.displayName = "Display name is required";
+    if (!robloxUsername.trim()) errs.robloxUsername = "Roblox username is required";
+    if (Object.keys(errs).length) return setFieldErrors(errs);
+    setLoading(true);
+    try {
+      const tok = localStorage.getItem("rbstars_customer_token");
+      const body: Record<string, string> = { displayName: displayName.trim(), robloxUsername: robloxUsername.trim() };
+      if (robloxAvatar) body.robloxAvatarUrl = robloxAvatar;
+      const res = await fetch(`${BACKEND}/api/customer-auth/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      updateUser({ displayName: displayName.trim(), robloxUsername: robloxUsername.trim(), ...(robloxAvatar ? { robloxAvatarUrl: robloxAvatar } : {}) });
+      closeAuthModal();
+    } catch (e: any) {
+      setError(e.message || "Update failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleResend() {
     if (resendCooldown > 0) return;
     try {
@@ -332,11 +353,12 @@ export default function AuthModal() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-white leading-tight">
-                    {step === "login" ? "Welcome back" : step === "register" ? "Create account" : "Verify email"}
+                    {step === "login" ? "Welcome back" : step === "register" ? "Create account" : step === "edit" ? "Edit Profile" : "Verify email"}
                   </h2>
                   <p className="text-[11px]" style={{ color: "#64748B" }}>
                     {step === "login" ? "Sign in to your RBstars account"
                       : step === "register" ? "Join RBstars in seconds"
+                      : step === "edit" ? "Update your display name and Roblox username"
                       : `Code sent to ${email}`}
                   </p>
                 </div>
@@ -508,6 +530,86 @@ export default function AuthModal() {
                       Sign in
                     </button>
                   </p>
+                </motion.div>
+              )}
+
+              {/* ── EDIT PROFILE ── */}
+              {step === "edit" && (
+                <motion.div key="edit"
+                  initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.22 }}
+                  className="space-y-3.5"
+                >
+                  <AuthInput label="Display Name" placeholder="How others see you"
+                    value={displayName} onChange={setDisplayName}
+                    icon={<User size={15} />} error={fieldErrors.displayName} autoFocus />
+
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>
+                      Roblox Username
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
+                        style={{
+                          background: "rgba(255,255,255,0.05)",
+                          border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(79,70,229,0.6)" : "rgba(165,180,252,0.18)"}`,
+                        }}>
+                        <Gamepad2 size={15} color="#4F46E5" className="flex-shrink-0" />
+                        <input
+                          type="text"
+                          placeholder="YourRobloxName"
+                          value={robloxUsername}
+                          onChange={e => setRobloxUsername(e.target.value)}
+                          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
+                        />
+                        {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#4F46E5" }} />}
+                        {robloxAvatar && !avatarLoading && <CheckCircle size={13} color="#4ade80" className="flex-shrink-0" />}
+                      </div>
+                      <AnimatePresence>
+                        {(robloxAvatar || avatarLoading) && (
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
+                            className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
+                            style={{ background: "rgba(79,70,229,0.15)", border: "2px solid rgba(79,70,229,0.4)" }}>
+                            {avatarLoading
+                              ? <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
+                              : robloxAvatar && <img src={robloxAvatar} alt="Roblox avatar" className="w-full h-full object-cover" />
+                            }
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    {fieldErrors.robloxUsername && (
+                      <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}>
+                        <AlertCircle size={10} />{fieldErrors.robloxUsername}
+                      </p>
+                    )}
+                    {robloxAvatar && !avatarLoading && (
+                      <p className="text-[11px] flex items-center gap-1" style={{ color: "#4ade80" }}>
+                        <CheckCircle size={10} />Avatar updated
+                      </p>
+                    )}
+                  </div>
+
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
+                        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}>
+                        <AlertCircle size={14} />{error}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(79,70,229,0.45)" }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleEditProfile}
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
+                    style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", opacity: loading ? 0.7 : 1 }}>
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : "Save Changes"}
+                  </motion.button>
                 </motion.div>
               )}
 
