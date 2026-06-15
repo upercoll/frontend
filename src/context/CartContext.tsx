@@ -6,6 +6,7 @@ export interface CartItem {
   price: number;
   originalPrice?: number;
   gradient: [string, string];
+  image?: string;
   quantity: number;
 }
 
