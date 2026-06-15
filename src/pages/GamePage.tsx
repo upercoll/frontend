@@ -133,7 +133,7 @@ function ProductCard({
   function handleAddToCart(e: React.MouseEvent) {
     e.stopPropagation();
     if (product.outOfStock) return;
-    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient });
+    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl });
     setJustAdded(true);
     setBounce(true);
     setTimeout(() => setJustAdded(false), 1400);
