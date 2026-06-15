@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Shield, Lock, Check, Star,
   ChevronRight, ChevronDown, Zap, Package, AlertCircle,
-  User, Mail, MapPin, Tag, X, Loader2, ExternalLink, MessageSquare,
+  User, Mail, MapPin, Tag, X, Loader2, MessageSquare,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
@@ -95,21 +95,6 @@ function MaestroIcon({ w = 38 }: { w?: number }) {
   );
 }
 
-function PayPalWordmark({ scale = 1 }: { scale?: number }) {
-  const size = Math.round(28 * scale);
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.26-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.477z"
-        fill="#009cde"
-      />
-      <path
-        d="M6.635 6.61L4.944.9C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81a5.6 5.6 0 0 1 .607.541c-.396-2.526-2.194-4.351-6.297-4.351H6.002c-.524 0-.972.382-1.054.9L1.84 20.604a.641.641 0 0 0 .633.74h4.606l1.556-9.85-1-4.883z"
-        fill="#003087"
-      />
-    </svg>
-  );
-}
 
 const BRAND_ICONS = [
   { key: "visa",       el: (w: number) => <VisaIcon w={w} /> },
@@ -680,7 +665,7 @@ export default function Checkout() {
 
   const [summaryOpen, setSummaryOpen] = useState(true);
   const [billingOpen, setBillingOpen] = useState(false);
-  const [openPayment, setOpenPayment] = useState<"card" | "paypal">("card");
+  const [openPayment, setOpenPayment] = useState<"card">("card");
 
   const [email, setEmail] = useState(user?.email || "");
 
@@ -707,15 +692,130 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const stripeRef = useRef<import("@stripe/stripe-js").Stripe | null>(null);
 
+  const prButtonRef = useRef<HTMLDivElement>(null);
+  const prRef = useRef<any>(null);
+  const [prAvailable, setPrAvailable] = useState(false);
+
+  const promoRef = useRef(promo);
+  const emailRef = useRef(email);
+  const itemsRef = useRef(items);
+  const userRef = useRef(user);
+  useEffect(() => { promoRef.current = promo; }, [promo]);
+  useEffect(() => { emailRef.current = email; }, [email]);
+  useEffect(() => { itemsRef.current = items; }, [items]);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  useEffect(() => {
+    if (!STRIPE_KEY) return;
+    let mounted = true;
+    (async () => {
+      const { loadStripe } = await import("@stripe/stripe-js");
+      const stripe = await loadStripe(STRIPE_KEY);
+      if (!stripe || !mounted) return;
+      if (!stripeRef.current) stripeRef.current = stripe;
+      const amount = Math.max(1, Math.round(finalTotal * 100));
+      const pr = (stripe as any).paymentRequest({
+        country: "US",
+        currency: "usd",
+        total: { label: "RBstars Order", amount },
+        requestPayerName: true,
+        requestPayerEmail: true,
+      });
+      const result = await pr.canMakePayment();
+      if (!result || !mounted) return;
+      prRef.current = pr;
+      setPrAvailable(true);
+      pr.on("paymentmethod", async (ev: any) => {
+        try {
+          const currentEmail = ev.payerEmail || emailRef.current;
+          const currentUser = userRef.current;
+          const currentItems = itemsRef.current;
+          const currentPromo = promoRef.current;
+          const customerInfo = {
+            email: currentEmail,
+            robloxUsername: currentUser?.robloxUsername || currentEmail,
+          };
+          const cartPayload = currentItems.map((i) => ({ id: i.id, quantity: i.quantity }));
+          const createResp = await fetch(`${BACKEND_URL}/api/payments/create-payment-intent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cartItems: cartPayload,
+              customer: customerInfo,
+              paymentMethodId: ev.paymentMethod.id,
+              promoCode: currentPromo?.code || null,
+            }),
+          });
+          const createData = await createResp.json();
+          if (!createResp.ok) {
+            ev.complete("fail");
+            setErrors({ payment: createData.message || "Payment failed. Please try again." });
+            return;
+          }
+          const { clientSecret, orderNumber } = createData.data;
+          const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(
+            clientSecret,
+            { payment_method: ev.paymentMethod.id },
+            { handleActions: false }
+          );
+          if (confirmError || !paymentIntent) {
+            ev.complete("fail");
+            setErrors({ payment: confirmError?.message || "Payment failed. Please try again." });
+            return;
+          }
+          if (paymentIntent.status === "requires_action") {
+            ev.complete("success");
+            const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
+            if (actionError) { setErrors({ payment: actionError.message || "Payment failed." }); return; }
+          } else {
+            ev.complete("success");
+          }
+          const orderData = {
+            orderRef: orderNumber,
+            email: customerInfo.email,
+            items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
+          };
+          try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
+          clearCart();
+          navigate("/order-success");
+        } catch {
+          ev.complete("fail");
+          setErrors({ payment: "Payment failed. Please try again." });
+        }
+      });
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (prRef.current && finalTotal > 0) {
+      try {
+        prRef.current.update({
+          total: { label: "RBstars Order", amount: Math.max(1, Math.round(finalTotal * 100)) },
+        });
+      } catch {}
+    }
+  }, [finalTotal]);
+
+  useEffect(() => {
+    if (!prAvailable || !prButtonRef.current || !stripeRef.current) return;
+    const stripe = stripeRef.current;
+    const elements = (stripe as any).elements();
+    const btn = elements.create("paymentRequestButton", {
+      paymentRequest: prRef.current,
+      style: { paymentRequestButton: { theme: "dark", height: "52px", type: "default" } },
+    });
+    btn.mount(prButtonRef.current);
+    return () => { try { btn.unmount(); } catch {} };
+  }, [prAvailable]);
+
   function validate() {
     const e: Record<string, string> = {};
     if (!email.includes("@")) e.email = "Enter a valid email address";
-    if (openPayment === "card") {
-      if (cardNum.replace(/\s/g, "").length < 13) e.cardNum = "Enter a valid card number";
-      if (expiry.length < 5) e.expiry = "Enter expiry (MM/YY)";
-      if (cvv.length < 3) e.cvv = "Enter CVV";
-      if (!cardName.trim()) e.cardName = "Enter name on card";
-    }
+    if (cardNum.replace(/\s/g, "").length < 13) e.cardNum = "Enter a valid card number";
+    if (expiry.length < 5) e.expiry = "Enter expiry (MM/YY)";
+    if (cvv.length < 3) e.cvv = "Enter CVV";
+    if (!cardName.trim()) e.cardName = "Enter name on card";
     return e;
   }
 
@@ -725,48 +825,6 @@ export default function Checkout() {
       robloxUsername: user?.robloxUsername || email,
     };
     const cartPayload = items.map((i) => ({ id: i.id, quantity: i.quantity }));
-
-    if (openPayment === "paypal") {
-      setLoading(true);
-      try {
-        if (!STRIPE_KEY) throw new Error("Payment processor is not configured. Please contact support.");
-
-        const { loadStripe } = await import("@stripe/stripe-js");
-        if (!stripeRef.current) {
-          stripeRef.current = await loadStripe(STRIPE_KEY);
-        }
-        const stripe = stripeRef.current;
-        if (!stripe) throw new Error("Failed to load payment processor. Please refresh and try again.");
-
-        const createResp = await fetch(`${BACKEND_URL}/api/payments/paypal-intent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cartItems: cartPayload, customer: customerInfo, promoCode: promo?.code || null }),
-        });
-        const createData = await createResp.json();
-        if (!createResp.ok) throw new Error(createData.message || "Failed to create PayPal order");
-
-        const { clientSecret, orderNumber } = createData.data;
-
-        const orderData = {
-          orderRef: orderNumber,
-          email: customerInfo.email,
-          items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
-        };
-        try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
-
-        const { error } = await (stripe as any).confirmPayPalPayment(clientSecret, {
-          return_url: `${window.location.origin}/order-success`,
-        });
-
-        if (error) throw new Error(error.message || "PayPal payment failed. Please try again.");
-      } catch (err) {
-        setErrors({ payment: err instanceof Error ? err.message : "PayPal payment failed. Please try again." });
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
 
     setBurst(true);
     await new Promise((r) => setTimeout(r, 320));
@@ -952,6 +1010,27 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
+              {prAvailable && (
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.38, delay: 0.14 }}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
+                >
+                  <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div ref={prButtonRef} />
+                  </div>
+                  <div className="flex items-center gap-3 px-4 pb-3">
+                    <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
+                    <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                  </div>
+                </motion.div>
+              )}
+
               {}
               <Accordion
                 open={openPayment === "card"}
@@ -991,34 +1070,6 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
-              {}
-              <Accordion
-                open={openPayment === "paypal"}
-                onToggle={() => setOpenPayment("paypal")}
-                title="PayPal"
-                iconEl={<RadioDot selected={openPayment === "paypal"} />}
-                iconBg="transparent"
-                headerRight={<PayPalWordmark scale={0.9} />}
-                delay={0.2}
-              >
-                <div className="pt-3">
-                  <div className="rounded-xl p-4 text-center space-y-3" style={{ background: "rgba(0,48,135,0.14)", border: "1.5px solid rgba(0,156,222,0.2)" }}>
-                    <div className="flex items-center justify-center">
-                      <PayPalWordmark scale={1.3} />
-                    </div>
-                    <p className="text-xs leading-relaxed" style={{ color: "#8b9cbf" }}>
-                      Click "Pay with PayPal" below and you'll be securely redirected to PayPal to complete your payment. You'll return here automatically once done.
-                    </p>
-                    <div className="flex items-center justify-center gap-1.5 text-xs font-semibold" style={{ color: "#16a34a" }}>
-                      <Shield size={11} /><span>Buyer Protection Included</span>
-                    </div>
-                    <div className="flex items-center justify-center gap-1.5 text-xs" style={{ color: "#8b9cbf" }}>
-                      <ExternalLink size={11} /><span>You'll be redirected to PayPal to authorize payment</span>
-                    </div>
-                  </div>
-                </div>
-              </Accordion>
-
               {errors.payment && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
@@ -1049,9 +1100,9 @@ export default function Checkout() {
                       style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.11),transparent)", width: "40%" }} />
                   )}
                   {loading ? (
-                    <><Loader2 size={20} className="animate-spin" /><span>{openPayment === "paypal" ? "Redirecting to PayPal…" : "Processing Payment…"}</span></>
+                    <><Loader2 size={20} className="animate-spin" /><span>Processing Payment…</span></>
                   ) : (
-                    <><Lock size={17} /><span>{openPayment === "paypal" ? "Pay with PayPal" : `Pay — $${finalTotal.toFixed(2)}`}</span><ChevronRight size={17} /></>
+                    <><Lock size={17} /><span>{`Pay — $${finalTotal.toFixed(2)}`}</span><ChevronRight size={17} /></>
                   )}
                 </motion.button>
                 <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#475569" }}>
