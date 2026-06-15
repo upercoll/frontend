@@ -19,6 +19,7 @@ export default function Queue() {
   const [estDelivery, setEstDelivery] = useState("");
   const [podNotes, setPodNotes] = useState("");
   const [submittingPod, setSubmittingPod] = useState(false);
+  const [noProof, setNoProof] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: pendingData, refetch } = useQuery({
@@ -41,16 +42,18 @@ export default function Queue() {
   };
 
   const submitProofAndClaim = async () => {
-    if (!proofFile || !estDelivery || !activeSession) return;
+    if (!activeSession) return;
+    if (!noProof && !proofFile) return;
     setSubmittingPod(true);
     try {
-      const form = new FormData();
-      form.append("proof", proofFile);
-      form.append("roomId", activeSession.roomId);
-      form.append("estimatedDelivery", estDelivery);
-      if (podNotes) form.append("notes", podNotes);
-
-      await adminApi.proof.submit(form);
+      if (!noProof && proofFile) {
+        const form = new FormData();
+        form.append("proof", proofFile);
+        form.append("roomId", activeSession.roomId);
+        if (estDelivery) form.append("estimatedDelivery", estDelivery);
+        if (podNotes) form.append("notes", podNotes);
+        await adminApi.proof.submit(form);
+      }
 
       socket?.emit("claim:mark_claimed", { roomId: activeSession.roomId });
 
@@ -58,10 +61,11 @@ export default function Queue() {
       setProofFile(null);
       setEstDelivery("");
       setPodNotes("");
+      setNoProof(false);
       setActiveSession(null);
       refetch();
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to submit proof");
+      alert(err instanceof Error ? err.message : "Failed to submit");
     } finally {
       setSubmittingPod(false);
     }
@@ -109,48 +113,73 @@ export default function Queue() {
                   <p className="text-slate-400 text-xs mt-0.5">Submit proof before marking as delivered</p>
                 </div>
                 <div className="p-6 space-y-4">
-                  <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Proof Screenshot *</label>
-                    <div onClick={() => fileRef.current?.click()}
-                      className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${proofFile ? "border-emerald-500/40 bg-emerald-500/5" : "border-white/10 hover:border-white/20"}`}>
-                      {proofFile ? (
-                        <div>
-                          <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-1" />
-                          <p className="text-emerald-300 text-sm">{proofFile.name}</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-slate-400 text-sm">Click to upload screenshot</p>
-                          <p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p>
-                        </div>
-                      )}
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden"
-                      onChange={(e) => { setProofFile(e.target.files?.[0] || null); e.target.value = ""; }} />
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-300 text-sm font-medium">
+                      Proof Screenshot {noProof ? "(skipped)" : "*"}
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <div
+                        onClick={() => { setNoProof((v) => !v); if (!noProof) setProofFile(null); }}
+                        className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${noProof ? "bg-amber-500" : "bg-white/10"}`}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${noProof ? "left-4" : "left-0.5"}`} />
+                      </div>
+                      <span className="text-xs text-slate-400">No proof</span>
+                    </label>
                   </div>
 
+                  {!noProof && (
+                    <>
+                      <div onClick={() => fileRef.current?.click()}
+                        className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${proofFile ? "border-emerald-500/40 bg-emerald-500/5" : "border-white/10 hover:border-white/20"}`}>
+                        {proofFile ? (
+                          <div>
+                            <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-1" />
+                            <p className="text-emerald-300 text-sm">{proofFile.name}</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-slate-400 text-sm">Click to upload screenshot</p>
+                            <p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p>
+                          </div>
+                        )}
+                      </div>
+                      <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                        onChange={(e) => { setProofFile(e.target.files?.[0] || null); e.target.value = ""; }} />
+                    </>
+                  )}
+
+                  {noProof && (
+                    <div className="rounded-xl px-4 py-3 text-sm text-amber-400/80 flex items-start gap-2"
+                      style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                      <span className="mt-0.5">⚠</span>
+                      <p>Marking as delivered without proof. The claim will still be closed and the customer notified.</p>
+                    </div>
+                  )}
+
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Estimated Delivery Time *</label>
+                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Estimated Delivery Time <span className="text-slate-500 font-normal">(optional)</span></label>
                     <input value={estDelivery} onChange={(e) => setEstDelivery(e.target.value)} placeholder="e.g. 5-10 minutes, Immediate"
                       className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                   </div>
 
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Notes (optional)</label>
+                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Notes <span className="text-slate-500 font-normal">(optional)</span></label>
                     <textarea value={podNotes} onChange={(e) => setPodNotes(e.target.value)} rows={2} placeholder="Any additional notes..."
                       className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
                   </div>
 
                   <div className="flex gap-3">
-                    <button onClick={() => setPodMode(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium">
+                    <button onClick={() => { setPodMode(false); setNoProof(false); setProofFile(null); }}
+                      className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium">
                       Cancel
                     </button>
                     <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                       onClick={submitProofAndClaim}
-                      disabled={!proofFile || !estDelivery || submittingPod}
+                      disabled={(!noProof && !proofFile) || submittingPod}
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
                       {submittingPod ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                      Submit & Mark Delivered
+                      {noProof ? "Mark Delivered (No Proof)" : "Submit & Mark Delivered"}
                     </motion.button>
                   </div>
                 </div>
