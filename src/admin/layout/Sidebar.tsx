@@ -29,6 +29,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/team", label: "Team", icon: Users, permission: "manage_team" },
   { href: "/admin/claim-teams", label: "Claim Teams", icon: MessageSquare, permission: "manage_team" },
   { href: "/admin/monitor", label: "Agent Monitor", icon: Activity, permission: "monitor_agents" },
+  { href: "/admin/open-chats", label: "Open Chats", icon: MessageSquare, permission: "monitor_agents" },
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod" },
   { href: "/admin/role-view", label: "Role View", icon: Eye, ownerOnly: true },
   { href: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },
