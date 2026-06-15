@@ -16,12 +16,14 @@ interface Props {
   popup: ClaimPopup;
   onAnswer: () => void;
   onDecline: () => void;
+  ownerMode?: boolean;
 }
 
-export default function ClaimQueuePopup({ popup, onAnswer, onDecline }: Props) {
+export default function ClaimQueuePopup({ popup, onAnswer, onDecline, ownerMode = false }: Props) {
   const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {
+    if (ownerMode) return;
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -33,7 +35,7 @@ export default function ClaimQueuePopup({ popup, onAnswer, onDecline }: Props) {
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [popup.roomId]);
+  }, [popup.roomId, ownerMode]);
 
   const progress = (timeLeft / 30) * 100;
 
@@ -94,7 +96,7 @@ export default function ClaimQueuePopup({ popup, onAnswer, onDecline }: Props) {
             onClick={onAnswer}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
           >
-            Answer
+            {ownerMode ? "View Monitor" : "Answer"}
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -102,7 +104,7 @@ export default function ClaimQueuePopup({ popup, onAnswer, onDecline }: Props) {
             onClick={onDecline}
             className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium py-2.5 rounded-xl transition-colors"
           >
-            Decline
+            Dismiss
           </motion.button>
         </div>
       </div>
