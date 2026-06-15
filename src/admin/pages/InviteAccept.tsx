@@ -57,7 +57,12 @@ export default function InviteAccept() {
     setError("");
     try {
       const res = await adminApi.auth.verifyAndActivate(token!, { code, password, displayName, username });
-      login(res.token, res.data.user, res.data.profile);
+      login(res.token, {
+        ...res.data.user,
+        isOwner: false,
+        permissions: res.data.permissions || [],
+        claimGames: (res.data.user as any).claimGames || [],
+      }, res.data.profile);
       setStep("done");
       setTimeout(() => navigate("/panel/dashboard"), 2000);
     } catch (err: unknown) {
@@ -143,6 +148,7 @@ export default function InviteAccept() {
               <motion.div key="verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                 <form onSubmit={verifyAndSetup} className="p-6 space-y-4">
                   <p className="text-slate-300 text-sm">Enter the 6-digit code sent to <strong className="text-white">{inviteData?.email}</strong> and set up your account.</p>
+                  <p className="text-slate-500 text-xs -mt-1">Can't find the email? Check your spam or junk folder.</p>
 
                   <div>
                     <label className="text-slate-300 text-sm font-medium block mb-1.5">Verification Code</label>
