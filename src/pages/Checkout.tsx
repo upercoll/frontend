@@ -1056,13 +1056,13 @@ export default function Checkout() {
                     <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
                       <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
                     </div>
-                    <div className="px-4 py-3">
+                    <div className="px-4 py-3" style={{ minHeight: 68 }}>
                       {eceAvailable === null && (
-                        <div className="flex items-center justify-center py-3" style={{ minHeight: 52 }}>
+                        <div className="flex items-center justify-center" style={{ minHeight: 52 }}>
                           <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
                         </div>
                       )}
-                      <div ref={eceContainerRef} style={{ display: eceAvailable ? "block" : "none" }} />
+                      <div ref={eceContainerRef} />
                     </div>
                     <div className="flex items-center gap-3 px-4 pb-3">
                       <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
