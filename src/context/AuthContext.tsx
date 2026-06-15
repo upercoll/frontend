@@ -12,7 +12,7 @@ export interface CustomerUser {
   emailVerified: boolean;
 }
 
-type AuthModalMode = "login" | "register";
+type AuthModalMode = "login" | "register" | "edit";
 
 interface AuthContextValue {
   user: CustomerUser | null;
