@@ -19,6 +19,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/team": "Team",
   "/admin/claim-teams": "Claim Teams",
   "/admin/monitor": "Agent Monitor",
+  "/admin/role-view": "Role View",
   "/admin/proof-of-delivery": "Proof of Delivery",
   "/admin/settings": "Settings",
   "/admin/profile": "My Profile",
@@ -114,7 +115,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {claimPopup && (
           <ClaimQueuePopup
             popup={claimPopup}
-            onAnswer={() => answerClaim(claimPopup.roomId)}
+            ownerMode={!!claimPopup.isOwnerAlert}
+            onAnswer={() => {
+              if (claimPopup.isOwnerAlert) {
+                navigate("/admin/monitor");
+                declineClaim(claimPopup.roomId);
+              } else {
+                answerClaim(claimPopup.roomId);
+              }
+            }}
             onDecline={() => declineClaim(claimPopup.roomId)}
           />
         )}
