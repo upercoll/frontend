@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, X, Send, Check, User, Mail,
@@ -14,6 +15,8 @@ interface Message {
 }
 
 type ChatStep = "idle" | "form" | "waiting" | "active" | "ended" | "claimed";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
 
 function makeId() {
   return Math.random().toString(36).slice(2, 10);
@@ -126,6 +129,8 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -140,39 +145,55 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
   }, [step, open]);
 
   useEffect(() => {
-    if (step !== "waiting" || !roomId) return;
+    if (!roomId) return;
 
-    const timer = setTimeout(() => {
-      const name = "RBstars Agent";
-      setAgentName(name);
+    const socket = io(BACKEND_URL, { transports: ["websocket"] });
+    socketRef.current = socket;
+
+    socket.emit("claim:join", { roomId });
+
+    socket.on("claim:agent_joined", ({ agentName: name }: { agentName: string }) => {
+      const displayName = name || "RBstars Agent";
+      setAgentName(displayName);
+      setStep("active");
+    });
+
+    socket.on("claim:new_message", (msg: { _id?: string; sender: string; text: string; senderName: string; timestamp: string }) => {
       setMessages(prev => [
         ...prev,
         {
-          id: makeId(),
-          sender: "system",
-          text: `${name} has joined the chat`,
-          senderName: "System",
-          timestamp: new Date(),
+          id: msg._id?.toString() || makeId(),
+          sender: msg.sender as Message["sender"],
+          text: msg.text,
+          senderName: msg.senderName,
+          timestamp: new Date(msg.timestamp),
         },
       ]);
-      setStep("active");
+    });
 
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: makeId(),
-            sender: "agent",
-            text: `Hi! I'm here to help with your order. I can see your Roblox username is **${robloxUser}** — give me a moment to get everything ready for your delivery!`,
-            senderName: name,
-            timestamp: new Date(),
-          },
-        ]);
-      }, 1500);
-    }, 4000);
+    socket.on("claim:typing", ({ senderName }: { senderName: string }) => {
+      if (senderName === robloxUser) return;
+      setAgentTyping(true);
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = setTimeout(() => setAgentTyping(false), 2500);
+    });
 
-    return () => clearTimeout(timer);
-  }, [step, roomId, robloxUser]);
+    socket.on("claim:ended", () => {
+      setStep("ended");
+      setAgentTyping(false);
+    });
+
+    socket.on("claim:marked_claimed", () => {
+      setStep("claimed");
+      setAgentTyping(false);
+    });
+
+    return () => {
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [roomId]);
 
   async function handleFormSubmit() {
     const e: Record<string, string> = {};
@@ -183,44 +204,45 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
     setSubmitting(true);
 
     try {
+      const resp = await fetch(`${BACKEND_URL}/api/claims`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ robloxUsername: robloxUser.trim(), contactEmail }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || "Failed to start chat");
 
-      await new Promise(r => setTimeout(r, 900));
-      const simulatedRoomId = makeId() + makeId();
-      setRoomId(simulatedRoomId);
+      const newRoomId: string = data.data.roomId;
+      setRoomId(newRoomId);
 
-      const systemMsg: Message = {
+      const seedMsgs: Message[] = (data.data.messages || []).map((m: {
+        sender: string; text: string; senderName: string; timestamp: string;
+      }) => ({
         id: makeId(),
-        sender: "system",
-        text: `${robloxUser.trim()} has joined the chat`,
-        senderName: "System",
-        timestamp: new Date(),
-      };
-      setMessages([systemMsg]);
+        sender: m.sender as Message["sender"],
+        text: m.text,
+        senderName: m.senderName,
+        timestamp: new Date(m.timestamp),
+      }));
+      setMessages(seedMsgs);
       setStep("waiting");
-    } catch {
-      setFormErrors({ submit: "Something went wrong. Please try again." });
+    } catch (err) {
+      setFormErrors({ submit: err instanceof Error ? err.message : "Something went wrong. Please try again." });
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function handleSend() {
+  function handleSend() {
     const text = input.trim();
-    if (!text || step !== "active") return;
+    if (!text || step !== "active" || !roomId || !socketRef.current) return;
     setInput("");
-    setSending(true);
-
-    const msg: Message = {
-      id: makeId(),
-      sender: "customer",
+    socketRef.current.emit("claim:message", {
+      roomId,
       text,
-      senderName: "You",
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, msg]);
-
-    await new Promise(r => setTimeout(r, 300));
-    setSending(false);
+      senderName: robloxUser,
+      sender: "customer",
+    });
   }
 
   function renderBody() {
@@ -371,7 +393,12 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                 <input
                   ref={inputRef}
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => {
+                    setInput(e.target.value);
+                    if (socketRef.current && roomId && e.target.value.trim()) {
+                      socketRef.current.emit("claim:typing", { roomId, senderName: robloxUser });
+                    }
+                  }}
                   onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
                   placeholder="Type a message…"
                   className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#4a3a6b] px-3 py-2.5 rounded-xl min-w-0"
