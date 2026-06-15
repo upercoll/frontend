@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Package, MessageSquare, ArrowLeft, Star } from "lucide-react";
 import { useLocation } from "wouter";
+import { useCart } from "@/context/CartContext";
+
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
 interface OrderItem {
   id: string;
@@ -28,11 +31,39 @@ function loadOrder(): LastOrder | null {
 
 export default function PaymentSuccess() {
   const [, navigate] = useLocation();
-  const [order] = useState<LastOrder | null>(() => loadOrder());
+  const { clearCart } = useCart();
+  const [order, setOrder] = useState<LastOrder | null>(() => loadOrder());
   const [claimOpened, setClaimOpened] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    const params = new URLSearchParams(window.location.search);
+    const paymentIntentId = params.get("payment_intent");
+    const redirectStatus = params.get("redirect_status");
+
+    if (paymentIntentId) {
+      if (redirectStatus === "succeeded") {
+        setVerifying(true);
+        fetch(`${BACKEND_URL}/api/payments/confirm`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentIntentId }),
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              clearCart();
+              const saved = loadOrder();
+              if (saved) setOrder(saved);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setVerifying(false));
+      }
+      window.history.replaceState({}, "", "/order-success");
+    }
   }, []);
 
   function openClaimChat() {
@@ -85,7 +116,15 @@ export default function PaymentSuccess() {
             className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", boxShadow: "0 0 40px rgba(22,163,74,0.5)" }}
           >
-            <Check size={38} color="white" strokeWidth={3} />
+            {verifying ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="w-9 h-9 rounded-full border-4 border-white border-t-transparent"
+              />
+            ) : (
+              <Check size={38} color="white" strokeWidth={3} />
+            )}
           </motion.div>
         </div>
 
@@ -96,7 +135,9 @@ export default function PaymentSuccess() {
           transition={{ delay: 0.3 }}
           className="text-center mb-6"
         >
-          <h1 className="text-3xl font-extrabold text-white mb-1">Order Confirmed!</h1>
+          <h1 className="text-3xl font-extrabold text-white mb-1">
+            {verifying ? "Confirming Payment…" : "Order Confirmed!"}
+          </h1>
           {order?.email && (
             <p className="text-sm" style={{ color: "#818CF8" }}>
               Confirmation sent to <span className="text-white font-bold">{order.email}</span>
