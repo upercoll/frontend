@@ -11,6 +11,17 @@ interface ClaimPopup {
   items: { name: string; quantity: number }[];
   orderRef?: string;
   createdAt: string;
+  isOwnerAlert?: boolean;
+}
+
+export interface LiveClaimSession {
+  roomId: string;
+  robloxUsername: string;
+  contactEmail?: string;
+  game?: string;
+  status: "pending" | "active" | "claimed" | "ended";
+  agentName?: string;
+  createdAt: string;
 }
 
 interface AdminSocketContextType {
@@ -21,6 +32,7 @@ interface AdminSocketContextType {
   answerClaim: (roomId: string) => void;
   declineClaim: (roomId: string) => void;
   onlineAgents: { agentId: string; agentName: string; games: string[] }[];
+  activeClaims: LiveClaimSession[];
 }
 
 const AdminSocketContext = createContext<AdminSocketContextType | null>(null);
@@ -33,6 +45,7 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [claimPopup, setClaimPopup] = useState<ClaimPopup | null>(null);
   const [onlineAgents, setOnlineAgents] = useState<{ agentId: string; agentName: string; games: string[] }[]>([]);
+  const [activeClaims, setActiveClaims] = useState<LiveClaimSession[]>([]);
 
   useEffect(() => {
     if (!user || !token) {
@@ -68,11 +81,43 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
     socket.on("disconnect", () => setConnected(false));
 
     socket.on("queue:claim_popup", (data: ClaimPopup) => {
-      setClaimPopup(data);
+      setClaimPopup({ ...data, isOwnerAlert: false });
     });
 
     socket.on("queue:already_taken", () => {
       setClaimPopup(null);
+    });
+
+    socket.on("admin:new_claim", (data: Omit<ClaimPopup, "isOwnerAlert">) => {
+      setActiveClaims((prev) => {
+        const exists = prev.find((c) => c.roomId === data.roomId);
+        if (exists) return prev;
+        return [
+          {
+            roomId: data.roomId,
+            robloxUsername: data.robloxUsername,
+            contactEmail: data.contactEmail,
+            game: data.game,
+            status: "pending",
+            createdAt: data.createdAt,
+          },
+          ...prev,
+        ];
+      });
+
+      if (user.isOwner) {
+        setClaimPopup({ ...data, isOwnerAlert: true });
+      }
+    });
+
+    socket.on("admin:claim_status_changed", ({ roomId, status, agentName }: { roomId: string; status: string; agentName?: string }) => {
+      setActiveClaims((prev) =>
+        prev.map((c) =>
+          c.roomId === roomId
+            ? { ...c, status: status as LiveClaimSession["status"], ...(agentName ? { agentName } : {}) }
+            : c
+        ).filter((c) => c.status !== "ended" && c.status !== "claimed")
+      );
     });
 
     socket.on("admin:agent_online", (data: { agentId: string; agentName: string; games: string[] }) => {
@@ -98,6 +143,10 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
   const answerClaim = (roomId: string) => {
     if (!socketRef.current || !user) return;
+    if (claimPopup?.isOwnerAlert) {
+      setClaimPopup(null);
+      return;
+    }
     socketRef.current.emit("queue:answer", {
       roomId,
       agentId: user.id,
@@ -108,6 +157,10 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
   const declineClaim = (roomId: string) => {
     if (!socketRef.current || !user) return;
+    if (claimPopup?.isOwnerAlert) {
+      setClaimPopup(null);
+      return;
+    }
     socketRef.current.emit("queue:decline", { roomId, agentId: user.id });
     setClaimPopup(null);
   };
@@ -122,6 +175,7 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
         answerClaim,
         declineClaim,
         onlineAgents,
+        activeClaims,
       }}
     >
       {children}
