@@ -962,11 +962,18 @@ export default function Checkout() {
 
   function handleApplePayClick() {
     const url = window.location.href;
-    window.location.href = "safari-https://" + url.replace(/^https?:\/\//, "");
-    setTimeout(() => {
-      setSafariCopied(true);
-      setTimeout(() => setSafariCopied(false), 5000);
-    }, 800);
+    try {
+      navigator.clipboard.writeText(url).catch(() => {
+        const el = document.createElement("input");
+        el.value = url;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      });
+    } catch {}
+    setSafariCopied(true);
+    setTimeout(() => setSafariCopied(false), 8000);
   }
 
   function handleGooglePayClick() {
@@ -1141,7 +1148,7 @@ export default function Checkout() {
                             style={{ color: "#a3e635" }}
                           >
                             {safariCopied
-                              ? "Couldn't open Safari automatically — try opening this page in Safari"
+                              ? "✓ Link copied — open Safari, tap the address bar and paste"
                               : "✓ Opening Chrome — Google Pay is ready there"}
                           </motion.p>
                         )}
@@ -1290,6 +1297,9 @@ export default function Checkout() {
                             <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
                               <div className="w-full h-full rounded-xl overflow-hidden relative" style={{ background: `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` }}>
                                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
+                                {item.image && (
+                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                                )}
                               </div>
                               {item.quantity > 1 && (
                                 <div className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full text-[9px] font-extrabold text-white flex items-center justify-center" style={{ background: "#4F46E5" }}>
