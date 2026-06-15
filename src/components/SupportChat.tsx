@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, X, Send, Gamepad2, Mail, Star, Loader2,
   CheckCheck, Clock, Headphones, ChevronRight, Package,
-  ArrowLeft, Edit2, Check,
+  ArrowLeft, Edit2, Check, ImagePlus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -30,7 +30,7 @@ interface LastOrder {
 }
 
 type ChatMode = null | "general" | "claim";
-type ClaimStep = "select" | "form" | "waiting" | "active" | "ended" | "claimed";
+type ClaimStep = "select" | "form" | "waiting" | "active" | "ended" | "claimed" | "review";
 
 const FAQ = [
   {
@@ -202,6 +202,14 @@ export default function SupportChat() {
   const [editValue, setEditValue] = useState("");
   const [editSaving, setEditSaving] = useState(false);
 
+  const [reviewStars, setReviewStars] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewProof, setReviewProof] = useState<File | null>(null);
+  const [reviewProofPreview, setReviewProofPreview] = useState<string | null>(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [chatOutcome, setChatOutcome] = useState<"claimed" | "ended" | null>(null);
+
   const [lastOrder] = useState<LastOrder | null>(() => loadLastOrder());
 
   const socketRef = useRef<Socket | null>(null);
@@ -277,7 +285,8 @@ export default function SupportChat() {
         id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
       }]);
       setClaimStep("ended");
-      setTimeout(() => closeAndReset(), 3000);
+      setChatOutcome("ended");
+      setTimeout(() => setClaimStep("review"), 1500);
     });
 
     socket.on("claim:marked_claimed", ({ message }: { message: string }) => {
@@ -285,7 +294,8 @@ export default function SupportChat() {
         id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
       }]);
       setClaimStep("claimed");
-      setTimeout(() => closeAndReset(), 3000);
+      setChatOutcome("claimed");
+      setTimeout(() => setClaimStep("review"), 1500);
     });
 
     return () => {
@@ -309,6 +319,13 @@ export default function SupportChat() {
     setRobloxUser(user?.robloxUsername || "");
     setContactEmail(user?.email || "");
     setFormErrors({});
+    setReviewStars(0);
+    setReviewComment("");
+    setReviewProof(null);
+    setReviewProofPreview(null);
+    setReviewSubmitting(false);
+    setReviewSubmitted(false);
+    setChatOutcome(null);
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
@@ -411,6 +428,28 @@ export default function SupportChat() {
       setEditMode(null);
       setEditValue("");
       setEditSaving(false);
+    }
+  }
+
+  async function handleReviewSubmit() {
+    if (reviewStars === 0 || !roomId) return;
+    setReviewSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("rating", String(reviewStars));
+      if (reviewComment.trim()) formData.append("comment", reviewComment.trim());
+      if (reviewProof) formData.append("proofImage", reviewProof);
+
+      await fetch(`${BACKEND}/api/claims/${roomId}/feedback`, {
+        method: "POST",
+        body: formData,
+      });
+
+      setReviewSubmitted(true);
+      setTimeout(() => closeAndReset(), 2000);
+    } catch {
+    } finally {
+      setReviewSubmitting(false);
     }
   }
 
@@ -930,6 +969,113 @@ export default function SupportChat() {
     );
   }
 
+  function renderReview() {
+    const isDelivered = chatOutcome === "claimed";
+    if (reviewSubmitted) {
+      return (
+        <div className="flex flex-col h-full items-center justify-center p-6 text-center">
+          <div className="w-14 h-14 rounded-full mb-4 flex items-center justify-center"
+            style={{ background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.3)" }}>
+            <CheckCheck size={24} color="#4ade80" />
+          </div>
+          <p className="text-base font-extrabold text-white mb-1">Review Submitted!</p>
+          <p className="text-xs" style={{ color: "#64748B" }}>Thank you for your feedback</p>
+        </div>
+      );
+    }
+    const starLabels = ["", "Poor", "Fair", "Good", "Great", "Excellent"];
+    return (
+      <div className="flex flex-col h-full overflow-y-auto">
+        <div className="px-4 pt-4 pb-2 text-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
+            style={{
+              background: isDelivered ? "rgba(34,197,94,0.15)" : "rgba(79,70,229,0.15)",
+              border: `1px solid ${isDelivered ? "rgba(34,197,94,0.3)" : "rgba(165,180,252,0.2)"}`,
+            }}>
+            {isDelivered ? <CheckCheck size={18} color="#4ade80" /> : <Clock size={18} color="#818CF8" />}
+          </div>
+          <p className="text-sm font-extrabold text-white">
+            {isDelivered ? "Items Delivered! 🎉" : "Chat Ended"}
+          </p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>Share your experience with us</p>
+        </div>
+        <div className="px-4 pb-2 flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#818CF8" }}>Your Rating</p>
+          <div className="flex items-center gap-1.5">
+            {[1, 2, 3, 4, 5].map(star => (
+              <motion.button key={star} whileHover={{ scale: 1.25 }} whileTap={{ scale: 0.85 }} onClick={() => setReviewStars(star)}>
+                <Star size={30} fill={star <= reviewStars ? "#f59e0b" : "none"} color={star <= reviewStars ? "#f59e0b" : "#334155"} strokeWidth={1.5} />
+              </motion.button>
+            ))}
+            {reviewStars > 0 && (
+              <span className="text-[11px] font-bold ml-1" style={{ color: "#f59e0b" }}>{starLabels[reviewStars]}</span>
+            )}
+          </div>
+        </div>
+        <div className="px-4 pb-2 flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#818CF8" }}>Review (optional)</p>
+          <textarea
+            value={reviewComment}
+            onChange={e => setReviewComment(e.target.value)}
+            placeholder="How was your experience?"
+            rows={3}
+            maxLength={300}
+            className="w-full bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-3 py-2.5 rounded-xl resize-none"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.15)" }}
+          />
+        </div>
+        <div className="px-4 pb-3 flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#818CF8" }}>Attach Proof (optional)</p>
+          {reviewProofPreview ? (
+            <div className="relative">
+              <img src={reviewProofPreview} alt="proof" className="w-full h-20 object-cover rounded-xl"
+                style={{ border: "1px solid rgba(165,180,252,0.2)" }} />
+              <button onClick={() => { setReviewProof(null); setReviewProofPreview(null); }}
+                className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(0,0,0,0.7)" }}>
+                <X size={10} color="white" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer text-[11px] font-semibold"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(165,180,252,0.2)", color: "#818CF8" }}>
+              <ImagePlus size={14} />
+              Attach screenshot
+              <input type="file" accept="image/*" className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setReviewProof(file);
+                  const reader = new FileReader();
+                  reader.onload = ev => setReviewProofPreview(ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                }} />
+            </label>
+          )}
+        </div>
+        <div className="px-4 pb-4 flex gap-2 flex-shrink-0 mt-auto">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => closeAndReset()}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(165,180,252,0.12)", color: "#64748B" }}>
+            Skip
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: reviewStars > 0 ? 1.02 : 1 }}
+            whileTap={{ scale: reviewStars > 0 ? 0.97 : 1 }}
+            onClick={handleReviewSubmit}
+            disabled={reviewStars === 0 || reviewSubmitting}
+            className="flex-1 py-2.5 rounded-xl text-sm font-extrabold text-white flex items-center justify-center gap-1.5"
+            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "rgba(79,70,229,0.25)", opacity: reviewSubmitting ? 0.7 : 1 }}>
+            {reviewSubmitting
+              ? <Loader2 size={13} className="animate-spin" />
+              : <Star size={13} fill={reviewStars > 0 ? "white" : "none"} color="white" strokeWidth={2} />}
+            Submit
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
+
   function renderHeader() {
     const canGoBack = mode !== null && (mode === "general" || claimStep === "select" || claimStep === "form");
     const title =
@@ -938,7 +1084,8 @@ export default function SupportChat() {
           : claimStep === "select" ? "Claim Chat"
             : claimStep === "form" ? `${selectedItem?.name || "Item"} Claim`
               : claimStep === "waiting" ? `${selectedItem?.name || "Item"} Claim`
-                : agentName || "Claim Chat";
+                : claimStep === "review" ? "Rate Your Experience"
+                  : agentName || "Claim Chat";
 
     const subtitle =
       mode === null ? "We're here to help"
@@ -947,7 +1094,8 @@ export default function SupportChat() {
             : claimStep === "active" ? `Online — ${agentName}`
               : claimStep === "claimed" ? "Delivered ✓"
                 : claimStep === "ended" ? "Chat Ended"
-                  : "RBstars Claim Team";
+                  : claimStep === "review" ? "Your feedback matters"
+                    : "RBstars Claim Team";
 
     return (
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
@@ -980,7 +1128,7 @@ export default function SupportChat() {
           </div>
         </div>
         <button
-          onClick={() => setOpen(false)}
+          onClick={() => claimStep === "review" ? closeAndReset() : setOpen(false)}
           className="w-7 h-7 rounded-full flex items-center justify-center"
           style={{ background: "rgba(255,255,255,0.08)" }}
         >
@@ -997,6 +1145,7 @@ export default function SupportChat() {
       if (claimStep === "select") return renderClaimSelect();
       if (claimStep === "form") return renderClaimForm();
       if (claimStep === "waiting") return renderWaiting();
+      if (claimStep === "review") return renderReview();
       return renderActiveChat();
     }
     return null;
