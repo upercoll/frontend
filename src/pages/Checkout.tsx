@@ -697,18 +697,20 @@ export default function Checkout() {
   const stripeRef = useRef<import("@stripe/stripe-js").Stripe | null>(null);
   const [stripeLoaded, setStripeLoaded] = useState(false);
 
-  const prButtonRef = useRef<HTMLDivElement>(null);
-  const prRef = useRef<any>(null);
-  const [prAvailable, setPrAvailable] = useState(false);
+  const eceContainerRef = useRef<HTMLDivElement>(null);
+  const eceElementsRef = useRef<any>(null);
+  const [eceAvailable, setEceAvailable] = useState<boolean | null>(null);
 
   const promoRef = useRef(promo);
   const emailRef = useRef(email);
   const itemsRef = useRef(items);
   const userRef = useRef(user);
+  const finalTotalRef = useRef(finalTotal);
   useEffect(() => { promoRef.current = promo; }, [promo]);
   useEffect(() => { emailRef.current = email; }, [email]);
   useEffect(() => { itemsRef.current = items; }, [items]);
   useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { finalTotalRef.current = finalTotal; }, [finalTotal]);
 
   useEffect(() => {
     if (!STRIPE_KEY) return;
@@ -726,80 +728,70 @@ export default function Checkout() {
   useEffect(() => {
     if (!stripeLoaded || !stripeRef.current) return;
     const stripe = stripeRef.current;
-    let mounted = true;
-    (async () => {
-      const amount = Math.max(1, Math.round(finalTotal * 100));
-      const pr = (stripe as any).paymentRequest({
-        country: "US",
-        currency: "usd",
-        total: { label: "RBstars Order", amount },
-        requestPayerName: true,
-        requestPayerEmail: true,
-      });
-      const result = await pr.canMakePayment();
-      if (!result || !mounted) return;
-      prRef.current = pr;
-      setPrAvailable(true);
-      pr.on("paymentmethod", async (ev: any) => {
-        try {
-          const currentEmail = ev.payerEmail || emailRef.current;
-          const currentUser = userRef.current;
-          const currentItems = itemsRef.current;
-          const currentPromo = promoRef.current;
-          const customerInfo = {
-            email: currentEmail,
-            robloxUsername: currentUser?.robloxUsername || currentEmail,
-          };
-          const cartPayload = currentItems.map((i) => ({ id: i.id, quantity: i.quantity }));
-          const createResp = await fetch(`${BACKEND_URL}/api/payments/create-intent`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              cartItems: cartPayload,
-              customer: customerInfo,
-              paymentMethodId: ev.paymentMethod.id,
-              promoCode: currentPromo?.code || null,
-            }),
-          });
-          const createData = await createResp.json();
-          if (!createResp.ok) {
-            ev.complete("fail");
-            setErrors({ payment: createData.message || "Payment failed. Please try again." });
-            return;
-          }
-          const { clientSecret, orderNumber } = createData.data;
-          const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(
-            clientSecret,
-            { payment_method: ev.paymentMethod.id },
-            { handleActions: false }
-          );
-          if (confirmError || !paymentIntent) {
-            ev.complete("fail");
-            setErrors({ payment: confirmError?.message || "Payment failed. Please try again." });
-            return;
-          }
-          if (paymentIntent.status === "requires_action") {
-            ev.complete("success");
-            const { error: actionError } = await stripe.confirmCardPayment(clientSecret);
-            if (actionError) { setErrors({ payment: actionError.message || "Payment failed." }); return; }
-          } else {
-            ev.complete("success");
-          }
-          const orderData = {
-            orderRef: orderNumber,
-            email: customerInfo.email,
-            items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
-          };
-          try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
-          clearCart();
-          navigate("/order-success");
-        } catch {
-          ev.complete("fail");
-          setErrors({ payment: "Payment failed. Please try again." });
-        }
-      });
-    })();
-    return () => { mounted = false; };
+    const amount = Math.max(50, Math.round(finalTotalRef.current * 100));
+
+    const elements = (stripe as any).elements({ mode: "payment", amount, currency: "usd" });
+    eceElementsRef.current = elements;
+
+    const ece = elements.create("expressCheckout", {
+      buttonType: { applePay: "buy", googlePay: "buy" },
+      buttonHeight: 52,
+      layout: { maxColumns: 2, maxRows: 1, overflow: "auto" },
+    });
+
+    ece.on("ready", ({ availablePaymentMethods }: any) => {
+      const hasAny = availablePaymentMethods &&
+        Object.values(availablePaymentMethods as Record<string, boolean>).some(Boolean);
+      setEceAvailable(!!hasAny);
+    });
+
+    ece.on("confirm", async (event: any) => {
+      const currentEmail = emailRef.current || event.billingDetails?.email || "";
+      const currentUser = userRef.current;
+      const currentItems = itemsRef.current;
+      const currentPromo = promoRef.current;
+      const customerInfo = {
+        email: currentEmail,
+        robloxUsername: currentUser?.robloxUsername || currentEmail,
+      };
+      try {
+        const createResp = await fetch(`${BACKEND_URL}/api/payments/create-intent`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cartItems: currentItems.map(i => ({ id: i.id, quantity: i.quantity })),
+            customer: customerInfo,
+            promoCode: currentPromo?.code || null,
+          }),
+        });
+        const createData = await createResp.json();
+        if (!createResp.ok) throw new Error(createData.message || "Payment failed. Please try again.");
+
+        const { clientSecret, orderNumber } = createData.data;
+        const orderData = {
+          orderRef: orderNumber,
+          email: customerInfo.email,
+          items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
+        };
+        try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
+
+        const { error } = await (stripe as any).confirmPayment({
+          elements,
+          clientSecret,
+          confirmParams: { return_url: `${window.location.origin}/order-success` },
+          redirect: "if_required",
+        });
+        if (error) throw new Error(error.message);
+
+        clearCart();
+        navigate("/order-success");
+      } catch (err) {
+        setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
+      }
+    });
+
+    if (eceContainerRef.current) ece.mount(eceContainerRef.current);
+    return () => { try { ece.unmount(); } catch {} eceElementsRef.current = null; };
   }, [stripeLoaded]);
 
   useEffect(() => {
@@ -849,26 +841,12 @@ export default function Checkout() {
   }, [stripeLoaded]);
 
   useEffect(() => {
-    if (prRef.current && finalTotal > 0) {
+    if (eceElementsRef.current && finalTotal > 0) {
       try {
-        prRef.current.update({
-          total: { label: "RBstars Order", amount: Math.max(1, Math.round(finalTotal * 100)) },
-        });
+        eceElementsRef.current.update({ amount: Math.max(50, Math.round(finalTotal * 100)) });
       } catch {}
     }
   }, [finalTotal]);
-
-  useEffect(() => {
-    if (!prAvailable || !prButtonRef.current || !stripeRef.current) return;
-    const stripe = stripeRef.current;
-    const elements = (stripe as any).elements();
-    const btn = elements.create("paymentRequestButton", {
-      paymentRequest: prRef.current,
-      style: { paymentRequestButton: { theme: "dark", height: "52px", type: "default" } },
-    });
-    btn.mount(prButtonRef.current);
-    return () => { try { btn.unmount(); } catch {} };
-  }, [prAvailable]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -1066,63 +1044,34 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
-              <motion.div
-                initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.38, delay: 0.14 }}
-                className="rounded-2xl overflow-hidden"
-                style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
-              >
-                <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
-                </div>
-                <div className="px-4 py-3">
-                  {!stripeLoaded ? (
-                    <div className="flex items-center justify-center py-3" style={{ minHeight: 52 }}>
-                      <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
+              <AnimatePresence>
+                {(eceAvailable !== false) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8, height: 0 }}
+                    transition={{ duration: 0.38, delay: 0.14 }}
+                    className="rounded-2xl overflow-hidden"
+                    style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
+                  >
+                    <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
                     </div>
-                  ) : prAvailable ? (
-                    <div ref={prButtonRef} style={{ minHeight: 52 }} />
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm select-none"
-                        style={{ background: "rgba(0,0,0,0.45)", border: "1.5px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)", cursor: "not-allowed" }}
-                      >
-                        <svg width="14" height="17" viewBox="0 0 814 1000" fill="currentColor">
-                          <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 71 0 130.5 46.4 175 46.4 42.8 0 109.3-49.1 189.3-49.1zm-134.3-66.9c-28.8-34.2-81.3-60.8-148-60.8-49.5 0-97.1 18.9-134.2 48.1-35.2 27.8-69.1 73.3-69.1 132.1 0 8.3.6 16.7 2 24.4 4.5.6 9 .6 13.5.6 46.4 0 90.3-17.9 125-46.4 37.2-30.2 71.4-76.8 71.4-138.4 0-7.7-.6-15.4-1.9-22.6z"/>
-                        </svg>
-                        Apple Pay
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm select-none"
-                        style={{ background: "rgba(0,0,0,0.45)", border: "1.5px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)", cursor: "not-allowed" }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" opacity="0.5"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" opacity="0.5"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" opacity="0.5"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" opacity="0.5"/>
-                        </svg>
-                        Google Pay
-                      </button>
+                    <div className="px-4 py-3">
+                      {eceAvailable === null && (
+                        <div className="flex items-center justify-center py-3" style={{ minHeight: 52 }}>
+                          <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
+                        </div>
+                      )}
+                      <div ref={eceContainerRef} style={{ display: eceAvailable ? "block" : "none" }} />
                     </div>
-                  )}
-                </div>
-                {stripeLoaded && !prAvailable && (
-                  <p className="text-center text-[10px] pb-3 px-4" style={{ color: "#475569" }}>
-                    Use Safari with Apple Pay or Chrome with Google Pay to enable express checkout
-                  </p>
+                    <div className="flex items-center gap-3 px-4 pb-3">
+                      <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
+                      <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                    </div>
+                  </motion.div>
                 )}
-                <div className="flex items-center gap-3 px-4 pb-3">
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                </div>
-              </motion.div>
+              </AnimatePresence>
 
               {}
               <Accordion
