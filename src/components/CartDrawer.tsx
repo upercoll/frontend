@@ -169,6 +169,9 @@ export default function CartDrawer() {
                             style={{ width: 52, height: 52, background: `linear-gradient(135deg,${item.gradient[0]} 0%,${item.gradient[1]} 100%)` }}>
                             <div className="absolute inset-0 opacity-10"
                               style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
+                            {item.image && (
+                              <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                            )}
                           </div>
 
                           <div className="flex-1 min-w-0">
