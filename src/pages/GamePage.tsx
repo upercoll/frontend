@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame, Sword, Target, Heart, PawPrint, Package, Leaf, Sprout, Wrench,
   Apple, Gem, Star, SlidersHorizontal, ArrowLeft, Tag, ChevronDown,
-  ChevronLeft, ChevronRight, ShoppingCart, ExternalLink, Check, Zap,
+  ChevronLeft, ChevronRight, ShoppingCart, ExternalLink, Check,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -738,37 +738,6 @@ export default function GamePage() {
       </div>
 
       <div className="h-16 flex-shrink-0" />
-
-      {}
-      <div className="relative flex items-center justify-between px-4 py-2.5 flex-shrink-0 z-10"
-        style={{ background:"linear-gradient(90deg,rgba(15,12,46,0.95) 0%,rgba(30,27,75,0.95) 50%,rgba(15,12,46,0.95) 100%)", borderBottom:"1px solid rgba(165,180,252,0.15)", backdropFilter: "blur(8px)" }}>
-        <div className="absolute inset-0 pointer-events-none line-grid-dark" />
-        <div className="flex items-center gap-2 relative z-10">
-          <div className="w-7 h-7 rounded-full flex items-center justify-center"
-            style={{ background:"rgba(79,70,229,0.3)", border:"1px solid rgba(165,180,252,0.2)" }}>
-            <Star size={13} fill="#A5B4FC" color="#A5B4FC" />
-          </div>
-          <div className="leading-tight">
-            <p className="text-white font-bold text-xs">RBstars</p>
-            <p className="text-[10px]" style={{ color:"#818CF8" }}>Members</p>
-          </div>
-        </div>
-
-        <motion.div
-          animate={{
-            boxShadow: ["0 0 8px rgba(79,70,229,0.4)", "0 0 22px rgba(79,70,229,0.9)", "0 0 8px rgba(79,70,229,0.4)"],
-            scale: [1, 1.04, 1],
-          }}
-          transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
-          className="relative overflow-hidden flex items-center gap-1 px-3 py-1.5 rounded-full font-bold text-xs z-10"
-          style={{ background:"linear-gradient(135deg,#4F46E5,#3730A3)", color:"white" }}>
-          <div className="rb-glare rb-glare-d1" style={{ opacity: 0.5 }} />
-          <Zap size={11} className="relative z-10" />
-          <span className="relative z-10">GET 10% OFF</span>
-        </motion.div>
-
-        <button className="text-xs font-bold relative z-10" style={{ color:"#A5B4FC" }}>Claim Now!</button>
-      </div>
 
       {}
       <div className="relative px-4 pt-3 pb-1 flex-shrink-0 z-10">
