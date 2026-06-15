@@ -439,7 +439,7 @@ function TestimonialsSection({ reviews }: { reviews: Review[] }) {
           <p className="text-xs mb-2" style={{ color: "#64748B" }}>Based on 1300+ reviews</p>
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
             style={{ background: "rgba(79,70,229,0.15)", color: "#A5B4FC", border: "1px solid rgba(165,180,252,0.2)" }}>
-            ★ Trustpilot
+            ★ Verified Reviews
           </span>
         </div>
 
@@ -488,15 +488,6 @@ function TestimonialsSection({ reviews }: { reviews: Review[] }) {
           </div>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02, boxShadow: "0 0 24px rgba(79,70,229,0.4)" }}
-          whileTap={{ scale: 0.97 }}
-          className="relative overflow-hidden w-full py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 text-white"
-          style={{ background: "linear-gradient(135deg,#4F46E5 0%,#3730A3 100%)" }}>
-          <span className="relative z-10 flex items-center gap-2">
-            <Star size={13} fill="white" color="white" /> View all reviews on Trustpilot <ExternalLink size={11} />
-          </span>
-        </motion.button>
       </div>
     </div>
   );
