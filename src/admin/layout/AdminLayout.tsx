@@ -21,6 +21,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/monitor": "Agent Monitor",
   "/admin/role-view": "Role View",
   "/admin/proof-of-delivery": "Proof of Delivery",
+  "/admin/open-chats": "Open Chats",
   "/admin/settings": "Settings",
   "/admin/profile": "My Profile",
   "/panel/dashboard": "Agent Dashboard",
