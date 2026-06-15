@@ -681,16 +681,21 @@ export default function Checkout() {
   const [zip, setZip] = useState("");
   const [country, setCountry] = useState("");
 
-  const [cardNum, setCardNum] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
   const [cardName, setCardName] = useState("");
-  const brand = detectBrand(cardNum);
+  const [elemBrand, setElemBrand] = useState<CardBrand>(null);
+  const [elemComplete, setElemComplete] = useState({ cardNum: false, expiry: false, cvv: false });
+  const brand = elemBrand;
+
+  const cardNumDivRef = useRef<HTMLDivElement>(null);
+  const cardExpDivRef = useRef<HTMLDivElement>(null);
+  const cardCvvDivRef = useRef<HTMLDivElement>(null);
+  const cardNumElRef = useRef<any>(null);
 
   const [loading, setLoading] = useState(false);
   const [burst, setBurst] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const stripeRef = useRef<import("@stripe/stripe-js").Stripe | null>(null);
+  const [stripeLoaded, setStripeLoaded] = useState(false);
 
   const prButtonRef = useRef<HTMLDivElement>(null);
   const prRef = useRef<any>(null);
@@ -707,12 +712,22 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!STRIPE_KEY) return;
-    let mounted = true;
+    let cancelled = false;
     (async () => {
       const { loadStripe } = await import("@stripe/stripe-js");
       const stripe = await loadStripe(STRIPE_KEY);
-      if (!stripe || !mounted) return;
-      if (!stripeRef.current) stripeRef.current = stripe;
+      if (!stripe || cancelled) return;
+      stripeRef.current = stripe;
+      setStripeLoaded(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!stripeLoaded || !stripeRef.current) return;
+    const stripe = stripeRef.current;
+    let mounted = true;
+    (async () => {
       const amount = Math.max(1, Math.round(finalTotal * 100));
       const pr = (stripe as any).paymentRequest({
         country: "US",
@@ -785,7 +800,53 @@ export default function Checkout() {
       });
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [stripeLoaded]);
+
+  useEffect(() => {
+    if (!stripeLoaded || !stripeRef.current) return;
+    if (!cardNumDivRef.current || !cardExpDivRef.current || !cardCvvDivRef.current) return;
+    const stripe = stripeRef.current;
+    const elements = (stripe as any).elements();
+    const BRAND_MAP: Record<string, CardBrand> = {
+      visa: "visa", mastercard: "mastercard", amex: "amex",
+      discover: "discover", unionpay: "unionpay", maestro: "maestro",
+    };
+    const baseStyle = {
+      style: {
+        base: {
+          color: "#ffffff",
+          fontFamily: '"Inter", system-ui, sans-serif',
+          fontSize: "14px",
+          fontSmoothing: "antialiased",
+          "::placeholder": { color: "#4b5563" },
+        },
+        invalid: { color: "#ef4444" },
+      },
+    };
+    const numEl = elements.create("cardNumber", baseStyle);
+    const expEl = elements.create("cardExpiry", baseStyle);
+    const cvcEl = elements.create("cardCvc", baseStyle);
+    numEl.mount(cardNumDivRef.current);
+    expEl.mount(cardExpDivRef.current);
+    cvcEl.mount(cardCvvDivRef.current);
+    cardNumElRef.current = numEl;
+    numEl.on("change", (e: any) => {
+      setElemBrand(BRAND_MAP[e.brand] || null);
+      setElemComplete(prev => ({ ...prev, cardNum: !!e.complete }));
+    });
+    expEl.on("change", (e: any) => {
+      setElemComplete(prev => ({ ...prev, expiry: !!e.complete }));
+    });
+    cvcEl.on("change", (e: any) => {
+      setElemComplete(prev => ({ ...prev, cvv: !!e.complete }));
+    });
+    return () => {
+      try { numEl.unmount(); } catch {}
+      try { expEl.unmount(); } catch {}
+      try { cvcEl.unmount(); } catch {}
+      cardNumElRef.current = null;
+    };
+  }, [stripeLoaded]);
 
   useEffect(() => {
     if (prRef.current && finalTotal > 0) {
@@ -812,9 +873,9 @@ export default function Checkout() {
   function validate() {
     const e: Record<string, string> = {};
     if (!email.includes("@")) e.email = "Enter a valid email address";
-    if (cardNum.replace(/\s/g, "").length < 13) e.cardNum = "Enter a valid card number";
-    if (expiry.length < 5) e.expiry = "Enter expiry (MM/YY)";
-    if (cvv.length < 3) e.cvv = "Enter CVV";
+    if (!elemComplete.cardNum) e.cardNum = "Enter a valid card number";
+    if (!elemComplete.expiry) e.expiry = "Enter expiry date";
+    if (!elemComplete.cvv) e.cvv = "Enter security code";
     if (!cardName.trim()) e.cardName = "Enter name on card";
     return e;
   }
@@ -841,15 +902,10 @@ export default function Checkout() {
       const stripe = stripeRef.current;
       if (!stripe) throw new Error("Failed to load payment processor. Please refresh and try again.");
 
-      const [mm, yy] = expiry.split("/");
+      if (!cardNumElRef.current) throw new Error("Card details not ready. Please wait and try again.");
       const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
         type: "card",
-        card: {
-          number: cardNum.replace(/\s/g, ""),
-          exp_month: parseInt(mm, 10),
-          exp_year: 2000 + parseInt(yy.trim(), 10),
-          cvc: cvv,
-        },
+        card: cardNumElRef.current,
         billing_details: { name: cardName, email: customerInfo.email },
       } as Parameters<typeof stripe.createPaymentMethod>[0]);
 
@@ -1010,26 +1066,47 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
-              {prAvailable && (
-                <motion.div
-                  initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.38, delay: 0.14 }}
-                  className="rounded-2xl overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
-                >
-                  <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
-                  </div>
-                  <div className="px-4 py-3">
+              <motion.div
+                initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.38, delay: 0.14 }}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
+              >
+                <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
+                </div>
+                <div className="px-4 py-3">
+                  {prAvailable ? (
                     <div ref={prButtonRef} />
-                  </div>
-                  <div className="flex items-center gap-3 px-4 pb-3">
-                    <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
-                    <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                  </div>
-                </motion.div>
-              )}
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <svg viewBox="0 0 814 1000" width="16" height="20" fill="white" style={{ opacity: 0.55 }}><path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-37.5-155.5-122.7c-58.3-96.8-107.4-249.1-107.4-393C0 233.1 141.1 137 280 137c68 0 124.3 44.5 166.5 44.5 40.8 0 104.9-47.5 182.4-47.5 28.8 0 130.5 2.6 198.2 99.2zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/></svg>
+                          <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>Apple Pay</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-5 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <svg viewBox="0 0 24 24" width="18" height="18" style={{ opacity: 0.55 }}>
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                          </svg>
+                          <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>Google Pay</span>
+                        </div>
+                      </div>
+                      <p className="text-center text-[10px] mt-2.5" style={{ color: "#4b5563" }}>
+                        Use Chrome (Google Pay) or Safari on iPhone/Mac (Apple Pay)
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 px-4 pb-3">
+                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
+                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                </div>
+              </motion.div>
 
               {}
               <Accordion
@@ -1042,11 +1119,10 @@ export default function Checkout() {
                 delay={0.16}
               >
                 <div className="space-y-3 pt-3">
-                  <Input
-                    label="Card Number" placeholder="1234 5678 9012 3456"
-                    value={cardNum} onChange={v => setCardNum(fmt4(v))}
-                    mode="numeric" maxLen={19} error={errors.cardNum}
-                    right={
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Card Number</label>
+                    <div className="flex items-center gap-2 px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cardNum ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                      <div ref={cardNumDivRef} className="flex-1 py-3" />
                       <AnimatePresence>
                         {brand && (
                           <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
@@ -1059,14 +1135,27 @@ export default function Checkout() {
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    }
-                  />
+                    </div>
+                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cardNum}</p>}
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input label="Expiry" placeholder="MM / YY" value={expiry} onChange={v => setExpiry(fmtExpiry(v))} mode="numeric" maxLen={5} error={errors.expiry} />
-                    <Input label="CVV" placeholder={brand === "amex" ? "4 digits" : "3 digits"} value={cvv} onChange={v => setCvv(fmtCvv(v))} type="password" mode="numeric" maxLen={brand === "amex" ? 4 : 3} error={errors.cvv} hint={brand === "amex" ? "4 digits on front of card" : "3 digits on back"} />
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Expiry</label>
+                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.expiry ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                        <div ref={cardExpDivRef} className="py-3" />
+                      </div>
+                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.expiry}</p>}
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Security Code</label>
+                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cvv ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                        <div ref={cardCvvDivRef} className="py-3" />
+                      </div>
+                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cvv}</p>}
+                    </div>
                   </div>
                   <Input label="Name on Card" placeholder="As it appears on your card" value={cardName} onChange={setCardName} icon={<User size={15} />} error={errors.cardName} />
-                  <CardPreview cardNum={cardNum} expiry={expiry} cardName={cardName} brand={brand} />
+                  <CardPreview cardNum="" expiry="" cardName={cardName} brand={brand} />
                 </div>
               </Accordion>
 
