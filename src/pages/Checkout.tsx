@@ -699,7 +699,8 @@ export default function Checkout() {
 
   const eceContainerRef = useRef<HTMLDivElement>(null);
   const eceElementsRef = useRef<any>(null);
-  const [eceAvailable, setEceAvailable] = useState<boolean>(false);
+  const [eceAvailable, setEceAvailable] = useState<boolean | null>(null);
+  const [eceCollapsed, setEceCollapsed] = useState(false);
 
   const promoRef = useRef(promo);
   const emailRef = useRef(email);
@@ -742,7 +743,12 @@ export default function Checkout() {
     ece.on("ready", ({ availablePaymentMethods }: any) => {
       const hasAny = availablePaymentMethods &&
         Object.values(availablePaymentMethods as Record<string, boolean>).some(Boolean);
-      if (hasAny) setEceAvailable(true);
+      if (hasAny) {
+        setEceAvailable(true);
+      } else {
+        setEceAvailable(false);
+        setTimeout(() => setEceCollapsed(true), 100);
+      }
     });
 
     ece.on("confirm", async (event: any) => {
@@ -1046,13 +1052,16 @@ export default function Checkout() {
 
               <motion.div
                 initial={false}
-                animate={{ opacity: eceAvailable ? 1 : 0, height: eceAvailable ? "auto" : 0 }}
-                transition={{ duration: 0.38 }}
+                animate={{
+                  opacity: eceAvailable === true ? 1 : 0,
+                  height: eceCollapsed ? 0 : "auto",
+                }}
+                transition={{ opacity: { duration: 0.38 }, height: { duration: 0.3 } }}
                 className="rounded-2xl overflow-hidden"
                 style={{
                   background: "rgba(255,255,255,0.035)",
-                  border: eceAvailable ? "1.5px solid rgba(165,180,252,0.13)" : "none",
-                  pointerEvents: eceAvailable ? "auto" : "none",
+                  border: eceAvailable === true ? "1.5px solid rgba(165,180,252,0.13)" : "none",
+                  pointerEvents: eceAvailable === true ? "auto" : "none",
                 }}
               >
                 <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
