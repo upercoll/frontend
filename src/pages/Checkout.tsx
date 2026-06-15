@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Shield, Lock, Check, Star,
@@ -8,6 +8,9 @@ import {
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
 function fmt4(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 16);
@@ -388,13 +391,24 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
   async function handleApply() {
     if (!code.trim()) return;
     setLoading(true); setErr("");
-    await new Promise(r => setTimeout(r, 800));
-    if (code.trim().toUpperCase() === "RBSTARS10") {
-      onApply({ code: "RBSTARS10", type: "percent", value: 10 });
-    } else {
-      setErr("Invalid or expired promo code");
+    try {
+      const resp = await fetch(`${BACKEND_URL}/api/promo/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || "Invalid or expired promo code");
+      onApply({
+        code: data.data.code,
+        type: data.data.discountType,
+        value: data.data.discountValue,
+      });
+    } catch (err) {
+      setErr(err instanceof Error ? err.message : "Invalid or expired promo code");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   if (applied) {
@@ -691,6 +705,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [burst, setBurst] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const stripeRef = useRef<import("@stripe/stripe-js").Stripe | null>(null);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -704,30 +719,121 @@ export default function Checkout() {
     return e;
   }
 
-  function doProcessPayment() {
-    return new Promise<void>(async (resolve) => {
-      if (openPayment === "paypal") {
-        setLoading(true);
-        await new Promise(r => setTimeout(r, 1200));
-        setLoading(false);
-      } else {
-        setBurst(true);
-        await new Promise(r => setTimeout(r, 320));
-        setBurst(false);
-        setLoading(true);
-        await new Promise(r => setTimeout(r, 2400));
+  async function doProcessPayment() {
+    const customerInfo = {
+      email: user?.email || email,
+      robloxUsername: user?.robloxUsername || email,
+    };
+    const cartPayload = items.map((i) => ({ id: i.id, quantity: i.quantity }));
+
+    if (openPayment === "paypal") {
+      setLoading(true);
+      try {
+        const createResp = await fetch(`${BACKEND_URL}/api/payments/create-paypal-order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cartItems: cartPayload, customer: customerInfo }),
+        });
+        const createData = await createResp.json();
+        if (!createResp.ok) throw new Error(createData.message || "Failed to create order");
+
+        const captureResp = await fetch(`${BACKEND_URL}/api/payments/capture-paypal-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: createData.data.orderId, paypalOrderId: "PAYPAL_DIRECT" }),
+        });
+        const captureData = await captureResp.json();
+        if (!captureResp.ok) throw new Error(captureData.message || "Payment capture failed");
+
+        const orderData = {
+          orderRef: captureData.data.orderNumber,
+          email: customerInfo.email,
+          items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
+        };
+        try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
+        clearCart();
+        navigate("/order-success");
+      } catch (err) {
+        setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
+      } finally {
         setLoading(false);
       }
+      return;
+    }
+
+    setBurst(true);
+    await new Promise((r) => setTimeout(r, 320));
+    setBurst(false);
+    setLoading(true);
+
+    try {
+      if (!STRIPE_KEY) throw new Error("Stripe is not configured. Please contact support.");
+
+      const { loadStripe } = await import("@stripe/stripe-js");
+      if (!stripeRef.current) {
+        stripeRef.current = await loadStripe(STRIPE_KEY);
+      }
+      const stripe = stripeRef.current;
+      if (!stripe) throw new Error("Failed to load payment processor. Please refresh and try again.");
+
+      const [mm, yy] = expiry.split("/");
+      const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+        type: "card",
+        card: {
+          number: cardNum.replace(/\s/g, ""),
+          exp_month: parseInt(mm, 10),
+          exp_year: 2000 + parseInt(yy.trim(), 10),
+          cvc: cvv,
+        },
+        billing_details: { name: cardName, email: customerInfo.email },
+      } as Parameters<typeof stripe.createPaymentMethod>[0]);
+
+      if (pmError || !paymentMethod) {
+        throw new Error(pmError?.message || "Invalid card details. Please check and try again.");
+      }
+
+      const createResp = await fetch(`${BACKEND_URL}/api/payments/create-payment-intent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cartItems: cartPayload,
+          customer: customerInfo,
+          paymentMethodId: paymentMethod.id,
+        }),
+      });
+      const createData = await createResp.json();
+      if (!createResp.ok) throw new Error(createData.message || "Failed to create payment");
+
+      const { clientSecret, orderNumber } = createData.data;
+
+      const { paymentIntent, error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: paymentMethod.id,
+      });
+
+      if (confirmError) throw new Error(confirmError.message || "Payment confirmation failed");
+      if (!paymentIntent || paymentIntent.status !== "succeeded") {
+        throw new Error("Payment was not completed. Please try again.");
+      }
+
+      await fetch(`${BACKEND_URL}/api/payments/confirm-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
+      }).catch(() => {});
+
       const orderData = {
-        orderRef: `RB-${Date.now().toString(36).toUpperCase()}`,
-        email: user?.email || email,
+        orderRef: orderNumber,
+        email: customerInfo.email,
         items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
       };
       try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
       clearCart();
       navigate("/order-success");
-      resolve();
-    });
+    } catch (err) {
+      setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handlePay() {
@@ -904,6 +1010,17 @@ export default function Checkout() {
                   </div>
                 </div>
               </Accordion>
+
+              {errors.payment && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2.5 px-4 py-3 rounded-xl"
+                  style={{ background: "rgba(239,68,68,0.1)", border: "1.5px solid rgba(239,68,68,0.25)" }}
+                >
+                  <AlertCircle size={15} color="#ef4444" className="flex-shrink-0 mt-0.5" />
+                  <p className="text-sm leading-snug" style={{ color: "#ef4444" }}>{errors.payment}</p>
+                </motion.div>
+              )}
 
               {/* 5. Pay Button */}
               <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="relative">
