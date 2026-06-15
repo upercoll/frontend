@@ -159,15 +159,22 @@ export default function Team() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {member.status === "invited" && (
                     <button onClick={() => resendMut.mutate(member._id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg text-xs transition-colors">
                       <RefreshCw className="w-3 h-3" /> Resend
                     </button>
                   )}
-                  <button onClick={() => removeMut.mutate(member._id)}
-                    className="w-7 h-7 rounded-lg bg-red-500/5 hover:bg-red-500/15 flex items-center justify-center text-red-400 transition-colors">
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Remove ${member.profile?.displayName || member.email} from the team? This cannot be undone.`)) {
+                        removeMut.mutate(member._id);
+                      }
+                    }}
+                    className="w-7 h-7 rounded-lg bg-red-500/5 hover:bg-red-500/20 flex items-center justify-center text-red-400 hover:text-red-300 transition-colors"
+                    title="Remove member"
+                  >
                     <UserX className="w-3.5 h-3.5" />
                   </button>
                 </div>
