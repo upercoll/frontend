@@ -36,6 +36,7 @@ import AdminProfilePage from "@/admin/pages/Profile";
 
 import Promos from "@/admin/pages/Promos";
 import Settings from "@/admin/pages/Settings";
+import RoleView from "@/admin/pages/RoleView";
 
 import AgentDashboard from "@/admin/pages/agent/AgentDashboard";
 import Queue from "@/admin/pages/agent/Queue";
@@ -143,6 +144,11 @@ function AdminRouter() {
       <Route path="/admin/settings">
         <AdminLayout>
           <Settings />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/role-view">
+        <AdminLayout>
+          <RoleView />
         </AdminLayout>
       </Route>
       <Route path="/admin/profile">
