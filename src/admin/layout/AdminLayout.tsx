@@ -123,6 +123,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 declineClaim(claimPopup.roomId);
               } else {
                 answerClaim(claimPopup.roomId);
+                navigate("/panel/queue");
               }
             }}
             onDecline={() => declineClaim(claimPopup.roomId)}
