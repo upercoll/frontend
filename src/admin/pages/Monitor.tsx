@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Activity, Users, CheckCircle, XCircle, Clock, Star, Wifi, WifiOff } from "lucide-react";
+import { Activity, Users, CheckCircle, Clock, Star, Wifi, WifiOff, MessageSquare, User, Gamepad2 } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game } from "../types";
+import { useAdminSocket } from "../context/AdminSocketContext";
 import { cn } from "@/lib/utils";
 
 interface AgentRow {
@@ -30,6 +31,7 @@ function msToResponseTime(ms: number): string {
 export default function Monitor() {
   const [gameFilter, setGameFilter] = useState("");
   const [onlineFilter, setOnlineFilter] = useState("");
+  const { activeClaims } = useAdminSocket();
 
   const { data, isLoading } = useQuery({
     queryKey: ["panel-agent-stats", gameFilter, onlineFilter],
@@ -66,6 +68,58 @@ export default function Monitor() {
           </select>
         </div>
       </div>
+
+      {activeClaims.length > 0 && (
+        <div className="bg-[#0d1f3c] border border-blue-500/20 rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <p className="text-white text-sm font-semibold">Active Claim Chats</p>
+            <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
+              {activeClaims.length} live
+            </span>
+          </div>
+          <div className="divide-y divide-white/3">
+            {activeClaims.map((claim) => (
+              <motion.div
+                key={claim.roomId}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="px-5 py-3 flex items-center gap-4"
+              >
+                <div className="w-8 h-8 rounded-full bg-blue-500/15 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <User className="w-3 h-3 text-slate-500" />
+                    <p className="text-white text-sm font-medium">{claim.robloxUsername}</p>
+                  </div>
+                  {claim.game && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Gamepad2 className="w-3 h-3 text-slate-600" />
+                      <p className="text-slate-500 text-xs">{claim.game}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                    claim.status === "active" ? "bg-emerald-500/15 text-emerald-400" :
+                    claim.status === "pending" ? "bg-yellow-500/15 text-yellow-400" :
+                    "bg-slate-500/15 text-slate-400"
+                  )}>
+                    {claim.status === "active" ? `● Active${claim.agentName ? ` — ${claim.agentName}` : ""}` :
+                     claim.status === "pending" ? "● Waiting" : claim.status}
+                  </span>
+                  <p className="text-slate-600 text-[10px] mt-0.5">
+                    {new Date(claim.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
