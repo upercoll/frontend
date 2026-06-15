@@ -1,5 +1,6 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
   Play, Youtube, Zap, Lock, Headphones, LayoutGrid,
@@ -7,6 +8,8 @@ import {
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
 import AnimatedGrid from "@/components/AnimatedGrid";
+
+const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -47,12 +50,6 @@ const features = [
   { icon: LayoutGrid, title: "Wide Variety",        desc: "From Jailbreak to Grow A Garden we have everything you need to enhance your gaming experience.",                                                                             accent: "#4338CA", iconBg: "rgba(67,56,202,0.1)"  },
 ];
 
-const reviews = [
-  { initials: "D", name: "Dawn Hughes", country: "United States", days: "76 days ago", stars: 5, text: "Cheap: the prices were much cheaper than other adopt me stores. Easy: it's idiot proof, all you do is join and it gives you your items instantly. Good service: every time I had an issue they responded really quickly." },
-  { initials: "M", name: "Max Rivera",  country: "United Kingdom", days: "14 days ago", stars: 5, text: "Super fast delivery! Got my Blade Ball items within minutes. The support team was also really helpful when I had questions about my order." },
-  { initials: "S", name: "Sara K",      country: "Canada",         days: "31 days ago", stars: 5, text: "Best place to buy Roblox items hands down. Trusted sellers, fair prices, and the whole process was smooth from start to finish." },
-];
-const avatarColors = ["#ea580c", "#16a34a", "#2563eb"];
 
 const faqs = [
   { q: "Is RBstars a trusted place to buy game items?",      a: "Yes! RBstars is a trusted and secure platform with thousands of successful transactions. Our safe payment methods, instant delivery, and dedicated support team ensure a smooth and risk-free shopping experience." },
@@ -153,9 +150,38 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+const fallbackReviews = [
+  { initials: "D", name: "Dawn Hughes", country: "United States", days: "76 days ago", stars: 5, text: "Cheap: the prices were much cheaper than other adopt me stores. Easy: it's idiot proof, all you do is join and it gives you your items instantly. Good service: every time I had an issue they responded really quickly." },
+  { initials: "M", name: "Max Rivera",  country: "United Kingdom", days: "14 days ago", stars: 5, text: "Super fast delivery! Got my Blade Ball items within minutes. The support team was also really helpful when I had questions about my order." },
+  { initials: "S", name: "Sara K",      country: "Canada",         days: "31 days ago", stars: 5, text: "Best place to buy Roblox items hands down. Trusted sellers, fair prices, and the whole process was smooth from start to finish." },
+];
+const avatarColors = ["#ea580c", "#16a34a", "#2563eb"];
+
 export default function Home() {
   const [shopOpen, setShopOpen] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
+  const [reviews, setReviews] = useState(fallbackReviews);
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.data?.reviews?.length >= 3) {
+          const mapped = data.data.reviews.map((r: { name: string; rating: number; comment: string; submittedAt: string }) => ({
+            initials: r.name.charAt(0).toUpperCase(),
+            name: r.name,
+            country: "Verified",
+            days: r.submittedAt ? `${Math.floor((Date.now() - new Date(r.submittedAt).getTime()) / 86400000)} days ago` : "Recently",
+            stars: r.rating,
+            text: r.comment,
+          }));
+          setReviews(mapped);
+        }
+        if (data?.data?.averageRating) setAvgRating(data.data.averageRating);
+      })
+      .catch(() => {});
+  }, []);
 
   const howRef = useRef<HTMLElement>(null);
   const { scrollYProgress: howProg } = useScroll({
@@ -453,7 +479,9 @@ export default function Home() {
 
           <div className="p-5 rounded-2xl mb-4 bg-white" style={{ border: "1.5px solid rgba(49,46,128,0.1)" }}>
             <div className="flex items-baseline gap-2 mb-1">
-              <span className="font-extrabold text-lg" style={{ color: "#312E80" }}>Excellent 4.7</span>
+              <span className="font-extrabold text-lg" style={{ color: "#312E80" }}>
+                Excellent {avgRating !== null ? avgRating.toFixed(1) : "4.7"}
+              </span>
               <span className="text-sm" style={{ color: "#5B5EA8" }}>out of 5.0</span>
             </div>
             <div className="flex items-center gap-0.5 mb-1">
@@ -463,7 +491,7 @@ export default function Home() {
             <p className="text-xs mb-3" style={{ color: "#5B5EA8" }}>Based on 1300+ reviews</p>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full" style={{ background: "rgba(49,46,128,.08)", border: "1px solid rgba(49,46,128,.2)" }}>
               <Star size={11} fill="#312E80" color="#312E80" />
-              <span className="text-xs font-semibold" style={{ color: "#312E80" }}>Trustpilot</span>
+              <span className="text-xs font-semibold" style={{ color: "#312E80" }}>Verified Reviews</span>
             </div>
           </div>
 
@@ -521,14 +549,6 @@ export default function Home() {
             </div>
           </div>
 
-          <motion.button
-            data-testid="button-view-trustpilot"
-            whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(49,46,128,.25)" }} whileTap={{ scale: 0.97 }}
-            className="w-full py-3.5 rounded-full font-bold text-sm flex items-center justify-center gap-2 text-white"
-            style={{ background: "linear-gradient(135deg,#312E80 0%,#1E1B4B 100%)" }}
-          >
-            <Star size={15} fill="white" color="white" /> View all reviews on Trustpilot <ChevronRight size={15} />
-          </motion.button>
         </div>
       </section>
 
