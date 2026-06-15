@@ -120,6 +120,7 @@ type Step = "login" | "register" | "verify" | "edit";
 
 export default function AuthModal() {
   const { authModalOpen, authModalMode, closeAuthModal, login, register, user, onSuccessCallback, updateUser } = useAuth();
+  // step is used only for the verify sub-flow; all other navigation uses authModalMode directly
   const [step, setStep] = useState<Step>("login");
 
   const [email, setEmail] = useState("");
@@ -136,6 +137,10 @@ export default function AuthModal() {
   const [robloxAvatar, setRobloxAvatar] = useState<string | null>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const lookupTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNextLookup = useRef(false);
+
+  // Derive the displayed step: verify is a local sub-step, everything else follows authModalMode
+  const displayStep: Step = step === "verify" ? "verify" : (authModalMode as Step);
 
   useEffect(() => {
     if (authModalOpen) {
@@ -144,14 +149,19 @@ export default function AuthModal() {
       setFieldErrors({});
       setVerifyCode("");
       if (authModalMode === "edit" && user) {
-        setDisplayName(user.displayName);
-        setRobloxUsername(user.robloxUsername);
-        setRobloxAvatar(user.robloxAvatarUrl);
+        skipNextLookup.current = true;
+        setDisplayName(user.displayName || "");
+        setRobloxUsername(user.robloxUsername || "");
+        setRobloxAvatar(user.robloxAvatarUrl || null);
       }
     }
   }, [authModalOpen, authModalMode, user]);
 
   useEffect(() => {
+    if (skipNextLookup.current) {
+      skipNextLookup.current = false;
+      return;
+    }
     if (!robloxUsername.trim() || robloxUsername.length < 3) {
       setRobloxAvatar(null);
       return;
@@ -340,7 +350,7 @@ export default function AuthModal() {
             {}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
-                {step === "verify" && (
+                {displayStep === "verify" && (
                   <button onClick={() => { setStep("register"); setVerifyCode(""); clearErrors(); }}
                     className="mr-1 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
                     style={{ background: "rgba(255,255,255,0.05)", color: "#818CF8" }}>
@@ -353,12 +363,12 @@ export default function AuthModal() {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-white leading-tight">
-                    {step === "login" ? "Welcome back" : step === "register" ? "Create account" : step === "edit" ? "Edit Profile" : "Verify email"}
+                    {displayStep === "login" ? "Welcome back" : displayStep === "register" ? "Create account" : displayStep === "edit" ? "Edit Profile" : "Verify email"}
                   </h2>
                   <p className="text-[11px]" style={{ color: "#64748B" }}>
-                    {step === "login" ? "Sign in to your RBstars account"
-                      : step === "register" ? "Join RBstars in seconds"
-                      : step === "edit" ? "Update your display name and Roblox username"
+                    {displayStep === "login" ? "Sign in to your RBstars account"
+                      : displayStep === "register" ? "Join RBstars in seconds"
+                      : displayStep === "edit" ? "Update your display name and Roblox username"
                       : `Code sent to ${email}`}
                   </p>
                 </div>
@@ -372,7 +382,7 @@ export default function AuthModal() {
 
             {}
             <AnimatePresence mode="wait">
-              {step === "login" && (
+              {displayStep === "login" && (
                 <motion.div key="login"
                   initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 16 }}
                   transition={{ duration: 0.22 }}
@@ -426,7 +436,7 @@ export default function AuthModal() {
               )}
 
               {/* ── REGISTER ── */}
-              {step === "register" && (
+              {displayStep === "register" && (
                 <motion.div key="register"
                   initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.22 }}
@@ -534,7 +544,7 @@ export default function AuthModal() {
               )}
 
               {/* ── EDIT PROFILE ── */}
-              {step === "edit" && (
+              {displayStep === "edit" && (
                 <motion.div key="edit"
                   initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.22 }}
@@ -614,7 +624,7 @@ export default function AuthModal() {
               )}
 
               {/* ── VERIFY EMAIL ── */}
-              {step === "verify" && (
+              {displayStep === "verify" && (
                 <motion.div key="verify"
                   initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.22 }}
