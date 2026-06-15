@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, ShoppingBag, Package, Gamepad2, Users, Shield,
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
-  ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell,
+  ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell, Eye, X,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/claim-teams", label: "Claim Teams", icon: MessageSquare, permission: "manage_team" },
   { href: "/admin/monitor", label: "Agent Monitor", icon: Activity, permission: "monitor_agents" },
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod" },
+  { href: "/admin/role-view", label: "Role View", icon: Eye, ownerOnly: true },
   { href: "/admin/settings", label: "Settings", icon: Settings, ownerOnly: true },
 ];
 
@@ -46,11 +47,21 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarProps) {
-  const { user, profile, hasPermission, isOwner, logout } = useAdminAuth();
+  const { user, profile, hasPermission, isOwner, logout, viewAsRole, setViewAsRole } = useAdminAuth();
   const [location] = useLocation();
 
+  const isViewingAsAgentRole = viewAsRole
+    ? viewAsRole.permissions.includes("claim_agent") &&
+      !viewAsRole.permissions.includes("view_analytics") &&
+      !viewAsRole.permissions.includes("manage_orders")
+    : false;
+
   const navItems = isOwner
-    ? ownerNav.filter((item) => !item.permission || hasPermission(item.permission))
+    ? viewAsRole
+      ? isViewingAsAgentRole
+        ? agentNav
+        : ownerNav.filter((item) => !item.permission || viewAsRole.permissions.includes(item.permission))
+      : ownerNav.filter((item) => !item.permission || hasPermission(item.permission))
     : agentNav;
 
   return (
@@ -91,6 +102,19 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
+
+      {viewAsRole && !collapsed && (
+        <div
+          className="mx-3 my-2 px-3 py-2 rounded-lg flex items-center gap-2 text-xs font-semibold"
+          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#f59e0b" }}
+        >
+          <Eye className="w-3 h-3 flex-shrink-0" />
+          <span className="flex-1 truncate">Viewing as: {viewAsRole.name}</span>
+          <button onClick={() => setViewAsRole(null)} className="hover:opacity-70 transition-opacity flex-shrink-0">
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2">
         {navItems.map((item) => {
