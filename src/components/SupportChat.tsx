@@ -170,6 +170,10 @@ function Bubble({ msg }: { msg: Message }) {
 
 export default function SupportChat() {
   const { user } = useAuth();
+  const gameSlug = (() => {
+    const m = window.location.pathname.match(/^\/game\/([^/]+)/);
+    return m ? m[1] : null;
+  })();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ChatMode>(null);
 
@@ -350,6 +354,7 @@ export default function SupportChat() {
           orderRef: lastOrder?.orderRef || null,
           itemName: selectedItem?.name || null,
           items: lastOrder?.items || [],
+          game: gameSlug || null,
         }),
       });
       const data = await res.json();
