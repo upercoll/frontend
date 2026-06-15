@@ -98,6 +98,24 @@ export default function Navbar({ dark = false }: NavbarProps) {
         }`}
         style={lightMode ? { borderBottom: "1px solid rgba(49,46,128,0.1)" } : {}}
       >
+        <div
+          className="relative overflow-hidden text-center py-2 px-4"
+          style={{ background: "linear-gradient(90deg,#1e1b4b,#4f46e5,#7c3aed,#4f46e5,#1e1b4b)", backgroundSize: "200% 100%" }}
+        >
+          <motion.div
+            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)", backgroundSize: "200% 100%" }}
+          />
+          <p className="relative text-[11px] sm:text-xs font-bold text-white tracking-wide">
+            🎉 USE CODE{" "}
+            <span className="font-black text-yellow-300 bg-yellow-300/10 px-1.5 py-0.5 rounded-md mx-0.5">
+              RBSTARS10
+            </span>{" "}
+            FOR 10% OFF ON YOUR PURCHASES!
+          </p>
+        </div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
 
