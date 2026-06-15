@@ -70,7 +70,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (res.ok) {
         const data = await res.json();
-        setUser(data.customer);
+        const customer: CustomerUser = data.customer;
+        setUser(customer);
+
+        if (customer.robloxUsername && !customer.robloxAvatarUrl) {
+          fetch(`${BACKEND}/api/customer-auth/roblox-avatar?username=${encodeURIComponent(customer.robloxUsername)}`)
+            .then(r => r.json())
+            .then(async (avatarData) => {
+              if (avatarData.avatarUrl) {
+                try {
+                  await fetch(`${BACKEND}/api/customer-auth/profile`, {
+                    method: "PATCH",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${storedToken}`,
+                    },
+                    body: JSON.stringify({ robloxAvatarUrl: avatarData.avatarUrl }),
+                  });
+                  setUser(prev => prev ? { ...prev, robloxAvatarUrl: avatarData.avatarUrl } : null);
+                } catch {}
+              }
+            })
+            .catch(() => {});
+        }
       } else {
         localStorage.removeItem(TOKEN_KEY);
         setToken(null);
