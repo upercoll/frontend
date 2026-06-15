@@ -185,4 +185,10 @@ export const adminApi = {
     update: (data: { salesTaxRate?: number; taxLabel?: string; taxEnabled?: boolean }) =>
       patch<{ success: boolean; data: { salesTaxRate: number; taxLabel: string; taxEnabled: boolean } }>("/settings", data),
   },
+
+  claimSessions: {
+    active: () => get<{ success: boolean; data: { sessions: import("./types").ClaimSession[] } }>("/claims/active"),
+    getSession: (roomId: string) =>
+      get<{ success: boolean; data: { roomId: string; status: string; assignedAgent: import("./types").ClaimSession["assignedAgent"]; messages: import("./types").ClaimSession["messages"] } }>(`/claims/${roomId}`),
+  },
 };
