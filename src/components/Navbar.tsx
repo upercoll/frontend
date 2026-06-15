@@ -235,7 +235,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                           </div>
                         </div>
                         <div className="py-2 px-2">
-                          <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile" onClick={() => { setProfileOpen(false); openAuthModal("login"); }} />
+                          <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile" onClick={() => { setProfileOpen(false); openAuthModal("edit"); }} />
                           <div className="my-1.5 mx-2" style={{ height: "1px", background: "rgba(165,180,252,0.08)" }} />
                           <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out" danger onClick={() => { logout(); setProfileOpen(false); }} />
                         </div>
