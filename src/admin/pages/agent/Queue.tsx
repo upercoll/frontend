@@ -1,19 +1,15 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Clock, Package, User, Wifi, WifiOff, CheckCircle, RefreshCw } from "lucide-react";
+import { MessageSquare, Clock, Package, Wifi, WifiOff, CheckCircle, RefreshCw } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import { adminApi } from "../../api";
-import { useLocation } from "wouter";
 import ChatWindow from "../../components/ChatWindow";
-import type { ClaimSession } from "../../types";
 
 export default function Queue() {
-  const { socket, connected, claimPopup, answerClaim, declineClaim } = useAdminSocket();
-  const { user, profile } = useAdminAuth();
-  const [, navigate] = useLocation();
-  const [activeSession, setActiveSession] = useState<ClaimSession | null>(null);
+  const { socket, connected, assignedSession, clearAssignedSession } = useAdminSocket();
+  const { user } = useAdminAuth();
   const [podMode, setPodMode] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [estDelivery, setEstDelivery] = useState("");
@@ -22,47 +18,38 @@ export default function Queue() {
   const [noProof, setNoProof] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { data: pendingData, refetch } = useQuery({
+  const { refetch } = useQuery({
     queryKey: ["agent-pending-claims"],
     queryFn: () => adminApi.orders.list({ status: "paid", page: "1", limit: "5" }),
     refetchInterval: 10000,
   });
 
-  useEffect(() => {
-    if (!socket) return;
-    socket.on("queue:claim_assigned", (data: { roomId: string; session: ClaimSession }) => {
-      setActiveSession(data.session);
-    });
-    return () => { socket.off("queue:claim_assigned"); };
-  }, [socket]);
-
   const markClaimed = () => {
-    if (!socket || !activeSession) return;
     setPodMode(true);
   };
 
   const submitProofAndClaim = async () => {
-    if (!activeSession) return;
+    if (!assignedSession) return;
     if (!noProof && !proofFile) return;
     setSubmittingPod(true);
     try {
       if (!noProof && proofFile) {
         const form = new FormData();
         form.append("proof", proofFile);
-        form.append("roomId", activeSession.roomId);
+        form.append("roomId", assignedSession.roomId);
         if (estDelivery) form.append("estimatedDelivery", estDelivery);
         if (podNotes) form.append("notes", podNotes);
         await adminApi.proof.submit(form);
       }
 
-      socket?.emit("claim:mark_claimed", { roomId: activeSession.roomId });
+      socket?.emit("claim:mark_claimed", { roomId: assignedSession.roomId });
 
       setPodMode(false);
       setProofFile(null);
       setEstDelivery("");
       setPodNotes("");
       setNoProof(false);
-      setActiveSession(null);
+      clearAssignedSession();
       refetch();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to submit");
@@ -72,19 +59,19 @@ export default function Queue() {
   };
 
   const endChat = () => {
-    if (!socket || !activeSession) return;
+    if (!socket || !assignedSession) return;
     if (!confirm("End this chat without marking as delivered?")) return;
-    socket.emit("claim:end", { roomId: activeSession.roomId });
-    setActiveSession(null);
+    socket.emit("claim:end", { roomId: assignedSession.roomId });
+    clearAssignedSession();
   };
 
-  if (activeSession) {
+  if (assignedSession) {
     return (
       <div className="p-4 sm:p-6 h-[calc(100vh-64px)] flex flex-col max-w-[900px] mx-auto">
         <div className="flex items-center justify-between mb-4 flex-shrink-0">
           <div>
             <h2 className="text-white font-semibold">Active Claim</h2>
-            <p className="text-slate-400 text-xs">Order: {activeSession.orderRef || "—"} · {activeSession.game}</p>
+            <p className="text-slate-400 text-xs">Order: {assignedSession.orderRef || "—"} · {assignedSession.game}</p>
           </div>
           <div className="flex gap-2">
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -99,7 +86,7 @@ export default function Queue() {
         </div>
 
         <div className="flex-1 overflow-hidden">
-          <ChatWindow session={activeSession} />
+          <ChatWindow session={assignedSession} />
         </div>
 
         <AnimatePresence>
