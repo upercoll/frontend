@@ -2,6 +2,13 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { adminApi } from "../api";
 import type { AdminUser, AdminProfile } from "../types";
 
+export interface ViewAsRole {
+  id: string;
+  name: string;
+  color: string;
+  permissions: string[];
+}
+
 interface AdminAuthState {
   user: AdminUser | null;
   profile: AdminProfile | null;
@@ -17,6 +24,8 @@ interface AdminAuthContextType extends AdminAuthState {
   hasPermission: (perm: string) => boolean;
   isOwner: boolean;
   refreshMe: () => Promise<void>;
+  viewAsRole: ViewAsRole | null;
+  setViewAsRole: (role: ViewAsRole | null) => void;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
@@ -29,6 +38,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     loading: true,
     profileComplete: false,
   });
+  const [viewAsRole, setViewAsRole] = useState<ViewAsRole | null>(null);
 
   const refreshMe = useCallback(async () => {
     const token = localStorage.getItem("panel_token");
@@ -64,6 +74,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try { await adminApi.auth.logout(); } catch {}
     localStorage.removeItem("panel_token");
     setState({ user: null, profile: null, token: null, loading: false, profileComplete: false });
+    setViewAsRole(null);
   }, []);
 
   const updateProfile = useCallback((profile: AdminProfile) => {
@@ -86,6 +97,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         hasPermission,
         isOwner: state.user?.isOwner ?? false,
         refreshMe,
+        viewAsRole,
+        setViewAsRole,
       }}
     >
       {children}
