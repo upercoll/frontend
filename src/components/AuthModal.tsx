@@ -530,6 +530,9 @@ export default function AuthModal() {
                       We sent a 6-digit code to
                     </p>
                     <p className="text-sm font-bold text-white">{email}</p>
+                    <p className="text-[11px] mt-1.5" style={{ color: "#64748B" }}>
+                      Can't find it? Check your spam or junk folder.
+                    </p>
                   </div>
 
                   <CodeInput value={verifyCode} onChange={v => { setVerifyCode(v); if (error) setError(""); }} />
