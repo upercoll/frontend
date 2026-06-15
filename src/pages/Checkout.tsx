@@ -729,32 +729,39 @@ export default function Checkout() {
     if (openPayment === "paypal") {
       setLoading(true);
       try {
-        const createResp = await fetch(`${BACKEND_URL}/api/payments/create-paypal-order`, {
+        if (!STRIPE_KEY) throw new Error("Payment processor is not configured. Please contact support.");
+
+        const { loadStripe } = await import("@stripe/stripe-js");
+        if (!stripeRef.current) {
+          stripeRef.current = await loadStripe(STRIPE_KEY);
+        }
+        const stripe = stripeRef.current;
+        if (!stripe) throw new Error("Failed to load payment processor. Please refresh and try again.");
+
+        const createResp = await fetch(`${BACKEND_URL}/api/payments/paypal-intent`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cartItems: cartPayload, customer: customerInfo }),
+          body: JSON.stringify({ cartItems: cartPayload, customer: customerInfo, promoCode: promo?.code || null }),
         });
         const createData = await createResp.json();
-        if (!createResp.ok) throw new Error(createData.message || "Failed to create order");
+        if (!createResp.ok) throw new Error(createData.message || "Failed to create PayPal order");
 
-        const captureResp = await fetch(`${BACKEND_URL}/api/payments/capture-paypal-payment`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: createData.data.orderId, paypalOrderId: "PAYPAL_DIRECT" }),
-        });
-        const captureData = await captureResp.json();
-        if (!captureResp.ok) throw new Error(captureData.message || "Payment capture failed");
+        const { clientSecret, orderNumber } = createData.data;
 
         const orderData = {
-          orderRef: captureData.data.orderNumber,
+          orderRef: orderNumber,
           email: customerInfo.email,
           items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
         };
         try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
-        clearCart();
-        navigate("/order-success");
+
+        const { error } = await (stripe as any).confirmPayPalPayment(clientSecret, {
+          return_url: `${window.location.origin}/order-success`,
+        });
+
+        if (error) throw new Error(error.message || "PayPal payment failed. Please try again.");
       } catch (err) {
-        setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
+        setErrors({ payment: err instanceof Error ? err.message : "PayPal payment failed. Please try again." });
       } finally {
         setLoading(false);
       }
@@ -799,6 +806,7 @@ export default function Checkout() {
           cartItems: cartPayload,
           customer: customerInfo,
           paymentMethodId: paymentMethod.id,
+          promoCode: promo?.code || null,
         }),
       });
       const createData = await createResp.json();
