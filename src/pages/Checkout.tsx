@@ -699,7 +699,7 @@ export default function Checkout() {
 
   const eceContainerRef = useRef<HTMLDivElement>(null);
   const eceElementsRef = useRef<any>(null);
-  const [eceAvailable, setEceAvailable] = useState<boolean | null>(null);
+  const [eceAvailable, setEceAvailable] = useState<boolean>(false);
 
   const promoRef = useRef(promo);
   const emailRef = useRef(email);
@@ -742,7 +742,7 @@ export default function Checkout() {
     ece.on("ready", ({ availablePaymentMethods }: any) => {
       const hasAny = availablePaymentMethods &&
         Object.values(availablePaymentMethods as Record<string, boolean>).some(Boolean);
-      setEceAvailable(!!hasAny);
+      if (hasAny) setEceAvailable(true);
     });
 
     ece.on("confirm", async (event: any) => {
@@ -1044,34 +1044,29 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
-              <AnimatePresence>
-                {(eceAvailable !== false) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8, height: 0 }}
-                    transition={{ duration: 0.38, delay: 0.14 }}
-                    className="rounded-2xl overflow-hidden"
-                    style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
-                  >
-                    <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
-                    </div>
-                    <div className="px-4 py-3" style={{ minHeight: 68 }}>
-                      {eceAvailable === null && (
-                        <div className="flex items-center justify-center" style={{ minHeight: 52 }}>
-                          <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
-                        </div>
-                      )}
-                      <div ref={eceContainerRef} />
-                    </div>
-                    <div className="flex items-center gap-3 px-4 pb-3">
-                      <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
-                      <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <motion.div
+                initial={false}
+                animate={{ opacity: eceAvailable ? 1 : 0, height: eceAvailable ? "auto" : 0 }}
+                transition={{ duration: 0.38 }}
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.035)",
+                  border: eceAvailable ? "1.5px solid rgba(165,180,252,0.13)" : "none",
+                  pointerEvents: eceAvailable ? "auto" : "none",
+                }}
+              >
+                <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
+                </div>
+                <div className="px-4 py-3" style={{ minHeight: 68 }}>
+                  <div ref={eceContainerRef} />
+                </div>
+                <div className="flex items-center gap-3 px-4 pb-3">
+                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
+                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                </div>
+              </motion.div>
 
               {}
               <Accordion
