@@ -39,6 +39,11 @@ import Settings from "@/admin/pages/Settings";
 import RoleView from "@/admin/pages/RoleView";
 import OpenChats from "@/admin/pages/OpenChats";
 
+import Analytics from "@/admin/pages/Analytics";
+import Customers from "@/admin/pages/Customers";
+import Tutorials from "@/admin/pages/Tutorials";
+import OrderDetail from "@/admin/pages/OrderDetail";
+
 import AgentDashboard from "@/admin/pages/agent/AgentDashboard";
 import Queue from "@/admin/pages/agent/Queue";
 import AgentStats from "@/admin/pages/agent/AgentStats";
@@ -133,9 +138,29 @@ function AdminRouter() {
           <Dashboard />
         </AdminLayout>
       </Route>
+      <Route path="/admin/orders/:id">
+        <AdminLayout>
+          <OrderDetail />
+        </AdminLayout>
+      </Route>
       <Route path="/admin/orders">
         <AdminLayout>
           <Orders />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/analytics">
+        <AdminLayout>
+          <Analytics />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/customers">
+        <AdminLayout>
+          <Customers />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/tutorials">
+        <AdminLayout>
+          <Tutorials />
         </AdminLayout>
       </Route>
       <Route path="/admin/products">
