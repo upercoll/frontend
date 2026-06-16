@@ -10,7 +10,7 @@ import { adminApi } from "../api";
 import type { Product, Category, Game } from "../types";
 import ImageUpload from "../components/ImageUpload";
 
-type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string };
+type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; imageUrl: string };
 
 const DEFAULT_FORM = {
   name: "", description: "", game: "", category: "", price: "",
@@ -55,7 +55,7 @@ export default function Products() {
   const [editingStock, setEditingStock] = useState<{ id: string; value: string } | null>(null);
   const [stockSaving, setStockSaving] = useState<string | null>(null);
   const [bulkQueue, setBulkQueue] = useState<BulkRow[]>([]);
-  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" });
+  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" });
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [bulkResult, setBulkResult] = useState<{ total: number; errors: { name: string; error: string }[] } | null>(null);
@@ -164,7 +164,7 @@ export default function Products() {
     }
   };
 
-  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" };
+  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" };
 
   const addToQueue = () => {
     const { name, game, category, price } = bulkDraft;
@@ -187,6 +187,7 @@ export default function Products() {
         price: parseFloat(r.price),
         ...(r.originalPrice ? { originalPrice: parseFloat(r.originalPrice) } : {}),
         stock: parseInt(r.stock) || -1,
+        ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
       }));
       const res = await adminApi.products.bulkCreate(payload);
       qc.invalidateQueries({ queryKey: ["panel-products"] });
@@ -617,6 +618,14 @@ export default function Products() {
                         placeholder="Stock"
                         title="Stock (-1 = unlimited)"
                         className={`${inputCls} w-24`} style={inpStyle} />
+                    </div>
+                    <div className="col-span-2">
+                      <input
+                        value={bulkDraft.imageUrl}
+                        onChange={e => setBulkDraft(d => ({ ...d, imageUrl: e.target.value }))}
+                        placeholder="Image URL (optional)"
+                        className={inputCls} style={inpStyle}
+                      />
                     </div>
                   </div>
                   {bulkError && (
