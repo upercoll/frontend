@@ -206,17 +206,22 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
     try {
       let orderRef: string | undefined;
       let orderItems: { name: string; quantity: number }[] | undefined;
+      let orderGame: string | null = null;
       try {
         const lastOrderRaw = localStorage.getItem("rbstars_last_order");
         if (lastOrderRaw) {
           const lastOrder = JSON.parse(lastOrderRaw);
-          orderRef = lastOrder?.orderNumber;
-          orderItems = lastOrder?.items?.map((i: { productSnapshot?: { name?: string }; quantity?: number }) => ({
-            name: i.productSnapshot?.name || "",
+          orderRef = lastOrder?.orderNumber || lastOrder?.orderRef;
+          orderGame = lastOrder?.game || null;
+          orderItems = lastOrder?.items?.map((i: { productSnapshot?: { name?: string }; name?: string; quantity?: number }) => ({
+            name: i.productSnapshot?.name || i.name || "",
             quantity: i.quantity || 1,
           }));
         }
       } catch {}
+
+      const urlGame = window.location.pathname.match(/^\/game\/([^/]+)/)?.[1] || null;
+      const game = urlGame || orderGame;
 
       const resp = await fetch(`${BACKEND_URL}/api/claims`, {
         method: "POST",
@@ -225,6 +230,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           robloxUsername: robloxUser.trim(),
           contactEmail,
           orderRef,
+          game,
           items: orderItems,
         }),
       });
