@@ -23,6 +23,9 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/proof-of-delivery": "Proof of Delivery",
   "/admin/open-chats": "Open Chats",
   "/admin/settings": "Settings",
+  "/admin/analytics": "Analytics",
+  "/admin/customers": "Customers",
+  "/admin/tutorials": "Tutorials",
   "/admin/profile": "My Profile",
   "/panel/dashboard": "Agent Dashboard",
   "/panel/queue": "Claim Queue",
@@ -68,7 +71,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-[#060d1a] overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ background: "#F7F8FC" }}>
       <div className="hidden lg:flex">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((p) => !p)} />
       </div>
@@ -80,7 +83,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              className="fixed inset-0 bg-black/40 z-40 lg:hidden"
               onClick={() => setMobileSidebarOpen(false)}
             />
             <motion.div
@@ -96,15 +99,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopBar title={title} onMenuClick={() => setMobileSidebarOpen(true)} />
 
         <main className="flex-1 overflow-y-auto">
           <motion.div
             key={location}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.18 }}
             className="h-full"
           >
             {children}
