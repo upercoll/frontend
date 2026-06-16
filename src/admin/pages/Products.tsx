@@ -1,289 +1,690 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Edit2, Trash2, X, Loader2, Package, Star, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search, Plus, Edit2, Trash2, X, Loader2, Package, Star,
+  CheckSquare, Square, ChevronDown, ChevronLeft, ChevronRight,
+  Layers, ToggleLeft, ToggleRight, AlertCircle
+} from "lucide-react";
 import { adminApi } from "../api";
 import type { Product, Category, Game } from "../types";
 import ImageUpload from "../components/ImageUpload";
+
+type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string };
+
+const DEFAULT_FORM = {
+  name: "", description: "", game: "", category: "", price: "",
+  originalPrice: "", gradFrom: "#7c3aed", gradTo: "#4c1d95",
+  imageUrl: "" as string | string[], featured: false, bestSeller: false,
+  stock: "-1", tags: "", active: true, outOfStock: false,
+};
+
+const FILTER_TABS = [
+  { label: "All", value: "" },
+  { label: "Active", value: "active" },
+  { label: "Out of Stock", value: "oos" },
+  { label: "Inactive", value: "inactive" },
+];
+
+function StatusBadge({ product }: { product: Product }) {
+  if (!product.active)
+    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#F3F4F6", color: "#374151", borderColor: "#D1D5DB" }}>Inactive</span>;
+  if (product.outOfStock)
+    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#FEF9C3", color: "#854D0E", borderColor: "#FDE047" }}>Out of Stock</span>;
+  return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#ECFDF5", color: "#065F46", borderColor: "#34D399" }}>Active</span>;
+}
+
+const inp = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
+const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" };
+const labelCls = "block text-xs font-semibold mb-1.5" ;
+const labelStyle = { color: "#6b7280" };
 
 export default function Products() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [gameFilter, setGameFilter] = useState("");
+  const [activeStatus, setActiveStatus] = useState("");
   const [page, setPage] = useState(1);
-  const [modal, setModal] = useState<"create" | "edit" | null>(null);
+  const [modal, setModal] = useState<"create" | "edit" | "bulk" | null>(null);
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [game, setGame] = useState("");
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-  const [originalPrice, setOriginalPrice] = useState("");
-  const [gradFrom, setGradFrom] = useState("#7c3aed");
-  const [gradTo, setGradTo] = useState("#4c1d95");
-  const [imageUrl, setImageUrl] = useState<string | string[]>("");
-  const [featured, setFeatured] = useState(false);
-  const [bestSeller, setBestSeller] = useState(false);
-  const [stock, setStock] = useState("-1");
-  const [tags, setTags] = useState("");
+  const [formError, setFormError] = useState("");
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDropOpen, setBulkDropOpen] = useState(false);
+  const [editingStock, setEditingStock] = useState<{ id: string; value: string } | null>(null);
+  const [stockSaving, setStockSaving] = useState<string | null>(null);
+  const [bulkQueue, setBulkQueue] = useState<BulkRow[]>([]);
+  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" });
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkError, setBulkError] = useState("");
+  const [bulkResult, setBulkResult] = useState<{ total: number; errors: { name: string; error: string }[] } | null>(null);
 
   const params: Record<string, string> = { page: String(page), limit: "20" };
   if (search) params.search = search;
   if (gameFilter) params.game = gameFilter;
+  if (activeStatus) params.activeStatus = activeStatus;
 
   const { data, isLoading } = useQuery({ queryKey: ["panel-products", params], queryFn: () => adminApi.products.list(params) });
   const { data: gamesData } = useQuery({ queryKey: ["panel-games"], queryFn: () => adminApi.games.list() });
-  const { data: catsData } = useQuery({ queryKey: ["panel-categories", game], queryFn: () => adminApi.categories.all(game || undefined), enabled: !!game });
+  const { data: allCatsData } = useQuery({ queryKey: ["panel-categories-all"], queryFn: () => adminApi.categories.all() });
 
-  const deleteMut = useMutation({
-    mutationFn: adminApi.products.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["panel-products"] }),
-  });
+  const products = (data?.data as Product[]) || [];
+  const total = (data as any)?.total || 0;
+  const pages = Math.ceil(total / 20) || 1;
+  const games: Game[] = gamesData?.data.games || [];
+  const allCats: Category[] = (allCatsData?.data as Category[]) || [];
+  const formCats = form.game ? allCats.filter((c: any) => c.game === form.game) : allCats;
+
+  const setF = (k: keyof typeof DEFAULT_FORM, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const openCreate = () => {
-    setName(""); setDescription(""); setGame(""); setCategory(""); setPrice(""); setOriginalPrice("");
-    setGradFrom("#7c3aed"); setGradTo("#4c1d95"); setImageUrl(""); setFeatured(false); setBestSeller(false); setStock("-1"); setTags(""); setError("");
-    setEditing(null); setModal("create");
+    setForm(DEFAULT_FORM); setEditing(null); setFormError(""); setModal("create");
   };
 
-  const openEdit = (product: Product) => {
-    setName(product.name); setDescription(product.description || ""); setGame(product.game);
-    setCategory(typeof product.category === "object" ? product.category._id : product.category as string);
-    setPrice(String(product.price)); setOriginalPrice(String(product.originalPrice || ""));
-    setGradFrom(product.gradient.from); setGradTo(product.gradient.to);
-    setImageUrl(product.imageUrl || ""); setFeatured(product.featured); setBestSeller(product.bestSeller);
-    setStock(String(product.stock)); setTags(product.tags?.join(", ") || ""); setError("");
-    setEditing(product); setModal("edit");
+  const openEdit = (p: Product) => {
+    setForm({
+      name: p.name, description: p.description || "",
+      game: p.game,
+      category: typeof p.category === "object" ? (p.category as any)._id : p.category as string,
+      price: String(p.price), originalPrice: String(p.originalPrice || ""),
+      gradFrom: p.gradient.from, gradTo: p.gradient.to,
+      imageUrl: p.imageUrl || "", featured: p.featured, bestSeller: p.bestSeller,
+      stock: String(p.stock), tags: p.tags?.join(", ") || "",
+      active: p.active !== false, outOfStock: p.outOfStock || false,
+    });
+    setEditing(p); setFormError(""); setModal("edit");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !game || !category || !price) { setError("Name, game, category and price are required"); return; }
-    setSaving(true); setError("");
+    if (!form.name || !form.game || !form.category || !form.price) {
+      setFormError("Name, game, category and price are required"); return;
+    }
+    setSaving(true); setFormError("");
     try {
-      const form = new FormData();
-      form.append("name", name.trim());
-      form.append("description", description);
-      form.append("game", game);
-      form.append("category", category);
-      form.append("price", price);
-      if (originalPrice) form.append("originalPrice", originalPrice);
-      form.append("gradient[from]", gradFrom);
-      form.append("gradient[to]", gradTo);
-      if (typeof imageUrl === "string" && imageUrl) form.append("imageUrl", imageUrl);
-      form.append("featured", String(featured));
-      form.append("bestSeller", String(bestSeller));
-      form.append("stock", stock);
-      if (tags) form.append("tags", tags.split(",").map((t) => t.trim()).join(","));
+      const fd = new FormData();
+      fd.append("name", form.name.trim());
+      fd.append("description", form.description);
+      fd.append("game", form.game);
+      fd.append("category", form.category);
+      fd.append("price", form.price);
+      if (form.originalPrice) fd.append("originalPrice", form.originalPrice);
+      fd.append("gradient[from]", form.gradFrom);
+      fd.append("gradient[to]", form.gradTo);
+      if (typeof form.imageUrl === "string" && form.imageUrl) fd.append("imageUrl", form.imageUrl);
+      fd.append("featured", String(form.featured));
+      fd.append("bestSeller", String(form.bestSeller));
+      fd.append("stock", form.stock);
+      fd.append("outOfStock", String(form.outOfStock));
+      fd.append("active", String(form.active));
+      if (form.tags) fd.append("tags", form.tags.split(",").map(t => t.trim()).filter(Boolean).join(","));
 
-      if (modal === "create") await adminApi.products.create(form);
-      else if (editing) await adminApi.products.update(editing._id, form);
+      if (modal === "create") await adminApi.products.create(fd);
+      else if (editing) await adminApi.products.update(editing._id, fd);
 
       qc.invalidateQueries({ queryKey: ["panel-products"] });
       setModal(null);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save");
+    } catch (err: any) {
+      setFormError(err.message || "Failed to save");
     } finally {
       setSaving(false);
     }
   };
 
-  const products = (data?.data as Product[]) || [];
-  const total = (data as { total?: number })?.total || 0;
-  const pages = Math.ceil(total / 20);
-  const games = gamesData?.data.games || [];
-  const cats = (catsData?.data as Category[]) || [];
+  const saveStock = async (id: string) => {
+    if (!editingStock || editingStock.id !== id) return;
+    const num = parseInt(editingStock.value);
+    if (isNaN(num)) { setEditingStock(null); return; }
+    setStockSaving(id);
+    try {
+      await adminApi.products.partialUpdate(id, { stock: num, outOfStock: num === 0 });
+      qc.invalidateQueries({ queryKey: ["panel-products"] });
+    } catch {}
+    setEditingStock(null);
+    setStockSaving(null);
+  };
+
+  const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleAll = () => selected.size === products.length ? setSelected(new Set()) : setSelected(new Set(products.map(p => p._id)));
+
+  const handleBulkAction = async (action: "activate" | "deactivate" | "delete") => {
+    setBulkDropOpen(false);
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (action === "delete" && !confirm(`Permanently delete ${ids.length} product(s)?`)) return;
+    try {
+      await Promise.all(ids.map(id =>
+        action === "delete" ? adminApi.products.delete(id) : adminApi.products.partialUpdate(id, { active: action === "activate" })
+      ));
+      qc.invalidateQueries({ queryKey: ["panel-products"] });
+      setSelected(new Set());
+    } catch (err: any) {
+      alert(err.message || "Bulk action failed");
+    }
+  };
+
+  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" };
+
+  const addToQueue = () => {
+    const { name, game, category, price } = bulkDraft;
+    if (!name.trim() || !game || !category || !price) {
+      setBulkError("Name, game, category and price are required before adding"); return;
+    }
+    setBulkQueue(q => [...q, { ...bulkDraft, name: bulkDraft.name.trim() }]);
+    setBulkDraft(d => ({ ...EMPTY_DRAFT, game: d.game, category: d.category }));
+    setBulkError("");
+  };
+
+  const removeFromQueue = (i: number) => setBulkQueue(q => q.filter((_, idx) => idx !== i));
+
+  const handleBulkSubmit = async () => {
+    if (bulkQueue.length === 0) { setBulkError("Add at least one product to the list first"); return; }
+    setBulkSaving(true); setBulkError(""); setBulkResult(null);
+    try {
+      const payload = bulkQueue.map(r => ({
+        name: r.name, game: r.game, category: r.category,
+        price: parseFloat(r.price),
+        ...(r.originalPrice ? { originalPrice: parseFloat(r.originalPrice) } : {}),
+        stock: parseInt(r.stock) || -1,
+      }));
+      const res = await adminApi.products.bulkCreate(payload);
+      qc.invalidateQueries({ queryKey: ["panel-products"] });
+      setBulkResult({ total: res.data.total, errors: res.data.errors as any });
+      if ((res.data.errors as any[]).length === 0) {
+        setModal(null);
+        setBulkQueue([]);
+        setBulkDraft(EMPTY_DRAFT);
+      }
+    } catch (err: any) {
+      setBulkError(err.message || "Bulk create failed");
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const inputCls = `${inp} focus:ring-indigo-300`;
 
   return (
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-white font-semibold text-lg">Products</h2>
-          <p className="text-slate-400 text-sm mt-0.5">{total} total products</p>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Products</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{total} total products</p>
         </div>
-        <div className="flex gap-3 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-56">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search products..."
-              className="w-full bg-[#0d1f3c] border border-white/10 text-white placeholder-slate-500 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
-          </div>
-          <select value={gameFilter} onChange={(e) => { setGameFilter(e.target.value); setPage(1); }}
-            className="bg-[#0d1f3c] border border-white/10 text-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none">
-            <option value="">All Games</option>
-            {games.map((g: Game) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
-          </select>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={openCreate}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex-shrink-0">
+        <div className="flex gap-2">
+          <button onClick={() => { setBulkQueue([]); setBulkDraft({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" }); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+            <Layers className="w-4 h-4" /> Bulk Add
+          </button>
+          <button onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
+            style={{ background: "#1e1b4b" }}>
             <Plus className="w-4 h-4" /> Add Product
-          </motion.button>
+          </button>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => <div key={i} className="h-48 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
-          <Package className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No products found.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {products.map((product: Product, i: number) => (
-            <motion.div key={product._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-              className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden hover:border-white/10 transition-colors group">
-              <div className="aspect-square relative" style={{ background: `linear-gradient(135deg, ${product.gradient.from}, ${product.gradient.to})` }}>
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-8 h-8 text-white/30" />
-                  </div>
-                )}
-                <div className="absolute top-2 right-2 flex gap-1">
-                  {product.featured && <span className="w-5 h-5 bg-yellow-400/90 rounded flex items-center justify-center"><Star className="w-3 h-3 text-yellow-900" /></span>}
-                </div>
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button onClick={() => openEdit(product)} className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center text-white transition-colors">
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => deleteMut.mutate(product._id)} className="w-8 h-8 bg-red-500/80 hover:bg-red-500 rounded-lg flex items-center justify-center text-white transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search products by name, tag..."
+                className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                style={inpStyle} />
+            </div>
+            <select value={gameFilter} onChange={e => { setGameFilter(e.target.value); setPage(1); }}
+              className="rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              style={{ ...inpStyle, minWidth: 130 }}>
+              <option value="">All Games</option>
+              {games.map(g => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+            </select>
+            {selected.size > 0 && (
+              <div className="relative">
+                <button onClick={() => setBulkDropOpen(o => !o)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white"
+                  style={{ background: "#1e1b4b" }}>
+                  {selected.size} selected <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+                <AnimatePresence>
+                  {bulkDropOpen && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl z-20 overflow-hidden"
+                      style={{ border: "1px solid #E9EBF5" }}>
+                      <div className="px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bulk Actions</p>
+                      </div>
+                      {[
+                        { label: "Set Active", action: "activate" as const },
+                        { label: "Set Inactive", action: "deactivate" as const },
+                        { label: "Delete", action: "delete" as const },
+                      ].map(item => (
+                        <button key={item.action} onClick={() => handleBulkAction(item.action)}
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 transition-colors"
+                          style={{ color: item.action === "delete" ? "#dc2626" : "#374151" }}>
+                          {item.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <div className="p-3">
-                <p className="text-white text-xs font-medium truncate">{product.name}</p>
-                <p className="text-slate-500 text-[10px] truncate">{product.game}</p>
-                <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-blue-400 text-sm font-bold">${product.price.toFixed(2)}</span>
-                  {product.originalPrice && <span className="text-slate-600 text-xs line-through">${product.originalPrice.toFixed(2)}</span>}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-slate-500 text-sm">Page {page} of {pages}</p>
-          <div className="flex gap-2">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-              className="w-8 h-8 rounded-lg bg-[#0d1f3c] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}
-              className="w-8 h-8 rounded-lg bg-[#0d1f3c] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            )}
+          </div>
+          <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+            {FILTER_TABS.map(tab => (
+              <button key={tab.value} onClick={() => { setActiveStatus(tab.value); setPage(1); setSelected(new Set()); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
+                style={activeStatus === tab.value
+                  ? { background: "#1e1b4b", color: "#fff" }
+                  : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
-      )}
+
+        {isLoading ? (
+          <div className="p-5 space-y-2.5">
+            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />)}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="p-16 text-center text-slate-400">
+            <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p>No products found.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
+                  <th className="px-4 py-3 w-10">
+                    <button onClick={toggleAll}>
+                      {selected.size === products.length && products.length > 0
+                        ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                        : <Square className="w-4 h-4 text-slate-300" />}
+                    </button>
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Product</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Game</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Price</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Stock</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Sales</th>
+                  <th className="px-4 py-3 w-20"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((p: Product) => {
+                  const isSelected = selected.has(p._id);
+                  const isEditingThisStock = editingStock?.id === p._id;
+                  return (
+                    <tr key={p._id}
+                      className="transition-colors"
+                      style={{ borderBottom: "1px solid #F3F4F6", background: isSelected ? "#EEF2FF" : undefined }}
+                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#F9FAFB"; }}
+                      onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
+                      <td className="px-4 py-3.5 w-10" onClick={e => { e.stopPropagation(); toggleSelect(p._id); }}>
+                        {isSelected
+                          ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                          : <Square className="w-4 h-4 text-slate-300" />}
+                      </td>
+                      <td className="px-4 py-3.5 cursor-pointer" onClick={() => openEdit(p)}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden"
+                            style={{ background: `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` }}>
+                            {p.imageUrl
+                              ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" />
+                              : <div className="w-full h-full flex items-center justify-center"><Package className="w-4 h-4 text-white/60" /></div>}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{p.name}</p>
+                              {p.featured && <Star className="w-3 h-3 text-yellow-400 flex-shrink-0" />}
+                            </div>
+                            <p className="text-xs text-slate-400 truncate max-w-[200px]">{p.slug}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 hidden md:table-cell">
+                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "#EEF2FF", color: "#4f46e5" }}>{p.game}</span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${p.price.toFixed(2)}</p>
+                          {p.originalPrice ? <p className="text-xs text-slate-400 line-through">${p.originalPrice.toFixed(2)}</p> : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                        {isEditingThisStock ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            value={editingStock.value}
+                            onChange={e => setEditingStock({ id: p._id, value: e.target.value })}
+                            onBlur={() => saveStock(p._id)}
+                            onKeyDown={e => { if (e.key === "Enter") saveStock(p._id); if (e.key === "Escape") setEditingStock(null); }}
+                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                          />
+                        ) : (
+                          <button onClick={() => setEditingStock({ id: p._id, value: String(p.stock) })}
+                            className="flex items-center gap-1 group text-left"
+                            title="Click to edit stock">
+                            {stockSaving === p._id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                              : null}
+                            <span className={`text-sm font-medium ${p.stock === 0 ? "text-red-500" : p.stock === -1 ? "text-slate-400" : ""}`}
+                              style={p.stock > 0 ? { color: "#1e1b4b" } : undefined}>
+                              {p.stock === -1 ? "∞" : p.stock}
+                            </span>
+                            <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
+                          </button>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5"><StatusBadge product={p} /></td>
+                      <td className="px-4 py-3.5 hidden lg:table-cell">
+                        <span className="text-sm text-slate-500">{p.salesCount || 0}</span>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => openEdit(p)} title="Edit product"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                            style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => { if (confirm(`Delete "${p.name}"?`)) adminApi.products.delete(p._id).then(() => qc.invalidateQueries({ queryKey: ["panel-products"] })); }}
+                            title="Delete product"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                            style={{ background: "#FEE2E2", color: "#dc2626" }}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {pages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid #F3F4F6" }}>
+            <p className="text-sm text-slate-400">Page {page} of {pages} · {total} products</p>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
+                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
+                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <AnimatePresence>
-        {modal && (
+        {(modal === "create" || modal === "edit") && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={() => setModal(null)}>
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-xl my-8"
-              onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-                <h3 className="text-white font-semibold">{modal === "create" ? "Add Product" : "Edit Product"}</h3>
-                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
+            <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
+              className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl"
+              style={{ border: "1px solid #E9EBF5" }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>{modal === "create" ? "Add Product" : `Edit — ${editing?.name}`}</h3>
+                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleSubmit} className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Product Name *</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} required
-                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                    <label className={labelCls} style={labelStyle}>Product Name *</label>
+                    <input value={form.name} onChange={e => setF("name", e.target.value)} required className={inputCls} style={inpStyle} placeholder="e.g. Godly Knife" />
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Game *</label>
-                    <select value={game} onChange={(e) => { setGame(e.target.value); setCategory(""); }} required
-                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50">
+                    <label className={labelCls} style={labelStyle}>Game *</label>
+                    <select value={form.game} onChange={e => setF("game", e.target.value)} required className={inputCls} style={inpStyle}>
                       <option value="">Select game</option>
-                      {games.map((g: Game) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+                      {games.map(g => <option key={g.slug} value={g.slug}>{g.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Category *</label>
-                    <select value={category} onChange={(e) => setCategory(e.target.value)} required
-                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50">
+                    <label className={labelCls} style={labelStyle}>Category *</label>
+                    <select value={form.category} onChange={e => setF("category", e.target.value)} required className={inputCls} style={inpStyle} disabled={!form.game}>
                       <option value="">Select category</option>
-                      {cats.map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                      {formCats.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Price *</label>
-                    <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} required
-                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                    <label className={labelCls} style={labelStyle}>Price *</label>
+                    <input type="number" step="0.01" min="0" value={form.price} onChange={e => setF("price", e.target.value)} required className={inputCls} style={inpStyle} placeholder="0.00" />
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Original Price</label>
-                    <input type="number" step="0.01" min="0" value={originalPrice} onChange={(e) => setOriginalPrice(e.target.value)}
-                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                    <label className={labelCls} style={labelStyle}>Original Price <span className="text-slate-400 font-normal">(for strike-through)</span></label>
+                    <input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => setF("originalPrice", e.target.value)} className={inputCls} style={inpStyle} placeholder="0.00" />
                   </div>
-                </div>
-                <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Description</label>
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
-                    className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Gradient From</label>
-                    <div className="flex gap-2"><input type="color" value={gradFrom} onChange={(e) => setGradFrom(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10" />
-                      <input value={gradFrom} onChange={(e) => setGradFrom(e.target.value)} className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50" />
+                    <label className={labelCls} style={labelStyle}>Stock <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
+                    <input type="number" value={form.stock} onChange={e => setF("stock", e.target.value)} className={inputCls} style={inpStyle} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Description</label>
+                    <textarea value={form.description} onChange={e => setF("description", e.target.value)} rows={2} className={`${inputCls} resize-none`} style={inpStyle} placeholder="Short description..." />
+                  </div>
+                  <div>
+                    <label className={labelCls} style={labelStyle}>Gradient From</label>
+                    <div className="flex gap-2">
+                      <input type="color" value={form.gradFrom} onChange={e => setF("gradFrom", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "#E9EBF5" }} />
+                      <input value={form.gradFrom} onChange={e => setF("gradFrom", e.target.value)} className={`${inputCls} flex-1`} style={inpStyle} />
                     </div>
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Gradient To</label>
-                    <div className="flex gap-2"><input type="color" value={gradTo} onChange={(e) => setGradTo(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10" />
-                      <input value={gradTo} onChange={(e) => setGradTo(e.target.value)} className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50" />
+                    <label className={labelCls} style={labelStyle}>Gradient To</label>
+                    <div className="flex gap-2">
+                      <input type="color" value={form.gradTo} onChange={e => setF("gradTo", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "#E9EBF5" }} />
+                      <input value={form.gradTo} onChange={e => setF("gradTo", e.target.value)} className={`${inputCls} flex-1`} style={inpStyle} />
                     </div>
                   </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Product Image</label>
+                    <ImageUpload value={form.imageUrl} onChange={url => setF("imageUrl", url)} folder="rbstars/products" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Tags <span className="text-slate-400 font-normal">(comma-separated)</span></label>
+                    <input value={form.tags} onChange={e => setF("tags", e.target.value)} className={inputCls} style={inpStyle} placeholder="rare, godly, limited" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Product Image</label>
-                  <ImageUpload
-                    value={imageUrl}
-                    onChange={(url) => setImageUrl(url)}
-                    folder="rbstars/products"
-                  />
+
+                <div className="flex flex-wrap gap-x-6 gap-y-3 pt-1">
+                  {[
+                    { label: "Featured", key: "featured" as const },
+                    { label: "Best Seller", key: "bestSeller" as const },
+                    { label: "Out of Stock", key: "outOfStock" as const },
+                  ].map(({ label, key }) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
+                      <input type="checkbox" checked={form[key] as boolean} onChange={e => setF(key, e.target.checked)}
+                        className="w-4 h-4 accent-indigo-600 rounded" />
+                      <span className="text-sm font-medium" style={{ color: "#374151" }}>{label}</span>
+                    </label>
+                  ))}
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <button type="button" onClick={() => setF("active", !form.active)} className="transition-colors">
+                      {form.active
+                        ? <ToggleRight className="w-5 h-5" style={{ color: "#16a34a" }} />
+                        : <ToggleLeft className="w-5 h-5 text-slate-400" />}
+                    </button>
+                    <span className="text-sm font-medium" style={{ color: "#374151" }}>Active / Listed</span>
+                  </label>
                 </div>
-                <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Tags (comma-separated)</label>
-                  <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="rare, godly, limited"
-                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
-                </div>
-                <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Stock (-1 = unlimited)</label>
-                  <input type="number" value={stock} onChange={(e) => setStock(e.target.value)}
-                    className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
-                </div>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="accent-blue-600 w-4 h-4" /><span className="text-slate-300 text-sm">Featured</span></label>
-                  <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={bestSeller} onChange={(e) => setBestSeller(e.target.checked)} className="accent-blue-600 w-4 h-4" /><span className="text-slate-300 text-sm">Best Seller</span></label>
-                </div>
-                {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
-                <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={() => setModal(null)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium">Cancel</button>
-                  <motion.button type="submit" disabled={saving} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
+
+                {formError && (
+                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" /> {formError}
+                  </div>
+                )}
+                <div className="flex gap-3 pt-1">
+                  <button type="button" onClick={() => setModal(null)}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={saving}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 transition-colors"
+                    style={{ background: "#1e1b4b" }}>
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {modal === "create" ? "Add Product" : "Save Changes"}
-                  </motion.button>
+                    {modal === "create" ? "Create Product" : "Save Changes"}
+                  </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {modal === "bulk" && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto"
+            onClick={() => setModal(null)}>
+            <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
+              className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl"
+              style={{ border: "1px solid #E9EBF5" }}
+              onClick={e => e.stopPropagation()}>
+
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                <div>
+                  <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Quick Add Products</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Fill in a product and hit Add — repeat for each one, then create them all at once.</p>
+                </div>
+                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Quick entry form */}
+                <div className="rounded-xl p-4 space-y-3" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">New Product</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <input
+                        value={bulkDraft.name}
+                        onChange={e => setBulkDraft(d => ({ ...d, name: e.target.value }))}
+                        onKeyDown={e => e.key === "Enter" && addToQueue()}
+                        placeholder="Product name *"
+                        className={inputCls} style={inpStyle}
+                        autoFocus
+                      />
+                    </div>
+                    <select value={bulkDraft.game} onChange={e => setBulkDraft(d => ({ ...d, game: e.target.value, category: "" }))}
+                      className={inputCls} style={inpStyle}>
+                      <option value="">Game *</option>
+                      {games.map(g => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+                    </select>
+                    <select value={bulkDraft.category} onChange={e => setBulkDraft(d => ({ ...d, category: e.target.value }))}
+                      className={inputCls} style={inpStyle} disabled={!bulkDraft.game}>
+                      <option value="">Category *</option>
+                      {(bulkDraft.game ? allCats.filter((c: any) => c.game === bulkDraft.game) : allCats).map((c: any) => (
+                        <option key={c._id} value={c._id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                      <input type="number" step="0.01" min="0" value={bulkDraft.price}
+                        onChange={e => setBulkDraft(d => ({ ...d, price: e.target.value }))}
+                        placeholder="Price *" className={`${inputCls} pl-7`} style={inpStyle} />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                        <input type="number" step="0.01" min="0" value={bulkDraft.originalPrice}
+                          onChange={e => setBulkDraft(d => ({ ...d, originalPrice: e.target.value }))}
+                          placeholder="Orig price" className={`${inputCls} pl-7`} style={inpStyle} />
+                      </div>
+                      <input type="number" value={bulkDraft.stock}
+                        onChange={e => setBulkDraft(d => ({ ...d, stock: e.target.value }))}
+                        placeholder="Stock"
+                        title="Stock (-1 = unlimited)"
+                        className={`${inputCls} w-24`} style={inpStyle} />
+                    </div>
+                  </div>
+                  {bulkError && (
+                    <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {bulkError}
+                    </div>
+                  )}
+                  <button onClick={addToQueue}
+                    className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                    style={{ background: "#EEF2FF", color: "#4f46e5", border: "1px solid #c7d2fe" }}>
+                    <Plus className="w-4 h-4" /> Add to List
+                  </button>
+                </div>
+
+                {/* Queue */}
+                {bulkQueue.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{bulkQueue.length} product{bulkQueue.length !== 1 ? "s" : ""} queued</p>
+                      <button onClick={() => setBulkQueue([])} className="text-xs text-slate-400 hover:text-red-500 transition-colors">Clear all</button>
+                    </div>
+                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
+                      {bulkQueue.map((item, i) => {
+                        const catName = allCats.find((c: any) => c._id === item.category || c._id?.toString() === item.category);
+                        return (
+                          <div key={i} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
+                            style={{ borderBottom: i < bulkQueue.length - 1 ? "1px solid #F3F4F6" : undefined }}>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
+                              <p className="text-xs text-slate-400 truncate">
+                                {item.game} · {(catName as any)?.name || item.category} · ${parseFloat(item.price || "0").toFixed(2)}
+                                {item.stock !== "-1" && item.stock ? ` · ${item.stock} in stock` : " · ∞ unlimited"}
+                              </p>
+                            </div>
+                            <button onClick={() => removeFromQueue(i)}
+                              className="w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {bulkResult && bulkResult.errors.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 space-y-1">
+                    <p className="text-sm font-semibold text-yellow-700">{bulkResult.total} created, {bulkResult.errors.length} failed:</p>
+                    {bulkResult.errors.map((e: any, i: number) => (
+                      <p key={i} className="text-xs text-yellow-600">• {e.name}: {e.error}</p>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <button onClick={() => setModal(null)}
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleBulkSubmit} disabled={bulkSaving || bulkQueue.length === 0}
+                    className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+                    style={{ background: "#1e1b4b" }}>
+                    {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Create {bulkQueue.length > 0 ? `${bulkQueue.length} ` : ""}Product{bulkQueue.length !== 1 ? "s" : ""}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}
