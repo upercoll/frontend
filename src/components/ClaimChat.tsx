@@ -204,10 +204,29 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
     setSubmitting(true);
 
     try {
+      let orderRef: string | undefined;
+      let orderItems: { name: string; quantity: number }[] | undefined;
+      try {
+        const lastOrderRaw = localStorage.getItem("rbstars_last_order");
+        if (lastOrderRaw) {
+          const lastOrder = JSON.parse(lastOrderRaw);
+          orderRef = lastOrder?.orderNumber;
+          orderItems = lastOrder?.items?.map((i: { productSnapshot?: { name?: string }; quantity?: number }) => ({
+            name: i.productSnapshot?.name || "",
+            quantity: i.quantity || 1,
+          }));
+        }
+      } catch {}
+
       const resp = await fetch(`${BACKEND_URL}/api/claims`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ robloxUsername: robloxUser.trim(), contactEmail }),
+        body: JSON.stringify({
+          robloxUsername: robloxUser.trim(),
+          contactEmail,
+          orderRef,
+          items: orderItems,
+        }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.message || "Failed to start chat");
