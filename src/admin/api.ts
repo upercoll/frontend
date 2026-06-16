@@ -67,6 +67,10 @@ export const adminApi = {
     byGame: () => get<{ success: boolean; data: { byGame: { _id: string; revenue: number; orders: number }[] } }>("/analytics/by-game"),
     topProducts: () => get<{ success: boolean; data: { topProducts: { _id: string; name: string; game: string; totalSold: number; revenue: number }[] } }>("/analytics/top-products"),
     claims: () => get<{ success: boolean; data: { claims: Record<string, number>; avgResponseMs: number } }>("/analytics/claims"),
+    salesSummary: (period: string) =>
+      get<{ success: boolean; data: { revenue: number; orders: number; avgOrderValue: number; revenueGrowth?: number; ordersGrowth?: number; statusBreakdown?: Record<string, number> } }>(`/analytics/sales-summary?period=${period}`),
+    conversion: () =>
+      get<{ success: boolean; data: { totalOrders: number; paidOrders: number; conversionRate: number; abandonmentRate: number } }>("/analytics/conversion"),
   },
 
   roles: {
@@ -91,7 +95,10 @@ export const adminApi = {
     update: (id: string, data: { roleId?: string; claimGames?: string[]; claimCategories?: string[]; active?: boolean }) =>
       patch<{ success: boolean; data: { member: import("./types").TeamMember } }>(`/team/${id}`, data),
     remove: (id: string) => del(`/team/${id}`),
+    hardDelete: (id: string) => del(`/team/${id}/hard-delete`),
     resendInvite: (id: string) => post(`/team/${id}/resend-invite`),
+    updateCommission: (id: string, commissionRate: number) =>
+      patch(`/team/${id}/commission`, { commissionRate }),
   },
 
   orders: {
@@ -102,8 +109,18 @@ export const adminApi = {
     get: (id: string) => get<{ success: boolean; data: { order: import("./types").Order; claimSession: import("./types").ClaimSession } }>(`/orders/${id}`),
     updateStatus: (id: string, status: string, adminNotes?: string) =>
       patch(`/orders/${id}/status`, { status, adminNotes }),
+    fulfill: (id: string, data?: { trackingNumber?: string; carrier?: string; notes?: string }) =>
+      post(`/orders/${id}/fulfill`, data || {}),
+    refund: (id: string, data: { amount: number; reason?: string; partial?: boolean; restockItems?: boolean }) =>
+      post<{ success: boolean; data: { order: import("./types").Order; refundAmount: number; isPartial: boolean; message: string } }>(`/orders/${id}/refund`, data),
+    addTimeline: (id: string, action: string, details?: string) =>
+      post(`/orders/${id}/timeline`, { action, details }),
+    updateTags: (id: string, tags: string[]) =>
+      patch(`/orders/${id}/tags`, { tags }),
     getClaimChat: (orderId: string) =>
       get<{ success: boolean; data: { claimSession: import("./types").ClaimSession } }>(`/orders/${orderId}/claim-chat`),
+    bulkUpdateStatus: (orderIds: string[], status: string) =>
+      patch("/orders/bulk-status", { orderIds, status }),
   },
 
   games: {
@@ -212,21 +229,3 @@ export const adminApi = {
       patch<{ success: boolean; data: { customer: import("./types").CustomerAdmin } }>(`/customers/${id}`, data),
   },
 };
-
-Object.assign(adminApi.team, {
-  hardDelete: (id: string) => del(`/team/${id}/hard-delete`),
-  updateCommission: (id: string, commissionRate: number) =>
-    patch(`/team/${id}/commission`, { commissionRate }),
-});
-
-Object.assign(adminApi.orders, {
-  bulkUpdateStatus: (ids: string[], status: string) =>
-    patch("/orders/bulk-status", { orderIds: ids, status }),
-});
-
-Object.assign(adminApi.analytics, {
-  salesSummary: (period: string) =>
-    get<{ success: boolean; data: { revenue: number; orders: number; avgOrderValue: number; revenueGrowth?: number; ordersGrowth?: number; statusBreakdown?: Record<string, number> } }>(`/analytics/sales-summary?period=${period}`),
-  conversion: () =>
-    get<{ success: boolean; data: { totalOrders: number; paidOrders: number; conversionRate: number; abandonmentRate: number } }>("/analytics/conversion"),
-});
