@@ -8,6 +8,7 @@ import {
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { useAdminSocket } from "../context/AdminSocketContext";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -42,7 +43,6 @@ const ownerNav: NavItem[] = [
 
 const agentSpecificItems: NavItem[] = [
   { href: "/panel/dashboard", label: "Dashboard",   icon: LayoutDashboard, group: "Overview" },
-  { href: "/panel/queue",     label: "Claim Queue", icon: Inbox,           permission: "claim_agent", group: "Operations" },
   { href: "/panel/stats",     label: "My Stats",    icon: BarChart3,       permission: "claim_agent", group: "Operations" },
 ];
 
@@ -56,6 +56,12 @@ const collabSubItems = [
 
 const CollabIcon = Link2;
 
+const claimQueueSubItems = [
+  { label: "Waiting to be Claimed", icon: Inbox, section: "waiting" },
+  { label: "My Active Chats", icon: Activity, section: "mine" },
+  { label: "Completed Chats", icon: FileCheck, section: "completed" },
+];
+
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -64,8 +70,13 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarProps) {
   const { user, profile, hasPermission, isOwner, logout, viewAsRole, setViewAsRole } = useAdminAuth();
+  const { pendingClaims } = useAdminSocket();
   const [location] = useLocation();
   const [collabOpen, setCollabOpen] = useState(location.startsWith("/admin/collaboration"));
+  const [claimQueueOpen, setClaimQueueOpen] = useState(location.startsWith("/panel/queue"));
+
+  const isAgent = !isOwner && user?.type === "team_member";
+  const hasClaimAgent = isAgent && hasPermission("claim_agent");
 
   const isViewingAsAgentRole = viewAsRole
     ? viewAsRole.permissions.includes("claim_agent") &&
@@ -105,13 +116,14 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
   const groups = isOwner && !viewAsRole
     ? ["Overview", "Commerce", "Content", "Team", "System"]
     : !isOwner
-    ? ["Overview", "Operations", "Commerce", "Content", "Team"]
+    ? ["Overview", "Commerce", "Content", "Team"]
     : undefined;
 
   const dashboardHref = isOwner ? "/admin/dashboard" : "/panel/dashboard";
   const profileHref = isOwner ? "/admin/profile" : "/panel/profile";
   const showCollab = isOwner && !viewAsRole;
   const isCollabActive = location.startsWith("/admin/collaboration");
+  const isQueueActive = location.startsWith("/panel/queue");
 
   return (
     <motion.aside
@@ -196,6 +208,101 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 </div>
               );
             })}
+
+            {hasClaimAgent && !collapsed && (
+              <div className="mb-2">
+                <div className="flex items-center gap-2 px-3 py-2 mb-0.5">
+                  <Inbox className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(139,92,246,0.5)" }} />
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    Operations
+                  </p>
+                  <div className="flex-1 h-px ml-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                </div>
+
+                <motion.div
+                  whileHover={{ x: collapsed ? 0 : 3 }}
+                  onClick={() => setClaimQueueOpen(o => !o)}
+                  className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
+                  style={isQueueActive ? {
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    color: "#a5b4fc",
+                    border: "1px solid rgba(99,102,241,0.25)",
+                    boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+                  } : {
+                    color: "rgba(255,255,255,0.4)",
+                    border: "1px solid transparent",
+                  }}
+                  onMouseEnter={e => {
+                    if (!isQueueActive) {
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
+                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (!isQueueActive) {
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
+                      (e.currentTarget as HTMLDivElement).style.background = "transparent";
+                    }
+                  }}
+                >
+                  {isQueueActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
+                      style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+                  )}
+                  <Inbox className="w-4 h-4 flex-shrink-0" />
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
+                    Claim Queue
+                  </motion.span>
+                  {pendingClaims.length > 0 && (
+                    <span className="bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                      {pendingClaims.length}
+                    </span>
+                  )}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${claimQueueOpen ? "rotate-180" : ""}`} />
+                </motion.div>
+
+                <AnimatePresence>
+                  {claimQueueOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      {claimQueueSubItems.map(sub => {
+                        const isActive = location.startsWith("/panel/queue");
+                        const SubIcon = sub.icon;
+                        const count = sub.section === "waiting" ? pendingClaims.length : 0;
+                        return (
+                          <Link key={sub.section} href="/panel/queue">
+                            <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
+                              style={isActive ? {
+                                background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
+                                color: "#a5b4fc",
+                                border: "1px solid rgba(99,102,241,0.2)",
+                              } : {
+                                color: "rgba(255,255,255,0.35)",
+                                border: "1px solid transparent",
+                              }}
+                              onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; } }}
+                              onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
+                            >
+                              <SubIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="font-medium flex-1 truncate">{sub.label}</span>
+                              {count > 0 && (
+                                <span className="bg-indigo-500/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                  {count}
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {showCollab && (
               <div className="mb-2">
@@ -303,6 +410,52 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
             {navItems.map(item => (
               <NavLink key={item.href} item={item} location={location} collapsed={collapsed} podBadge={podBadge} />
             ))}
+            {hasClaimAgent && !collapsed && (
+              <Link href="/panel/queue">
+                <motion.div
+                  whileHover={{ x: 3 }}
+                  className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
+                  style={isQueueActive ? {
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    color: "#a5b4fc",
+                    border: "1px solid rgba(99,102,241,0.25)",
+                  } : {
+                    color: "rgba(255,255,255,0.4)",
+                    border: "1px solid transparent",
+                  }}
+                >
+                  <Inbox className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-medium">Claim Queue</span>
+                  {pendingClaims.length > 0 && (
+                    <span className="ml-auto bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                      {pendingClaims.length}
+                    </span>
+                  )}
+                </motion.div>
+              </Link>
+            )}
+            {hasClaimAgent && collapsed && (
+              <Link href="/panel/queue">
+                <motion.div
+                  className="relative flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
+                  style={isQueueActive ? {
+                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    color: "#a5b4fc",
+                    border: "1px solid rgba(99,102,241,0.25)",
+                  } : {
+                    color: "rgba(255,255,255,0.4)",
+                    border: "1px solid transparent",
+                  }}
+                >
+                  <Inbox className="w-4 h-4 flex-shrink-0" />
+                  {pendingClaims.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                      {pendingClaims.length > 9 ? "9+" : pendingClaims.length}
+                    </span>
+                  )}
+                </motion.div>
+              </Link>
+            )}
             {showCollab && !collapsed && (
               <Link href="/admin/collaboration/collaborators">
                 <motion.div
