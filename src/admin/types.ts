@@ -197,6 +197,7 @@ export interface ClaimSession {
   contactEmail: string;
   orderRef?: string;
   game?: string;
+  itemName?: string;
   items: { name: string; quantity: number }[];
   status: "pending" | "active" | "claimed" | "ended";
   assignedAgent?: { userId: string; name: string; joinedAt: string };
@@ -273,6 +274,7 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
   { key: "manage_categories", label: "Manage Categories", description: "Add, edit, and remove categories", group: "Content" },
   { key: "manage_products", label: "Manage Products", description: "Add, edit, and remove products", group: "Content" },
   { key: "edit_site_content", label: "Edit Site Content", description: "Edit homepage and site text", group: "Content" },
+  { key: "upload_images", label: "Upload Images", description: "Upload images to the media library", group: "Content" },
   { key: "manage_orders", label: "Manage Orders", description: "View and update orders", group: "Operations" },
   { key: "manage_claims", label: "Manage Claims", description: "View all claim sessions", group: "Operations" },
   { key: "claim_agent", label: "Claim Agent", description: "Answer and handle claim chats", group: "Operations" },
@@ -281,4 +283,5 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
   { key: "manage_team", label: "Manage Team", description: "Invite and manage team members", group: "Team" },
   { key: "manage_roles", label: "Manage Roles", description: "Create and edit permission roles", group: "Team" },
   { key: "monitor_agents", label: "Monitor Agents", description: "View agent statistics and activity", group: "Team" },
+  { key: "manage_collaborators", label: "Manage Collaborators", description: "Manage collaborator accounts and products", group: "Team" },
 ];
