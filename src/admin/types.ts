@@ -142,10 +142,26 @@ export interface CustomerAdmin {
   createdAt: string;
 }
 
+export interface TimelineEvent {
+  action: string;
+  by: string;
+  details?: string;
+  timestamp: string;
+}
+
 export interface Order {
   _id: string;
   orderNumber: string;
-  customer: { email: string; robloxUsername: string };
+  customer: {
+    email: string;
+    robloxUsername: string;
+    shippingAddress?: {
+      line1?: string; line2?: string; city?: string; state?: string; postalCode?: string; country?: string;
+    };
+    billingAddress?: {
+      name?: string; line1?: string; line2?: string; city?: string; state?: string; postalCode?: string; country?: string;
+    };
+  };
   items: {
     product?: string;
     productSnapshot: { name: string; price: number; game: string; imageUrl?: string; gradient?: { from: string; to: string } };
@@ -153,11 +169,23 @@ export interface Order {
     unitPrice: number;
     totalPrice: number;
   }[];
-  pricing: { subtotal: number; discount: number; total: number };
-  payment: { method: string; status: string; paidAt?: string };
-  delivery: { status: string; deliveredAt?: string };
+  pricing: { subtotal: number; discount: number; discountPercent?: number; promoCode?: string; total: number };
+  payment: { method: string; status: string; paidAt?: string; failureReason?: string };
+  delivery: { status: string; deliveredAt?: string; trackingNumber?: string; carrier?: string; notes?: string };
   status: string;
+  refundAmount?: number;
+  refundReason?: string;
+  refundedAt?: string;
+  fulfillmentStatus?: "unfulfilled" | "partial" | "fulfilled";
+  fulfilledAt?: string;
+  fulfilledBy?: string;
   adminNotes?: string;
+  notes?: string;
+  tags?: string[];
+  timeline?: TimelineEvent[];
+  source?: string;
+  riskLevel?: "low" | "medium" | "high";
+  customerOrderCount?: number;
   createdAt: string;
   claimSession?: ClaimSession;
 }
