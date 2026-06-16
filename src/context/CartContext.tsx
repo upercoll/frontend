@@ -8,6 +8,7 @@ export interface CartItem {
   gradient: [string, string];
   image?: string;
   quantity: number;
+  game?: string;
 }
 
 interface CartContextType {
