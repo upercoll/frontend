@@ -151,6 +151,12 @@ export const adminApi = {
     get: (id: string) => get<{ success: boolean; data: import("./types").Product }>(`/products/${id}`),
     create: (form: FormData) => postForm<{ success: boolean; data: import("./types").Product }>("/products", form),
     update: (id: string, form: FormData) => patchForm<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, form),
+    partialUpdate: (id: string, data: Record<string, unknown>) =>
+      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, data),
+    toggleActive: (id: string) =>
+      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}/toggle-active`),
+    bulkCreate: (products: unknown[]) =>
+      post<{ success: boolean; data: { created: import("./types").Product[]; errors: unknown[]; total: number }; message: string }>("/products/bulk", { products }),
     delete: (id: string) => del(`/products/${id}`),
   },
 
