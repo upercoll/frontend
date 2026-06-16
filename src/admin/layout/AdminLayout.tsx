@@ -60,7 +60,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, loading, profileComplete, hasPermission } = useAdminAuth();
-  const { claimPopup, answerClaim, declineClaim } = useAdminSocket();
+  const { claimPopup, dismissClaimPopup } = useAdminSocket();
   const [location, navigate] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -174,15 +174,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
 
       <AnimatePresence>
-        {claimPopup && (
+        {claimPopup && user.isOwner && (
           <ClaimQueuePopup
             popup={claimPopup}
-            ownerMode={!!claimPopup.isOwnerAlert}
+            ownerMode={true}
             onAnswer={() => {
-              if (claimPopup.isOwnerAlert) { navigate("/admin/monitor"); declineClaim(claimPopup.roomId); }
-              else { answerClaim(claimPopup.roomId); navigate("/panel/queue"); }
+              navigate("/admin/monitor");
+              dismissClaimPopup();
             }}
-            onDecline={() => declineClaim(claimPopup.roomId)}
+            onDecline={() => dismissClaimPopup()}
           />
         )}
       </AnimatePresence>
