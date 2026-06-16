@@ -133,7 +133,8 @@ function ProductCard({
   function handleAddToCart(e: React.MouseEvent) {
     e.stopPropagation();
     if (product.outOfStock) return;
-    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl });
+    const gameSlug = window.location.pathname.match(/^\/game\/([^/]+)/)?.[1];
+    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl, game: gameSlug });
     setJustAdded(true);
     setBounce(true);
     setTimeout(() => setJustAdded(false), 1400);
