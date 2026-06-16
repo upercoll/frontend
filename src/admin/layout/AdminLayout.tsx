@@ -71,7 +71,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F7F8FC" }}>
+    <div className="flex h-screen overflow-hidden dot-grid" style={{ background: "#F7F8FC" }}>
       <div className="hidden lg:flex">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((p) => !p)} />
       </div>
