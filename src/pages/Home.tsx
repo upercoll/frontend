@@ -31,17 +31,18 @@ const steps = [
   { icon: Gift,          number: "03", title: "Receive your items", description: "Upon receiving a response, our team will add you on Roblox to complete the trade or gift your purchased items." },
 ];
 
-const tutorials = [
-  { name: "Murder Mystery 2",        gradient: ["#6d28d9", "#4c1d95"] },
-  { name: "Blade Ball",              gradient: ["#4c1d95", "#2e1065"] },
-  { name: "Grow A Garden",           gradient: ["#16a34a", "#4ade80"] },
-  { name: "Steal A Brainrot",        gradient: ["#ea580c", "#f97316"] },
-  { name: "Blox Fruits",             gradient: ["#d97706", "#fbbf24"] },
-  { name: "Garden Tower Defense",    gradient: ["#15803d", "#84cc16"] },
-  { name: "99 Nights In The Forest", gradient: ["#1e3a5f", "#374151"] },
-  { name: "Dress To Impress",        gradient: ["#be185d", "#ec4899"] },
-  { name: "Pet Simulator 99",        gradient: ["#ec4899", "#f43f5e"] },
+const FALLBACK_TUTORIALS = [
+  { _id: "1", name: "Murder Mystery 2",        gradient: { from: "#6d28d9", to: "#4c1d95" }, title: "Murder Mystery 2", videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "2", name: "Blade Ball",              gradient: { from: "#4c1d95", to: "#2e1065" }, title: "Blade Ball",       videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "3", name: "Grow A Garden",           gradient: { from: "#16a34a", to: "#4ade80" }, title: "Grow A Garden",    videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "4", name: "Steal A Brainrot",        gradient: { from: "#ea580c", to: "#f97316" }, title: "Steal A Brainrot", videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "5", name: "Blox Fruits",             gradient: { from: "#d97706", to: "#fbbf24" }, title: "Blox Fruits",      videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "6", name: "Garden Tower Defense",    gradient: { from: "#15803d", to: "#84cc16" }, title: "Garden Tower Defense", videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "7", name: "99 Nights In The Forest", gradient: { from: "#1e3a5f", to: "#374151" }, title: "99 Nights In The Forest", videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "8", name: "Dress To Impress",        gradient: { from: "#be185d", to: "#ec4899" }, title: "Dress To Impress", videoUrl: "", thumbnailUrl: "", active: true },
+  { _id: "9", name: "Pet Simulator 99",        gradient: { from: "#ec4899", to: "#f43f5e" }, title: "Pet Simulator 99", videoUrl: "", thumbnailUrl: "", active: true },
 ];
+type TutorialItem = { _id: string; name: string; title: string; gradient: { from: string; to: string }; videoUrl?: string; thumbnailUrl?: string; active: boolean };
 
 const features = [
   { icon: Zap,        title: "Fast and Reliable",   desc: "Our Claim Support Team ensure your items are delivered almost instantly.",                                                                                                accent: "#312E80", iconBg: "rgba(49,46,128,0.1)"  },
@@ -162,6 +163,17 @@ export default function Home() {
   const [reviewIndex, setReviewIndex] = useState(0);
   const [reviews, setReviews] = useState(fallbackReviews);
   const [avgRating, setAvgRating] = useState<number | null>(null);
+  const [tutorials, setTutorials] = useState<TutorialItem[]>(FALLBACK_TUTORIALS);
+
+  useEffect(() => {
+    fetch(`${BACKEND}/api/panel/tutorials`)
+      .then(r => r.json())
+      .then(data => {
+        const fetched: TutorialItem[] = (data?.data?.tutorials || []).filter((t: TutorialItem) => t.active);
+        if (fetched.length > 0) setTutorials(fetched);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
@@ -340,11 +352,14 @@ export default function Home() {
 
           {/* 1 col mobile / 2 col sm / 3 col lg */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {tutorials.map((game, i) => {
+            {tutorials.map((tut, i) => {
               const col = i % 3;
+              const gradFrom = tut.gradient?.from || "#6d28d9";
+              const gradTo = tut.gradient?.to || "#4c1d95";
+              const hasVideo = !!tut.videoUrl;
               return (
               <motion.div
-                key={game.name}
+                key={tut._id}
                 initial={{ opacity: 0, x: col === 0 ? -24 : col === 2 ? 24 : 0, y: col === 1 ? 20 : 0 }}
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
@@ -359,34 +374,37 @@ export default function Home() {
                 initial="rest" whileHover="hover" whileTap="tap" variants={cardPop}
                 className="flex flex-col rounded-2xl overflow-hidden cursor-pointer bg-white"
                 style={{ border: "1.5px solid rgba(49,46,128,0.1)" }}
+                onClick={() => { if (tut.videoUrl) window.open(tut.videoUrl, "_blank"); }}
               >
-                {/* Thumbnail 16:9 */}
                 <div className="relative w-full overflow-hidden" style={{ paddingTop: "56.25%" }}>
-                  <div
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-2"
-                    style={{ background: `linear-gradient(135deg,${game.gradient[0]} 0%,${game.gradient[1]} 100%)` }}
-                  >
-                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "20px 20px" }} />
+                  {tut.thumbnailUrl ? (
+                    <img src={tut.thumbnailUrl} className="absolute inset-0 w-full h-full object-cover" alt={tut.title} />
+                  ) : (
                     <div
-                      className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center"
-                      style={{ background: "rgba(255,255,255,.18)", backdropFilter: "blur(6px)", border: "2px solid rgba(255,255,255,.3)" }}
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-2"
+                      style={{ background: `linear-gradient(135deg,${gradFrom} 0%,${gradTo} 100%)` }}
                     >
-                      <Play size={20} fill="white" color="white" className="ml-0.5" />
+                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "20px 20px" }} />
+                      <div
+                        className="relative z-10 w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ background: "rgba(255,255,255,.18)", backdropFilter: "blur(6px)", border: "2px solid rgba(255,255,255,.3)" }}
+                      >
+                        <Play size={20} fill="white" color="white" className="ml-0.5" />
+                      </div>
+                      <div
+                        className="relative z-10 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                        style={{ background: "rgba(0,0,0,.5)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,.2)" }}
+                      >
+                        {hasVideo ? "Watch tutorial" : "Tutorial soon"}
+                      </div>
                     </div>
-                    <div
-                      className="relative z-10 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-                      style={{ background: "rgba(0,0,0,.5)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,.2)" }}
-                    >
-                      Tutorial soon
-                    </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Card body */}
                 <div className="flex items-center justify-between gap-3 px-4 py-3.5">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-sm leading-tight" style={{ color: "#1E1B4B" }}>{game.name}</h3>
-                    <p className="text-xs mt-0.5" style={{ color: "#5B5EA8" }}>Watch tutorial</p>
+                    <h3 className="font-bold text-sm leading-tight" style={{ color: "#1E1B4B" }}>{tut.title || tut.name}</h3>
+                    <p className="text-xs mt-0.5" style={{ color: "#5B5EA8" }}>{tut.description || "Watch tutorial"}</p>
                   </div>
                   <motion.button
                     data-testid={`button-tutorial-${i + 1}`}
