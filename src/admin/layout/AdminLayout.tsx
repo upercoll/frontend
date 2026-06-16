@@ -27,18 +27,20 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/customers": "Customers",
   "/admin/tutorials": "Tutorials",
   "/admin/profile": "My Profile",
-  "/panel/dashboard": "Agent Dashboard",
+  "/panel/dashboard": "Dashboard",
   "/panel/queue": "Claim Queue",
   "/panel/stats": "My Statistics",
   "/panel/profile": "My Profile",
 };
+
+const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view"];
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { user, loading, profileComplete } = useAdminAuth();
+  const { user, loading, profileComplete, hasPermission } = useAdminAuth();
   const { claimPopup, answerClaim, declineClaim } = useAdminSocket();
   const [location, navigate] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -54,8 +56,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       navigate(user.isOwner ? "/admin/profile-setup" : "/panel/profile-setup");
       return;
     }
-    if (user.isOwner && isAgentRoute) navigate("/admin/dashboard");
-    if (!user.isOwner && isAdminRoute && location !== "/admin/profile-setup") navigate("/panel/dashboard");
+    if (user.isOwner && isAgentRoute) { navigate("/admin/dashboard"); return; }
+
+    if (!user.isOwner && isAdminRoute && location !== "/admin/profile-setup") {
+      if (OWNER_ONLY_ROUTES.some(r => location.startsWith(r))) {
+        navigate("/panel/dashboard");
+        return;
+      }
+    }
   }, [user, loading, profileComplete, location]);
 
   const title = PAGE_TITLES[location] || location.split("/").pop()?.replace(/-/g, " ")?.replace(/\b\w/g, (c) => c.toUpperCase()) || "Panel";
@@ -80,7 +88,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       className="flex h-screen overflow-hidden relative"
       style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}
     >
-      {/* Particle background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particles.map(p => (
           <div
@@ -98,14 +105,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             }}
           />
         ))}
-        {/* Ambient glows */}
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
       </div>
 
-      {/* Sidebar */}
       <div className="hidden lg:flex relative z-10">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(p => !p)} />
       </div>
