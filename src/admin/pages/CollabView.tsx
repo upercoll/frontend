@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRoute, Link } from "wouter";
-import { Package, Plus, Trash2, Edit2, X, Loader2, ChevronLeft, DollarSign, AlertCircle, Check, History } from "lucide-react";
+import { Package, Plus, Trash2, Edit2, X, Loader2, ChevronLeft, DollarSign, AlertCircle, Check, History, Layers } from "lucide-react";
 import { adminApi } from "../api";
 
 const inp = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
@@ -14,12 +14,17 @@ export default function CollabView() {
   const qc = useQueryClient();
 
   const [addModal, setAddModal] = useState(false);
+  const [bulkModal, setBulkModal] = useState(false);
   const [editModal, setEditModal] = useState<{ cpId: string; cut: string; productName: string } | null>(null);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [cut, setCut] = useState("80");
   const [editCut, setEditCut] = useState("");
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [bulkCut, setBulkCut] = useState("80");
+  const [bulkSelected, setBulkSelected] = useState<string[]>([]);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkError, setBulkError] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["collab-view", id],
@@ -27,10 +32,10 @@ export default function CollabView() {
     enabled: !!id,
   });
 
-  const { data: availData } = useQuery({
+  const { data: availData, isLoading: availLoading } = useQuery({
     queryKey: ["collab-available-products", id],
     queryFn: () => adminApi.collab.getAvailableProducts(id),
-    enabled: !!id && addModal,
+    enabled: !!id && (addModal || bulkModal),
   });
 
   const removeProdMut = useMutation({
@@ -77,6 +82,36 @@ export default function CollabView() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleBulkAdd = async () => {
+    if (bulkSelected.length === 0) { setBulkError("Select at least one product"); return; }
+    const cutNum = parseFloat(bulkCut);
+    if (isNaN(cutNum) || cutNum < 0 || cutNum > 100) { setBulkError("Cut must be 0–100"); return; }
+    setBulkSaving(true); setBulkError("");
+    let failed = 0;
+    for (const productId of bulkSelected) {
+      try {
+        await adminApi.collab.addProduct(id, productId, cutNum);
+      } catch {
+        failed++;
+      }
+    }
+    qc.invalidateQueries({ queryKey: ["collab-view", id] });
+    qc.invalidateQueries({ queryKey: ["collab-available-products", id] });
+    if (failed > 0) {
+      setBulkError(`${failed} products failed to add.`);
+    } else {
+      setBulkModal(false);
+    }
+    setBulkSelected([]);
+    setBulkSaving(false);
+  };
+
+  const toggleBulkProduct = (productId: string) => {
+    setBulkSelected(prev =>
+      prev.includes(productId) ? prev.filter(p => p !== productId) : [...prev, productId]
+    );
   };
 
   if (isLoading) {
@@ -133,13 +168,22 @@ export default function CollabView() {
           <div>
             <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Connected Products ({products.length})</h3>
           </div>
-          <button
-            onClick={() => { setAddModal(true); setFormError(""); setSelectedProduct(""); setCut("80"); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white"
-            style={{ background: "#1e1b4b" }}
-          >
-            <Plus className="w-4 h-4" /> Connect to products
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setBulkModal(true); setBulkError(""); setBulkSelected([]); setBulkCut("80"); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold border"
+              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}
+            >
+              <Layers className="w-4 h-4" /> Bulk Add
+            </button>
+            <button
+              onClick={() => { setAddModal(true); setFormError(""); setSelectedProduct(""); setCut("80"); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white"
+              style={{ background: "#1e1b4b" }}
+            >
+              <Plus className="w-4 h-4" /> Connect to products
+            </button>
+          </div>
         </div>
 
         {products.length === 0 ? (
@@ -198,6 +242,124 @@ export default function CollabView() {
           </table>
         )}
       </div>
+
+      <AnimatePresence>
+        {bulkModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+            onClick={() => setBulkModal(false)}>
+            <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
+              className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[80vh] flex flex-col"
+              style={{ border: "1px solid #E9EBF5" }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
+                <div>
+                  <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Bulk Add Products</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Select multiple products and set a shared cut %</p>
+                </div>
+                <button onClick={() => setBulkModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5 text-slate-500">Collaborator Cut (%) *</label>
+                  <input type="number" min="0" max="100" step="0.01" value={bulkCut} onChange={e => setBulkCut(e.target.value)}
+                    placeholder="e.g. 80" className={`${inp} focus:ring-indigo-300`} style={inpStyle} />
+                  <p className="text-xs text-slate-400 mt-1">This cut applies to all selected products</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-slate-500">Select Products *</label>
+                    {bulkSelected.length > 0 && (
+                      <span className="text-xs font-semibold text-indigo-600">{bulkSelected.length} selected</span>
+                    )}
+                  </div>
+                  {availLoading ? (
+                    <div className="py-8 text-center">
+                      <Loader2 className="w-5 h-5 text-slate-400 animate-spin mx-auto" />
+                    </div>
+                  ) : availableProducts.length === 0 ? (
+                    <div className="py-6 text-center text-slate-400 text-sm">
+                      All products are already connected.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (bulkSelected.length === availableProducts.length) {
+                            setBulkSelected([]);
+                          } else {
+                            setBulkSelected(availableProducts.map((p: any) => p._id));
+                          }
+                        }}
+                        className="text-xs text-indigo-600 font-semibold mb-1 hover:underline"
+                      >
+                        {bulkSelected.length === availableProducts.length ? "Deselect all" : "Select all"}
+                      </button>
+                      {availableProducts.map((p: any) => {
+                        const isSelected = bulkSelected.includes(p._id);
+                        return (
+                          <div
+                            key={p._id}
+                            onClick={() => toggleBulkProduct(p._id)}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all"
+                            style={{
+                              border: isSelected ? "1px solid #6366f1" : "1px solid #E9EBF5",
+                              background: isSelected ? "#EEF2FF" : "#F7F8FC",
+                            }}
+                          >
+                            <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? "bg-indigo-600" : "bg-white border border-slate-300"}`}>
+                              {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                            </div>
+                            <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0"
+                              style={{ background: p.gradient ? `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` : "#6366f1" }}>
+                              {p.imageUrl
+                                ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" />
+                                : <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-white/60" /></div>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{p.name}</p>
+                              <p className="text-xs text-slate-400 truncate">{p.game}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {bulkError && (
+                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    {bulkError}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 px-6 pb-6 pt-2 flex-shrink-0">
+                <button type="button" onClick={() => setBulkModal(false)}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium"
+                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkAdd}
+                  disabled={bulkSelected.length === 0 || bulkSaving}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+                  style={{ background: "#1e1b4b" }}
+                >
+                  {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+                  Add {bulkSelected.length > 0 ? `${bulkSelected.length} ` : ""}Products
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {addModal && (
