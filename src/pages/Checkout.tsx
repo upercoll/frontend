@@ -777,6 +777,7 @@ export default function Checkout() {
         const orderData = {
           orderRef: orderNumber,
           email: customerInfo.email,
+          game: currentItems[0]?.game || null,
           items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
         };
         try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
@@ -930,6 +931,7 @@ export default function Checkout() {
       const orderData = {
         orderRef: orderNumber,
         email: customerInfo.email,
+        game: items[0]?.game || null,
         items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
       };
       try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
