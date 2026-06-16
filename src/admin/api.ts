@@ -1,5 +1,6 @@
 const BASE = import.meta.env.VITE_API_URL || "";
 const PANEL = `${BASE}/api/panel`;
+const COLLAB_BASE = `${BASE}/api/collab`;
 
 function getToken(): string | null {
   return localStorage.getItem("panel_token");
@@ -26,6 +27,25 @@ async function req<T>(
   if (!res.ok) throw new Error(data.message || "Request failed");
   return data;
 }
+
+async function collabReq<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${COLLAB_BASE}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+}
+
+const cget = <T>(path: string) => collabReq<T>("GET", path);
+const cpost = <T>(path: string, body?: unknown) => collabReq<T>("POST", path, body);
+const cpatch = <T>(path: string, body?: unknown) => collabReq<T>("PATCH", path, body);
+const cdel = <T>(path: string) => collabReq<T>("DELETE", path);
 
 const get = <T>(path: string) => req<T>("GET", path);
 const post = <T>(path: string, body?: unknown) => req<T>("POST", path, body);
@@ -222,6 +242,33 @@ export const adminApi = {
     update: (id: string, data: Partial<import("./types").Tutorial>) =>
       patch<{ success: boolean; data: { tutorial: import("./types").Tutorial } }>(`/tutorials/${id}`, data),
     delete: (id: string) => del(`/tutorials/${id}`),
+  },
+
+  collab: {
+    listCollaborators: () =>
+      cget<any>("/"),
+    getCollaborator: (id: string) =>
+      cget<any>(`/${id}`),
+    invite: (name: string, email: string) =>
+      cpost<any>("/invite", { name, email }),
+    delete: (id: string) =>
+      cdel<any>(`/${id}`),
+    getAvailableProducts: (id: string) =>
+      cget<any>(`/${id}/available-products`),
+    addProduct: (id: string, productId: string, cut: number) =>
+      cpost<any>(`/${id}/products`, { productId, cut }),
+    updateProduct: (id: string, cpId: string, cut: number) =>
+      cpatch<any>(`/${id}/products/${cpId}`, { cut }),
+    removeProduct: (id: string, cpId: string) =>
+      cdel<any>(`/${id}/products/${cpId}`),
+    getCollaboratorPayouts: (id: string) =>
+      cget<any>(`/${id}/payouts`),
+    getPayoutDetail: (id: string, payoutId: string) =>
+      cget<any>(`/${id}/payouts/${payoutId}`),
+    markPayoutPaid: (id: string) =>
+      cpost<any>(`/${id}/payouts/mark-paid`, {}),
+    listAllPayouts: () =>
+      cget<any>("/payouts"),
   },
 
   customers: {
