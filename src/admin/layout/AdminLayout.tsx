@@ -35,6 +35,23 @@ const PAGE_TITLES: Record<string, string> = {
 
 const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view"];
 
+const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
+  { prefix: "/admin/dashboard",        permission: "view_analytics" },
+  { prefix: "/admin/analytics",        permission: "view_analytics" },
+  { prefix: "/admin/orders",           permission: "manage_orders" },
+  { prefix: "/admin/products",         permission: "manage_products" },
+  { prefix: "/admin/promos",           permission: "manage_promos" },
+  { prefix: "/admin/games",            permission: "manage_games" },
+  { prefix: "/admin/site-content",     permission: "edit_site_content" },
+  { prefix: "/admin/tutorials",        permission: "edit_site_content" },
+  { prefix: "/admin/roles",            permission: "manage_roles" },
+  { prefix: "/admin/team",             permission: "manage_team" },
+  { prefix: "/admin/claim-teams",      permission: "manage_team" },
+  { prefix: "/admin/monitor",          permission: "monitor_agents" },
+  { prefix: "/admin/open-chats",       permission: "monitor_agents" },
+  { prefix: "/admin/proof-of-delivery", permission: "view_pod" },
+];
+
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
@@ -60,6 +77,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     if (!user.isOwner && isAdminRoute && location !== "/admin/profile-setup") {
       if (OWNER_ONLY_ROUTES.some(r => location.startsWith(r))) {
+        navigate("/panel/dashboard");
+        return;
+      }
+      const routeRule = ROUTE_PERMISSIONS.find(r => location.startsWith(r.prefix));
+      if (routeRule && !hasPermission(routeRule.permission)) {
         navigate("/panel/dashboard");
         return;
       }
