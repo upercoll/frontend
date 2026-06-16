@@ -40,14 +40,14 @@ const ownerNav: NavItem[] = [
   { href: "/admin/settings",  label: "Settings",        icon: Settings,        ownerOnly: true,                group: "System" },
 ];
 
-const agentNav: NavItem[] = [
-  { href: "/panel/dashboard", label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/panel/queue",     label: "Claim Queue", icon: Inbox },
-  { href: "/panel/stats",     label: "My Stats",    icon: BarChart3 },
+const agentSpecificItems: NavItem[] = [
+  { href: "/panel/dashboard", label: "Dashboard",   icon: LayoutDashboard, group: "Overview" },
+  { href: "/panel/queue",     label: "Claim Queue", icon: Inbox,           permission: "claim_agent", group: "Operations" },
+  { href: "/panel/stats",     label: "My Stats",    icon: BarChart3,       permission: "claim_agent", group: "Operations" },
 ];
 
 const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users, System: Settings,
+  Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users, System: Settings, Operations: Inbox,
 };
 
 interface SidebarProps {
@@ -66,18 +66,43 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
       !viewAsRole.permissions.includes("manage_orders")
     : false;
 
-  const navItems = isOwner
-    ? viewAsRole
-      ? isViewingAsAgentRole
-        ? agentNav
-        : ownerNav.filter(item => {
-            if (item.ownerOnly) return false;
-            return !item.permission || viewAsRole.permissions.includes(item.permission);
-          })
-      : ownerNav.filter(item => !item.permission || hasPermission(item.permission))
-    : agentNav;
+  let navItems: NavItem[];
 
-  const groups = isOwner && !viewAsRole ? ["Overview", "Commerce", "Content", "Team", "System"] : undefined;
+  if (isOwner) {
+    if (viewAsRole) {
+      if (isViewingAsAgentRole) {
+        navItems = [
+          { href: "/panel/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Overview" },
+          { href: "/panel/queue", label: "Claim Queue", icon: Inbox, group: "Operations" },
+          { href: "/panel/stats", label: "My Stats", icon: BarChart3, group: "Operations" },
+        ];
+      } else {
+        navItems = ownerNav.filter(item => {
+          if (item.ownerOnly) return false;
+          return !item.permission || viewAsRole.permissions.includes(item.permission);
+        });
+      }
+    } else {
+      navItems = ownerNav.filter(item => !item.permission || hasPermission(item.permission));
+    }
+  } else {
+    const agentItems = agentSpecificItems.filter(item => !item.permission || hasPermission(item.permission));
+    const adminItems = ownerNav.filter(item =>
+      !item.ownerOnly &&
+      item.permission &&
+      hasPermission(item.permission)
+    );
+    navItems = [...agentItems, ...adminItems];
+  }
+
+  const groups = isOwner && !viewAsRole
+    ? ["Overview", "Commerce", "Content", "Team", "System"]
+    : !isOwner
+    ? ["Overview", "Operations", "Commerce", "Content", "Team"]
+    : undefined;
+
+  const dashboardHref = isOwner ? "/admin/dashboard" : "/panel/dashboard";
+  const profileHref = isOwner ? "/admin/profile" : "/panel/profile";
 
   return (
     <motion.aside
@@ -92,7 +117,6 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         boxShadow: "inset -1px 0 0 rgba(255,255,255,0.03), 4px 0 32px rgba(0,0,0,0.3)",
       }}
     >
-      {/* Logo */}
       <div className="flex items-center px-4 h-16 flex-shrink-0"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <AnimatePresence>
@@ -109,7 +133,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
               <div>
                 <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
                 <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(139,92,246,0.7)" }}>
-                  {isOwner ? "Owner Panel" : "Agent Panel"}
+                  {isOwner ? (viewAsRole ? `Viewing as ${viewAsRole.name}` : "Owner Panel") : "Team Panel"}
                 </p>
               </div>
             </motion.div>
@@ -130,7 +154,6 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         </button>
       </div>
 
-      {/* View As Banner */}
       {viewAsRole && !collapsed && (
         <div className="mx-3 my-2 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold"
           style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b" }}>
@@ -142,7 +165,6 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         </div>
       )}
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2">
         {groups && !collapsed ? (
           groups.map(group => {
@@ -173,9 +195,8 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         )}
       </nav>
 
-      {/* Bottom user + logout */}
       <div className="p-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <Link href={isOwner ? "/admin/profile" : "/panel/profile"}>
+        <Link href={profileHref}>
           <div className={cn(
             "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all mb-1 hover:bg-white/5",
             collapsed && "justify-center"
