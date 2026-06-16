@@ -214,7 +214,7 @@ export default function Products() {
           <p className="text-sm text-slate-500 mt-0.5">{total} total products</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => { setBulkQueue([]); setBulkDraft({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1" }); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
+          <button onClick={() => { setBulkQueue([]); setBulkDraft({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" }); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
             <Layers className="w-4 h-4" /> Bulk Add
@@ -620,11 +620,11 @@ export default function Products() {
                         className={`${inputCls} w-24`} style={inpStyle} />
                     </div>
                     <div className="col-span-2">
-                      <input
+                      <ImageUpload
                         value={bulkDraft.imageUrl}
-                        onChange={e => setBulkDraft(d => ({ ...d, imageUrl: e.target.value }))}
-                        placeholder="Image URL (optional)"
-                        className={inputCls} style={inpStyle}
+                        onChange={url => setBulkDraft(d => ({ ...d, imageUrl: url as string }))}
+                        folder="rbstars/products"
+                        light
                       />
                     </div>
                   </div>
