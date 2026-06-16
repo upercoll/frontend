@@ -191,4 +191,42 @@ export const adminApi = {
     getSession: (roomId: string) =>
       get<{ success: boolean; data: { roomId: string; status: string; assignedAgent: import("./types").ClaimSession["assignedAgent"]; messages: import("./types").ClaimSession["messages"] } }>(`/claims/${roomId}`),
   },
+
+  tutorials: {
+    list: () => get<{ success: boolean; data: { tutorials: import("./types").Tutorial[] } }>("/tutorials"),
+    create: (data: Partial<import("./types").Tutorial>) =>
+      post<{ success: boolean; data: { tutorial: import("./types").Tutorial } }>("/tutorials", data),
+    update: (id: string, data: Partial<import("./types").Tutorial>) =>
+      patch<{ success: boolean; data: { tutorial: import("./types").Tutorial } }>(`/tutorials/${id}`, data),
+    delete: (id: string) => del(`/tutorials/${id}`),
+  },
+
+  customers: {
+    list: (params?: Record<string, string>) => {
+      const q = new URLSearchParams(params || {}).toString();
+      return get<{ success: boolean; data: { customers: import("./types").CustomerAdmin[]; total: number; pages: number } }>(`/customers${q ? `?${q}` : ""}`);
+    },
+    stats: () => get<{ success: boolean; data: { total: number; active: number; newThisMonth: number; topSpenders: { _id: string; robloxUsername?: string; total: number; orders: number }[] } }>("/customers/stats"),
+    get: (id: string) => get<{ success: boolean; data: { customer: import("./types").CustomerAdmin } }>(`/customers/${id}`),
+    update: (id: string, data: Partial<import("./types").CustomerAdmin>) =>
+      patch<{ success: boolean; data: { customer: import("./types").CustomerAdmin } }>(`/customers/${id}`, data),
+  },
 };
+
+Object.assign(adminApi.team, {
+  hardDelete: (id: string) => del(`/team/${id}/hard-delete`),
+  updateCommission: (id: string, commissionRate: number) =>
+    patch(`/team/${id}/commission`, { commissionRate }),
+});
+
+Object.assign(adminApi.orders, {
+  bulkUpdateStatus: (ids: string[], status: string) =>
+    patch("/orders/bulk-status", { orderIds: ids, status }),
+});
+
+Object.assign(adminApi.analytics, {
+  salesSummary: (period: string) =>
+    get<{ success: boolean; data: { revenue: number; orders: number; avgOrderValue: number; revenueGrowth?: number; ordersGrowth?: number; statusBreakdown?: Record<string, number> } }>(`/analytics/sales-summary?period=${period}`),
+  conversion: () =>
+    get<{ success: boolean; data: { totalOrders: number; paidOrders: number; conversionRate: number; abandonmentRate: number } }>("/analytics/conversion"),
+});
