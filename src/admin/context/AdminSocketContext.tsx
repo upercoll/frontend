@@ -139,6 +139,17 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id, token]);
 
+  const claimGamesKey = user?.claimGames?.join(",") ?? "";
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !user || user.type !== "team_member" || !user.claimGames?.length) return;
+    socket.emit("queue:join", {
+      games: user.claimGames,
+      agentId: user.id,
+      agentName: profile?.displayName || user.email,
+    });
+  }, [claimGamesKey]);
+
   const dismissClaimPopup = () => setClaimPopup(null);
 
   const answerClaim = (roomId: string) => {
