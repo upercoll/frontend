@@ -5,12 +5,33 @@ import { Plus, BookOpen, Pencil, Trash2, X, Loader2, GripVertical, Eye, EyeOff }
 import { adminApi } from "../api";
 import type { Tutorial } from "../types";
 
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
+    /[?&]v=([A-Za-z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function getYouTubeThumbnail(url: string): string | null {
+  const id = extractYouTubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : null;
+}
+
 export default function Tutorials() {
   const qc = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<Tutorial | null>(null);
   const [form, setForm] = useState({ game: "", title: "", description: "", videoUrl: "", thumbnailUrl: "", gradientFrom: "#6d28d9", gradientTo: "#4c1d95", sortOrder: "0" });
   const [formError, setFormError] = useState("");
+  const [thumbPreviewError, setThumbPreviewError] = useState(false);
+
+  const autoThumb = getYouTubeThumbnail(form.videoUrl);
+  const effectiveThumb = form.thumbnailUrl || autoThumb || null;
 
   const { data, isLoading } = useQuery({
     queryKey: ["panel-tutorials"],
@@ -77,7 +98,7 @@ export default function Tutorials() {
       title: form.title.trim(),
       description: form.description.trim() || undefined,
       videoUrl: form.videoUrl.trim() || undefined,
-      thumbnailUrl: form.thumbnailUrl.trim() || undefined,
+      thumbnailUrl: form.thumbnailUrl.trim() || getYouTubeThumbnail(form.videoUrl) || undefined,
       gradient: { from: form.gradientFrom, to: form.gradientTo },
       sortOrder: parseInt(form.sortOrder) || 0,
     };
@@ -260,21 +281,51 @@ export default function Tutorials() {
                 <div>
                   <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>Video URL</label>
                   <input
-                    value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                    value={form.videoUrl}
+                    onChange={(e) => {
+                      setThumbPreviewError(false);
+                      setForm({ ...form, videoUrl: e.target.value });
+                    }}
                     placeholder="https://youtube.com/watch?v=..."
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                     style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                   />
+                  {autoThumb && !thumbPreviewError && (
+                    <div className="mt-2 rounded-xl overflow-hidden relative" style={{ aspectRatio: "16/9", border: "1px solid #E9EBF5" }}>
+                      <img
+                        src={autoThumb}
+                        alt="YouTube thumbnail"
+                        className="w-full h-full object-cover"
+                        onError={() => setThumbPreviewError(true)}
+                      />
+                      <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+                        style={{ background: "rgba(0,0,0,0.6)", color: "#fff" }}>
+                        Auto-detected thumbnail
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>Thumbnail URL</label>
+                  <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>
+                    Thumbnail URL
+                    {autoThumb && !form.thumbnailUrl && (
+                      <span className="ml-2 text-xs font-normal text-emerald-500">auto-filled from YouTube</span>
+                    )}
+                  </label>
                   <input
-                    value={form.thumbnailUrl} onChange={(e) => setForm({ ...form, thumbnailUrl: e.target.value })}
-                    placeholder="https://..."
+                    value={form.thumbnailUrl}
+                    onChange={(e) => { setThumbPreviewError(false); setForm({ ...form, thumbnailUrl: e.target.value }); }}
+                    placeholder={autoThumb ? autoThumb : "https://... (leave blank to use YouTube thumbnail)"}
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                     style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                   />
+                  {effectiveThumb && form.thumbnailUrl && (
+                    <div className="mt-2 rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", border: "1px solid #E9EBF5" }}>
+                      <img src={effectiveThumb} alt="Thumbnail preview" className="w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                    </div>
+                  )}
                 </div>
 
                 <div>
