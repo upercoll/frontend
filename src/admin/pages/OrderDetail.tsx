@@ -243,7 +243,7 @@ export default function OrderDetail() {
                     className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 flex items-center gap-2" style={{ color: "#374151" }}>
                     <Printer className="w-3.5 h-3.5" /> Print Order
                   </button>
-                  {["cancelled", "refunded"].includes(order.status) ? null : (
+                  {!["cancelled", "refunded"].includes(order.status) && isPaid && (
                     <button onClick={() => {
                       if (window.confirm("Cancel this order?")) updateMut.mutate({ status: "cancelled" });
                       setShowMoreActions(false);
@@ -488,7 +488,7 @@ export default function OrderDetail() {
                   className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
                   <option value="">Select status</option>
-                  {VALID_STATUSES.map((s) => (
+                  {VALID_STATUSES.filter(s => isPaid || !["cancelled", "refunded"].includes(s)).map((s) => (
                     <option key={s} value={s}>{STATUS_DISPLAY[s] || s}</option>
                   ))}
                 </select>
