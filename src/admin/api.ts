@@ -233,6 +233,10 @@ export const adminApi = {
     active: () => get<{ success: boolean; data: { sessions: import("./types").ClaimSession[] } }>("/claims/active"),
     getSession: (roomId: string) =>
       get<{ success: boolean; data: { roomId: string; status: string; assignedAgent: import("./types").ClaimSession["assignedAgent"]; messages: import("./types").ClaimSession["messages"] } }>(`/claims/${roomId}`),
+    getFullSession: (roomId: string) =>
+      get<{ success: boolean; data: { session: import("./types").ClaimSession } }>(`/claims/${roomId}/full`),
+    getAgentQueue: () =>
+      get<{ success: boolean; data: { pending: import("./types").ClaimSession[]; mine: import("./types").ClaimSession[]; completed: import("./types").ClaimSession[] } }>("/claims/queue"),
   },
 
   tutorials: {
