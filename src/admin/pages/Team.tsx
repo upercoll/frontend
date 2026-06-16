@@ -247,7 +247,7 @@ export default function Team() {
                     {member.status === "active" && (
                       <button
                         onClick={() => {
-                          if (window.confirm(`Disable ${member.profile?.displayName || member.email}?`)) {
+                          if (window.confirm(`Disable ${member.profile?.displayName || member.email}? They will lose access immediately.`)) {
                             removeMut.mutate(member._id);
                           }
                         }}
@@ -258,10 +258,14 @@ export default function Team() {
                         <UserX className="w-3.5 h-3.5" />
                       </button>
                     )}
-                    {isOwner && member.status !== "active" && (
+                    {isOwner && (
                       <button
                         onClick={() => {
-                          if (window.confirm(`PERMANENTLY DELETE ${member.email}? This cannot be undone.`)) {
+                          const name = member.profile?.displayName || member.email;
+                          const msg = member.status === "active"
+                            ? `PERMANENTLY DELETE ${name}? They are currently active and will lose all access. This cannot be undone.`
+                            : `PERMANENTLY DELETE ${name}? This cannot be undone.`;
+                          if (window.confirm(msg)) {
                             hardDeleteMut.mutate(member._id);
                           }
                         }}
