@@ -31,9 +31,11 @@ const PAGE_TITLES: Record<string, string> = {
   "/panel/queue": "Claim Queue",
   "/panel/stats": "My Statistics",
   "/panel/profile": "My Profile",
+  "/admin/collaboration/collaborators": "Collaborators",
+  "/admin/collaboration/payouts-all": "All Payouts",
 };
 
-const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view"];
+const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view", "/admin/collaboration"];
 
 const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/dashboard",        permission: "view_analytics" },
