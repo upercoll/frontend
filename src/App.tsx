@@ -14,6 +14,9 @@ import GamePage from "@/pages/GamePage";
 import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/not-found";
+import CollabInviteAccept from "@/pages/CollabInviteAccept";
+import CollabLogin from "@/pages/CollabLogin";
+import CollabDashboard from "@/pages/CollabDashboard";
 
 import { AdminAuthProvider } from "@/admin/context/AdminAuthContext";
 import { AdminSocketProvider } from "@/admin/context/AdminSocketContext";
@@ -43,6 +46,11 @@ import Analytics from "@/admin/pages/Analytics";
 import Customers from "@/admin/pages/Customers";
 import Tutorials from "@/admin/pages/Tutorials";
 import OrderDetail from "@/admin/pages/OrderDetail";
+import CollabCollaborators from "@/admin/pages/CollabCollaborators";
+import CollabView from "@/admin/pages/CollabView";
+import CollabPayouts from "@/admin/pages/CollabPayouts";
+import CollabPayoutDetail from "@/admin/pages/CollabPayoutDetail";
+import CollabPayoutsAll from "@/admin/pages/CollabPayoutsAll";
 
 import AgentDashboard from "@/admin/pages/agent/AgentDashboard";
 import Queue from "@/admin/pages/agent/Queue";
@@ -58,6 +66,10 @@ function isAdminRoute(location: string) {
     location.startsWith("/panel") ||
     location.startsWith("/invite/")
   );
+}
+
+function isCollabRoute(location: string) {
+  return location.startsWith("/collab");
 }
 
 function DiscordFloat() {
@@ -250,6 +262,32 @@ function AdminRouter() {
         </AdminLayout>
       </Route>
 
+      <Route path="/admin/collaboration/collaborators">
+        <AdminLayout>
+          <CollabCollaborators />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/collaboration/view/:id">
+        <AdminLayout>
+          <CollabView />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/collaboration/payouts-all">
+        <AdminLayout>
+          <CollabPayoutsAll />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/collaboration/payouts/:id/detail/:payoutId">
+        <AdminLayout>
+          <CollabPayoutDetail />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/collaboration/payouts/:id">
+        <AdminLayout>
+          <CollabPayouts />
+        </AdminLayout>
+      </Route>
+
       <Route path="/admin">
         {() => { window.location.replace("/admin/login"); return null; }}
       </Route>
@@ -260,8 +298,23 @@ function AdminRouter() {
   );
 }
 
+function CollabRouter() {
+  return (
+    <Switch>
+      <Route path="/collab/invite/:token" component={CollabInviteAccept} />
+      <Route path="/collab/login" component={CollabLogin} />
+      <Route path="/collab/dashboard" component={CollabDashboard} />
+      <Route path="/collab">{() => { window.location.replace("/collab/login"); return null; }}</Route>
+    </Switch>
+  );
+}
+
 function RootRouter() {
   const [location] = useLocation();
+
+  if (isCollabRoute(location)) {
+    return <CollabRouter />;
+  }
 
   if (isAdminRoute(location)) {
     return <AdminRouter />;
