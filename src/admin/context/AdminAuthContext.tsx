@@ -84,8 +84,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = useCallback((perm: string) => {
     if (!state.user) return false;
     if (state.user.isOwner) return true;
-    return state.user.permissions.includes(perm);
-  }, [state.user]);
+    if (viewAsRole) return viewAsRole.permissions.includes(perm);
+    return (state.user.permissions || []).includes(perm);
+  }, [state.user, viewAsRole]);
 
   return (
     <AdminAuthContext.Provider
