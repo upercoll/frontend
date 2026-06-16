@@ -48,6 +48,7 @@ export interface TeamMember {
   createdAt: string;
   profile?: AdminProfile;
   stats?: AgentStatsSummary;
+  commissionRate?: number;
 }
 
 export interface AgentStatsSummary {
@@ -117,13 +118,37 @@ export interface Product {
   createdAt: string;
 }
 
+export interface Tutorial {
+  _id: string;
+  game: string;
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  gradient?: { from: string; to: string };
+  sortOrder: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CustomerAdmin {
+  _id: string;
+  email: string;
+  displayName: string;
+  robloxUsername?: string;
+  active?: boolean;
+  orderCount?: number;
+  totalSpent?: number;
+  createdAt: string;
+}
+
 export interface Order {
   _id: string;
   orderNumber: string;
   customer: { email: string; robloxUsername: string };
   items: {
     product?: string;
-    productSnapshot: { name: string; price: number; game: string };
+    productSnapshot: { name: string; price: number; game: string; imageUrl?: string; gradient?: { from: string; to: string } };
     quantity: number;
     unitPrice: number;
     totalPrice: number;
