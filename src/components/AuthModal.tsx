@@ -119,7 +119,7 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
 type Step = "login" | "register" | "verify" | "edit";
 
 export default function AuthModal() {
-  const { authModalOpen, authModalMode, closeAuthModal, login, register, user, onSuccessCallback, updateUser } = useAuth();
+  const { authModalOpen, authModalMode, openAuthModal, closeAuthModal, login, register, user, onSuccessCallback, updateUser } = useAuth();
   // step is used only for the verify sub-flow; all other navigation uses authModalMode directly
   const [step, setStep] = useState<Step>("login");
 
@@ -426,7 +426,7 @@ export default function AuthModal() {
 
                   <p className="text-center text-[12px]" style={{ color: "#64748B" }}>
                     Don't have an account?{" "}
-                    <button onClick={() => { setStep("register"); clearErrors(); }}
+                    <button onClick={() => { openAuthModal("register"); clearErrors(); }}
                       className="font-bold transition-colors hover:text-white"
                       style={{ color: "#A5B4FC" }}>
                       Create one
@@ -534,7 +534,7 @@ export default function AuthModal() {
 
                   <p className="text-center text-[12px]" style={{ color: "#64748B" }}>
                     Already have an account?{" "}
-                    <button onClick={() => { setStep("login"); clearErrors(); }}
+                    <button onClick={() => { openAuthModal("login"); clearErrors(); }}
                       className="font-bold transition-colors hover:text-white"
                       style={{ color: "#A5B4FC" }}>
                       Sign in
