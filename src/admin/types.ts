@@ -1,29 +1,29 @@
 export interface AdminUser {
   id: string;
+  _id?: string;
   email: string;
-  type: "owner" | "team_member";
+  name?: string;
+  type: "owner" | "team_member" | "stocker";
   isOwner: boolean;
+  isStocker?: boolean;
   permissions: string[];
   claimGames?: string[];
   role?: AdminRole;
+  games?: string[];
+  commissionRate?: number;
 }
 
 export interface AdminProfile {
   _id: string;
   memberId: string;
-  memberType: "User" | "TeamMember";
-  isOwner: boolean;
-  displayName: string;
-  username: string;
-  profilePicture?: string;
+  memberType: "User" | "TeamMember" | "Stocker";
+  displayName?: string;
+  username?: string;
   bio?: string;
+  profilePicture?: string;
   profileComplete: boolean;
-  timezone: string;
-  notifications: {
-    newOrders: boolean;
-    newClaims: boolean;
-    teamUpdates: boolean;
-  };
+  isOwner?: boolean;
+  createdAt?: string;
 }
 
 export interface AdminRole {
@@ -33,112 +33,28 @@ export interface AdminRole {
   color: string;
   permissions: string[];
   memberCount?: number;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface TeamMember {
   _id: string;
   email: string;
-  role: AdminRole;
   status: "invited" | "active" | "disabled";
+  role: AdminRole;
   claimGames: string[];
-  claimCategories?: string[];
-  active: boolean;
-  lastLogin?: string;
-  createdAt: string;
-  profile?: AdminProfile;
-  stats?: AgentStatsSummary;
   commissionRate?: number;
-}
-
-export interface AgentStatsSummary {
-  totalClaims: number;
-  completedClaims: number;
-  declinedClaims?: number;
-  timedOutClaims?: number;
-  avgResponseTimeMs?: number;
-  totalOnlineMs?: number;
-  isOnline: boolean;
-  lastSeen?: string;
-  gamesHandled?: string[];
-  completionRate: number;
-  rating?: { total: number; count: number; average: number };
-  monthlyStats?: { month: string; year: number; claims: number; completed: number }[];
-}
-
-export interface Game {
-  _id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  imageUrl?: string;
-  imagePublicId?: string;
-  bannerUrl?: string;
-  gradient: { from: string; to: string };
   active: boolean;
-  featured: boolean;
-  sortOrder: number;
-  claimTeam?: string;
-  productCount?: number;
-  categoryCount?: number;
-  createdAt: string;
-}
-
-export interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  game: string;
-  icon?: string;
-  subcategories: { _id: string; name: string; slug: string }[];
-  active: boolean;
-  sortOrder: number;
-}
-
-export interface Product {
-  _id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  game: string;
-  category: { _id: string; name: string; slug: string };
-  subcategory?: string;
-  price: number;
-  originalPrice?: number;
-  gradient: { from: string; to: string };
-  imageUrl?: string;
-  images?: string[];
-  stock: number;
-  outOfStock: boolean;
-  featured: boolean;
-  bestSeller: boolean;
-  tags: string[];
-  active: boolean;
-  salesCount: number;
-  createdAt: string;
-}
-
-export interface Tutorial {
-  _id: string;
-  game: string;
-  title: string;
-  description?: string;
-  videoUrl?: string;
-  thumbnailUrl?: string;
-  gradient?: { from: string; to: string };
-  sortOrder: number;
-  active: boolean;
-  createdAt: string;
-}
-
-export interface CustomerAdmin {
-  _id: string;
-  email: string;
-  displayName: string;
-  robloxUsername?: string;
-  active?: boolean;
-  orderCount?: number;
-  totalSpent?: number;
+  profile?: {
+    displayName?: string;
+    username?: string;
+    profilePicture?: string;
+  };
+  stats?: {
+    isOnline: boolean;
+    completedClaims: number;
+    activeClaims: number;
+    avgResponseTime?: number;
+  };
   createdAt: string;
 }
 
@@ -147,6 +63,51 @@ export interface TimelineEvent {
   by: string;
   details?: string;
   timestamp: string;
+}
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  game: string;
+  description?: string;
+  sortOrder: number;
+  subcategories: { _id: string; name: string; slug: string; sortOrder: number }[];
+}
+
+export interface Game {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  bannerUrl?: string;
+  gradient?: { from: string; to: string };
+  isActive: boolean;
+  sortOrder: number;
+  categories?: Category[];
+  productCount?: number;
+}
+
+export interface Product {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  game: string;
+  category?: Category | string;
+  imageUrl?: string;
+  images?: string[];
+  gradient?: { from: string; to: string };
+  features?: string[];
+  stock: number;
+  outOfStock: boolean;
+  featured: boolean;
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
 }
 
 export interface Order {
@@ -176,7 +137,7 @@ export interface Order {
   refundAmount?: number;
   refundReason?: string;
   refundedAt?: string;
-  fulfillmentStatus?: "unfulfilled" | "partial" | "fulfilled";
+  fulfillmentStatus?: "unfulfilled" | "partial" | "completed";
   fulfilledAt?: string;
   fulfilledBy?: string;
   adminNotes?: string;
@@ -231,6 +192,11 @@ export interface ProofOfDelivery {
   viewedAt?: string;
   ownerNotes?: string;
   createdAt: string;
+  orderDetails?: {
+    items: Order["items"];
+    pricing: Order["pricing"];
+    status: string;
+  };
 }
 
 export interface SiteContentItem {
@@ -268,20 +234,92 @@ export interface RevenueChartPoint {
   orders: number;
 }
 
+export interface Stocker {
+  _id: string;
+  email: string;
+  name: string;
+  status: "invited" | "active" | "disabled";
+  commissionRate: number;
+  games: string[];
+  lastLogin?: string;
+  totalStocked: number;
+  totalRevenue: number;
+  totalCommission: number;
+  requestCount?: number;
+  stockedCount?: number;
+  createdAt: string;
+}
+
+export interface StockRequestItem {
+  product?: string;
+  productName: string;
+  productSlug?: string;
+  game?: string;
+  imageUrl?: string;
+  gradient?: { from: string; to: string };
+  quantity: number;
+  salePrice: number;
+  totalSaleValue: number;
+}
+
+export interface StockRequest {
+  _id: string;
+  stocker: Stocker | string;
+  stockerName: string;
+  stockerEmail: string;
+  game: string;
+  items: StockRequestItem[];
+  totalSaleValue: number;
+  status: "pending" | "approved" | "stocked" | "rejected";
+  adminNotes?: string;
+  paymentAmount: number;
+  paymentSent: boolean;
+  commission: number;
+  commissionRate: number;
+  approvedAt?: string;
+  stockedAt?: string;
+  rejectedAt?: string;
+  stockedBy?: string;
+  createdAt: string;
+}
+
 export const ALL_PERMISSIONS: { key: string; label: string; description: string; group: string }[] = [
   { key: "view_analytics", label: "View Analytics", description: "Access the analytics dashboard", group: "Analytics" },
-  { key: "manage_games", label: "Manage Games", description: "Add, edit, and remove games", group: "Content" },
-  { key: "manage_categories", label: "Manage Categories", description: "Add, edit, and remove categories", group: "Content" },
-  { key: "manage_products", label: "Manage Products", description: "Add, edit, and remove products", group: "Content" },
+
+  { key: "view_products", label: "View Products", description: "View the product catalog", group: "Products" },
+  { key: "create_products", label: "Add Products", description: "Create new products", group: "Products" },
+  { key: "edit_products", label: "Edit Products", description: "Modify existing products", group: "Products" },
+  { key: "delete_products", label: "Delete Products", description: "Remove products from the catalog", group: "Products" },
+
+  { key: "view_orders", label: "View Orders", description: "See the orders list and details", group: "Orders" },
+  { key: "update_order_status", label: "Update Order Status", description: "Change order status (e.g. paid, delivering)", group: "Orders" },
+  { key: "fulfill_orders", label: "Mark as Delivered", description: "Mark orders as completed/delivered", group: "Orders" },
+  { key: "refund_orders", label: "Refund Orders", description: "Issue refunds on orders", group: "Orders" },
+
+  { key: "view_games", label: "View Games", description: "See the games list", group: "Games" },
+  { key: "create_games", label: "Add Games", description: "Create new games", group: "Games" },
+  { key: "edit_games", label: "Edit Games", description: "Modify existing games", group: "Games" },
+  { key: "delete_games", label: "Delete Games", description: "Remove games", group: "Games" },
+  { key: "manage_categories", label: "Manage Categories", description: "Add, edit, and remove categories", group: "Games" },
+
   { key: "edit_site_content", label: "Edit Site Content", description: "Edit homepage and site text", group: "Content" },
   { key: "upload_images", label: "Upload Images", description: "Upload images to the media library", group: "Content" },
-  { key: "manage_orders", label: "Manage Orders", description: "View and update orders", group: "Operations" },
-  { key: "manage_claims", label: "Manage Claims", description: "View all claim sessions", group: "Operations" },
-  { key: "claim_agent", label: "Claim Agent", description: "Answer and handle claim chats", group: "Operations" },
-  { key: "view_pod", label: "View Proof of Delivery", description: "View proof of delivery submissions", group: "Operations" },
+
   { key: "manage_promos", label: "Manage Promos", description: "Create and manage promo codes", group: "Marketing" },
-  { key: "manage_team", label: "Manage Team", description: "Invite and manage team members", group: "Team" },
+
+  { key: "view_claims", label: "View Claims", description: "View all claim sessions", group: "Claims" },
+  { key: "claim_agent", label: "Claim Agent", description: "Answer and handle claim chats", group: "Claims" },
+  { key: "monitor_agents", label: "Monitor Agents", description: "View agent statistics and activity", group: "Claims" },
+  { key: "view_pod", label: "View Proof of Delivery", description: "View proof of delivery submissions", group: "Claims" },
+
+  { key: "view_team", label: "View Team", description: "See team members list", group: "Team" },
+  { key: "invite_team", label: "Invite Members", description: "Invite new team members", group: "Team" },
+  { key: "edit_team", label: "Edit Members", description: "Update team member roles and assignments", group: "Team" },
+  { key: "remove_team", label: "Remove Members", description: "Remove or disable team members", group: "Team" },
   { key: "manage_roles", label: "Manage Roles", description: "Create and edit permission roles", group: "Team" },
-  { key: "monitor_agents", label: "Monitor Agents", description: "View agent statistics and activity", group: "Team" },
   { key: "manage_collaborators", label: "Manage Collaborators", description: "Manage collaborator accounts and products", group: "Team" },
+
+  { key: "view_stock", label: "View Stock", description: "View stock requests and stocker tracking", group: "Stock" },
+  { key: "manage_stock", label: "Manage Stock", description: "Approve, reject, and mark stock requests as stocked", group: "Stock" },
+  { key: "manage_stockers", label: "Manage Stockers", description: "Invite and manage stocker accounts", group: "Stock" },
 ];
