@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Bell, Menu, Wifi, WifiOff, Eye, ChevronDown, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminAuth } from "../context/AdminAuthContext";
@@ -15,10 +15,19 @@ interface TopBarProps {
 export default function TopBar({ title, onMenuClick }: TopBarProps) {
   const { profile, user, viewAsRole, setViewAsRole, isOwner } = useAdminAuth();
   const { connected } = useAdminSocket();
+  const [, navigate] = useLocation();
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [rolesLoading, setRolesLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  function getNavTargetForRole(permissions: string[]): string {
+    const isAgentRole = permissions.includes("claim_agent") &&
+      !permissions.includes("view_analytics") &&
+      !permissions.includes("manage_orders") &&
+      !permissions.includes("view_orders");
+    return isAgentRole ? "/panel/dashboard" : "/admin/dashboard";
+  }
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -125,7 +134,7 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
                     </p>
                   </div>
                   <button
-                    onClick={() => { setViewAsRole(null); setViewDropdownOpen(false); }}
+                    onClick={() => { setViewAsRole(null); setViewDropdownOpen(false); navigate("/admin/dashboard"); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all"
                     style={{ color: !viewAsRole ? "#a5b4fc" : "rgba(255,255,255,0.6)", background: !viewAsRole ? "rgba(99,102,241,0.12)" : "transparent" }}
                     onMouseEnter={e => { if (viewAsRole) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
@@ -143,7 +152,12 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
                   ) : roles.map(role => (
                     <button
                       key={role._id}
-                      onClick={() => { setViewAsRole({ id: role._id, name: role.name, color: role.color || "#6366f1", permissions: role.permissions || [] }); setViewDropdownOpen(false); }}
+                      onClick={() => {
+                        const perms = role.permissions || [];
+                        setViewAsRole({ id: role._id, name: role.name, color: role.color || "#6366f1", permissions: perms });
+                        setViewDropdownOpen(false);
+                        navigate(getNavTargetForRole(perms));
+                      }}
                       className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all"
                       style={{ color: viewAsRole?.id === role._id ? "#a5b4fc" : "rgba(255,255,255,0.6)", background: viewAsRole?.id === role._id ? "rgba(99,102,241,0.12)" : "transparent" }}
                       onMouseEnter={e => { if (viewAsRole?.id !== role._id) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
