@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, Clock, Package, CheckCircle, RefreshCw,
-  ChevronDown, Wifi, WifiOff, Inbox, Activity, Archive,
+  ChevronDown, Wifi, WifiOff, Inbox, Activity, Archive, ArrowLeft,
 } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -153,6 +153,7 @@ export default function Queue() {
   const [podNotes, setPodNotes] = useState("");
   const [submittingPod, setSubmittingPod] = useState(false);
   const [noProof, setNoProof] = useState(false);
+  const [showChatMobile, setShowChatMobile] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["agent-queue"],
@@ -213,6 +214,7 @@ export default function Queue() {
       refetch();
       setSelectedSession(session);
       setOpenSection("mine");
+      setShowChatMobile(true);
     };
 
     socket.on("queue:claim_completed", handleCompleted);
@@ -233,6 +235,7 @@ export default function Queue() {
   }, [socket, selectedSession, removePendingClaim, refetch]);
 
   const openSession = useCallback(async (sessionOrStub: ClaimSession) => {
+    setShowChatMobile(true);
     if (sessionOrStub.messages && sessionOrStub.messages.length > 0) {
       setSelectedSession(sessionOrStub);
       socket?.emit("claim:agent_browse", { roomId: sessionOrStub.roomId });
@@ -258,6 +261,10 @@ export default function Queue() {
     removePendingClaim(session.roomId);
     refetch();
   }, [removePendingClaim, refetch]);
+
+  const handleBack = () => {
+    setShowChatMobile(false);
+  };
 
   const markClaimed = () => setPodMode(true);
 
@@ -297,27 +304,9 @@ export default function Queue() {
   };
 
   const sections: { key: SectionKey; label: string; icon: React.ElementType; items: ClaimSession[]; color: string }[] = [
-    {
-      key: "waiting",
-      label: "Waiting to be Claimed",
-      icon: Inbox,
-      items: allPending,
-      color: "text-yellow-400",
-    },
-    {
-      key: "mine",
-      label: "My Active Chats",
-      icon: Activity,
-      items: mine,
-      color: "text-emerald-400",
-    },
-    {
-      key: "completed",
-      label: "Completed Chats",
-      icon: Archive,
-      items: completed,
-      color: "text-slate-400",
-    },
+    { key: "waiting", label: "Waiting to be Claimed", icon: Inbox, items: allPending, color: "text-yellow-400" },
+    { key: "mine", label: "My Active Chats", icon: Activity, items: mine, color: "text-emerald-400" },
+    { key: "completed", label: "Completed Chats", icon: Archive, items: completed, color: "text-slate-400" },
   ];
 
   const isSessionActive =
@@ -327,12 +316,10 @@ export default function Queue() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+      {/* Sidebar — full width on mobile when no chat shown, fixed 320px on md+ */}
       <div
-        className="w-80 flex-shrink-0 flex flex-col overflow-hidden border-r"
-        style={{
-          background: "rgba(6,9,28,0.6)",
-          borderColor: "rgba(139,92,246,0.1)",
-        }}
+        className={`${showChatMobile ? "hidden" : "flex"} md:flex flex-col w-full md:w-80 flex-shrink-0 overflow-hidden border-r`}
+        style={{ background: "rgba(6,9,28,0.6)", borderColor: "rgba(139,92,246,0.1)" }}
       >
         <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <div className="flex items-center gap-2 mb-1">
@@ -364,7 +351,7 @@ export default function Queue() {
             return (
               <div key={section.key} className="mb-1">
                 <button
-                  onClick={() => setOpenSection(isOpen ? section.key : section.key)}
+                  onClick={() => setOpenSection(section.key)}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-xl transition-all"
                   style={isOpen ? {
                     background: "rgba(99,102,241,0.08)",
@@ -420,7 +407,7 @@ export default function Queue() {
                               key={s.roomId}
                               session={s}
                               selected={selectedSession?.roomId === s.roomId}
-                              onClick={() => { openSession(s); }}
+                              onClick={() => openSession(s)}
                               badge={section.key === "waiting" ? "Claim" : undefined}
                             />
                           ))
@@ -435,17 +422,26 @@ export default function Queue() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Chat panel — full width on mobile when showChatMobile, flex-1 on md+ */}
+      <div className={`${showChatMobile ? "flex" : "hidden"} md:flex flex-1 flex-col overflow-hidden`}>
         {loadingSession ? (
           <div className="flex-1 flex items-center justify-center">
             <RefreshCw className="w-6 h-6 text-slate-600 animate-spin" />
           </div>
         ) : selectedSession ? (
           <>
-            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+            <div className="flex items-center gap-2 px-3 md:px-4 py-3 flex-shrink-0"
               style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <div>
-                <p className="text-white text-sm font-semibold">
+              {/* Back button — mobile only */}
+              <button
+                onClick={handleBack}
+                className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 flex-shrink-0 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-semibold truncate">
                   {selectedSession.status === "active"
                     ? `In Progress · ${selectedSession.itemName || selectedSession.game || "Chat"}`
                     : selectedSession.status === "pending"
@@ -454,25 +450,30 @@ export default function Queue() {
                     ? `${selectedSession.assignedAgent?.name || "Agent"} · ${selectedSession.itemName || selectedSession.game || "Chat"}`
                     : `Ended · ${selectedSession.itemName || selectedSession.game || "Chat"}`}
                 </p>
-                <p className="text-slate-400 text-xs">
+                <p className="text-slate-400 text-xs truncate">
                   {selectedSession.robloxUsername} · {selectedSession.orderRef ? `Order ${selectedSession.orderRef}` : selectedSession.game}
                 </p>
               </div>
+
               {isSessionActive && (
-                <div className="flex gap-2">
+                <div className="flex gap-1.5 flex-shrink-0">
                   <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     onClick={markClaimed}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl text-xs font-medium transition-colors">
-                    <CheckCircle className="w-3.5 h-3.5" /> Mark Delivered
+                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Mark Delivered</span>
+                    <span className="sm:hidden">Deliver</span>
                   </motion.button>
                   <button onClick={endChat}
-                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-3 py-2 rounded-xl text-xs transition-colors">
-                    End Chat
+                    className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-2.5 py-1.5 rounded-xl text-xs transition-colors">
+                    <span className="hidden sm:inline">End Chat</span>
+                    <span className="sm:hidden">End</span>
                   </button>
                 </div>
               )}
             </div>
-            <div className="flex-1 overflow-hidden p-3">
+
+            <div className="flex-1 overflow-hidden p-2 md:p-3">
               <ChatWindow
                 session={selectedSession}
                 onSessionClaimed={handleSessionClaimed}
@@ -505,12 +506,14 @@ export default function Queue() {
         )}
       </div>
 
+      {/* POD Modal */}
       <AnimatePresence>
         {podMode && selectedSession && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden">
+            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Proof of Delivery Required</h3>
                 <p className="text-slate-400 text-xs mt-0.5">Submit proof before marking as delivered</p>
@@ -542,12 +545,12 @@ export default function Queue() {
                         </div>
                       ) : (
                         <div>
-                          <p className="text-slate-400 text-sm">Click to upload screenshot</p>
+                          <p className="text-slate-400 text-sm">Tap to upload screenshot</p>
                           <p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p>
                         </div>
                       )}
                     </div>
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden"
+                    <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
                       onChange={e => { setProofFile(e.target.files?.[0] || null); e.target.value = ""; }} />
                   </>
                 )}
@@ -555,40 +558,37 @@ export default function Queue() {
                 {noProof && (
                   <div className="rounded-xl px-4 py-3 text-sm text-amber-400/80 flex items-start gap-2"
                     style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
-                    <span className="mt-0.5">⚠</span>
-                    <p>Marking as delivered without proof.</p>
+                    <span>⚠️</span>
+                    <span className="text-xs">Skipping proof — the delivery will be marked without a screenshot.</span>
                   </div>
                 )}
 
                 <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">
-                    Estimated Delivery <span className="text-slate-500 font-normal">(optional)</span>
-                  </label>
+                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Estimated Delivery Time</label>
                   <input value={estDelivery} onChange={e => setEstDelivery(e.target.value)}
-                    placeholder="e.g. 5-10 minutes, Immediate"
+                    placeholder="e.g. 5 minutes"
                     className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                 </div>
-
                 <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">
-                    Notes <span className="text-slate-500 font-normal">(optional)</span>
-                  </label>
-                  <textarea value={podNotes} onChange={e => setPodNotes(e.target.value)} rows={2}
-                    placeholder="Any additional notes..."
-                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
+                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Notes</label>
+                  <textarea value={podNotes} onChange={e => setPodNotes(e.target.value)}
+                    placeholder="Optional notes..."
+                    rows={2}
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50" />
                 </div>
 
-                <div className="flex gap-3">
-                  <button onClick={() => { setPodMode(false); setNoProof(false); setProofFile(null); }}
-                    className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium">
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => { setPodMode(false); setProofFile(null); setNoProof(false); }}
+                    className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium transition-colors">
                     Cancel
                   </button>
-                  <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
+                  <motion.button
+                    whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                     onClick={submitProofAndClaim}
-                    disabled={(!noProof && !proofFile) || submittingPod}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60">
+                    disabled={submittingPod || (!noProof && !proofFile)}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors">
                     {submittingPod ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                    {noProof ? "Mark Delivered (No Proof)" : "Submit & Mark Delivered"}
+                    Mark Delivered
                   </motion.button>
                 </div>
               </div>
