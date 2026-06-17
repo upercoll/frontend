@@ -139,7 +139,7 @@ export interface Order {
   refundAmount?: number;
   refundReason?: string;
   refundedAt?: string;
-  fulfillmentStatus?: "unfulfilled" | "partial" | "completed";
+  fulfillmentStatus?: "pending" | "partial" | "completed";
   fulfilledAt?: string;
   fulfilledBy?: string;
   adminNotes?: string;
