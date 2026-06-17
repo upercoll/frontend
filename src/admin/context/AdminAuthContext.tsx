@@ -28,6 +28,27 @@ interface AdminAuthContextType extends AdminAuthState {
   setViewAsRole: (role: ViewAsRole | null) => void;
 }
 
+const LEGACY_PERMISSION_MAP: Record<string, string> = {
+  view_products: "manage_products",
+  create_products: "manage_products",
+  edit_products: "manage_products",
+  delete_products: "manage_products",
+  view_orders: "manage_orders",
+  update_order_status: "manage_orders",
+  fulfill_orders: "manage_orders",
+  refund_orders: "manage_orders",
+  view_games: "manage_games",
+  create_games: "manage_games",
+  edit_games: "manage_games",
+  delete_games: "manage_games",
+  view_team: "manage_team",
+  invite_team: "manage_team",
+  edit_team: "manage_team",
+  remove_team: "manage_team",
+  view_claims: "manage_claims",
+  view_stock: "manage_stock",
+};
+
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
@@ -84,8 +105,15 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = useCallback((perm: string) => {
     if (!state.user) return false;
     if (state.user.isOwner) return true;
-    if (viewAsRole) return viewAsRole.permissions.includes(perm);
-    return (state.user.permissions || []).includes(perm);
+
+    const checkPerms = (perms: string[]) => {
+      if (perms.includes(perm)) return true;
+      const legacy = LEGACY_PERMISSION_MAP[perm];
+      return legacy ? perms.includes(legacy) : false;
+    };
+
+    if (viewAsRole) return checkPerms(viewAsRole.permissions);
+    return checkPerms(state.user.permissions || []);
   }, [state.user, viewAsRole]);
 
   return (
