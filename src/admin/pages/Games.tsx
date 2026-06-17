@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game, Category } from "../types";
 
@@ -13,6 +13,8 @@ export default function Games() {
   const [showCatModal, setShowCatModal] = useState<string | null>(null);
   const [addingSubcatFor, setAddingSubcatFor] = useState<string | null>(null);
   const [newSubcatName, setNewSubcatName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<Game | null>(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const [gameName, setGameName] = useState("");
   const [gameDesc, setGameDesc] = useState("");
@@ -29,8 +31,12 @@ export default function Games() {
 
   const deleteGameMut = useMutation({
     mutationFn: adminApi.games.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["panel-games"] }),
-    onError: (err: Error) => alert(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["panel-games"] });
+      setDeleteConfirm(null);
+      setDeleteError("");
+    },
+    onError: (err: Error) => setDeleteError(err.message),
   });
 
   const createCatMut = useMutation({
@@ -106,7 +112,7 @@ export default function Games() {
   const getGameCats = (slug: string) => categories.filter((c) => c.game === slug);
 
   return (
-    <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
+    <div className="p-4 md:p-6 space-y-5 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-white font-semibold text-lg">Games & Categories</h2>
@@ -143,11 +149,11 @@ export default function Games() {
                 transition={{ delay: i * 0.05 }}
                 className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden"
               >
-                <div className="flex items-center gap-4 p-4">
+                <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4">
                   {game.imageUrl ? (
-                    <img src={game.imageUrl} className="w-12 h-12 rounded-xl object-cover flex-shrink-0" alt="" />
+                    <img src={game.imageUrl} className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover flex-shrink-0" alt="" />
                   ) : (
-                    <div className="w-12 h-12 rounded-xl flex-shrink-0" style={{ background: `linear-gradient(135deg, ${game.gradient.from}, ${game.gradient.to})` }}>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex-shrink-0" style={{ background: `linear-gradient(135deg, ${game.gradient.from}, ${game.gradient.to})` }}>
                       <div className="w-full h-full flex items-center justify-center">
                         <Gamepad2 className="w-5 h-5 text-white/50" />
                       </div>
@@ -155,26 +161,30 @@ export default function Games() {
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-white font-medium">{game.name}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-white font-medium text-sm md:text-base">{game.name}</p>
                       {game.featured && <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/10 text-yellow-400">Featured</span>}
                       {!game.active && <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-400/10 text-slate-400">Inactive</span>}
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5">
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-slate-500 text-xs flex items-center gap-1"><Package className="w-3 h-3" />{game.productCount || 0} products</span>
-                      <span className="text-slate-500 text-xs flex items-center gap-1"><FolderOpen className="w-3 h-3" />{gameCats.length} categories</span>
+                      <span className="text-slate-500 text-xs flex items-center gap-1"><FolderOpen className="w-3 h-3" />{gameCats.length} cats</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button onClick={() => { setShowCatModal(game.slug); setCatName(""); setError(""); }}
-                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg text-xs transition-colors flex items-center gap-1.5">
+                      className="hidden sm:flex px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg text-xs transition-colors items-center gap-1.5">
                       <Plus className="w-3 h-3" /> Category
+                    </button>
+                    <button onClick={() => { setShowCatModal(game.slug); setCatName(""); setError(""); }}
+                      className="sm:hidden w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => openEdit(game)} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
-                    <button onClick={() => { if (confirm(`Delete game "${game.name}"?`)) deleteGameMut.mutate(game.slug); }}
+                    <button onClick={() => { setDeleteConfirm(game); setDeleteError(""); }}
                       className="w-8 h-8 rounded-lg bg-red-500/5 hover:bg-red-500/15 flex items-center justify-center text-red-400 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -258,7 +268,7 @@ export default function Games() {
                                     <span className="hidden sm:inline">Sub</span>
                                   </button>
                                   <button
-                                    onClick={() => { if (confirm(`Delete category "${cat.name}"?`)) deleteCatMut.mutate(cat._id); }}
+                                    onClick={() => { if (window.confirm(`Delete category "${cat.name}"?`)) deleteCatMut.mutate(cat._id); }}
                                     className="w-6 h-6 rounded flex items-center justify-center text-red-400/60 hover:text-red-400 transition-colors"
                                   >
                                     <X className="w-3.5 h-3.5" />
@@ -279,12 +289,66 @@ export default function Games() {
       )}
 
       <AnimatePresence>
+        {/* Delete Game Modal */}
+        {deleteConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={() => { setDeleteConfirm(null); setDeleteError(""); }}>
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Trash2 className="w-6 h-6 text-red-400" />
+                </div>
+                <h3 className="text-white font-semibold text-base mb-1">Delete "{deleteConfirm.name}"?</h3>
+                <p className="text-slate-400 text-sm mb-1">
+                  This permanently removes the game and all its categories from the database.
+                </p>
+                {(deleteConfirm.productCount || 0) > 0 && (
+                  <div className="flex items-start gap-2 text-left mt-3 px-4 py-3 rounded-xl"
+                    style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-amber-400/90 text-xs">
+                      This game has <strong>{deleteConfirm.productCount} active product{deleteConfirm.productCount !== 1 ? "s" : ""}</strong>. You must deactivate or remove them before the game can be deleted.
+                    </p>
+                  </div>
+                )}
+                {deleteError && (
+                  <div className="flex items-start gap-2 text-left mt-3 px-4 py-3 rounded-xl"
+                    style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-red-400/90 text-xs">{deleteError}</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 px-6 pb-6">
+                <button
+                  onClick={() => { setDeleteConfirm(null); setDeleteError(""); }}
+                  className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium transition-colors">
+                  Cancel
+                </button>
+                <motion.button
+                  whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                  onClick={() => deleteGameMut.mutate(deleteConfirm.slug)}
+                  disabled={deleteGameMut.isPending}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+                  {deleteGameMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  Delete Game
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Create / Edit Game Modal */}
         {showGameModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
             onClick={() => setShowGameModal(null)}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">{showGameModal === "create" ? "Add Game" : "Edit Game"}</h3>
@@ -307,17 +371,17 @@ export default function Games() {
                   <div>
                     <label className="text-slate-300 text-sm font-medium block mb-1.5">Gradient From</label>
                     <div className="flex gap-2">
-                      <input type="color" value={gameGradFrom} onChange={(e) => setGameGradFrom(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer" />
+                      <input type="color" value={gameGradFrom} onChange={(e) => setGameGradFrom(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent" />
                       <input value={gameGradFrom} onChange={(e) => setGameGradFrom(e.target.value)}
-                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50" />
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
                     </div>
                   </div>
                   <div>
                     <label className="text-slate-300 text-sm font-medium block mb-1.5">Gradient To</label>
                     <div className="flex gap-2">
-                      <input type="color" value={gameGradTo} onChange={(e) => setGameGradTo(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer" />
+                      <input type="color" value={gameGradTo} onChange={(e) => setGameGradTo(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent" />
                       <input value={gameGradTo} onChange={(e) => setGameGradTo(e.target.value)}
-                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50" />
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
                     </div>
                   </div>
                 </div>
@@ -345,12 +409,13 @@ export default function Games() {
           </motion.div>
         )}
 
+        {/* Add Category Modal */}
         {showCatModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={() => setShowCatModal(null)}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Add Category to {games.find((g: Game) => g.slug === showCatModal)?.name}</h3>
