@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, User, Gamepad2, Clock, Package, Mail, RefreshCw, ChevronRight, AlertCircle } from "lucide-react";
+import { MessageSquare, User, Gamepad2, Clock, Package, Mail, RefreshCw, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
 import { adminApi } from "../api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import { cn } from "@/lib/utils";
@@ -105,10 +105,10 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-5 py-4 border-b border-white/5 flex-shrink-0">
+      <div className="px-4 md:px-5 py-4 border-b border-white/5 flex-shrink-0">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-white font-semibold text-base">{session.robloxUsername}</h3>
               <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLOR[session.status])}>
                 {session.status}
@@ -116,8 +116,8 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               <span className="flex items-center gap-1 text-slate-500 text-xs">
-                <Mail className="w-3 h-3" />
-                {session.contactEmail}
+                <Mail className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-[180px]">{session.contactEmail}</span>
               </span>
               {session.game && (
                 <span className="flex items-center gap-1 text-slate-500 text-xs">
@@ -152,7 +152,7 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 md:px-5 py-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center h-32 text-slate-600">
             <RefreshCw className="w-4 h-4 animate-spin mr-2" />
@@ -184,12 +184,12 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
                   )}>
                     {(msg.senderName || (isAgent ? "A" : "C"))[0].toUpperCase()}
                   </div>
-                  <div className={cn("max-w-[70%]", isAgent ? "items-end" : "items-start", "flex flex-col gap-1")}>
+                  <div className={cn("max-w-[75%]", isAgent ? "items-end" : "items-start", "flex flex-col gap-1")}>
                     <span className={cn("text-[10px] font-medium", isAgent ? "text-purple-400 text-right" : "text-blue-400")}>
                       {msg.senderName}
                     </span>
                     <div className={cn(
-                      "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed",
+                      "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words",
                       isAgent
                         ? "bg-purple-600/20 text-purple-100 border border-purple-500/15 rounded-tr-sm"
                         : "bg-blue-600/15 text-slate-200 border border-blue-500/10 rounded-tl-sm"
@@ -211,6 +211,7 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
 
 export default function OpenChats() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [showChatMobile, setShowChatMobile] = useState(false);
   const { activeClaims } = useAdminSocket();
 
   const { data: listData, isLoading: listLoading, refetch: refetchList } = useQuery({
@@ -248,9 +249,15 @@ export default function OpenChats() {
     }
   }, [sessions.length]);
 
+  const handleSelectSession = (roomId: string) => {
+    setSelectedRoomId(roomId);
+    setShowChatMobile(true);
+  };
+
   return (
     <div className="flex h-full overflow-hidden">
-      <div className="w-80 flex-shrink-0 flex flex-col border-r border-white/5 bg-[#0a1628]">
+      {/* Session list — full width on mobile unless chat is open */}
+      <div className={`${showChatMobile ? "hidden" : "flex"} md:flex flex-col w-full md:w-80 flex-shrink-0 border-r border-white/5 bg-[#0a1628]`}>
         <div className="px-4 py-4 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -301,7 +308,7 @@ export default function OpenChats() {
                   <SessionRow
                     session={session}
                     selected={selectedRoomId === session.roomId}
-                    onClick={() => setSelectedRoomId(session.roomId)}
+                    onClick={() => handleSelectSession(session.roomId)}
                     liveStatus={liveStatusMap.get(session.roomId) as ClaimSession["status"] | undefined}
                   />
                 </motion.div>
@@ -311,7 +318,8 @@ export default function OpenChats() {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#060d1a]">
+      {/* Chat pane — full width on mobile when chat is open */}
+      <div className={`${showChatMobile ? "flex" : "hidden"} md:flex flex-1 flex-col overflow-hidden bg-[#060d1a]`}>
         {!selectedSession ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-600">
             <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
@@ -327,8 +335,23 @@ export default function OpenChats() {
               transition={{ duration: 0.18 }}
               className="flex flex-col h-full"
             >
+              {/* Mobile back bar */}
+              <div className="md:hidden flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0"
+                style={{ background: "rgba(6,9,28,0.8)" }}>
+                <button
+                  onClick={() => setShowChatMobile(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex-shrink-0"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <span className="text-white text-sm font-medium truncate">{selectedSession.robloxUsername}</span>
+                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto flex-shrink-0", STATUS_COLOR[selectedSession.status])}>
+                  {selectedSession.status}
+                </span>
+              </div>
+
               {selectedSession.status === "pending" && (
-                <div className="px-5 py-2.5 flex items-center gap-2 bg-yellow-500/8 border-b border-yellow-500/15 flex-shrink-0">
+                <div className="px-4 md:px-5 py-2.5 flex items-center gap-2 bg-yellow-500/8 border-b border-yellow-500/15 flex-shrink-0">
                   <AlertCircle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
                   <p className="text-yellow-400 text-xs font-medium">Waiting for an agent to answer this chat</p>
                 </div>
