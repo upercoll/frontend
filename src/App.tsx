@@ -56,6 +56,14 @@ import AgentDashboard from "@/admin/pages/agent/AgentDashboard";
 import Queue from "@/admin/pages/agent/Queue";
 import AgentStats from "@/admin/pages/agent/AgentStats";
 
+import StockRequests from "@/admin/pages/stock/StockRequests";
+import StockTracking from "@/admin/pages/stock/StockTracking";
+
+import StockerDashboard from "@/admin/pages/stocker/StockerDashboard";
+import StockerRequestForm from "@/admin/pages/stocker/StockerRequestForm";
+import StockerHistory from "@/admin/pages/stocker/StockerHistory";
+import StockerInviteAccept from "@/admin/pages/stocker/StockerInviteAccept";
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
@@ -64,6 +72,7 @@ function isAdminRoute(location: string) {
   return (
     location.startsWith("/admin") ||
     location.startsWith("/panel") ||
+    location.startsWith("/stocker") ||
     location.startsWith("/invite/")
   );
 }
@@ -144,6 +153,8 @@ function AdminRouter() {
       <Route path="/admin/invite/:token" component={InviteAccept} />
       <Route path="/admin/profile-setup" component={AdminProfileSetup} />
       <Route path="/panel/profile-setup" component={AdminProfileSetup} />
+
+      <Route path="/stocker/invite/:token" component={StockerInviteAccept} />
 
       <Route path="/admin/dashboard">
         <AdminLayout>
@@ -241,6 +252,17 @@ function AdminRouter() {
         </AdminLayout>
       </Route>
 
+      <Route path="/admin/stock/requests">
+        <AdminLayout>
+          <StockRequests />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/stock/tracking">
+        <AdminLayout>
+          <StockTracking />
+        </AdminLayout>
+      </Route>
+
       <Route path="/panel/dashboard">
         <AdminLayout>
           <AgentDashboard />
@@ -259,6 +281,22 @@ function AdminRouter() {
       <Route path="/panel/profile">
         <AdminLayout>
           <AdminProfilePage />
+        </AdminLayout>
+      </Route>
+
+      <Route path="/stocker/dashboard">
+        <AdminLayout>
+          <StockerDashboard />
+        </AdminLayout>
+      </Route>
+      <Route path="/stocker/request">
+        <AdminLayout>
+          <StockerRequestForm />
+        </AdminLayout>
+      </Route>
+      <Route path="/stocker/history">
+        <AdminLayout>
+          <StockerHistory />
         </AdminLayout>
       </Route>
 
@@ -293,6 +331,9 @@ function AdminRouter() {
       </Route>
       <Route path="/panel">
         {() => { window.location.replace("/panel/dashboard"); return null; }}
+      </Route>
+      <Route path="/stocker">
+        {() => { window.location.replace("/stocker/dashboard"); return null; }}
       </Route>
     </Switch>
   );
