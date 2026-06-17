@@ -33,6 +33,11 @@ const PAGE_TITLES: Record<string, string> = {
   "/panel/profile": "My Profile",
   "/admin/collaboration/collaborators": "Collaborators",
   "/admin/collaboration/payouts-all": "All Payouts",
+  "/admin/stock/requests": "Stock Requests",
+  "/admin/stock/tracking": "Stocker Tracking",
+  "/stocker/dashboard": "Dashboard",
+  "/stocker/request": "New Stock Request",
+  "/stocker/history": "My Requests",
 };
 
 const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view", "/admin/collaboration"];
@@ -40,18 +45,19 @@ const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-v
 const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/dashboard",        permission: "view_analytics" },
   { prefix: "/admin/analytics",        permission: "view_analytics" },
-  { prefix: "/admin/orders",           permission: "manage_orders" },
-  { prefix: "/admin/products",         permission: "manage_products" },
+  { prefix: "/admin/orders",           permission: "view_orders" },
+  { prefix: "/admin/products",         permission: "view_products" },
   { prefix: "/admin/promos",           permission: "manage_promos" },
-  { prefix: "/admin/games",            permission: "manage_games" },
+  { prefix: "/admin/games",            permission: "view_games" },
   { prefix: "/admin/site-content",     permission: "edit_site_content" },
   { prefix: "/admin/tutorials",        permission: "edit_site_content" },
   { prefix: "/admin/roles",            permission: "manage_roles" },
-  { prefix: "/admin/team",             permission: "manage_team" },
+  { prefix: "/admin/team",             permission: "view_team" },
   { prefix: "/admin/claim-teams",      permission: "manage_team" },
   { prefix: "/admin/monitor",          permission: "monitor_agents" },
   { prefix: "/admin/open-chats",       permission: "monitor_agents" },
   { prefix: "/admin/proof-of-delivery", permission: "view_pod" },
+  { prefix: "/admin/stock",            permission: "view_stock" },
 ];
 
 interface AdminLayoutProps {
@@ -67,15 +73,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const isAdminRoute = location.startsWith("/admin");
   const isAgentRoute = location.startsWith("/panel");
+  const isStockerRoute = location.startsWith("/stocker");
 
   useEffect(() => {
     if (loading) return;
     if (!user) { navigate("/admin/login"); return; }
+
     if (!profileComplete && location !== "/admin/profile-setup" && location !== "/panel/profile-setup") {
       navigate(user.isOwner ? "/admin/profile-setup" : "/panel/profile-setup");
       return;
     }
+
+    if (user.type === "stocker") {
+      if (isAdminRoute || isAgentRoute) {
+        navigate("/stocker/dashboard");
+        return;
+      }
+      return;
+    }
+
     if (user.isOwner && isAgentRoute) { navigate("/admin/dashboard"); return; }
+    if (user.isOwner && isStockerRoute) { navigate("/admin/dashboard"); return; }
 
     if (!user.isOwner && isAdminRoute && location !== "/admin/profile-setup") {
       if (OWNER_ONLY_ROUTES.some(r => location.startsWith(r))) {
