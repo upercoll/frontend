@@ -21,6 +21,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout>>();
   const joinedRef = useRef(false);
   const pendingMsgIds = useRef(new Set<string>());
@@ -52,7 +53,6 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     if (!socket || joinedRef.current) return;
     joinedRef.current = true;
     socket.emit("claim:agent_browse", { roomId: session.roomId });
-
     return () => {
       joinedRef.current = false;
     };
@@ -72,14 +72,8 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMsg = (data: ClaimMessage & { roomId: string }) => {
-      addMessage(data);
-    };
-
-    const handleMsgAck = (data: ClaimMessage & { roomId: string }) => {
-      addMessage(data);
-    };
-
+    const handleNewMsg = (data: ClaimMessage & { roomId: string }) => addMessage(data);
+    const handleMsgAck = (data: ClaimMessage & { roomId: string }) => addMessage(data);
     const handleTyping = () => {
       setIsTyping(true);
       setTimeout(() => setIsTyping(false), 2500);
@@ -136,6 +130,9 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       senderName: profile?.displayName || user?.email || "Agent",
     });
     setText("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "40px";
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -152,6 +149,13 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       });
       typingTimeout.current = setTimeout(() => setTyping(false), 2000);
     }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+    const ta = e.target;
+    ta.style.height = "40px";
+    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   };
 
   const isEnded = sessionStatus === "claimed" || sessionStatus === "ended";
@@ -172,8 +176,9 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
 
   return (
     <div className="flex flex-col h-full bg-[#0a1628] rounded-xl border border-white/5 overflow-hidden">
+      {/* Header */}
       <div className="px-4 py-3 border-b border-white/5 bg-[#0d1f3c] flex items-center gap-3 flex-shrink-0">
-        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
           <User className="w-4 h-4 text-blue-400" />
         </div>
         <div className="flex-1 min-w-0">
@@ -189,7 +194,8 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
         {sessionStatus === "pending" && (
           <div className="text-center py-4">
             <p className="text-yellow-400/70 text-xs bg-yellow-400/5 border border-yellow-400/10 rounded-xl px-4 py-3">
@@ -213,19 +219,19 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
             >
               {msg.sender === "system" ? (
                 <div className="flex items-center gap-2 text-slate-500 text-xs bg-white/3 border border-white/5 px-3 py-1.5 rounded-full">
-                  <Info className="w-3 h-3" />
+                  <Info className="w-3 h-3 flex-shrink-0" />
                   {msg.text}
                 </div>
               ) : (
                 <div className={cn(
-                  "max-w-xs lg:max-w-sm flex flex-col gap-1",
+                  "max-w-[80%] sm:max-w-sm flex flex-col gap-1",
                   msg.sender === "agent" ? "items-end" : "items-start"
                 )}>
                   <p className={cn("text-[10px]", msg.sender === "agent" ? "text-slate-500 text-right" : "text-slate-500")}>
                     {msg.senderName}
                   </p>
                   <div className={cn(
-                    "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed",
+                    "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words",
                     msg.sender === "agent"
                       ? "bg-blue-600 text-white rounded-br-sm"
                       : "bg-[#0d1f3c] text-slate-200 border border-white/5 rounded-bl-sm"
@@ -259,12 +265,14 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       {!isEnded ? (
-        <div className="p-3 border-t border-white/5 flex-shrink-0">
-          <div className="flex gap-2">
+        <div className="p-2.5 md:p-3 border-t border-white/5 flex-shrink-0">
+          <div className="flex gap-2 items-end">
             <textarea
+              ref={textareaRef}
               value={text}
-              onChange={e => setText(e.target.value)}
+              onChange={handleTextChange}
               onKeyDown={handleKeyDown}
               placeholder={sessionStatus === "pending" ? "Type to claim this chat..." : "Type a message..."}
               rows={1}
@@ -276,7 +284,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
               whileTap={{ scale: 0.95 }}
               onClick={sendMessage}
               disabled={!text.trim()}
-              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors self-end"
+              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
             >
               <Send className="w-4 h-4 text-white" />
             </motion.button>
