@@ -59,7 +59,7 @@ const FAQ = [
   },
   {
     q: "Is it safe to buy here?",
-    a: "Absolutely. We use trusted payment processors and have fulfilled thousands of orders. Your data is fully encrypted and never shared.",
+    a: "Absolutely. We use trusted payment processors and have completed thousands of orders. Your data is fully encrypted and never shared.",
   },
   {
     q: "Do I need a Roblox account?",
@@ -121,13 +121,13 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#4f46e5" }}>{label}</label>
       <div
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
         style={{
-          background: "rgba(255,255,255,0.07)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#4F46E5" : "rgba(165,180,252,0.2)"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.1)" : "none",
+          background: "#f9fafb",
+          border: `1.5px solid ${error ? "#fca5a5" : focused ? "#4F46E5" : "#e5e7eb"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.08)" : "none",
         }}
       >
         {icon && <span style={{ color: "#4F46E5", flexShrink: 0 }}>{icon}</span>}
@@ -135,10 +135,11 @@ function Field({
           type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#6b5c8a] font-medium min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium min-w-0"
+          style={{ color: "#1e1b4b" }}
         />
       </div>
-      {error && <p className="text-[10px]" style={{ color: "#f87171" }}>{error}</p>}
+      {error && <p className="text-[10px]" style={{ color: "#ef4444" }}>{error}</p>}
     </div>
   );
 }
@@ -151,7 +152,7 @@ function Bubble({ msg }: { msg: Message }) {
         animate={{ opacity: 1, scale: 1 }}
         className="flex justify-center my-1"
       >
-        <span className="text-[10px] px-3 py-1 rounded-full font-semibold" style={{ background: "rgba(165,180,252,0.1)", color: "#818CF8" }}>
+        <span className="text-[10px] px-3 py-1 rounded-full font-semibold" style={{ background: "#f0f0f0", color: "#6b7280" }}>
           {msg.text}
         </span>
       </motion.div>
@@ -174,19 +175,19 @@ function Bubble({ msg }: { msg: Message }) {
       )}
       <div className={`max-w-[78%] ${isCustomer ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
         {!isCustomer && (
-          <span className="text-[9px] font-bold ml-1" style={{ color: "#818CF8" }}>{msg.senderName}</span>
+          <span className="text-[9px] font-bold ml-1" style={{ color: "#6366f1" }}>{msg.senderName}</span>
         )}
         <div
           className="px-3 py-2 text-sm leading-relaxed"
           style={{
-            background: isCustomer ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "rgba(255,255,255,0.07)",
-            color: "white",
+            background: isCustomer ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#f3f4f6",
+            color: isCustomer ? "white" : "#374151",
             borderRadius: isCustomer ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
           }}
         >
           {msg.text}
         </div>
-        <span className="text-[9px] mx-1" style={{ color: "#475569" }}>{fmtTime(msg.timestamp)}</span>
+        <span className="text-[9px] mx-1" style={{ color: "#9ca3af" }}>{fmtTime(msg.timestamp)}</span>
       </div>
     </motion.div>
   );
@@ -563,76 +564,76 @@ export default function SupportChat() {
       <div className="flex flex-col h-full">
         <div className="p-4 pb-2 text-center">
           <div className="w-11 h-11 rounded-full mx-auto mb-2.5 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 0 18px rgba(79,70,229,0.4)" }}>
+            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 0 18px rgba(79,70,229,0.25)" }}>
             <MessageSquare size={20} color="white" />
           </div>
-          <h3 className="text-sm font-extrabold text-white mb-0.5">How can we help?</h3>
-          <p className="text-[11px]" style={{ color: "#818CF8" }}>Choose an option to get started</p>
+          <h3 className="text-sm font-extrabold mb-0.5" style={{ color: "#1e1b4b" }}>How can we help?</h3>
+          <p className="text-[11px]" style={{ color: "#6b7280" }}>Choose an option to get started</p>
         </div>
 
         <div className="flex-1 px-4 flex flex-col gap-3 justify-center">
           {}
           <motion.button
-            whileHover={{ scale: 1.02, borderColor: "rgba(167,139,250,0.5)" }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setMode("general")}
             className="w-full rounded-2xl p-4 text-left flex items-center gap-3 transition-all"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1.5px solid rgba(165,180,252,0.15)",
+              background: "#f9fafb",
+              border: "1.5px solid #e5e7eb",
             }}
           >
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(79,70,229,0.2)" }}>
-              <Headphones size={18} color="#A5B4FC" />
+              style={{ background: "#ede9fe" }}>
+              <Headphones size={18} color="#7c3aed" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold text-white">General Support</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>FAQs, payment help & general questions</p>
+              <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>General Support</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "#6b7280" }}>FAQs, payment help & general questions</p>
             </div>
-            <ChevronRight size={15} color="#64748B" />
+            <ChevronRight size={15} color="#9ca3af" />
           </motion.button>
 
           {}
           <motion.button
-            whileHover={{ scale: 1.02, borderColor: "rgba(220,38,38,0.5)" }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => { setMode("claim"); setClaimStep("select"); }}
             className="w-full rounded-2xl p-4 text-left flex items-center gap-3 transition-all relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg,rgba(220,38,38,0.1),rgba(159,18,57,0.08))",
-              border: "1.5px solid rgba(220,38,38,0.3)",
+              background: "linear-gradient(135deg,#fff1f2,#ffe4e6)",
+              border: "1.5px solid #fecdd3",
             }}
           >
             <motion.div
               animate={{ x: ["-120%", "220%"] }}
               transition={{ repeat: Infinity, duration: 3.5, ease: "linear", repeatDelay: 2 }}
               className="absolute inset-0 pointer-events-none"
-              style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)", width: "40%" }}
+              style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent)", width: "40%" }}
             />
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(220,38,38,0.2)" }}>
-              <Package size={18} color="#fca5a5" />
+              style={{ background: "#fee2e2" }}>
+              <Package size={18} color="#dc2626" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold text-white flex items-center gap-1.5">
+              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#1e1b4b" }}>
                 Claim Chat
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(220,38,38,0.25)", color: "#fca5a5" }}>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "#fee2e2", color: "#dc2626" }}>
                   ITEMS
                 </span>
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: "#9a5c6a" }}>
+              <p className="text-[11px] mt-0.5" style={{ color: "#9f1239" }}>
                 {lastOrder?.items?.length ? `${lastOrder.items.length} item${lastOrder.items.length !== 1 ? "s" : ""} ready to claim` : "Receive your purchased items"}
               </p>
             </div>
-            <ChevronRight size={15} color="#9a5c6a" />
+            <ChevronRight size={15} color="#f43f5e" />
           </motion.button>
         </div>
 
         <div className="px-4 pb-4">
-          <div className="rounded-xl p-2.5 text-center" style={{ background: "rgba(79,70,229,0.08)", border: "1px solid rgba(165,180,252,0.1)" }}>
-            <p className="text-[10px]" style={{ color: "#64748B" }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block mr-1" />
+          <div className="rounded-xl p-2.5 text-center" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
+            <p className="text-[10px]" style={{ color: "#16a34a" }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block mr-1" />
               Support team online · Usually replies in 2–5 min
             </p>
           </div>
@@ -652,10 +653,10 @@ export default function SupportChat() {
                 style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
-              <div className="px-3 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", borderRadius: "18px 18px 18px 4px" }}>
+              <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#818CF8" }}
+                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366f1" }}
                       animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                   ))}
                 </div>
@@ -675,7 +676,7 @@ export default function SupportChat() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleFaqQuestion(f.q, f.a)}
                   className="text-left px-3 py-2 rounded-xl text-[11px] font-semibold"
-                  style={{ background: "rgba(79,70,229,0.12)", border: "1px solid rgba(165,180,252,0.15)", color: "#A5B4FC" }}
+                  style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#3730a3" }}
                 >
                   {f.q}
                 </motion.button>
@@ -685,22 +686,22 @@ export default function SupportChat() {
         </div>
 
         {}
-        <div className="p-3 border-t" style={{ borderColor: "rgba(165,180,252,0.08)" }}>
+        <div className="p-3 border-t" style={{ borderColor: "#f3f4f6" }}>
           <div className="flex gap-2">
             <input
               value={faqInput}
               onChange={e => setFaqInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleFaqInput()}
               placeholder="Type a question…"
-              className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-3 py-2.5 rounded-xl min-w-0"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.15)" }}
+              className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl min-w-0"
+              style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
             />
             <motion.button
               whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
               onClick={handleFaqInput}
               disabled={!faqInput.trim()}
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "rgba(79,70,229,0.15)" }}
+              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
             >
               <Send size={14} color="white" />
             </motion.button>
@@ -721,12 +722,12 @@ export default function SupportChat() {
       return (
         <div className="flex flex-col h-full items-center justify-center p-6 text-center gap-4">
           <div className="w-14 h-14 rounded-full flex items-center justify-center"
-            style={{ background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.3)" }}>
-            <CheckCheck size={24} color="#4ade80" />
+            style={{ background: "#dcfce7", border: "2px solid #86efac" }}>
+            <CheckCheck size={24} color="#16a34a" />
           </div>
           <div>
-            <p className="text-base font-extrabold text-white mb-1">Order Delivered!</p>
-            <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
+            <p className="text-base font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Order Delivered!</p>
+            <p className="text-xs leading-relaxed" style={{ color: "#6b7280" }}>
               Your items have been delivered to your Roblox account. Check your inventory!
             </p>
           </div>
@@ -734,7 +735,7 @@ export default function SupportChat() {
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => { clearClaimSession(); }}
             className="text-[11px] font-semibold px-4 py-2 rounded-xl"
-            style={{ background: "rgba(79,70,229,0.15)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.15)" }}
+            style={{ background: "#ede9fe", color: "#4f46e5", border: "1px solid #c4b5fd" }}
           >
             Start New Chat
           </motion.button>
@@ -750,10 +751,10 @@ export default function SupportChat() {
     if (!lastOrder || !lastOrder.items?.length) {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
-          <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.15)" }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}>
             <Package size={28} color="#4F46E5" className="mx-auto mb-2" />
-            <p className="text-sm font-extrabold text-white mb-1">No Recent Order Found</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: "#6B7280" }}>
+            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>No Recent Order Found</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
               Place an order first, then return here to claim your items. If you already ordered, your items will appear here.
             </p>
           </div>
@@ -764,7 +765,7 @@ export default function SupportChat() {
               setClaimStep("form");
             }}
             className="w-full py-3 rounded-xl font-bold text-sm"
-            style={{ background: "rgba(79,70,229,0.2)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
+            style={{ background: "#ede9fe", border: "1.5px solid #c4b5fd", color: "#4f46e5" }}
           >
             Open General Claim Chat
           </motion.button>
@@ -775,10 +776,10 @@ export default function SupportChat() {
     if (pendingSession) {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
-          <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(79,70,229,0.08)", border: "1.5px solid rgba(165,180,252,0.15)" }}>
-            <MessageSquare size={28} color="#A5B4FC" className="mx-auto mb-2" />
-            <p className="text-sm font-extrabold text-white mb-1">Chat In Progress</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: "#6B7280" }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}>
+            <MessageSquare size={28} color="#6366f1" className="mx-auto mb-2" />
+            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Chat In Progress</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
               You already have an active claim session for this order.
             </p>
           </div>
@@ -801,16 +802,16 @@ export default function SupportChat() {
     return (
       <div className="flex flex-col h-full">
         <div className="px-4 pt-3 pb-2">
-          <p className="text-xs font-bold text-white">Select item to claim</p>
+          <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>Select item to claim</p>
           {lastOrder.orderRef && (
-            <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Order {lastOrder.orderRef}</p>
+            <p className="text-[10px] mt-0.5" style={{ color: "#9ca3af" }}>Order {lastOrder.orderRef}</p>
           )}
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-1 space-y-2">
           {lastOrder.items.map(item => (
             <motion.button
               key={item.id}
-              whileHover={{ scale: 1.02, borderColor: "rgba(220,38,38,0.5)" }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => {
                 setSelectedItem({ id: item.id, name: item.name });
@@ -818,22 +819,22 @@ export default function SupportChat() {
                 setClaimStep("form");
               }}
               className="w-full flex items-center gap-3 p-3 rounded-xl text-left"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.12)" }}
+              style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}
             >
               <div
                 className="w-9 h-9 rounded-xl flex-shrink-0"
                 style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` : "linear-gradient(135deg,#4F46E5,#3730A3)" }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-extrabold text-white truncate">{item.name}</p>
+                <p className="text-[11px] font-extrabold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
                 {item.quantity > 1 && (
-                  <p className="text-[10px]" style={{ color: "#6B7280" }}>Qty: {item.quantity}</p>
+                  <p className="text-[10px]" style={{ color: "#9ca3af" }}>Qty: {item.quantity}</p>
                 )}
               </div>
               <div className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.3),rgba(159,18,57,0.2))", border: "1px solid rgba(220,38,38,0.3)" }}>
-                <Package size={11} color="#fca5a5" />
-                <span className="text-[10px] font-extrabold" style={{ color: "#fca5a5" }}>Claim</span>
+                style={{ background: "#fee2e2", border: "1px solid #fecaca" }}>
+                <Package size={11} color="#dc2626" />
+                <span className="text-[10px] font-extrabold" style={{ color: "#dc2626" }}>Claim</span>
               </div>
             </motion.button>
           ))}
@@ -847,11 +848,11 @@ export default function SupportChat() {
       <div className="flex flex-col h-full">
         <div className="p-4 pb-3 text-center">
           <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.3),rgba(159,18,57,0.2))", border: "1px solid rgba(220,38,38,0.3)" }}>
-            <Package size={18} color="#fca5a5" />
+            style={{ background: "#fee2e2", border: "1px solid #fecaca" }}>
+            <Package size={18} color="#dc2626" />
           </div>
-          <p className="text-xs font-extrabold text-white">{selectedItem?.name} Claim</p>
-          <p className="text-[10px] mt-0.5" style={{ color: "#6B7280" }}>Enter your details to connect with the claim team</p>
+          <p className="text-xs font-extrabold" style={{ color: "#1e1b4b" }}>{selectedItem?.name} Claim</p>
+          <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>Enter your details to connect with the claim team</p>
         </div>
 
         <div className="flex-1 px-4 space-y-3 overflow-y-auto">
@@ -872,13 +873,13 @@ export default function SupportChat() {
             type="email"
             error={formErrors.contactEmail}
           />
-          <div className="rounded-xl p-3" style={{ background: "rgba(79,70,229,0.08)", border: "1px solid rgba(165,180,252,0.1)" }}>
-            <p className="text-[10px] leading-relaxed" style={{ color: "#818CF8" }}>
+          <div className="rounded-xl p-3" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
+            <p className="text-[10px] leading-relaxed" style={{ color: "#3730a3" }}>
               Make sure your Roblox account allows friend requests. Our agent will add you in-game to deliver your items.
             </p>
           </div>
           {formErrors.submit && (
-            <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{formErrors.submit}</p>
+            <p className="text-[11px] text-center" style={{ color: "#ef4444" }}>{formErrors.submit}</p>
           )}
         </div>
 
@@ -916,10 +917,10 @@ export default function SupportChat() {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 className="rounded-xl overflow-hidden"
-                style={{ background: "rgba(79,70,229,0.1)", border: "1px solid rgba(165,180,252,0.15)" }}
+                style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}
               >
                 <div className="p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#818CF8" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#3730a3" }}>
                     {editMode === "roblox" ? "New Roblox Username" : "New Email Address"}
                   </p>
                   <div className="flex gap-2">
@@ -929,43 +930,43 @@ export default function SupportChat() {
                       onKeyDown={e => e.key === "Enter" && handleSaveUserInfo()}
                       placeholder={editMode === "roblox" ? "New username…" : "New email…"}
                       type={editMode === "email" ? "email" : "text"}
-                      className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-2.5 py-2 rounded-lg min-w-0"
-                      style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(165,180,252,0.2)" }}
+                      className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-2.5 py-2 rounded-lg min-w-0"
+                      style={{ background: "#f9fafb", border: "1px solid #e5e7eb", color: "#1e1b4b" }}
                       autoFocus
                     />
                     <button
                       onClick={handleSaveUserInfo}
                       disabled={editSaving || !editValue.trim()}
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: editValue.trim() ? "#4F46E5" : "rgba(79,70,229,0.2)" }}
+                      style={{ background: editValue.trim() ? "#4F46E5" : "#e0e7ff" }}
                     >
                       {editSaving ? <Loader2 size={12} className="animate-spin text-white" /> : <Check size={13} color="white" />}
                     </button>
                     <button
                       onClick={() => { setEditMode(null); setEditValue(""); }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: "rgba(255,255,255,0.07)" }}
+                      style={{ background: "#f3f4f6" }}
                     >
-                      <X size={13} color="#818CF8" />
+                      <X size={13} color="#6b7280" />
                     </button>
                   </div>
                 </div>
               </motion.div>
             ) : (
               <motion.div key="edit-buttons" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <p className="text-[10px] text-center mb-1.5" style={{ color: "#475569" }}>Change before agent arrives</p>
+                <p className="text-[10px] text-center mb-1.5" style={{ color: "#9ca3af" }}>Change before agent arrives</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setEditMode("roblox"); setEditValue(robloxUser); }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(165,180,252,0.12)", color: "#A5B4FC" }}
+                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#4f46e5" }}
                   >
                     <Gamepad2 size={11} />Change Username
                   </button>
                   <button
                     onClick={() => { setEditMode("email"); setEditValue(contactEmail); }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(165,180,252,0.12)", color: "#A5B4FC" }}
+                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#4f46e5" }}
                   >
                     <Mail size={11} />Change Email
                   </button>
@@ -976,7 +977,7 @@ export default function SupportChat() {
         </div>
 
         {}
-        <div className="p-3 pt-0 text-center border-t" style={{ borderColor: "rgba(165,180,252,0.08)" }}>
+        <div className="p-3 pt-0 text-center border-t" style={{ borderColor: "#f3f4f6" }}>
           <div className="flex items-center justify-center gap-2 mb-1">
             <motion.div
               animate={{ rotate: 360 }}
@@ -984,9 +985,9 @@ export default function SupportChat() {
               className="w-4 h-4 rounded-full border-2"
               style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }}
             />
-            <span className="text-xs font-semibold" style={{ color: "#818CF8" }}>Waiting for claim team…</span>
+            <span className="text-xs font-semibold" style={{ color: "#4f46e5" }}>Waiting for claim team…</span>
           </div>
-          <p className="text-[10px]" style={{ color: "#475569" }}>Usually responds within 2–5 minutes</p>
+          <p className="text-[10px]" style={{ color: "#9ca3af" }}>Usually responds within 2–5 minutes</p>
         </div>
       </div>
     );
@@ -999,20 +1000,20 @@ export default function SupportChat() {
       <div className="flex flex-col h-full">
         {agentName && (
           <div className="px-4 py-2 flex items-center gap-2 border-b flex-shrink-0"
-            style={{ borderColor: "rgba(165,180,252,0.08)", background: "rgba(79,70,229,0.08)" }}>
+            style={{ borderColor: "#e5e7eb", background: "#f5f3ff" }}>
             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ background: "#4F46E5" }}>
               <Star size={9} fill="white" color="white" />
             </div>
-            <span className="text-xs font-bold text-white">{agentName}</span>
+            <span className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{agentName}</span>
             {claimStep === "active" && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-auto flex-shrink-0" />}
             {claimStep === "claimed" && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "#dcfce7", color: "#16a34a" }}>
                 ✓ Delivered
               </span>
             )}
             {claimStep === "ended" && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "rgba(107,92,138,0.3)", color: "#818CF8" }}>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "#ede9fe", color: "#6366f1" }}>
                 Ended
               </span>
             )}
@@ -1027,10 +1028,10 @@ export default function SupportChat() {
                 style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
-              <div className="px-3 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", borderRadius: "18px 18px 18px 4px" }}>
+              <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#818CF8" }}
+                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366f1" }}
                       animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                   ))}
                 </div>
@@ -1040,22 +1041,22 @@ export default function SupportChat() {
         </div>
 
         {isEnded && (
-          <div className="px-4 py-3 text-center" style={{ borderTop: "1px solid rgba(165,180,252,0.08)" }}>
+          <div className="px-4 py-3 text-center" style={{ borderTop: "1px solid #f3f4f6" }}>
             <div className="rounded-xl p-3" style={{
-              background: claimStep === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(79,70,229,0.1)",
-              border: `1px solid ${claimStep === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(165,180,252,0.12)"}`,
+              background: claimStep === "claimed" ? "#dcfce7" : "#eff6ff",
+              border: `1px solid ${claimStep === "claimed" ? "#86efac" : "#bfdbfe"}`,
             }}>
               {claimStep === "claimed" ? (
                 <>
-                  <CheckCheck size={16} color="#4ade80" className="mx-auto mb-1" />
-                  <p className="text-xs font-bold" style={{ color: "#4ade80" }}>Order Delivered!</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Check your Roblox inventory</p>
+                  <CheckCheck size={16} color="#16a34a" className="mx-auto mb-1" />
+                  <p className="text-xs font-bold" style={{ color: "#16a34a" }}>Order Delivered!</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>Check your Roblox inventory</p>
                 </>
               ) : (
                 <>
-                  <Clock size={16} color="#818CF8" className="mx-auto mb-1" />
-                  <p className="text-xs font-bold text-white">Chat Ended</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>Thank you for using RBstars!</p>
+                  <Clock size={16} color="#6366f1" className="mx-auto mb-1" />
+                  <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>Chat Ended</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>Thank you for using RBstars!</p>
                 </>
               )}
             </div>
@@ -1063,7 +1064,7 @@ export default function SupportChat() {
         )}
 
         {claimStep === "active" && (
-          <div className="p-3 border-t" style={{ borderColor: "rgba(165,180,252,0.08)" }}>
+          <div className="p-3 border-t" style={{ borderColor: "#f3f4f6" }}>
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -1071,15 +1072,15 @@ export default function SupportChat() {
                 onChange={e => { setInput(e.target.value); handleTyping(); }}
                 onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder="Type a message…"
-                className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-3 py-2.5 rounded-xl min-w-0"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.15)" }}
+                className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl min-w-0"
+                style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
               />
               <motion.button
                 whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
                 onClick={handleSend}
                 disabled={!input.trim()}
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: input.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "rgba(79,70,229,0.15)" }}
+                style={{ background: input.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
               >
                 <Send size={14} color="white" />
               </motion.button>
@@ -1096,11 +1097,11 @@ export default function SupportChat() {
       return (
         <div className="flex flex-col h-full items-center justify-center p-6 text-center">
           <div className="w-14 h-14 rounded-full mb-4 flex items-center justify-center"
-            style={{ background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.3)" }}>
-            <CheckCheck size={24} color="#4ade80" />
+            style={{ background: "#dcfce7", border: "2px solid #86efac" }}>
+            <CheckCheck size={24} color="#16a34a" />
           </div>
-          <p className="text-base font-extrabold text-white mb-1">Review Submitted!</p>
-          <p className="text-xs" style={{ color: "#64748B" }}>Thank you for your feedback</p>
+          <p className="text-base font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Review Submitted!</p>
+          <p className="text-xs" style={{ color: "#6b7280" }}>Thank you for your feedback</p>
         </div>
       );
     }
@@ -1110,22 +1111,22 @@ export default function SupportChat() {
         <div className="px-4 pt-4 pb-2 text-center flex-shrink-0">
           <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
             style={{
-              background: isDelivered ? "rgba(34,197,94,0.15)" : "rgba(79,70,229,0.15)",
-              border: `1px solid ${isDelivered ? "rgba(34,197,94,0.3)" : "rgba(165,180,252,0.2)"}`,
+              background: isDelivered ? "#dcfce7" : "#eff6ff",
+              border: `1px solid ${isDelivered ? "#86efac" : "#bfdbfe"}`,
             }}>
-            {isDelivered ? <CheckCheck size={18} color="#4ade80" /> : <Clock size={18} color="#818CF8" />}
+            {isDelivered ? <CheckCheck size={18} color="#16a34a" /> : <Clock size={18} color="#6366f1" />}
           </div>
-          <p className="text-sm font-extrabold text-white">
+          <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>
             {isDelivered ? "Items Delivered! 🎉" : "Chat Ended"}
           </p>
-          <p className="text-[11px] mt-0.5" style={{ color: "#6B7280" }}>Share your experience with us</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "#6b7280" }}>Share your experience with us</p>
         </div>
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#818CF8" }}>Your Rating</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#4f46e5" }}>Your Rating</p>
           <div className="flex items-center gap-1.5">
             {[1, 2, 3, 4, 5].map(star => (
               <motion.button key={star} whileHover={{ scale: 1.25 }} whileTap={{ scale: 0.85 }} onClick={() => setReviewStars(star)}>
-                <Star size={30} fill={star <= reviewStars ? "#f59e0b" : "none"} color={star <= reviewStars ? "#f59e0b" : "#334155"} strokeWidth={1.5} />
+                <Star size={30} fill={star <= reviewStars ? "#f59e0b" : "none"} color={star <= reviewStars ? "#f59e0b" : "#d1d5db"} strokeWidth={1.5} />
               </motion.button>
             ))}
             {reviewStars > 0 && (
@@ -1134,32 +1135,32 @@ export default function SupportChat() {
           </div>
         </div>
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#818CF8" }}>Review (optional)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4f46e5" }}>Review (optional)</p>
           <textarea
             value={reviewComment}
             onChange={e => setReviewComment(e.target.value)}
             placeholder="How was your experience?"
             rows={3}
             maxLength={300}
-            className="w-full bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-3 py-2.5 rounded-xl resize-none"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.15)" }}
+            className="w-full bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl resize-none"
+            style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
           />
         </div>
         <div className="px-4 pb-3 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#818CF8" }}>Attach Proof (optional)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4f46e5" }}>Attach Proof (optional)</p>
           {reviewProofPreview ? (
             <div className="relative">
               <img src={reviewProofPreview} alt="proof" className="w-full h-20 object-cover rounded-xl"
-                style={{ border: "1px solid rgba(165,180,252,0.2)" }} />
+                style={{ border: "1px solid #e5e7eb" }} />
               <button onClick={() => { setReviewProof(null); setReviewProofPreview(null); }}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(0,0,0,0.7)" }}>
+                style={{ background: "rgba(0,0,0,0.6)" }}>
                 <X size={10} color="white" />
               </button>
             </div>
           ) : (
             <label className="flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer text-[11px] font-semibold"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1.5px dashed rgba(165,180,252,0.2)", color: "#818CF8" }}>
+              style={{ background: "#f9fafb", border: "1.5px dashed #c4b5fd", color: "#6366f1" }}>
               <ImagePlus size={14} />
               Attach screenshot
               <input type="file" accept="image/*" className="hidden"
@@ -1177,7 +1178,7 @@ export default function SupportChat() {
         <div className="px-4 pb-4 flex gap-2 flex-shrink-0 mt-auto">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => closeAndReset()}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(165,180,252,0.12)", color: "#64748B" }}>
+            style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#6b7280" }}>
             Skip
           </motion.button>
           <motion.button
@@ -1186,7 +1187,7 @@ export default function SupportChat() {
             onClick={handleReviewSubmit}
             disabled={reviewStars === 0 || reviewSubmitting}
             className="flex-1 py-2.5 rounded-xl text-sm font-extrabold text-white flex items-center justify-center gap-1.5"
-            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "rgba(79,70,229,0.25)", opacity: reviewSubmitting ? 0.7 : 1 }}>
+            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff", opacity: reviewSubmitting ? 0.7 : 1 }}>
             {reviewSubmitting
               ? <Loader2 size={13} className="animate-spin" />
               : <Star size={13} fill={reviewStars > 0 ? "white" : "none"} color="white" strokeWidth={2} />}
@@ -1220,7 +1221,7 @@ export default function SupportChat() {
 
     return (
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{ background: "linear-gradient(135deg,rgba(79,70,229,0.35),rgba(55,48,163,0.2))", borderBottom: "1px solid rgba(165,180,252,0.1)" }}>
+        style={{ background: "#ffffff", borderBottom: "1px solid #e5e7eb" }}>
         <div className="flex items-center gap-2.5">
           {canGoBack ? (
             <button
@@ -1230,9 +1231,9 @@ export default function SupportChat() {
                 else if (claimStep === "select") { setMode(null); }
               }}
               className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.08)" }}
+              style={{ background: "#f3f4f6" }}
             >
-              <ArrowLeft size={14} color="#818CF8" />
+              <ArrowLeft size={14} color="#6b7280" />
             </button>
           ) : (
             <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
@@ -1241,19 +1242,19 @@ export default function SupportChat() {
             </div>
           )}
           <div>
-            <p className="text-sm font-extrabold text-white leading-tight">{title}</p>
+            <p className="text-sm font-extrabold leading-tight" style={{ color: "#1e1b4b" }}>{title}</p>
             <div className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <span className="text-[9px] font-semibold" style={{ color: "#4ade80" }}>{subtitle}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span className="text-[9px] font-semibold" style={{ color: "#16a34a" }}>{subtitle}</span>
             </div>
           </div>
         </div>
         <button
           onClick={() => claimStep === "review" ? closeAndReset() : setOpen(false)}
           className="w-7 h-7 rounded-full flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#f3f4f6" }}
         >
-          <X size={14} color="#818CF8" />
+          <X size={14} color="#6b7280" />
         </button>
       </div>
     );
@@ -1287,9 +1288,9 @@ export default function SupportChat() {
             style={{
               width: "min(360px, calc(100vw - 24px))",
               height: "min(520px, calc(100vh - 128px))",
-              background: "#0F0C2E",
-              border: "1.5px solid rgba(165,180,252,0.18)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,70,229,0.15)",
+              background: "#ffffff",
+              border: "1.5px solid #e5e7eb",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(99,102,241,0.08)",
             }}
           >
             {renderHeader()}
