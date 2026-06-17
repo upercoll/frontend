@@ -6,6 +6,7 @@ import {
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
   ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell, Eye, X,
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
+  Archive, ClipboardList,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -24,19 +25,21 @@ interface NavItem {
 const ownerNav: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard",        icon: LayoutDashboard, permission: "view_analytics",   group: "Overview" },
   { href: "/admin/analytics", label: "Analytics",        icon: TrendingUp,      permission: "view_analytics",   group: "Overview" },
-  { href: "/admin/orders",    label: "Orders",           icon: ShoppingBag,     permission: "manage_orders",    group: "Commerce" },
+  { href: "/admin/orders",    label: "Orders",           icon: ShoppingBag,     permission: "view_orders",      group: "Commerce" },
   { href: "/admin/customers", label: "Customers",        icon: UserCircle,      ownerOnly: true,                group: "Commerce" },
-  { href: "/admin/products",  label: "Products",         icon: Package,         permission: "manage_products",  group: "Commerce" },
+  { href: "/admin/products",  label: "Products",         icon: Package,         permission: "view_products",    group: "Commerce" },
   { href: "/admin/promos",    label: "Promo Codes",      icon: Tag,             permission: "manage_promos",    group: "Commerce" },
-  { href: "/admin/games",     label: "Games & Categories", icon: Gamepad2,      permission: "manage_games",     group: "Content" },
+  { href: "/admin/games",     label: "Games & Categories", icon: Gamepad2,      permission: "view_games",       group: "Content" },
   { href: "/admin/site-content", label: "Site Content", icon: PenSquare,       permission: "edit_site_content", group: "Content" },
   { href: "/admin/tutorials", label: "Tutorials",        icon: BookOpen,        permission: "edit_site_content", group: "Content" },
   { href: "/admin/roles",     label: "Roles",            icon: Shield,          permission: "manage_roles",     group: "Team" },
-  { href: "/admin/team",      label: "Team",             icon: Users,           permission: "manage_team",      group: "Team" },
+  { href: "/admin/team",      label: "Team",             icon: Users,           permission: "view_team",        group: "Team" },
   { href: "/admin/claim-teams", label: "Claim Teams",   icon: MessageSquare,   permission: "manage_team",      group: "Team" },
   { href: "/admin/monitor",   label: "Agent Monitor",   icon: Activity,        permission: "monitor_agents",   group: "Team" },
   { href: "/admin/open-chats", label: "Open Chats",     icon: MessageSquare,   permission: "monitor_agents",   group: "Team" },
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod",    group: "Team" },
+  { href: "/admin/stock/requests", label: "Stock Requests", icon: ClipboardList, permission: "view_stock",    group: "Stock" },
+  { href: "/admin/stock/tracking", label: "Stocker Tracking", icon: Archive,   permission: "manage_stockers", group: "Stock" },
   { href: "/admin/role-view", label: "Role View",       icon: Eye,             ownerOnly: true,                group: "System" },
   { href: "/admin/settings",  label: "Settings",        icon: Settings,        ownerOnly: true,                group: "System" },
 ];
@@ -46,8 +49,15 @@ const agentSpecificItems: NavItem[] = [
   { href: "/panel/stats",     label: "My Stats",    icon: BarChart3,       permission: "claim_agent", group: "Operations" },
 ];
 
+const stockerNavItems: NavItem[] = [
+  { href: "/stocker/dashboard", label: "Dashboard",       icon: LayoutDashboard, group: "Overview" },
+  { href: "/stocker/request",   label: "New Request",     icon: ClipboardList,   group: "Stock" },
+  { href: "/stocker/history",   label: "My Requests",     icon: Archive,         group: "Stock" },
+];
+
 const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users, System: Settings, Operations: Inbox,
+  Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users,
+  System: Settings, Operations: Inbox, Stock: Archive,
 };
 
 const collabSubItems = [
@@ -68,6 +78,57 @@ interface SidebarProps {
   podBadge?: number;
 }
 
+function NavLink({ item, location, collapsed, podBadge = 0 }: { item: NavItem; location: string; collapsed: boolean; podBadge?: number }) {
+  const isActive = location === item.href || location.startsWith(item.href + "/");
+  const badge = item.href === "/admin/proof-of-delivery" ? podBadge : (item.badge || 0);
+
+  return (
+    <Link href={item.href}>
+      <motion.div
+        whileHover={{ x: collapsed ? 0 : 3 }}
+        className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
+        style={isActive ? {
+          background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+          color: "#a5b4fc",
+          border: "1px solid rgba(99,102,241,0.25)",
+          boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+        } : {
+          color: "rgba(255,255,255,0.4)",
+          border: "1px solid transparent",
+        }}
+        onMouseEnter={e => {
+          if (!isActive) {
+            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
+            (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isActive) {
+            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
+            (e.currentTarget as HTMLDivElement).style.background = "transparent";
+          }
+        }}
+      >
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
+            style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+        )}
+        <item.icon className="w-4 h-4 flex-shrink-0" />
+        {!collapsed && (
+          <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
+            {item.label}
+          </motion.span>
+        )}
+        {!collapsed && badge > 0 && (
+          <span className="bg-violet-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+            {badge}
+          </span>
+        )}
+      </motion.div>
+    </Link>
+  );
+}
+
 export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarProps) {
   const { user, profile, hasPermission, isOwner, logout, viewAsRole, setViewAsRole } = useAdminAuth();
   const { pendingClaims } = useAdminSocket();
@@ -75,18 +136,21 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
   const [collabOpen, setCollabOpen] = useState(location.startsWith("/admin/collaboration"));
   const [claimQueueOpen, setClaimQueueOpen] = useState(location.startsWith("/panel/queue"));
 
-  const isAgent = !isOwner && user?.type === "team_member";
+  const isStocker = user?.type === "stocker";
+  const isAgent = !isOwner && !isStocker && user?.type === "team_member";
   const hasClaimAgent = isAgent && hasPermission("claim_agent");
 
   const isViewingAsAgentRole = viewAsRole
     ? viewAsRole.permissions.includes("claim_agent") &&
       !viewAsRole.permissions.includes("view_analytics") &&
-      !viewAsRole.permissions.includes("manage_orders")
+      !viewAsRole.permissions.includes("view_orders")
     : false;
 
   let navItems: NavItem[];
 
-  if (isOwner) {
+  if (isStocker) {
+    navItems = stockerNavItems;
+  } else if (isOwner) {
     if (viewAsRole) {
       if (isViewingAsAgentRole) {
         navItems = [
@@ -113,15 +177,17 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
     navItems = [...agentItems, ...adminItems];
   }
 
-  const groups = isOwner && !viewAsRole
-    ? ["Overview", "Commerce", "Content", "Team", "System"]
+  const groups = isStocker
+    ? ["Overview", "Stock"]
+    : isOwner && !viewAsRole
+    ? ["Overview", "Commerce", "Content", "Team", "Stock", "System"]
     : !isOwner
-    ? ["Overview", "Commerce", "Content", "Team"]
+    ? ["Overview", "Commerce", "Content", "Team", "Stock"]
     : undefined;
 
-  const dashboardHref = isOwner ? "/admin/dashboard" : "/panel/dashboard";
-  const profileHref = isOwner ? "/admin/profile" : "/panel/profile";
-  const showCollab = isOwner && !viewAsRole;
+  const dashboardHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/dashboard" : "/panel/dashboard";
+  const profileHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/profile" : "/panel/profile";
+  const showCollab = isOwner && !viewAsRole && !isStocker;
   const isCollabActive = location.startsWith("/admin/collaboration");
   const isQueueActive = location.startsWith("/panel/queue");
 
@@ -154,7 +220,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
               <div>
                 <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
                 <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(139,92,246,0.7)" }}>
-                  {isOwner ? (viewAsRole ? `Viewing as ${viewAsRole.name}` : "Owner Panel") : "Team Panel"}
+                  {isStocker ? "Stocker Panel" : isOwner ? (viewAsRole ? `Viewing as ${viewAsRole.name}` : "Owner Panel") : "Team Panel"}
                 </p>
               </div>
             </motion.div>
@@ -447,48 +513,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                     border: "1px solid transparent",
                   }}
                 >
-                  <Inbox className="w-4 h-4 flex-shrink-0" />
-                  {pendingClaims.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-indigo-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                      {pendingClaims.length > 9 ? "9+" : pendingClaims.length}
-                    </span>
-                  )}
-                </motion.div>
-              </Link>
-            )}
-            {showCollab && !collapsed && (
-              <Link href="/admin/collaboration/collaborators">
-                <motion.div
-                  whileHover={{ x: 3 }}
-                  className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
-                  style={isCollabActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                  } : {
-                    color: "rgba(255,255,255,0.4)",
-                    border: "1px solid transparent",
-                  }}
-                >
-                  <CollabIcon className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-sm font-medium">Collaboration</span>
-                </motion.div>
-              </Link>
-            )}
-            {showCollab && collapsed && (
-              <Link href="/admin/collaboration/collaborators">
-                <motion.div
-                  className="relative flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
-                  style={isCollabActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                  } : {
-                    color: "rgba(255,255,255,0.4)",
-                    border: "1px solid transparent",
-                  }}
-                >
-                  <CollabIcon className="w-4 h-4 flex-shrink-0" />
+                  <Inbox className="w-4 h-4" />
                 </motion.div>
               </Link>
             )}
@@ -496,118 +521,45 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         )}
       </nav>
 
-      <div className="p-3 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      <div className="flex-shrink-0 px-2 pb-4 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <Link href={profileHref}>
-          <div className={cn(
-            "flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-all mb-1 hover:bg-white/5",
-            collapsed && "justify-center"
-          )}>
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.5)"; }}
+          >
             {profile?.profilePicture ? (
-              <img src={profile.profilePicture}
-                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                style={{ boxShadow: "0 0 0 2px rgba(99,102,241,0.4)" }} alt="" />
+              <img src={profile.profilePicture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
             ) : (
-              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.3))", border: "1px solid rgba(139,92,246,0.3)" }}>
-                <span className="text-indigo-300 text-xs font-bold">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                <span className="text-white text-xs font-bold">
                   {(profile?.displayName || user?.email || "?")[0].toUpperCase()}
                 </span>
               </div>
             )}
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-semibold truncate">
-                    {profile?.displayName || user?.email?.split("@")[0]}
-                  </p>
-                  <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.3)" }}>
-                    {isOwner ? "Owner" : user?.role?.name || "Agent"}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate text-white/80">{profile?.displayName || user?.email?.split("@")[0]}</p>
+                <p className="text-[10px] truncate" style={{ color: "rgba(139,92,246,0.6)" }}>
+                  {isStocker ? "Stocker" : isOwner ? "Owner" : user?.role?.name || "Team Member"}
+                </p>
+              </div>
+            )}
           </div>
         </Link>
+
         <button
           onClick={logout}
-          className={cn("w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm", collapsed && "justify-center")}
-          style={{ color: "rgba(255,255,255,0.3)" }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.color = "#f87171";
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)";
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.3)";
-            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-          }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mt-1"
+          style={{ color: "rgba(255,255,255,0.35)" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(239,68,68,0.7)"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                Log out
-              </motion.span>
-            )}
-          </AnimatePresence>
+          {!collapsed && <span className="text-sm font-medium">Sign Out</span>}
         </button>
       </div>
     </motion.aside>
-  );
-}
-
-function NavLink({ item, location, collapsed, podBadge }: { item: NavItem; location: string; collapsed: boolean; podBadge: number }) {
-  const isActive = location === item.href || location.startsWith(item.href + "/");
-  const Icon = item.icon;
-  const badge = item.href.includes("proof-of-delivery") ? podBadge : 0;
-
-  return (
-    <Link href={item.href}>
-      <motion.div
-        whileHover={{ x: collapsed ? 0 : 3 }}
-        className={cn("relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5", collapsed && "justify-center")}
-        style={isActive ? {
-          background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-          color: "#a5b4fc",
-          border: "1px solid rgba(99,102,241,0.25)",
-          boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
-        } : {
-          color: "rgba(255,255,255,0.4)",
-          border: "1px solid transparent",
-        }}
-        onMouseEnter={e => {
-          if (!isActive) {
-            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
-            (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
-          }
-        }}
-        onMouseLeave={e => {
-          if (!isActive) {
-            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
-            (e.currentTarget as HTMLDivElement).style.background = "transparent";
-          }
-        }}
-      >
-        {isActive && !collapsed && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-            style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
-        )}
-        <Icon className="w-4 h-4 flex-shrink-0" />
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="text-sm font-medium truncate flex-1"
-            >
-              {item.label}
-            </motion.span>
-          )}
-        </AnimatePresence>
-        {!collapsed && badge > 0 && (
-          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-            {badge > 99 ? "99+" : badge}
-          </span>
-        )}
-      </motion.div>
-    </Link>
   );
 }
