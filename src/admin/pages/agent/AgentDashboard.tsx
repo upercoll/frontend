@@ -292,7 +292,7 @@ export default function AgentDashboard() {
                       completed: { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7" },
                       cancelled: { bg: "rgba(239,68,68,0.12)", text: "#fca5a5" },
                       refunded: { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.4)" },
-                      fulfilled: { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7" },
+                      partially_refunded: { bg: "rgba(249,115,22,0.12)", text: "#fdba74" },
                     };
                     const sc = statusColors[order.status] || statusColors.refunded;
                     return (
