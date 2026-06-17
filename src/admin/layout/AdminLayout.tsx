@@ -65,7 +65,7 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const { user, loading, profileComplete, hasPermission } = useAdminAuth();
+  const { user, loading, profileComplete, hasPermission, viewAsRole } = useAdminAuth();
   const { claimPopup, dismissClaimPopup } = useAdminSocket();
   const [location, navigate] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -92,8 +92,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       return;
     }
 
-    if (user.isOwner && isAgentRoute) { navigate("/admin/dashboard"); return; }
-    if (user.isOwner && isStockerRoute) { navigate("/admin/dashboard"); return; }
+    if (user.isOwner && isAgentRoute && !viewAsRole) { navigate("/admin/dashboard"); return; }
+    if (user.isOwner && isStockerRoute && !viewAsRole) { navigate("/admin/dashboard"); return; }
 
     if (!user.isOwner && isAdminRoute && location !== "/admin/profile-setup") {
       if (OWNER_ONLY_ROUTES.some(r => location.startsWith(r))) {
@@ -106,7 +106,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         return;
       }
     }
-  }, [user, loading, profileComplete, location]);
+  }, [user, loading, profileComplete, location, viewAsRole]);
 
   const title = PAGE_TITLES[location] || location.split("/").pop()?.replace(/-/g, " ")?.replace(/\b\w/g, (c) => c.toUpperCase()) || "Panel";
 
