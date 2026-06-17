@@ -232,6 +232,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           orderRef,
           game,
           items: orderItems,
+          itemName: orderItems?.[0]?.name || null,
         }),
       });
       const data = await resp.json();
