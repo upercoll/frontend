@@ -82,11 +82,13 @@ export interface Game {
   description?: string;
   imageUrl?: string;
   bannerUrl?: string;
-  gradient?: { from: string; to: string };
-  isActive: boolean;
+  gradient: { from: string; to: string };
+  active: boolean;
+  featured: boolean;
   sortOrder: number;
   categories?: Category[];
   productCount?: number;
+  categoryCount?: number;
 }
 
 export interface Product {
