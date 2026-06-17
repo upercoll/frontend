@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAdminAuth } from "./AdminAuthContext";
 import type { ClaimSession } from "../types";
@@ -24,22 +24,58 @@ export interface LiveClaimSession {
   createdAt: string;
 }
 
+export interface PendingClaim {
+  roomId: string;
+  robloxUsername: string;
+  contactEmail?: string;
+  game?: string;
+  itemName?: string;
+  items: { name: string; quantity: number }[];
+  orderRef?: string;
+  createdAt: string;
+}
+
 interface AdminSocketContextType {
   socket: Socket | null;
   connected: boolean;
   claimPopup: ClaimPopup | null;
   dismissClaimPopup: () => void;
-  answerClaim: (roomId: string) => void;
-  declineClaim: (roomId: string) => void;
   onlineAgents: { agentId: string; agentName: string; games: string[] }[];
   activeClaims: LiveClaimSession[];
-  assignedSession: ClaimSession | null;
-  clearAssignedSession: () => void;
+  pendingClaims: PendingClaim[];
+  removePendingClaim: (roomId: string) => void;
 }
 
 const AdminSocketContext = createContext<AdminSocketContextType | null>(null);
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || "";
+
+function playNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    const playTone = (freq: number, start: number, duration: number, volume: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(volume, start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+
+    const t = ctx.currentTime;
+    playTone(880, t, 0.3, 0.28);
+    playTone(1108, t + 0.12, 0.28, 0.22);
+    playTone(1318, t + 0.24, 0.45, 0.18);
+  } catch {}
+}
 
 export function AdminSocketProvider({ children }: { children: ReactNode }) {
   const { user, token, profile } = useAdminAuth();
@@ -48,7 +84,11 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
   const [claimPopup, setClaimPopup] = useState<ClaimPopup | null>(null);
   const [onlineAgents, setOnlineAgents] = useState<{ agentId: string; agentName: string; games: string[] }[]>([]);
   const [activeClaims, setActiveClaims] = useState<LiveClaimSession[]>([]);
-  const [assignedSession, setAssignedSession] = useState<ClaimSession | null>(null);
+  const [pendingClaims, setPendingClaims] = useState<PendingClaim[]>([]);
+
+  const removePendingClaim = useCallback((roomId: string) => {
+    setPendingClaims(prev => prev.filter(c => c.roomId !== roomId));
+  }, []);
 
   useEffect(() => {
     if (!user || !token) {
@@ -72,9 +112,9 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
     socket.on("connect", () => {
       setConnected(true);
 
-      if (user.type === "team_member" && user.claimGames?.length) {
+      if (user.type === "team_member") {
         socket.emit("queue:join", {
-          games: user.claimGames,
+          games: user.claimGames || [],
           agentId: user.id,
           agentName: profile?.displayName || user.email,
         });
@@ -83,21 +123,27 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
     socket.on("disconnect", () => setConnected(false));
 
-    socket.on("queue:claim_popup", (data: ClaimPopup) => {
-      setClaimPopup({ ...data, isOwnerAlert: false });
+    socket.on("queue:new_pending_claim", (data: PendingClaim) => {
+      if (user.type !== "team_member") return;
+      setPendingClaims(prev => {
+        const exists = prev.find(c => c.roomId === data.roomId);
+        if (exists) return prev;
+        return [data, ...prev];
+      });
+      playNotificationSound();
     });
 
-    socket.on("queue:already_taken", () => {
-      setClaimPopup(null);
+    socket.on("queue:claim_taken", ({ roomId }: { roomId: string }) => {
+      setPendingClaims(prev => prev.filter(c => c.roomId !== roomId));
     });
 
-    socket.on("queue:claim_assigned", (data: { roomId: string; session: ClaimSession }) => {
-      setAssignedSession(data.session);
+    socket.on("queue:claim_ended", ({ roomId }: { roomId: string }) => {
+      setPendingClaims(prev => prev.filter(c => c.roomId !== roomId));
     });
 
     socket.on("admin:new_claim", (data: Omit<ClaimPopup, "isOwnerAlert">) => {
-      setActiveClaims((prev) => {
-        const exists = prev.find((c) => c.roomId === data.roomId);
+      setActiveClaims(prev => {
+        const exists = prev.find(c => c.roomId === data.roomId);
         if (exists) return prev;
         return [
           {
@@ -114,28 +160,31 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
       if (user.isOwner) {
         setClaimPopup({ ...data, isOwnerAlert: true });
+        playNotificationSound();
       }
     });
 
     socket.on("admin:claim_status_changed", ({ roomId, status, agentName }: { roomId: string; status: string; agentName?: string }) => {
-      setActiveClaims((prev) =>
-        prev.map((c) =>
-          c.roomId === roomId
-            ? { ...c, status: status as LiveClaimSession["status"], ...(agentName ? { agentName } : {}) }
-            : c
-        ).filter((c) => c.status !== "ended" && c.status !== "claimed")
+      setActiveClaims(prev =>
+        prev
+          .map(c =>
+            c.roomId === roomId
+              ? { ...c, status: status as LiveClaimSession["status"], ...(agentName ? { agentName } : {}) }
+              : c
+          )
+          .filter(c => c.status !== "ended" && c.status !== "claimed")
       );
     });
 
     socket.on("admin:agent_online", (data: { agentId: string; agentName: string; games: string[] }) => {
-      setOnlineAgents((prev) => {
-        const filtered = prev.filter((a) => a.agentId !== data.agentId);
+      setOnlineAgents(prev => {
+        const filtered = prev.filter(a => a.agentId !== data.agentId);
         return [...filtered, data];
       });
     });
 
     socket.on("admin:agent_offline", ({ agentId }: { agentId: string }) => {
-      setOnlineAgents((prev) => prev.filter((a) => a.agentId !== agentId));
+      setOnlineAgents(prev => prev.filter(a => a.agentId !== agentId));
     });
 
     return () => {
@@ -146,33 +195,18 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
     };
   }, [user?.id, token]);
 
-  const dismissClaimPopup = () => setClaimPopup(null);
-
-  const answerClaim = (roomId: string) => {
-    if (!socketRef.current || !user) return;
-    if (claimPopup?.isOwnerAlert) {
-      setClaimPopup(null);
-      return;
-    }
-    socketRef.current.emit("queue:answer", {
-      roomId,
+  const claimGamesKey = user?.claimGames?.join(",") ?? "";
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !user || user.type !== "team_member") return;
+    socket.emit("queue:join", {
+      games: user.claimGames || [],
       agentId: user.id,
       agentName: profile?.displayName || user.email,
     });
-    setClaimPopup(null);
-  };
+  }, [claimGamesKey]);
 
-  const declineClaim = (roomId: string) => {
-    if (!socketRef.current || !user) return;
-    if (claimPopup?.isOwnerAlert) {
-      setClaimPopup(null);
-      return;
-    }
-    socketRef.current.emit("queue:decline", { roomId, agentId: user.id });
-    setClaimPopup(null);
-  };
-
-  const clearAssignedSession = () => setAssignedSession(null);
+  const dismissClaimPopup = () => setClaimPopup(null);
 
   return (
     <AdminSocketContext.Provider
@@ -181,12 +215,10 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
         connected,
         claimPopup,
         dismissClaimPopup,
-        answerClaim,
-        declineClaim,
         onlineAgents,
         activeClaims,
-        assignedSession,
-        clearAssignedSession,
+        pendingClaims,
+        removePendingClaim,
       }}
     >
       {children}
