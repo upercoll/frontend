@@ -11,23 +11,23 @@ import type { Order, ClaimSession } from "../types";
 import ChatWindow from "../components/ChatWindow";
 
 const STATUS_DISPLAY: Record<string, string> = {
-  pending: "Unpaid",
-  paid: "Paid",
-  delivering: "Delivering",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  refunded: "Refunded",
-  fulfilled: "Fulfilled",
+  pending:            "Unpaid",
+  paid:               "Paid",
+  delivering:         "Delivering",
+  completed:          "Completed",
+  cancelled:          "Cancelled",
+  refunded:           "Refunded",
+  partially_refunded: "Partial Refund",
 };
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  pending:   { bg: "#FEF9C3", text: "#854D0E", border: "#FDE047" },
-  paid:      { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
-  delivering:{ bg: "#EDE9FE", text: "#5B21B6", border: "#A78BFA" },
-  completed: { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
-  cancelled: { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
-  refunded:  { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
-  fulfilled: { bg: "#ECFDF5", text: "#065F46", border: "#34D399" },
+  pending:            { bg: "#FEF9C3", text: "#854D0E", border: "#FDE047" },
+  paid:               { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
+  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#A78BFA" },
+  completed:          { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
+  cancelled:          { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
+  refunded:           { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
+  partially_refunded: { bg: "#FFF7ED", text: "#9A3412", border: "#FDBA74" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -45,13 +45,13 @@ const FILTER_TABS = [
   { label: "Unpaid", value: "pending" },
   { label: "Paid", value: "paid" },
   { label: "Delivering", value: "delivering" },
-  { label: "Fulfilled", value: "fulfilled" },
   { label: "Completed", value: "completed" },
   { label: "Cancelled", value: "cancelled" },
   { label: "Refunded", value: "refunded" },
+  { label: "Partial Refund", value: "partially_refunded" },
 ];
 
-const VALID_STATUSES = ["pending", "paid", "delivering", "completed", "cancelled", "refunded", "fulfilled"];
+const VALID_STATUSES = ["pending", "paid", "delivering", "completed", "cancelled", "refunded", "partially_refunded"];
 
 export default function Orders() {
   const [search, setSearch] = useState("");
