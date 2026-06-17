@@ -1,24 +1,41 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, User, Gamepad2, Clock, Package, Mail, RefreshCw, ChevronRight, AlertCircle, ArrowLeft } from "lucide-react";
+import {
+  MessageSquare, User, Gamepad2, Clock, Package, Mail, RefreshCw,
+  ChevronRight, AlertCircle, ArrowLeft, ChevronDown,
+} from "lucide-react";
 import { adminApi } from "../api";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import { cn } from "@/lib/utils";
 import type { ClaimSession, ClaimMessage } from "../types";
 
-const STATUS_COLOR: Record<string, string> = {
-  pending: "bg-yellow-500/15 text-yellow-400",
-  active: "bg-emerald-500/15 text-emerald-400",
-  claimed: "bg-blue-500/15 text-blue-400",
-  ended: "bg-slate-500/15 text-slate-400",
-};
-
-const STATUS_DOT: Record<string, string> = {
-  pending: "bg-yellow-400",
-  active: "bg-emerald-400 animate-pulse",
-  claimed: "bg-blue-400",
-  ended: "bg-slate-500",
+const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; dotPulse?: boolean; label: string }> = {
+  pending: {
+    bg: "bg-red-500/15",
+    text: "text-red-400",
+    dot: "bg-red-400",
+    label: "Unclaimed",
+  },
+  active: {
+    bg: "bg-emerald-500/15",
+    text: "text-emerald-400",
+    dot: "bg-emerald-400",
+    dotPulse: true,
+    label: "In Progress",
+  },
+  claimed: {
+    bg: "bg-yellow-500/15",
+    text: "text-yellow-400",
+    dot: "bg-yellow-400",
+    label: "Claimed",
+  },
+  ended: {
+    bg: "bg-slate-500/15",
+    text: "text-slate-400",
+    dot: "bg-slate-500",
+    label: "Ended",
+  },
 };
 
 function timeAgo(iso: string): string {
@@ -39,11 +56,23 @@ interface SessionRowProps {
   session: ClaimSession;
   selected: boolean;
   onClick: () => void;
-  liveStatus?: "pending" | "active" | "claimed" | "ended";
+  liveStatus?: ClaimSession["status"];
+}
+
+function StatusBadge({ status, agentName }: { status: string; agentName?: string }) {
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.ended;
+  const label = status === "active" && agentName ? `In Progress · ${agentName}` : cfg.label;
+  return (
+    <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1", cfg.bg, cfg.text)}>
+      <span className={cn("w-1.5 h-1.5 rounded-full inline-block flex-shrink-0", cfg.dot, cfg.dotPulse ? "animate-pulse" : "")} />
+      {label}
+    </span>
+  );
 }
 
 function SessionRow({ session, selected, onClick, liveStatus }: SessionRowProps) {
   const status = liveStatus || session.status;
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.ended;
   return (
     <motion.button
       whileHover={{ x: 2 }}
@@ -57,32 +86,18 @@ function SessionRow({ session, selected, onClick, liveStatus }: SessionRowProps)
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/10 flex items-center justify-center">
           <User className="w-4 h-4 text-blue-400" />
         </div>
-        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a1628]", STATUS_DOT[status])} />
+        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a1628]", cfg.dot, cfg.dotPulse ? "animate-pulse" : "")} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <p className="text-white text-sm font-medium truncate">{session.robloxUsername}</p>
           <span className="text-slate-600 text-[10px] flex-shrink-0">{timeAgo(session.createdAt)}</span>
         </div>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          {session.game && (
-            <span className="flex items-center gap-1 text-slate-500 text-xs">
-              <Gamepad2 className="w-3 h-3" />
-              {session.game}
-            </span>
-          )}
-          {session.game && session.orderRef && <span className="text-slate-700 text-xs">·</span>}
-          {session.orderRef && (
-            <span className="text-slate-600 text-xs truncate">#{session.orderRef.slice(-6)}</span>
-          )}
-        </div>
+        {session.orderRef && (
+          <p className="text-slate-600 text-xs truncate">#{session.orderRef.slice(-6)}</p>
+        )}
         <div className="flex items-center justify-between mt-1.5">
-          <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1", STATUS_COLOR[status])}>
-            <span className={cn("w-1.5 h-1.5 rounded-full inline-block", STATUS_DOT[status].replace("animate-pulse", ""))} />
-            {status === "active" ? (session.assignedAgent?.name ? `Active — ${session.assignedAgent.name}` : "Active") :
-             status === "pending" ? "Waiting" :
-             status === "claimed" ? "Claimed" : "Ended"}
-          </span>
+          <StatusBadge status={status} agentName={session.assignedAgent?.name} />
           {selected && <ChevronRight className="w-3.5 h-3.5 text-blue-400" />}
         </div>
       </div>
@@ -110,9 +125,7 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-white font-semibold text-base">{session.robloxUsername}</h3>
-              <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", STATUS_COLOR[session.status])}>
-                {session.status}
-              </span>
+              <StatusBadge status={session.status} agentName={session.assignedAgent?.name} />
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               <span className="flex items-center gap-1 text-slate-500 text-xs">
@@ -136,7 +149,7 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
               {formatTime(session.createdAt)}
             </p>
             {session.assignedAgent && (
-              <p className="text-slate-600 text-[10px] mt-0.5">Agent: {session.assignedAgent.name}</p>
+              <p className="text-slate-400 text-[11px] mt-0.5 font-medium">Agent: {session.assignedAgent.name}</p>
             )}
           </div>
         </div>
@@ -209,6 +222,72 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
   );
 }
 
+function GameGroup({
+  game,
+  sessions,
+  selectedRoomId,
+  liveStatusMap,
+  onSelect,
+}: {
+  game: string;
+  sessions: ClaimSession[];
+  selectedRoomId: string | null;
+  liveStatusMap: Map<string, string>;
+  onSelect: (roomId: string) => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const unclaimedCount = sessions.filter(s => s.status === "pending").length;
+  const activeCount = sessions.filter(s => s.status === "active").length;
+
+  return (
+    <div className="mb-1">
+      <button
+        onClick={() => setCollapsed(v => !v)}
+        className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-white/3 transition-colors group"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
+      >
+        <Gamepad2 className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+        <span className="text-xs font-bold text-slate-300 flex-1 text-left truncate">{game}</span>
+        <div className="flex items-center gap-1.5">
+          {unclaimedCount > 0 && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-red-500/15 text-red-400">
+              {unclaimedCount} unclaimed
+            </span>
+          )}
+          {activeCount > 0 && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-400">
+              {activeCount} active
+            </span>
+          )}
+        </div>
+        <ChevronDown className={cn("w-3.5 h-3.5 text-slate-600 transition-transform flex-shrink-0", collapsed ? "" : "rotate-180")} />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            {sessions.map(session => (
+              <SessionRow
+                key={session.roomId}
+                session={session}
+                selected={selectedRoomId === session.roomId}
+                onClick={() => onSelect(session.roomId)}
+                liveStatus={liveStatusMap.get(session.roomId) as ClaimSession["status"] | undefined}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function OpenChats() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [showChatMobile, setShowChatMobile] = useState(false);
@@ -228,20 +307,29 @@ export default function OpenChats() {
   });
 
   const sessions: ClaimSession[] = listData?.data.sessions || [];
-
   const liveStatusMap = new Map(activeClaims.map((c) => [c.roomId, c.status]));
+
   const sortedSessions = [...sessions].sort((a, b) => {
-    const aPriority = a.status === "pending" ? 0 : a.status === "active" ? 1 : 2;
-    const bPriority = b.status === "pending" ? 0 : b.status === "active" ? 1 : 2;
-    if (aPriority !== bPriority) return aPriority - bPriority;
+    const order = { pending: 0, active: 1, claimed: 2, ended: 3 };
+    const aPri = order[a.status as keyof typeof order] ?? 3;
+    const bPri = order[b.status as keyof typeof order] ?? 3;
+    if (aPri !== bPri) return aPri - bPri;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+
+  const gameGroups = sortedSessions.reduce<Record<string, ClaimSession[]>>((acc, s) => {
+    const key = s.game || "General";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(s);
+    return acc;
+  }, {});
 
   const selectedSession = sortedSessions.find((s) => s.roomId === selectedRoomId);
   const messages: ClaimMessage[] = sessionData?.data.messages || [];
 
-  const pendingCount = sessions.filter((s) => s.status === "pending").length;
-  const activeCount = sessions.filter((s) => s.status === "active").length;
+  const pendingCount = sessions.filter(s => s.status === "pending").length;
+  const activeCount = sessions.filter(s => s.status === "active").length;
+  const claimedCount = sessions.filter(s => s.status === "claimed").length;
 
   useEffect(() => {
     if (!selectedRoomId && sortedSessions.length > 0) {
@@ -256,17 +344,31 @@ export default function OpenChats() {
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* Session list — full width on mobile unless chat is open */}
       <div className={`${showChatMobile ? "hidden" : "flex"} md:flex flex-col w-full md:w-80 flex-shrink-0 border-r border-white/5 bg-[#0a1628]`}>
         <div className="px-4 py-4 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-white font-semibold text-sm">Open Chats</h2>
-              <p className="text-slate-500 text-xs mt-0.5">
-                {pendingCount > 0 && <span className="text-yellow-400 font-medium">{pendingCount} waiting</span>}
-                {pendingCount > 0 && activeCount > 0 && " · "}
-                {activeCount > 0 && <span className="text-emerald-400 font-medium">{activeCount} active</span>}
-                {pendingCount === 0 && activeCount === 0 && "No open chats"}
+              <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
+                {pendingCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                    <span className="text-red-400 font-medium">{pendingCount} unclaimed</span>
+                  </span>
+                )}
+                {activeCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                    <span className="text-emerald-400 font-medium">{activeCount} in progress</span>
+                  </span>
+                )}
+                {claimedCount > 0 && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />
+                    <span className="text-yellow-400 font-medium">{claimedCount} claimed</span>
+                  </span>
+                )}
+                {pendingCount === 0 && activeCount === 0 && claimedCount === 0 && "No open chats"}
               </p>
             </div>
             <button
@@ -297,28 +399,20 @@ export default function OpenChats() {
               <p className="text-sm text-center">No open chats right now</p>
             </div>
           ) : (
-            <AnimatePresence>
-              {sortedSessions.map((session) => (
-                <motion.div
-                  key={session.roomId}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                >
-                  <SessionRow
-                    session={session}
-                    selected={selectedRoomId === session.roomId}
-                    onClick={() => handleSelectSession(session.roomId)}
-                    liveStatus={liveStatusMap.get(session.roomId) as ClaimSession["status"] | undefined}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            Object.entries(gameGroups).map(([game, gameSessions]) => (
+              <GameGroup
+                key={game}
+                game={game}
+                sessions={gameSessions}
+                selectedRoomId={selectedRoomId}
+                liveStatusMap={liveStatusMap}
+                onSelect={handleSelectSession}
+              />
+            ))
           )}
         </div>
       </div>
 
-      {/* Chat pane — full width on mobile when chat is open */}
       <div className={`${showChatMobile ? "flex" : "hidden"} md:flex flex-1 flex-col overflow-hidden bg-[#060d1a]`}>
         {!selectedSession ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-600">
@@ -335,7 +429,6 @@ export default function OpenChats() {
               transition={{ duration: 0.18 }}
               className="flex flex-col h-full"
             >
-              {/* Mobile back bar */}
               <div className="md:hidden flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0"
                 style={{ background: "rgba(6,9,28,0.8)" }}>
                 <button
@@ -345,15 +438,15 @@ export default function OpenChats() {
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <span className="text-white text-sm font-medium truncate">{selectedSession.robloxUsername}</span>
-                <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto flex-shrink-0", STATUS_COLOR[selectedSession.status])}>
-                  {selectedSession.status}
-                </span>
+                <div className="ml-auto flex-shrink-0">
+                  <StatusBadge status={selectedSession.status} agentName={selectedSession.assignedAgent?.name} />
+                </div>
               </div>
 
               {selectedSession.status === "pending" && (
-                <div className="px-4 md:px-5 py-2.5 flex items-center gap-2 bg-yellow-500/8 border-b border-yellow-500/15 flex-shrink-0">
-                  <AlertCircle className="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" />
-                  <p className="text-yellow-400 text-xs font-medium">Waiting for an agent to answer this chat</p>
+                <div className="px-4 md:px-5 py-2.5 flex items-center gap-2 bg-red-500/8 border-b border-red-500/15 flex-shrink-0">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                  <p className="text-red-400 text-xs font-medium">Unclaimed — no agent has answered this chat yet</p>
                 </div>
               )}
               <ChatPane
