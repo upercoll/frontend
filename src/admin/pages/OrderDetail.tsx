@@ -327,7 +327,7 @@ export default function OrderDetail() {
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
                     style={{ background: "#1e1b4b" }}>
                     <Plus className="w-3.5 h-3.5" />
-                    Add tracking / Fulfill
+                    Add tracking / Complete
                   </button>
                 </div>
               )}
