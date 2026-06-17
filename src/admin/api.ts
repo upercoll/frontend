@@ -1,6 +1,7 @@
 const BASE = import.meta.env.VITE_API_URL || "";
 const PANEL = `${BASE}/api/panel`;
 const COLLAB_BASE = `${BASE}/api/collab`;
+const STOCKER_BASE = `${BASE}/api/stocker`;
 
 function getToken(): string | null {
   return localStorage.getItem("panel_token");
@@ -10,14 +11,15 @@ async function req<T>(
   method: string,
   path: string,
   body?: unknown,
-  isFormData = false
+  isFormData = false,
+  baseUrl = PANEL
 ): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
   if (!isFormData && body) headers["Content-Type"] = "application/json";
 
-  const res = await fetch(`${PANEL}${path}`, {
+  const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
     body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
@@ -53,6 +55,9 @@ const patch = <T>(path: string, body?: unknown) => req<T>("PATCH", path, body);
 const del = <T>(path: string, body?: unknown) => req<T>("DELETE", path, body);
 const postForm = <T>(path: string, form: FormData) => req<T>("POST", path, form, true);
 const patchForm = <T>(path: string, form: FormData) => req<T>("PATCH", path, form, true);
+
+const sget = <T>(path: string) => stockerReq<T>("GET", path);
+const spost = <T>(path: string, body?: unknown) => stockerReq<T>("POST", path, body);
 
 export const adminApi = {
   auth: {
@@ -285,4 +290,54 @@ export const adminApi = {
     update: (id: string, data: Partial<import("./types").CustomerAdmin>) =>
       patch<{ success: boolean; data: { customer: import("./types").CustomerAdmin } }>(`/customers/${id}`, data),
   },
+
+  stock: {
+    listStockers: () =>
+      get<{ success: boolean; data: { stockers: import("./types").Stocker[] } }>("/stock/stockers"),
+    getStockerDetail: (id: string) =>
+      get<{ success: boolean; data: { stocker: import("./types").Stocker; requests: import("./types").StockRequest[]; stats: Record<string, number> } }>(`/stock/stockers/${id}`),
+    inviteStocker: (data: { email: string; name?: string; commissionRate?: number; games?: string[] }) =>
+      post<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/stock/stockers/invite", data),
+    updateStocker: (id: string, data: { name?: string; status?: string; commissionRate?: number; games?: string[] }) =>
+      patch<{ success: boolean; data: { stocker: import("./types").Stocker } }>(`/stock/stockers/${id}`, data),
+    deleteStocker: (id: string) =>
+      del(`/stock/stockers/${id}`),
+
+    listRequests: (params?: { status?: string; stocker?: string; game?: string }) => {
+      const q = new URLSearchParams(params as Record<string, string>).toString();
+      return get<{ success: boolean; data: { requests: import("./types").StockRequest[] } }>(`/stock/requests${q ? `?${q}` : ""}`);
+    },
+    getRequest: (id: string) =>
+      get<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}`),
+    approveRequest: (id: string, data: { paymentAmount?: number; adminNotes?: string }) =>
+      patch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}/approve`, data),
+    markStocked: (id: string, data?: { adminNotes?: string }) =>
+      patch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}/stocked`, data || {}),
+    rejectRequest: (id: string, data?: { adminNotes?: string }) =>
+      patch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}/reject`, data || {}),
+  },
+
+  stockerPanel: {
+    login: (email: string, password: string) =>
+      stockerReq<{ success: boolean; token: string; data: { user: import("./types").AdminUser; profile: import("./types").AdminProfile } }>("POST", "/auth/login", { email, password }),
+    validateInvite: (token: string) =>
+      stockerReq<{ success: boolean; data: { email: string; stockerId: string } }>("GET", `/auth/invite/${token}`),
+    sendCode: (token: string) =>
+      stockerReq<{ success: boolean; message: string }>("POST", `/auth/invite/${token}/send-code`),
+    verifyAndActivate: (token: string, body: { code: string; password: string; displayName?: string; username?: string }) =>
+      stockerReq<{ success: boolean; token: string; data: { user: import("./types").AdminUser; profile: import("./types").AdminProfile } }>("POST", `/auth/invite/${token}/verify`, body),
+    me: () => sget<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/auth/me"),
+    getProducts: (game?: string) =>
+      sget<{ success: boolean; data: { products: import("./types").Product[] } }>(`/products${game ? `?game=${game}` : ""}`),
+    getMyRequests: () =>
+      sget<{ success: boolean; data: { requests: import("./types").StockRequest[] } }>("/requests"),
+    submitRequest: (data: { game: string; items: { productId: string; quantity: number }[] }) =>
+      spost<{ success: boolean; data: { request: import("./types").StockRequest } }>("/requests", data),
+    getMyStats: () =>
+      sget<{ success: boolean; data: { stats: Record<string, number>; recentRequests: import("./types").StockRequest[]; productBreakdown: { productName: string; quantityStocked: number; totalValue: number; game?: string; imageUrl?: string }[] } }>("/stats"),
+  },
 };
+
+function stockerReq<T>(method: string, path: string, body?: unknown, isFormData = false): Promise<T> {
+  return req<T>(method, path, body, isFormData, STOCKER_BASE);
+}
