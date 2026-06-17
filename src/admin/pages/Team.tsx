@@ -2,12 +2,11 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, UserPlus, Mail, RefreshCw, UserX, X, Loader2, Activity,
-  Trash2, Percent, ChevronDown, Edit2, Check,
+  UserPlus, Mail, RefreshCw, UserX, X, Loader2, Activity,
+  Trash2, ChevronDown,
 } from "lucide-react";
 import { adminApi } from "../api";
 import type { TeamMember, AdminRole } from "../types";
-import { cn } from "@/lib/utils";
 import { useAdminAuth } from "../context/AdminAuthContext";
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
@@ -25,7 +24,6 @@ export default function Team() {
   const [inviteGames, setInviteGames] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [editCommission, setEditCommission] = useState<{ id: string; rate: number } | null>(null);
 
   const { data: membersData, isLoading } = useQuery({
     queryKey: ["panel-team", statusFilter],
@@ -60,16 +58,6 @@ export default function Team() {
   const hardDeleteMut = useMutation({
     mutationFn: adminApi.team.hardDelete,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["panel-team"] }),
-    onError: (err: Error) => alert(err.message),
-  });
-
-  const commissionMut = useMutation({
-    mutationFn: ({ id, rate }: { id: string; rate: number }) =>
-      adminApi.team.updateCommission(id, rate),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["panel-team"] });
-      setEditCommission(null);
-    },
     onError: (err: Error) => alert(err.message),
   });
 
@@ -134,7 +122,7 @@ export default function Team() {
         </div>
       ) : (
         <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
-          {members.map((member: TeamMember & { commissionRate?: number }, i: number) => {
+          {members.map((member: TeamMember, i: number) => {
             const st = STATUS_STYLES[member.status] || STATUS_STYLES.disabled;
             return (
               <motion.div
@@ -194,41 +182,6 @@ export default function Team() {
                       <div className="text-xs text-slate-400 hidden lg:flex items-center gap-1">
                         <Activity className="w-3 h-3" />
                         {member.stats.completedClaims} claims
-                      </div>
-                    )}
-                    {isOwner && (
-                      <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <Percent className="w-3 h-3" />
-                        {editCommission?.id === member._id ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number" min="0" max="100" step="0.5"
-                              value={editCommission.rate}
-                              onChange={(e) => setEditCommission({ id: member._id, rate: parseFloat(e.target.value) || 0 })}
-                              className="w-14 text-xs rounded px-1.5 py-0.5 focus:outline-none"
-                              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
-                              autoFocus
-                            />
-                            <span className="text-slate-400">%</span>
-                            <button
-                              onClick={() => commissionMut.mutate({ id: member._id, rate: editCommission.rate })}
-                              className="p-0.5 rounded text-emerald-600"
-                            >
-                              {commissionMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
-                            </button>
-                            <button onClick={() => setEditCommission(null)} className="p-0.5 rounded text-slate-400">
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setEditCommission({ id: member._id, rate: member.commissionRate || 0 })}
-                            className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
-                          >
-                            {member.commissionRate || 0}% commission
-                            <Edit2 className="w-2.5 h-2.5 opacity-50" />
-                          </button>
-                        )}
                       </div>
                     )}
                   </div>
