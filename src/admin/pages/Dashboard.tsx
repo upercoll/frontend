@@ -44,16 +44,17 @@ function SectionHeading({ icon: Icon, title, action }: { icon: React.ComponentTy
 
 const STATUS_DISPLAY: Record<string, string> = {
   pending: "Unpaid", paid: "Paid", delivering: "Delivering",
-  completed: "Completed", cancelled: "Cancelled", refunded: "Refunded", fulfilled: "Fulfilled",
+  completed: "Completed", cancelled: "Cancelled", refunded: "Refunded",
+  partially_refunded: "Partial Refund",
 };
 const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  pending:    { bg: "rgba(245,158,11,0.12)", text: "#fbbf24", dot: "#f59e0b" },
-  paid:       { bg: "rgba(99,102,241,0.12)", text: "#a5b4fc", dot: "#6366f1" },
-  delivering: { bg: "rgba(139,92,246,0.12)", text: "#c4b5fd", dot: "#8b5cf6" },
-  completed:  { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7", dot: "#10b981" },
-  cancelled:  { bg: "rgba(239,68,68,0.12)",  text: "#fca5a5", dot: "#ef4444" },
-  refunded:   { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.5)", dot: "rgba(255,255,255,0.3)" },
-  fulfilled:  { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7", dot: "#10b981" },
+  pending:            { bg: "rgba(245,158,11,0.12)", text: "#fbbf24", dot: "#f59e0b" },
+  paid:               { bg: "rgba(99,102,241,0.12)", text: "#a5b4fc", dot: "#6366f1" },
+  delivering:         { bg: "rgba(139,92,246,0.12)", text: "#c4b5fd", dot: "#8b5cf6" },
+  completed:          { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7", dot: "#10b981" },
+  cancelled:          { bg: "rgba(239,68,68,0.12)",  text: "#fca5a5", dot: "#ef4444" },
+  refunded:           { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.5)", dot: "rgba(255,255,255,0.3)" },
+  partially_refunded: { bg: "rgba(249,115,22,0.12)", text: "#fdba74", dot: "#f97316" },
 };
 
 function StatusBadge({ status }: { status: string }) {
