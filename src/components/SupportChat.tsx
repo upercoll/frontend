@@ -85,6 +85,30 @@ function loadLastOrder(): LastOrder | null {
   }
 }
 
+const CLAIM_SESSION_KEY = "rbstars_claim_session";
+
+interface StoredClaimSession {
+  roomId: string;
+  orderRef: string | null;
+  status: string;
+  agentName?: string | null;
+}
+
+function saveClaimSession(data: StoredClaimSession) {
+  try { localStorage.setItem(CLAIM_SESSION_KEY, JSON.stringify(data)); } catch {}
+}
+
+function loadClaimSession(): StoredClaimSession | null {
+  try {
+    const raw = localStorage.getItem(CLAIM_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function clearClaimSession() {
+  try { localStorage.removeItem(CLAIM_SESSION_KEY); } catch {}
+}
+
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
 function Field({
@@ -265,6 +289,8 @@ export default function SupportChat() {
       }]);
       setClaimStep("active");
       setEditMode(null);
+      const stored = loadClaimSession();
+      if (stored) saveClaimSession({ ...stored, status: "active", agentName: name });
     });
 
     socket.on("claim:new_message", (msg: { sender: string; text: string; senderName: string; timestamp: string }) => {
@@ -290,6 +316,8 @@ export default function SupportChat() {
       }]);
       setClaimStep("ended");
       setChatOutcome("ended");
+      const stored = loadClaimSession();
+      if (stored) saveClaimSession({ ...stored, status: "ended" });
       setTimeout(() => setClaimStep("review"), 1500);
     });
 
@@ -299,6 +327,8 @@ export default function SupportChat() {
       }]);
       setClaimStep("claimed");
       setChatOutcome("claimed");
+      const stored = loadClaimSession();
+      if (stored) saveClaimSession({ ...stored, status: "claimed" });
       setTimeout(() => setClaimStep("review"), 1500);
     });
 
@@ -361,6 +391,7 @@ export default function SupportChat() {
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to start chat");
 
       const rid = data.data.roomId;
+      const sessionStatus: string = data.data.status || "pending";
       const existingMessages: Message[] = (data.data.messages || []).map((m: { sender: string; text: string; senderName: string; timestamp: string }) => ({
         id: makeId(),
         sender: m.sender as "customer" | "agent" | "system",
@@ -370,8 +401,30 @@ export default function SupportChat() {
       }));
 
       setMessages(existingMessages);
-      setRoomId(rid);
-      setClaimStep("waiting");
+
+      saveClaimSession({
+        roomId: rid,
+        orderRef: lastOrder?.orderRef || null,
+        status: sessionStatus,
+        agentName: data.data.assignedAgent?.name || null,
+      });
+
+      if (sessionStatus === "claimed") {
+        setChatOutcome("claimed");
+        setClaimStep("claimed");
+        setTimeout(() => setClaimStep("review"), 1500);
+      } else if (sessionStatus === "ended") {
+        setChatOutcome("ended");
+        setClaimStep("ended");
+        setTimeout(() => setClaimStep("review"), 1500);
+      } else if (sessionStatus === "active") {
+        setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
+        setRoomId(rid);
+        setClaimStep("active");
+      } else {
+        setRoomId(rid);
+        setClaimStep("waiting");
+      }
     } catch (err) {
       setFormErrors({ submit: "Something went wrong. Please try again." });
     } finally {
@@ -451,6 +504,7 @@ export default function SupportChat() {
       });
 
       setReviewSubmitted(true);
+      clearClaimSession();
       setTimeout(() => closeAndReset(), 2000);
     } catch {
     } finally {
@@ -657,6 +711,42 @@ export default function SupportChat() {
   }
 
   function renderClaimSelect() {
+    const storedSession = loadClaimSession();
+    const orderDelivered =
+      storedSession &&
+      storedSession.orderRef === lastOrder?.orderRef &&
+      storedSession.status === "claimed";
+
+    if (orderDelivered) {
+      return (
+        <div className="flex flex-col h-full items-center justify-center p-6 text-center gap-4">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(34,197,94,0.15)", border: "2px solid rgba(34,197,94,0.3)" }}>
+            <CheckCheck size={24} color="#4ade80" />
+          </div>
+          <div>
+            <p className="text-base font-extrabold text-white mb-1">Order Delivered!</p>
+            <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
+              Your items have been delivered to your Roblox account. Check your inventory!
+            </p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => { clearClaimSession(); }}
+            className="text-[11px] font-semibold px-4 py-2 rounded-xl"
+            style={{ background: "rgba(79,70,229,0.15)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.15)" }}
+          >
+            Start New Chat
+          </motion.button>
+        </div>
+      );
+    }
+
+    const pendingSession =
+      storedSession &&
+      storedSession.orderRef === lastOrder?.orderRef &&
+      (storedSession.status === "pending" || storedSession.status === "active");
+
     if (!lastOrder || !lastOrder.items?.length) {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
@@ -677,6 +767,32 @@ export default function SupportChat() {
             style={{ background: "rgba(79,70,229,0.2)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
           >
             Open General Claim Chat
+          </motion.button>
+        </div>
+      );
+    }
+
+    if (pendingSession) {
+      return (
+        <div className="flex flex-col h-full justify-center p-4 gap-4">
+          <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(79,70,229,0.08)", border: "1.5px solid rgba(165,180,252,0.15)" }}>
+            <MessageSquare size={28} color="#A5B4FC" className="mx-auto mb-2" />
+            <p className="text-sm font-extrabold text-white mb-1">Chat In Progress</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#6B7280" }}>
+              You already have an active claim session for this order.
+            </p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              setSelectedItem({ id: "existing", name: "Claim Chat" });
+              setContactEmail(lastOrder?.email || "");
+              setClaimStep("form");
+            }}
+            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+          >
+            <MessageSquare size={15} />Continue Chat
           </motion.button>
         </div>
       );
@@ -1167,10 +1283,10 @@ export default function SupportChat() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-24 right-4 z-[300] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+            className="fixed bottom-24 right-3 sm:right-6 z-[300] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
             style={{
-              width: 320,
-              height: 500,
+              width: "min(360px, calc(100vw - 24px))",
+              height: "min(520px, calc(100vh - 128px))",
               background: "#0F0C2E",
               border: "1.5px solid rgba(165,180,252,0.18)",
               boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(79,70,229,0.15)",
