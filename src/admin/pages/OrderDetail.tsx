@@ -13,9 +13,13 @@ import type { Order, ClaimSession } from "../types";
 import ChatWindow from "../components/ChatWindow";
 
 const STATUS_DISPLAY: Record<string, string> = {
-  pending: "Unpaid", paid: "Paid", delivering: "Delivering",
-  completed: "Completed", cancelled: "Cancelled", refunded: "Refunded",
-  fulfilled: "Fulfilled", partially_refunded: "Partially Refunded",
+  pending:            "Unpaid",
+  paid:               "Paid",
+  delivering:         "Delivering",
+  completed:          "Completed",
+  cancelled:          "Cancelled",
+  refunded:           "Refunded",
+  partially_refunded: "Partially Refunded",
 };
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
@@ -25,11 +29,10 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }
   completed:          { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
   cancelled:          { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
   refunded:           { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
-  fulfilled:          { bg: "#ECFDF5", text: "#065F46", border: "#34D399" },
   partially_refunded: { bg: "#FFF7ED", text: "#9A3412", border: "#FDBA74" },
 };
 
-const VALID_STATUSES = ["pending", "paid", "delivering", "completed", "cancelled", "refunded", "fulfilled"];
+const VALID_STATUSES = ["pending", "paid", "delivering", "completed", "cancelled", "refunded", "partially_refunded"];
 
 const REFUND_REASONS = [
   "Customer request",
@@ -153,7 +156,7 @@ export default function OrderDetail() {
 
   const s = STATUS_STYLES[order.status] || STATUS_STYLES.refunded;
   const isPaid = order.payment?.status === "succeeded";
-  const isFulfilled = order.status === "fulfilled" || order.fulfillmentStatus === "fulfilled";
+  const isFulfilled = order.status === "completed";
   const isRefundable = isPaid && !["refunded", "cancelled"].includes(order.status);
   const isFulfillable = !isFulfilled && ["paid", "delivering"].includes(order.status);
   const tags: string[] = (order as any).tags || [];
@@ -212,7 +215,7 @@ export default function OrderDetail() {
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-white"
               style={{ background: "#1e1b4b" }}>
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Mark Fulfilled
+              Mark Completed
             </button>
           )}
           {claimSession && (
@@ -271,7 +274,7 @@ export default function OrderDetail() {
                   ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   : <Clock className="w-4 h-4 text-amber-500" />}
                 <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>
-                  {isFulfilled ? "Fulfilled" : "Unfulfilled"}
+                  {isFulfilled ? "Completed" : "Pending Delivery"}
                 </span>
               </div>
               {isFulfilled && order.fulfilledAt && (
@@ -753,7 +756,7 @@ export default function OrderDetail() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Fulfill Order</h3>
+                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Complete Order</h3>
                 <button onClick={() => setShowFulfill(false)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ background: "#F7F8FC", color: "#6b7280" }}>
@@ -791,7 +794,7 @@ export default function OrderDetail() {
                   className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{ background: "#1e1b4b" }}>
                   {fulfillMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Mark as Fulfilled
+                  Mark as Completed
                 </button>
               </div>
             </motion.div>
