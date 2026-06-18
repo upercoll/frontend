@@ -230,7 +230,7 @@ export default function Queue() {
 
   // POD modal
   const [podMode, setPodMode]           = useState(false);
-  const [proofFile, setProofFile]       = useState<File | null>(null);
+  const [proofFiles, setProofFiles]     = useState<File[]>([]);
   const [estDelivery, setEstDelivery]   = useState("");
   const [podNotes, setPodNotes]         = useState("");
   const [submittingPod, setSubmittingPod] = useState(false);
@@ -374,11 +374,6 @@ export default function Queue() {
     setUnread(p => { const n = new Map(p); n.delete(s.roomId); return n; });
     selectedRoomIdRef.current = s.roomId;
 
-    if (s.messages?.length) {
-      setSelectedSession(s);
-      socket?.emit("claim:agent_browse", { roomId: s.roomId });
-      return;
-    }
     setLoadingSession(true);
     try {
       const res = await (adminApi.claimSessions as any).getFullSession(s.roomId);
@@ -400,12 +395,12 @@ export default function Queue() {
   }, [removePendingClaim, refetch]);
 
   const submitPod = async () => {
-    if (!selectedSession || (!noProof && !proofFile)) return;
+    if (!selectedSession || (!noProof && proofFiles.length === 0)) return;
     setSubmittingPod(true);
     try {
-      if (!noProof && proofFile) {
+      if (!noProof && proofFiles.length > 0) {
         const form = new FormData();
-        form.append("proof", proofFile);
+        proofFiles.forEach(f => form.append("proofs", f));
         form.append("roomId", selectedSession.roomId);
         if (estDelivery) form.append("estimatedDelivery", estDelivery);
         if (podNotes)    form.append("notes", podNotes);
@@ -413,7 +408,7 @@ export default function Queue() {
       }
       socket?.emit("claim:mark_claimed", { roomId: selectedSession.roomId });
       setPodMode(false);
-      setProofFile(null); setEstDelivery(""); setPodNotes(""); setNoProof(false);
+      setProofFiles([]); setEstDelivery(""); setPodNotes(""); setNoProof(false);
       setActiveTab("completed");
       refetch();
     } catch (err: unknown) {
@@ -673,9 +668,9 @@ export default function Queue() {
               </div>
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-slate-300 text-sm font-medium">Screenshot {noProof ? "(skipped)" : "*"}</label>
+                  <label className="text-slate-300 text-sm font-medium">Screenshots {noProof ? "(skipped)" : `(${proofFiles.length}/5)`}</label>
                   <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <div onClick={() => { setNoProof(v => !v); if (!noProof) setProofFile(null); }}
+                    <div onClick={() => { setNoProof(v => !v); if (!noProof) setProofFiles([]); }}
                       className={cn("relative w-9 h-5 rounded-full transition-colors flex-shrink-0", noProof ? "bg-amber-500" : "bg-white/10")}>
                       <span className={cn("absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all", noProof ? "left-4" : "left-0.5")} />
                     </div>
@@ -684,15 +679,36 @@ export default function Queue() {
                 </div>
                 {!noProof && (
                   <>
-                    <div onClick={() => fileRef.current?.click()}
-                      className={cn("border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors",
-                        proofFile ? "border-emerald-500/40 bg-emerald-500/5" : "border-white/10 hover:border-white/20")}>
-                      {proofFile
-                        ? <div><CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-1" /><p className="text-emerald-300 text-sm">{proofFile.name}</p></div>
-                        : <div><p className="text-slate-400 text-sm">Tap to upload screenshot</p><p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p></div>}
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
-                      onChange={e => { setProofFile(e.target.files?.[0] || null); e.target.value = ""; }} />
+                    {proofFiles.length > 0 && (
+                      <div className="space-y-1.5">
+                        {proofFiles.map((f, i) => (
+                          <div key={i} className="flex items-center gap-2 bg-emerald-500/8 border border-emerald-500/20 rounded-lg px-3 py-2">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                            <p className="text-emerald-300 text-xs flex-1 truncate">{f.name}</p>
+                            <button type="button" onClick={() => setProofFiles(p => p.filter((_, j) => j !== i))}
+                              className="text-slate-500 hover:text-red-400 transition-colors flex-shrink-0">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {proofFiles.length < 5 && (
+                      <div onClick={() => fileRef.current?.click()}
+                        className="border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors border-white/10 hover:border-white/20">
+                        <p className="text-slate-400 text-sm">{proofFiles.length === 0 ? "Tap to upload screenshots" : "Add another screenshot"}</p>
+                        <p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB · max 5 images</p>
+                      </div>
+                    )}
+                    <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+                      onChange={e => {
+                        const newFiles = Array.from(e.target.files || []);
+                        setProofFiles(p => {
+                          const combined = [...p, ...newFiles];
+                          return combined.slice(0, 5);
+                        });
+                        e.target.value = "";
+                      }} />
                   </>
                 )}
                 {noProof && (
@@ -712,13 +728,13 @@ export default function Queue() {
                 </div>
               </div>
               <div className="px-6 py-4 border-t border-white/5 flex gap-3">
-                <button onClick={() => { setPodMode(false); setProofFile(null); setNoProof(false); }}
+                <button onClick={() => { setPodMode(false); setProofFiles([]); setNoProof(false); }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors">
                   Cancel
                 </button>
-                <button onClick={submitPod} disabled={submittingPod || (!noProof && !proofFile)}
+                <button onClick={submitPod} disabled={submittingPod || (!noProof && proofFiles.length === 0)}
                   className={cn("flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors",
-                    (!noProof && !proofFile) || submittingPod ? "bg-emerald-700/40 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700")}>
+                    (!noProof && proofFiles.length === 0) || submittingPod ? "bg-emerald-700/40 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700")}>
                   {submittingPod
                     ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Submitting…</>
                     : <><CheckCircle className="w-3.5 h-3.5" />Mark as Completed</>}
