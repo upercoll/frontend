@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Filter, Eye, MessageSquare, ChevronLeft, ChevronRight,
-  X, CheckSquare, Square, ChevronDown, Package, Loader2
+  X, CheckSquare, Square, ChevronDown, Package, Loader2, RefreshCw
 } from "lucide-react";
 import { Link } from "wouter";
 import { adminApi } from "../api";
@@ -63,6 +63,7 @@ export default function Orders() {
   const [bulkStatus, setBulkStatus] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkDropOpen, setBulkDropOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const qc = useQueryClient();
 
   const params: Record<string, string> = { page: String(page), limit: "25" };
@@ -110,6 +111,19 @@ export default function Orders() {
     else setSelected(new Set(orders.map((o: Order) => o._id)));
   };
 
+  const handleStripeSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await adminApi.orders.syncStripe();
+      qc.invalidateQueries({ queryKey: ["panel-orders"] });
+      alert(`Stripe sync complete!\n\nChecked: ${res.data.checked} orders\nFixed (now marked paid): ${res.data.fixed} orders\n${res.data.fixed > 0 ? `\nFixed orders: ${res.data.fixedOrders.join(", ")}` : ""}`);
+    } catch (e: any) {
+      alert(e.message || "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleBulkUpdate = async (newStatus: string) => {
     if (!newStatus || selected.size === 0) return;
     setBulkLoading(true);
@@ -132,6 +146,16 @@ export default function Orders() {
           <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Orders</h2>
           <p className="text-sm text-slate-500 mt-0.5">{total} total orders</p>
         </div>
+        <button
+          onClick={handleStripeSync}
+          disabled={syncing}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60"
+          style={{ background: "#4f46e5", color: "#fff" }}
+          title="Check Stripe for any orders that were paid but not updated in the system"
+        >
+          {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {syncing ? "Syncing..." : "Sync with Stripe"}
+        </button>
       </div>
 
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
