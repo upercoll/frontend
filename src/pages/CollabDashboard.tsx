@@ -217,7 +217,7 @@ export default function CollabDashboard() {
                         <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#a5b4fc" }}>#{s.orderNumber?.replace("RB-", "")}</td>
                         <td className="px-5 py-3.5 text-sm text-white/80">{s.productName}</td>
                         <td className="px-5 py-3.5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{s.quantity}</td>
-                        <td className="px-5 py-3.5 text-sm font-semibold text-white">${(s.unitPrice * s.quantity).toFixed(2)}</td>
+                        <td className="px-5 py-3.5 text-sm font-semibold text-white">${(s.salePrice ?? s.unitPrice * s.quantity).toFixed(2)}</td>
                         <td className="px-5 py-3.5">
                           <span className="text-xs px-2 py-1 rounded-full font-semibold"
                             style={s.isPaid
