@@ -57,9 +57,13 @@ export default function PaymentSuccess() {
               clearCart();
               const saved = loadOrder();
               if (saved) setOrder(saved);
+            } else {
+              console.error("[PaymentSuccess] confirmPayment failed:", data);
             }
           })
-          .catch(() => {})
+          .catch(err => {
+            console.error("[PaymentSuccess] confirmPayment network error:", err);
+          })
           .finally(() => setVerifying(false));
       }
       window.history.replaceState({}, "", "/order-success");
