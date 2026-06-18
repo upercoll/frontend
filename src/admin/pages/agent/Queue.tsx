@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle, RefreshCw, Inbox, ArrowLeft, Mail,
-  Gamepad2, Package, Hash, Clock, ChevronDown, ChevronRight,
-  Wifi, WifiOff, X, AlertCircle, User,
+  Gamepad2, Package, Hash, Clock, ChevronDown,
+  Wifi, WifiOff, X, AlertCircle, User, MessageSquare,
 } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -13,20 +13,38 @@ import ChatWindow from "../../components/ChatWindow";
 import { cn } from "@/lib/utils";
 import type { ClaimSession } from "../../types";
 
-// ── helpers ────────────────────────────────────────────────────────────────
+// ── helpers ─────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  pending: { dot: "bg-red-400",     ring: "border-red-400/30",     pill: "bg-red-500/15 text-red-400",     label: "Unclaimed",   pulse: true  },
-  active:  { dot: "bg-amber-400",   ring: "border-amber-400/30",   pill: "bg-amber-500/15 text-amber-400", label: "In Progress", pulse: true  },
-  claimed: { dot: "bg-emerald-400", ring: "border-emerald-400/20", pill: "bg-emerald-500/15 text-emerald-400", label: "Claimed", pulse: false },
-  ended:   { dot: "bg-slate-500",   ring: "border-slate-500/20",   pill: "bg-slate-500/15 text-slate-400",  label: "Ended",   pulse: false },
+  pending: { dot: "bg-red-400",     pill: "bg-red-500/15 text-red-400",         label: "Waiting",     pulse: true  },
+  active:  { dot: "bg-amber-400",   pill: "bg-amber-500/15 text-amber-400",     label: "In Progress", pulse: true  },
+  claimed: { dot: "bg-emerald-400", pill: "bg-emerald-500/15 text-emerald-400", label: "Delivered",   pulse: false },
+  ended:   { dot: "bg-slate-500",   pill: "bg-slate-500/15 text-slate-400",     label: "Ended",       pulse: false },
 } as const;
 
 type LiveStatus = { status: ClaimSession["status"]; agentName?: string };
 
+function playPing() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 1100;
+    gain.gain.setValueAtTime(0.22, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.18);
+  } catch {}
+}
+
 function timeAgo(d: string) {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-  if (s < 60)  return "Now";
-  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 60)   return "Now";
+  if (s < 3600)  return `${Math.floor(s / 60)}m`;
   if (s < 86400) return `${Math.floor(s / 3600)}h`;
   return new Date(d).toLocaleDateString([], { month: "short", day: "numeric" });
 }
@@ -35,16 +53,14 @@ function getItemLabel(s: ClaimSession): string {
   const raw = s.itemName;
   if (raw && raw.toLowerCase() !== "general claim" && raw.trim()) return raw;
   const first = s.items?.find(i => i.name && i.name.toLowerCase() !== "general claim");
-  if (first) return first.name;
-  return "";
+  return first?.name || "";
 }
 
 function lastMessagePreview(s: ClaimSession): string {
   const msgs = s.messages?.filter(m => m.sender !== "system") || [];
   if (!msgs.length) return "No messages yet";
   const last = msgs[msgs.length - 1];
-  const who = last.sender === "agent" ? "You: " : "";
-  return who + last.text.slice(0, 80);
+  return (last.sender === "agent" ? "You: " : "") + last.text.slice(0, 60);
 }
 
 function avatarColor(username: string): string {
@@ -54,24 +70,31 @@ function avatarColor(username: string): string {
   return colors[h];
 }
 
-// ── sub-components ─────────────────────────────────────────────────────────
+// ── ConvoItem ────────────────────────────────────────────────────────────────
 function ConvoItem({
-  session, liveStatus, selected, onClick,
-}: { session: ClaimSession; liveStatus?: LiveStatus; selected: boolean; onClick: () => void }) {
+  session, liveStatus, selected, onClick, unreadCount, livePreview,
+}: {
+  session: ClaimSession; liveStatus?: LiveStatus; selected: boolean;
+  onClick: () => void; unreadCount: number; livePreview?: string;
+}) {
   const effStatus = liveStatus?.status || session.status;
   const cfg = STATUS_CFG[effStatus] || STATUS_CFG.ended;
-  const item  = getItemLabel(session);
-  const preview = lastMessagePreview(session);
+  const item    = getItemLabel(session);
+  const preview = livePreview || lastMessagePreview(session);
+  const hasUnread = unreadCount > 0;
 
   return (
     <button
       onClick={onClick}
       className={cn(
         "w-full text-left px-3 py-3.5 flex items-start gap-3 border-b border-white/[0.04] transition-colors",
-        selected ? "bg-indigo-600/10 border-l-2 border-l-indigo-500" : "hover:bg-white/[0.03]"
+        selected
+          ? "bg-indigo-600/10 border-l-2 border-l-indigo-500"
+          : hasUnread
+          ? "bg-blue-500/5 hover:bg-blue-500/8"
+          : "hover:bg-white/[0.03]"
       )}
     >
-      {/* Avatar */}
       <div className="relative flex-shrink-0 mt-0.5">
         <div className={cn("w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white", avatarColor(session.robloxUsername))}>
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
@@ -82,13 +105,16 @@ function ConvoItem({
         )} />
       </div>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1 mb-0.5">
-          <p className="text-white text-xs font-semibold truncate">{session.robloxUsername}</p>
+          <p className={cn("text-xs font-semibold truncate", hasUnread ? "text-white" : "text-slate-200")}>
+            {session.robloxUsername}
+          </p>
           <span className="text-slate-600 text-[10px] flex-shrink-0">{timeAgo(session.createdAt)}</span>
         </div>
-        <p className="text-slate-500 text-[11px] truncate leading-relaxed">{preview}</p>
+        <p className={cn("text-[11px] truncate leading-relaxed", hasUnread ? "text-slate-300 font-medium" : "text-slate-500")}>
+          {preview}
+        </p>
         <div className="flex items-center gap-1 mt-1.5 flex-wrap">
           {item && (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/15 truncate max-w-[100px]">{item}</span>
@@ -96,8 +122,10 @@ function ConvoItem({
           {session.game && (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-500/15 text-slate-400 border border-slate-500/15 truncate max-w-[80px]">{session.game}</span>
           )}
-          {!item && !session.game && (
-            <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full", cfg.pill)}>{cfg.label}</span>
+          {hasUnread && (
+            <span className="ml-auto flex-shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-blue-500 text-white">
+              {unreadCount} unread
+            </span>
           )}
         </div>
       </div>
@@ -105,32 +133,28 @@ function ConvoItem({
   );
 }
 
+// ── ProfilePanel ─────────────────────────────────────────────────────────────
 function ProfilePanel({
   session, liveStatus, isMyActiveSession, onClose, onDeliver, onEnd,
 }: {
-  session: ClaimSession;
-  liveStatus?: LiveStatus;
-  isMyActiveSession: boolean;
-  onClose: () => void;
-  onDeliver: () => void;
-  onEnd: () => void;
+  session: ClaimSession; liveStatus?: LiveStatus; isMyActiveSession: boolean;
+  onClose: () => void; onDeliver: () => void; onEnd: () => void;
 }) {
   const effStatus = liveStatus?.status || session.status;
   const effAgent  = liveStatus?.agentName || session.assignedAgent?.name;
-  const cfg = STATUS_CFG[effStatus] || STATUS_CFG.ended;
+  const cfg  = STATUS_CFG[effStatus] || STATUS_CFG.ended;
   const item = getItemLabel(session);
 
   const rows = [
-    session.contactEmail && { icon: Mail,     label: "Email",   value: session.contactEmail },
-    session.game         && { icon: Gamepad2,  label: "Game",    value: session.game },
-    item                 && { icon: Package,   label: "Product", value: item },
-    session.orderRef     && { icon: Hash,      label: "Order",   value: session.orderRef },
-    { icon: Clock, label: "Waiting", value: timeAgo(session.createdAt) },
+    session.contactEmail && { icon: Mail,    label: "Email",   value: session.contactEmail },
+    session.game         && { icon: Gamepad2, label: "Game",    value: session.game },
+    item                 && { icon: Package,  label: "Product", value: item },
+    session.orderRef     && { icon: Hash,     label: "Order",   value: session.orderRef },
+    { icon: Clock, label: "Started", value: timeAgo(session.createdAt) },
   ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
 
   return (
     <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
         <p className="text-white text-sm font-semibold">Profile</p>
         <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
@@ -138,7 +162,6 @@ function ProfilePanel({
         </button>
       </div>
 
-      {/* Avatar + name */}
       <div className="px-4 pt-5 pb-4 border-b border-white/5 text-center">
         <div className={cn("w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mx-auto mb-3", avatarColor(session.robloxUsername))}>
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
@@ -153,7 +176,6 @@ function ProfilePanel({
         </div>
       </div>
 
-      {/* Metadata */}
       <div className="px-4 py-4 space-y-3 border-b border-white/5">
         {rows.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-start gap-3">
@@ -166,7 +188,6 @@ function ProfilePanel({
         ))}
       </div>
 
-      {/* Actions */}
       {isMyActiveSession && (
         <div className="px-4 py-4 space-y-2 flex-shrink-0">
           <motion.button
@@ -189,30 +210,68 @@ function ProfilePanel({
   );
 }
 
-// ── main component ──────────────────────────────────────────────────────────
-interface GameGroup { game: string; active: ClaimSession[]; completed: ClaimSession[] }
+// ── Section ──────────────────────────────────────────────────────────────────
+function Section({
+  title, count, unreadTotal, children, defaultOpen,
+}: {
+  title: string; count: number; unreadTotal?: number;
+  children: React.ReactNode; defaultOpen: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/[0.02] transition-colors border-b border-white/[0.04] sticky top-0 z-10 bg-[#0a1628]"
+      >
+        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-wider flex-1 text-left">{title}</span>
+        {unreadTotal !== undefined && unreadTotal > 0 && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold bg-blue-500/20 text-blue-400">{unreadTotal} new</span>
+        )}
+        {count > 0 && (
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/8 text-slate-400 font-medium">{count}</span>
+        )}
+        <ChevronDown className={cn("w-3 h-3 text-slate-600 transition-transform flex-shrink-0", open ? "rotate-180" : "")} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.16 }} className="overflow-hidden"
+          >
+            {count === 0 ? (
+              <p className="text-slate-700 text-[11px] text-center py-4">No chats here</p>
+            ) : children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
+// ── main component ────────────────────────────────────────────────────────────
 export default function Queue() {
   const { socket, connected, pendingClaims, removePendingClaim } = useAdminSocket();
   const { user } = useAdminAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+  const selectedRoomIdRef = useRef<string | null>(null);
 
-  // panel state for mobile (0=list 1=chat 2=profile)
-  const [mobilePanel, setMobilePanel] = useState<0 | 1 | 2>(0);
+  const [mobilePanel, setMobilePanel]     = useState<0 | 1 | 2>(0);
   const [selectedSession, setSelectedSession] = useState<ClaimSession | null>(null);
-  const [loadingSession, setLoadingSession] = useState(false);
-  const [showProfile, setShowProfile] = useState(true);
+  const [loadingSession, setLoadingSession]   = useState(false);
+  const [showProfile, setShowProfile]         = useState(true);
   const [liveStatuses, setLiveStatuses] = useState<Map<string, LiveStatus>>(new Map());
-  const [expandedGames, setExpandedGames] = useState<Set<string>>(new Set(["__all__"]));
-  const [showCompletedFor, setShowCompletedFor] = useState<Set<string>>(new Set());
+  const [unread, setUnread]             = useState<Map<string, number>>(new Map());
+  const [lastActivity, setLastActivity] = useState<Map<string, number>>(new Map());
+  const [livePreview, setLivePreview]   = useState<Map<string, string>>(new Map());
 
   // POD modal
-  const [podMode, setPodMode] = useState(false);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [estDelivery, setEstDelivery] = useState("");
-  const [podNotes, setPodNotes] = useState("");
+  const [podMode, setPodMode]           = useState(false);
+  const [proofFile, setProofFile]       = useState<File | null>(null);
+  const [estDelivery, setEstDelivery]   = useState("");
+  const [podNotes, setPodNotes]         = useState("");
   const [submittingPod, setSubmittingPod] = useState(false);
-  const [noProof, setNoProof] = useState(false);
+  const [noProof, setNoProof]           = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["agent-queue"],
@@ -242,36 +301,47 @@ export default function Queue() {
     return Array.from(map.values());
   }, [pending, mine, completed, pendingClaims]);
 
-  const gameGroups = useMemo<GameGroup[]>(() => {
-    const map = new Map<string, { active: ClaimSession[]; completed: ClaimSession[] }>();
-    allSessions.forEach(s => {
-      const game = s.game?.trim() || "General";
-      if (!map.has(game)) map.set(game, { active: [], completed: [] });
-      const eff = liveStatuses.get(s.roomId)?.status || s.status;
-      const bucket = map.get(game)!;
-      if (eff === "claimed" || eff === "ended") bucket.completed.push(s);
-      else bucket.active.push(s);
-    });
-    const ord: Record<string, number> = { pending: 0, active: 1, claimed: 2, ended: 3 };
-    const result: GameGroup[] = [];
-    map.forEach((val, game) => {
-      val.active.sort((a, b) => ord[liveStatuses.get(a.roomId)?.status || a.status] - ord[liveStatuses.get(b.roomId)?.status || b.status]);
-      val.completed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      result.push({ game, ...val });
-    });
-    return result.sort((a, b) => b.active.length - a.active.length || a.game.localeCompare(b.game));
-  }, [allSessions, liveStatuses]);
+  const getEffStatus = (s: ClaimSession) => liveStatuses.get(s.roomId)?.status || s.status;
 
-  // expand all game sections on first load
-  useEffect(() => {
-    if (gameGroups.length > 0 && expandedGames.has("__all__")) {
-      setExpandedGames(new Set(gameGroups.map(g => g.game)));
-    }
-  }, [gameGroups.length]);
+  const waitingSessions = useMemo(() =>
+    allSessions
+      .filter(s => getEffStatus(s) === "pending")
+      .sort((a, b) => {
+        const au = unread.get(a.roomId) || 0, bu = unread.get(b.roomId) || 0;
+        if (au !== bu) return bu - au;
+        const aa = lastActivity.get(a.roomId) || 0, ba = lastActivity.get(b.roomId) || 0;
+        return ba - aa || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }),
+  [allSessions, liveStatuses, unread, lastActivity]);
 
-  // socket listeners
+  const activeSessions = useMemo(() =>
+    allSessions
+      .filter(s => getEffStatus(s) === "active")
+      .sort((a, b) => {
+        const au = unread.get(a.roomId) || 0, bu = unread.get(b.roomId) || 0;
+        if (au !== bu) return bu - au;
+        const aa = lastActivity.get(a.roomId) || 0, ba = lastActivity.get(b.roomId) || 0;
+        return ba - aa;
+      }),
+  [allSessions, liveStatuses, unread, lastActivity]);
+
+  const deliveredSessions = useMemo(() =>
+    allSessions
+      .filter(s => { const st = getEffStatus(s); return st === "claimed" || st === "ended"; })
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  [allSessions, liveStatuses]);
+
+  const waitingUnread   = waitingSessions.reduce((acc, s) => acc + (unread.get(s.roomId) || 0), 0);
+  const activeUnread    = activeSessions.reduce((acc, s) => acc + (unread.get(s.roomId) || 0), 0);
+  const totalBadge      = waitingSessions.length + waitingUnread + activeUnread;
+
+  // Sync ref
+  useEffect(() => { selectedRoomIdRef.current = selectedSession?.roomId ?? null; }, [selectedSession?.roomId]);
+
+  // Socket listeners
   useEffect(() => {
     if (!socket) return;
+
     const onTaken = ({ roomId, agentName }: { roomId: string; agentName: string }) => {
       setLiveStatuses(p => { const n = new Map(p); n.set(roomId, { status: "active", agentName }); return n; });
       removePendingClaim(roomId);
@@ -294,20 +364,35 @@ export default function Queue() {
       setSelectedSession(session);
       setMobilePanel(1);
     };
+    const onCustomerMsg = ({ roomId, text }: { roomId: string; senderName: string; text: string }) => {
+      playPing();
+      setLastActivity(p => { const n = new Map(p); n.set(roomId, Date.now()); return n; });
+      setLivePreview(p => { const n = new Map(p); n.set(roomId, text.slice(0, 60)); return n; });
+      if (roomId !== selectedRoomIdRef.current) {
+        setUnread(p => { const n = new Map(p); n.set(roomId, (n.get(roomId) || 0) + 1); return n; });
+      }
+    };
+
     socket.on("queue:claim_taken",         onTaken);
     socket.on("queue:claim_completed",     onCompleted);
     socket.on("queue:claim_ended",         onEnded);
     socket.on("queue:claim_auto_assigned", onAutoAssigned);
+    socket.on("queue:customer_message",    onCustomerMsg);
+
     return () => {
       socket.off("queue:claim_taken",         onTaken);
       socket.off("queue:claim_completed",     onCompleted);
       socket.off("queue:claim_ended",         onEnded);
       socket.off("queue:claim_auto_assigned", onAutoAssigned);
+      socket.off("queue:customer_message",    onCustomerMsg);
     };
   }, [socket, removePendingClaim, refetch]);
 
   const openSession = useCallback(async (s: ClaimSession) => {
     setMobilePanel(1);
+    setUnread(p => { const n = new Map(p); n.delete(s.roomId); return n; });
+    selectedRoomIdRef.current = s.roomId;
+
     if (s.messages?.length) {
       setSelectedSession(s);
       socket?.emit("claim:agent_browse", { roomId: s.roomId });
@@ -342,7 +427,7 @@ export default function Queue() {
         form.append("proof", proofFile);
         form.append("roomId", selectedSession.roomId);
         if (estDelivery) form.append("estimatedDelivery", estDelivery);
-        if (podNotes) form.append("notes", podNotes);
+        if (podNotes)    form.append("notes", podNotes);
         await adminApi.proof.submit(form);
       }
       socket?.emit("claim:mark_claimed", { roomId: selectedSession.roomId });
@@ -364,33 +449,26 @@ export default function Queue() {
     refetch();
   };
 
-  const selLive = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
+  const selLive      = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
   const selEffStatus = selLive?.status || selectedSession?.status;
-  const isMyActive = selEffStatus === "active" && selectedSession?.assignedAgent?.userId === user?.id;
-
-  const totalActive = allSessions.filter(s => {
-    const st = liveStatuses.get(s.roomId)?.status || s.status;
-    return st === "pending" || st === "active";
-  }).length;
+  const isMyActive   = selEffStatus === "active" && selectedSession?.assignedAgent?.userId === user?.id;
 
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[#060d1a]">
 
-      {/* ══════ LEFT: Conversation List ══════ */}
+      {/* ══════ LEFT: Inbox ══════ */}
       <div className={cn(
-        "flex flex-col flex-shrink-0 border-r border-white/5 bg-[#0a1628]",
-        "w-full md:w-72",
+        "flex flex-col flex-shrink-0 border-r border-white/5 bg-[#0a1628] w-full md:w-72",
         mobilePanel !== 0 ? "hidden md:flex" : "flex"
       )}>
-        {/* Header */}
         <div className="px-4 py-3.5 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className={cn("w-2 h-2 rounded-full flex-shrink-0", connected ? "bg-emerald-400" : "bg-red-400")}
                 style={{ boxShadow: connected ? "0 0 6px rgba(52,211,153,0.6)" : undefined }} />
               <span className="text-white font-semibold text-sm">Inbox</span>
-              {totalActive > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold">{totalActive}</span>
+              {totalBadge > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 font-bold">{totalBadge}</span>
               )}
             </div>
             {connected
@@ -406,84 +484,58 @@ export default function Queue() {
           )}
         </div>
 
-        {/* List */}
         <div className="flex-1 overflow-y-auto">
           {isLoading && allSessions.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="w-4 h-4 text-slate-700 animate-spin" />
             </div>
-          ) : gameGroups.length === 0 ? (
+          ) : allSessions.length === 0 ? (
             <div className="px-4 py-12 text-center">
               <Inbox className="w-8 h-8 text-slate-700 mx-auto mb-2" />
               <p className="text-slate-600 text-sm font-medium">Inbox empty</p>
               <p className="text-slate-700 text-xs mt-0.5">New claims appear here</p>
             </div>
           ) : (
-            gameGroups.map(group => {
-              const isOpen    = expandedGames.has(group.game);
-              const showComp  = showCompletedFor.has(group.game);
-              const pCount = group.active.filter(s => (liveStatuses.get(s.roomId)?.status || s.status) === "pending").length;
-              const aCount = group.active.filter(s => (liveStatuses.get(s.roomId)?.status || s.status) === "active").length;
+            <>
+              <Section title="Waiting to be Claimed" count={waitingSessions.length} unreadTotal={waitingUnread} defaultOpen>
+                {waitingSessions.map(s => (
+                  <ConvoItem
+                    key={s.roomId} session={s}
+                    liveStatus={liveStatuses.get(s.roomId)}
+                    selected={selectedSession?.roomId === s.roomId}
+                    onClick={() => openSession(s)}
+                    unreadCount={unread.get(s.roomId) || 0}
+                    livePreview={livePreview.get(s.roomId)}
+                  />
+                ))}
+              </Section>
 
-              return (
-                <div key={group.game}>
-                  {/* Game section header */}
-                  <button
-                    onClick={() => setExpandedGames(p => { const n = new Set(p); n.has(group.game) ? n.delete(group.game) : n.add(group.game); return n; })}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/[0.03] transition-colors border-b border-white/[0.04]"
-                  >
-                    <Gamepad2 className="w-3 h-3 text-indigo-400/70 flex-shrink-0" />
-                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider flex-1 text-left truncate">{group.game}</span>
-                    {pCount > 0 && <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/15 text-red-400 font-bold">{pCount}</span>}
-                    {aCount > 0 && <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 font-bold">{aCount}</span>}
-                    <ChevronDown className={cn("w-3 h-3 text-slate-700 transition-transform", isOpen ? "rotate-180" : "")} />
-                  </button>
+              <Section title="In Progress" count={activeSessions.length} unreadTotal={activeUnread} defaultOpen>
+                {activeSessions.map(s => (
+                  <ConvoItem
+                    key={s.roomId} session={s}
+                    liveStatus={liveStatuses.get(s.roomId)}
+                    selected={selectedSession?.roomId === s.roomId}
+                    onClick={() => openSession(s)}
+                    unreadCount={unread.get(s.roomId) || 0}
+                    livePreview={livePreview.get(s.roomId)}
+                  />
+                ))}
+              </Section>
 
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.16 }} className="overflow-hidden"
-                      >
-                        {group.active.length === 0 && group.completed.length === 0 && (
-                          <p className="text-slate-700 text-[11px] text-center py-3">No chats</p>
-                        )}
-                        {group.active.map(s => (
-                          <ConvoItem key={s.roomId} session={s}
-                            liveStatus={liveStatuses.get(s.roomId)}
-                            selected={selectedSession?.roomId === s.roomId}
-                            onClick={() => openSession(s)} />
-                        ))}
-                        {group.completed.length > 0 && (
-                          <>
-                            <button
-                              onClick={() => setShowCompletedFor(p => { const n = new Set(p); n.has(group.game) ? n.delete(group.game) : n.add(group.game); return n; })}
-                              className="w-full flex items-center gap-2 px-4 py-2 hover:bg-white/[0.02] transition-colors border-b border-white/[0.03]"
-                            >
-                              <ChevronRight className={cn("w-3 h-3 text-slate-700 transition-transform", showComp ? "rotate-90" : "")} />
-                              <span className="text-slate-700 text-[10px] font-medium">Completed ({group.completed.length})</span>
-                            </button>
-                            <AnimatePresence initial={false}>
-                              {showComp && (
-                                <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
-                                  transition={{ duration: 0.14 }} className="overflow-hidden">
-                                  {group.completed.map(s => (
-                                    <ConvoItem key={s.roomId} session={s}
-                                      liveStatus={liveStatuses.get(s.roomId)}
-                                      selected={selectedSession?.roomId === s.roomId}
-                                      onClick={() => openSession(s)} />
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })
+              <Section title="Delivered" count={deliveredSessions.length} defaultOpen={false}>
+                {deliveredSessions.map(s => (
+                  <ConvoItem
+                    key={s.roomId} session={s}
+                    liveStatus={liveStatuses.get(s.roomId)}
+                    selected={selectedSession?.roomId === s.roomId}
+                    onClick={() => openSession(s)}
+                    unreadCount={0}
+                    livePreview={livePreview.get(s.roomId)}
+                  />
+                ))}
+              </Section>
+            </>
           )}
         </div>
       </div>
@@ -499,7 +551,6 @@ export default function Queue() {
           </div>
         ) : selectedSession ? (
           <>
-            {/* Chat top-bar */}
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0 bg-[#0a1628]">
               <button onClick={() => setMobilePanel(0)}
                 className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 flex-shrink-0">
@@ -514,44 +565,43 @@ export default function Queue() {
                   {[selectedSession.game, getItemLabel(selectedSession)].filter(Boolean).join(" · ") || "Customer"}
                 </p>
               </div>
-
               {selEffStatus === "pending" && (
-                <span className="hidden sm:flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/15 px-2 py-1 rounded-full">
+                <span className="hidden sm:flex items-center gap-1 text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/15 px-2 py-1 rounded-full flex-shrink-0">
                   <AlertCircle className="w-3 h-3" /> Unclaimed
                 </span>
               )}
-
-              {/* Profile toggle (desktop) */}
               <button onClick={() => setShowProfile(p => !p)}
                 className={cn("hidden md:flex w-8 h-8 rounded-lg items-center justify-center transition-colors flex-shrink-0",
                   showProfile ? "bg-indigo-600/20 text-indigo-400" : "text-slate-500 hover:text-white hover:bg-white/5")}>
                 <User className="w-4 h-4" />
               </button>
-              {/* Profile button (mobile) */}
               <button onClick={() => setMobilePanel(2)}
                 className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 flex-shrink-0">
                 <User className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Chat window */}
+            {/* key prop prevents message merging between sessions */}
             <div className="flex-1 overflow-hidden">
-              <ChatWindow session={selectedSession} onSessionClaimed={handleSessionClaimed} />
+              <ChatWindow
+                key={selectedSession.roomId}
+                session={selectedSession}
+                onSessionClaimed={handleSessionClaimed}
+              />
             </div>
           </>
         ) : (
-          /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-16 h-16 rounded-2xl bg-indigo-500/8 border border-indigo-500/10 flex items-center justify-center mb-4">
-              <Inbox className="w-7 h-7 text-slate-700" />
+              <MessageSquare className="w-7 h-7 text-slate-700" />
             </div>
             <h3 className="text-white font-semibold mb-1">Select a conversation</h3>
             <p className="text-slate-500 text-sm max-w-xs">Choose a chat from the inbox on the left to start helping a customer.</p>
             <div className="mt-6 space-y-3 text-left max-w-xs w-full">
               {([
-                ["bg-red-400",     "Unclaimed — no agent yet, type to claim"],
-                ["bg-amber-400",   "In Progress — agent is actively helping"],
-                ["bg-emerald-400", "Claimed — delivery was confirmed"],
+                ["bg-red-400",     "Waiting — no agent yet, type to claim"],
+                ["bg-amber-400",   "In Progress — actively helping a customer"],
+                ["bg-emerald-400", "Delivered — order delivery confirmed"],
               ] as const).map(([color, label]) => (
                 <div key={label} className="flex items-center gap-3">
                   <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", color)} />
@@ -567,19 +617,13 @@ export default function Queue() {
       <AnimatePresence>
         {selectedSession && (showProfile || mobilePanel === 2) && (
           <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: undefined, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
+            initial={{ width: 0, opacity: 0 }} animate={{ width: undefined, opacity: 1 }} exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className={cn(
-              "flex-shrink-0 overflow-hidden",
-              mobilePanel === 2 ? "flex w-full md:w-72" : "hidden md:flex md:w-72"
-            )}
+            className={cn("flex-shrink-0 overflow-hidden", mobilePanel === 2 ? "flex w-full md:w-72" : "hidden md:flex md:w-72")}
           >
             <div className="w-full">
               <ProfilePanel
-                session={selectedSession}
-                liveStatus={selLive}
+                session={selectedSession} liveStatus={selLive}
                 isMyActiveSession={isMyActive}
                 onClose={() => { setShowProfile(false); setMobilePanel(1); }}
                 onDeliver={() => setPodMode(true)}
@@ -590,12 +634,9 @@ export default function Queue() {
         )}
       </AnimatePresence>
 
-      {/* Mobile back from profile */}
       {mobilePanel === 2 && (
-        <button
-          onClick={() => setMobilePanel(1)}
-          className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#0a1628] border border-white/10 rounded-lg flex items-center justify-center text-slate-400"
-        >
+        <button onClick={() => setMobilePanel(1)}
+          className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#0a1628] border border-white/10 rounded-lg flex items-center justify-center text-slate-400">
           <ArrowLeft className="w-4 h-4" />
         </button>
       )}
@@ -603,14 +644,10 @@ export default function Queue() {
       {/* ══════ POD Modal ══════ */}
       <AnimatePresence>
         {podMode && selectedSession && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden"
-            >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Proof of Delivery</h3>
                 <p className="text-slate-400 text-xs mt-0.5">Submit proof before marking as delivered</p>
@@ -633,8 +670,7 @@ export default function Queue() {
                         proofFile ? "border-emerald-500/40 bg-emerald-500/5" : "border-white/10 hover:border-white/20")}>
                       {proofFile
                         ? <div><CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-1" /><p className="text-emerald-300 text-sm">{proofFile.name}</p></div>
-                        : <div><p className="text-slate-400 text-sm">Tap to upload screenshot</p><p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p></div>
-                      }
+                        : <div><p className="text-slate-400 text-sm">Tap to upload screenshot</p><p className="text-slate-600 text-xs mt-0.5">PNG, JPG up to 10MB</p></div>}
                     </div>
                     <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden"
                       onChange={e => { setProofFile(e.target.files?.[0] || null); e.target.value = ""; }} />
