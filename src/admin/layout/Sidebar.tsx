@@ -177,13 +177,15 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
     navItems = [...agentItems, ...adminItems];
   }
 
-  const groups = isStocker
+  const groups: string[] | undefined = isStocker
     ? ["Overview", "Stock"]
     : isOwner && !viewAsRole
     ? ["Overview", "Commerce", "Content", "Team", "Stock", "System"]
-    : !isOwner
+    : isOwner && viewAsRole && isViewingAsAgentRole
+    ? ["Overview", "Operations"]
+    : isOwner && viewAsRole && !isViewingAsAgentRole
     ? ["Overview", "Commerce", "Content", "Team", "Stock"]
-    : undefined;
+    : ["Overview", "Commerce", "Content", "Team", "Stock"];
 
   const dashboardHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/dashboard" : "/panel/dashboard";
   const profileHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/profile" : "/panel/profile";
