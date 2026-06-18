@@ -146,6 +146,8 @@ export const adminApi = {
       get<{ success: boolean; data: { claimSession: import("./types").ClaimSession } }>(`/orders/${orderId}/claim-chat`),
     bulkUpdateStatus: (orderIds: string[], status: string) =>
       patch("/orders/bulk-status", { orderIds, status }),
+    syncStripe: () =>
+      post<{ success: boolean; message: string; data: { checked: number; fixed: number; alreadyFailed: number; stillPending: number; fixedOrders: string[] } }>("/orders/sync-stripe"),
   },
 
   games: {
