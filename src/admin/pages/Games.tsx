@@ -22,6 +22,8 @@ export default function Games() {
   const [gameGradTo, setGameGradTo] = useState("#0f172a");
   const [gameImage, setGameImage] = useState<File | null>(null);
   const [gameFeatured, setGameFeatured] = useState(false);
+  const [gameClaimTime, setGameClaimTime] = useState(0);
+  const [gameClaimSchedule, setGameClaimSchedule] = useState<{label: string; from: string; to: string; minutes: number}[]>([]);
   const [catName, setCatName] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -69,13 +71,13 @@ export default function Games() {
   });
 
   const openCreate = () => {
-    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameFeatured(false); setError("");
+    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameFeatured(false); setGameClaimTime(0); setGameClaimSchedule([]); setError("");
     setEditingGame(null);
     setShowGameModal("create");
   };
 
   const openEdit = (game: Game) => {
-    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameImage(null); setError("");
+    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameClaimTime(game.claimTime || 0); setGameClaimSchedule(game.claimSchedule?.map(s => ({ label: s.label || "", from: s.from, to: s.to, minutes: s.minutes })) || []); setGameImage(null); setError("");
     setEditingGame(game);
     setShowGameModal("edit");
   };
@@ -91,6 +93,8 @@ export default function Games() {
       form.append("gradientFrom", gameGradFrom);
       form.append("gradientTo", gameGradTo);
       form.append("featured", String(gameFeatured));
+      form.append("claimTime", String(gameClaimTime));
+      form.append("claimSchedule", JSON.stringify(gameClaimSchedule));
       if (gameImage) form.append("image", gameImage);
 
       if (showGameModal === "create") {
@@ -390,6 +394,79 @@ export default function Games() {
                   <input type="file" accept="image/*" onChange={(e) => setGameImage(e.target.files?.[0] || null)}
                     className="w-full bg-[#0a1628] border border-white/10 text-slate-400 rounded-xl px-4 py-2 text-sm focus:outline-none" />
                 </div>
+                <div>
+                  <label className="text-slate-300 text-sm font-medium block mb-1.5">
+                    Claim Time <span className="text-slate-500 font-normal">(minutes, 0 = disabled)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={gameClaimTime}
+                    onChange={(e) => setGameClaimTime(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                  />
+                  <p className="text-slate-600 text-xs mt-1">Customers see a countdown + automated message when they open a claim chat.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-300 text-sm font-medium">
+                      Schedule Slots <span className="text-slate-500 font-normal text-xs">(override by time of day)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setGameClaimSchedule(prev => [...prev, { label: "", from: "00:00", to: "23:59", minutes: 5 }])}
+                      className="text-[11px] px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
+                    >
+                      + Add Slot
+                    </button>
+                  </div>
+                  {gameClaimSchedule.length > 0 && (
+                    <div className="space-y-2">
+                      {gameClaimSchedule.map((slot, idx) => (
+                        <div key={idx} className="bg-[#0a1628] border border-white/8 rounded-xl p-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              value={slot.label}
+                              onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, label: e.target.value } : s))}
+                              placeholder="Label (e.g. Peak Hours)"
+                              className="flex-1 bg-transparent border-b border-white/10 text-white placeholder-slate-600 text-xs pb-1 focus:outline-none focus:border-blue-500/40"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setGameClaimSchedule(prev => prev.filter((_, i) => i !== idx))}
+                              className="w-6 h-6 rounded flex items-center justify-center text-red-400/60 hover:text-red-400 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <p className="text-slate-500 text-[10px] mb-1">From</p>
+                              <input type="time" value={slot.from}
+                                onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, from: e.target.value } : s))}
+                                className="w-full bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500/40" />
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-[10px] mb-1">To</p>
+                              <input type="time" value={slot.to}
+                                onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, to: e.target.value } : s))}
+                                className="w-full bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500/40" />
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-[10px] mb-1">Minutes</p>
+                              <input type="number" min="1" max="120" value={slot.minutes}
+                                onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, minutes: Math.max(1, parseInt(e.target.value) || 1) } : s))}
+                                className="w-full bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500/40" />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={gameFeatured} onChange={(e) => setGameFeatured(e.target.checked)} className="w-4 h-4 accent-blue-600" />
                   <span className="text-slate-300 text-sm">Featured game</span>
