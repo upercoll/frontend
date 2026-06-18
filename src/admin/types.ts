@@ -86,6 +86,8 @@ export interface Game {
   active: boolean;
   featured: boolean;
   sortOrder: number;
+  claimTime?: number;
+  claimSchedule?: Array<{ label?: string; from: string; to: string; minutes: number }>;
   categories?: Category[];
   productCount?: number;
   categoryCount?: number;
