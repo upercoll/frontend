@@ -305,7 +305,17 @@ export default function AgentDashboard() {
                           </Link>
                         </td>
                         <td className="px-4 py-3.5">
-                          <p className="text-sm font-medium text-white">{order.customer.robloxUsername}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg flex-shrink-0 overflow-hidden"
+                              style={{ background: order.items?.[0]?.productSnapshot?.gradient ? `linear-gradient(135deg,${order.items[0].productSnapshot.gradient.from},${order.items[0].productSnapshot.gradient.to})` : "rgba(99,102,241,0.15)" }}>
+                              {order.items?.[0]?.productSnapshot?.imageUrl
+                                ? <img src={order.items[0].productSnapshot.imageUrl} className="w-full h-full object-cover" alt="" />
+                                : <div className="w-full h-full flex items-center justify-center">
+                                    <Package className="w-3.5 h-3.5" style={{ color: "rgba(255,255,255,0.4)" }} />
+                                  </div>}
+                            </div>
+                            <p className="text-sm font-medium text-white">{order.customer.robloxUsername}</p>
+                          </div>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="text-sm font-bold text-white">${(order.pricing?.total || 0).toFixed(2)}</span>
