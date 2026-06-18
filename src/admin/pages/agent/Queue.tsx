@@ -331,6 +331,7 @@ export default function Queue() {
       removePendingClaim(roomId);
       refetch();
       setSelectedSession(s => s?.roomId === roomId ? { ...s, status: "claimed" } : s);
+      if (roomId === selectedRoomIdRef.current) setActiveTab("completed");
     };
     const onEnded = ({ roomId }: { roomId: string }) => {
       setLiveStatuses(p => { const n = new Map(p); n.set(roomId, { status: "ended", agentName: p.get(roomId)?.agentName }); return n; });
@@ -413,6 +414,7 @@ export default function Queue() {
       socket?.emit("claim:mark_claimed", { roomId: selectedSession.roomId });
       setPodMode(false);
       setProofFile(null); setEstDelivery(""); setPodNotes(""); setNoProof(false);
+      setActiveTab("completed");
       refetch();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to submit proof");
