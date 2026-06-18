@@ -383,7 +383,7 @@ export default function SupportChat() {
           robloxUsername: robloxUser.trim(),
           contactEmail: contactEmail.trim(),
           orderRef: lastOrder?.orderRef || null,
-          itemName: selectedItem?.name || null,
+          itemName: (selectedItem?.id && selectedItem.id !== "general" && selectedItem.name !== "General Claim") ? selectedItem.name : null,
           items: lastOrder?.items || [],
           game: gameSlug || null,
         }),
