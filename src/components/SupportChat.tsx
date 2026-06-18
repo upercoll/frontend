@@ -27,6 +27,7 @@ interface LastOrder {
   orderRef: string;
   email: string;
   items: OrderItem[];
+  game?: string | null;
 }
 
 type ChatMode = null | "general" | "claim";
@@ -197,7 +198,12 @@ export default function SupportChat() {
   const { user } = useAuth();
   const gameSlug = (() => {
     const m = window.location.pathname.match(/^\/game\/([^/]+)/);
-    return m ? m[1] : null;
+    if (m) return m[1];
+    try {
+      const raw = localStorage.getItem("rbstars_last_order");
+      if (raw) return JSON.parse(raw)?.game || null;
+    } catch {}
+    return null;
   })();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ChatMode>(null);
