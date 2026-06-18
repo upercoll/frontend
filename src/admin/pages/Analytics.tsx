@@ -243,10 +243,18 @@ export default function Analytics() {
             <div className="space-y-3">
               {topProducts.slice(0, 8).map((p: any, i: number) => (
                 <div key={p._id || i} className="flex items-center gap-3">
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                     style={{ background: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#92400e" : "#E9EBF5", color: i < 3 ? "#fff" : "#6b7280" }}>
                     {i + 1}
                   </span>
+                  <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
+                    style={{ background: p.gradient ? `linear-gradient(135deg,${p.gradient.from},${p.gradient.to})` : "#E9EBF5" }}>
+                    {p.imageUrl
+                      ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-[10px] font-bold" style={{ color: "#6b7280" }}>{(p.name || "?")[0]}</span>
+                        </div>}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: "#1e1b4b" }}>{p.name}</p>
                     <p className="text-xs text-slate-400">{p.game} · {p.totalSold} sold</p>
