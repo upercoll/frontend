@@ -66,7 +66,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         return all.filter((m, i, arr) => !m._id || arr.findIndex(x => x._id === m._id) === i);
       });
     }
-  }, [session._id]);
+  }, [session._id, session.messages]);
 
   useEffect(() => {
     setSessionStatus(session.status);
