@@ -12,6 +12,29 @@ interface ChatWindowProps {
   onSessionClaimed?: (session: ClaimSession) => void;
 }
 
+function cleanItemName(raw?: string): string {
+  if (!raw || raw.trim().toLowerCase() === "general claim") return "";
+  return raw.trim();
+}
+
+function playPing() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 1100;
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+  } catch {}
+}
+
 export default function ChatWindow({ session, onUpdate, onSessionClaimed }: ChatWindowProps) {
   const { socket } = useAdminSocket();
   const { user, profile } = useAdminAuth();
@@ -26,6 +49,13 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   const joinedRef = useRef(false);
   const pendingMsgIds = useRef(new Set<string>());
 
+  // Reset messages when session changes (key-based remount handles this, but keep as safety net)
+  useEffect(() => {
+    setMessages(session.messages || []);
+    setSessionStatus(session.status);
+    joinedRef.current = false;
+  }, [session.roomId]);
+
   useEffect(() => {
     if (session.messages && session.messages.length > 0) {
       setMessages(prev => {
@@ -33,10 +63,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         const newMsgs = session.messages.filter(m => !m._id || !existingIds.has(m._id));
         if (newMsgs.length === 0) return prev;
         const all = [...prev, ...newMsgs];
-        const deduped = all.filter((m, i, arr) =>
-          !m._id || arr.findIndex(x => x._id === m._id) === i
-        );
-        return deduped;
+        return all.filter((m, i, arr) => !m._id || arr.findIndex(x => x._id === m._id) === i);
       });
     }
   }, [session._id]);
@@ -53,9 +80,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     if (!socket || joinedRef.current) return;
     joinedRef.current = true;
     socket.emit("claim:agent_browse", { roomId: session.roomId });
-    return () => {
-      joinedRef.current = false;
-    };
+    return () => { joinedRef.current = false; };
   }, [socket, session.roomId]);
 
   const addMessage = useCallback((msg: ClaimMessage & { roomId?: string }) => {
@@ -72,13 +97,17 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMsg = (data: ClaimMessage & { roomId: string }) => addMessage(data);
+    const handleNewMsg = (data: ClaimMessage & { roomId: string }) => {
+      if (data.roomId && data.roomId !== session.roomId) return;
+      addMessage(data);
+      if (data.sender === "customer") playPing();
+    };
     const handleMsgAck = (data: ClaimMessage & { roomId: string }) => addMessage(data);
-    const handleTyping = () => {
+    const handleTyping = ({ roomId }: { roomId?: string; senderName?: string }) => {
+      if (roomId && roomId !== session.roomId) return;
       setIsTyping(true);
       setTimeout(() => setIsTyping(false), 2500);
     };
-
     const handleAgentJoined = ({ agentName }: { agentName: string; message: string }) => {
       setSessionStatus("active");
       const sysMsg: ClaimMessage = {
@@ -93,31 +122,29 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         return [...prev, sysMsg];
       });
     };
-
     const handleAutoAssigned = ({ session: assignedSession }: { roomId: string; session: ClaimSession }) => {
       setSessionStatus("active");
       onSessionClaimed?.(assignedSession);
     };
-
     const handleClaimed = () => setSessionStatus("claimed");
     const handleEnded = () => setSessionStatus("ended");
 
-    socket.on("claim:new_message", handleNewMsg);
-    socket.on("claim:message_ack", handleMsgAck);
-    socket.on("claim:typing", handleTyping);
-    socket.on("claim:agent_joined", handleAgentJoined);
+    socket.on("claim:new_message",         handleNewMsg);
+    socket.on("claim:message_ack",         handleMsgAck);
+    socket.on("claim:typing",              handleTyping);
+    socket.on("claim:agent_joined",        handleAgentJoined);
     socket.on("queue:claim_auto_assigned", handleAutoAssigned);
-    socket.on("claim:marked_claimed", handleClaimed);
-    socket.on("claim:ended", handleEnded);
+    socket.on("claim:marked_claimed",      handleClaimed);
+    socket.on("claim:ended",               handleEnded);
 
     return () => {
-      socket.off("claim:new_message", handleNewMsg);
-      socket.off("claim:message_ack", handleMsgAck);
-      socket.off("claim:typing", handleTyping);
-      socket.off("claim:agent_joined", handleAgentJoined);
+      socket.off("claim:new_message",         handleNewMsg);
+      socket.off("claim:message_ack",         handleMsgAck);
+      socket.off("claim:typing",              handleTyping);
+      socket.off("claim:agent_joined",        handleAgentJoined);
       socket.off("queue:claim_auto_assigned", handleAutoAssigned);
-      socket.off("claim:marked_claimed", handleClaimed);
-      socket.off("claim:ended", handleEnded);
+      socket.off("claim:marked_claimed",      handleClaimed);
+      socket.off("claim:ended",               handleEnded);
     };
   }, [socket, session.roomId, addMessage, onSessionClaimed]);
 
@@ -130,9 +157,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       senderName: profile?.displayName || user?.email || "Agent",
     });
     setText("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "40px";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "40px";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -143,10 +168,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     }
     if (socket && !typing) {
       setTyping(true);
-      socket.emit("claim:typing", {
-        roomId: session.roomId,
-        senderName: profile?.displayName || "Agent",
-      });
+      socket.emit("claim:typing", { roomId: session.roomId, senderName: profile?.displayName || "Agent" });
       typingTimeout.current = setTimeout(() => setTyping(false), 2000);
     }
   };
@@ -166,12 +188,11 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     claimed: "Delivered",
     ended: "Ended",
   };
-
   const statusColor: Record<string, string> = {
     pending: "bg-yellow-400/10 text-yellow-400",
-    active: "bg-emerald-400/10 text-emerald-400",
+    active:  "bg-emerald-400/10 text-emerald-400",
     claimed: "bg-blue-400/10 text-blue-400",
-    ended: "bg-slate-400/10 text-slate-400",
+    ended:   "bg-slate-400/10 text-slate-400",
   };
 
   return (
@@ -186,7 +207,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
           <p className="text-slate-500 text-xs truncate">
             {session.contactEmail}
             {session.game && ` · ${session.game}`}
-            {session.itemName && ` · ${session.itemName}`}
+            {cleanItemName(session.itemName) && ` · ${cleanItemName(session.itemName)}`}
           </p>
         </div>
         <div className={cn("text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0", statusColor[sessionStatus] || statusColor.pending)}>
@@ -280,8 +301,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
               style={{ minHeight: 40, maxHeight: 120 }}
             />
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               onClick={sendMessage}
               disabled={!text.trim()}
               className="w-10 h-10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
