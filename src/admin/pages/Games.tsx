@@ -1,9 +1,63 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle, Clock } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game, Category } from "../types";
+
+function getGmt3Hhmm() {
+  const gmt3 = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  return `${String(gmt3.getUTCHours()).padStart(2, "0")}:${String(gmt3.getUTCMinutes()).padStart(2, "0")}`;
+}
+
+function findActiveSlot(game: Game): { label: string; minutes: number; endsAt: string | null } | null {
+  const hhmm = getGmt3Hhmm();
+  if (game.claimSchedule?.length) {
+    const slot = game.claimSchedule.find(s => {
+      if (!s.from || !s.to || !s.minutes) return false;
+      return s.from <= s.to ? (hhmm >= s.from && hhmm <= s.to) : (hhmm >= s.from || hhmm <= s.to);
+    });
+    if (slot) return { label: slot.label || "Scheduled Slot", minutes: slot.minutes, endsAt: slot.to };
+  }
+  if ((game.claimTime || 0) > 0) return { label: "Default", minutes: game.claimTime!, endsAt: null };
+  return null;
+}
+
+function fmtCountdown(toHhmm: string) {
+  const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const [toH, toM] = toHhmm.split(":").map(Number);
+  const end = new Date(now);
+  end.setUTCHours(toH, toM, 0, 0);
+  if (end <= now) end.setUTCDate(end.getUTCDate() + 1);
+  const diff = Math.max(0, Math.floor((end.getTime() - now.getTime()) / 1000));
+  const h = Math.floor(diff / 3600);
+  const m = Math.floor((diff % 3600) / 60);
+  const s = diff % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function ClaimTimeStatus({ game }: { game: Game }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const active = findActiveSlot(game);
+  if (!active) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold flex-shrink-0"
+      style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ade80" }}>
+      <Clock className="w-3 h-3 flex-shrink-0" />
+      <span>{active.label} · {active.minutes}m</span>
+      {active.endsAt && (
+        <span className="opacity-60 font-normal">ends {fmtCountdown(active.endsAt)}</span>
+      )}
+    </div>
+  );
+}
 
 export default function Games() {
   const qc = useQueryClient();
@@ -155,7 +209,8 @@ export default function Games() {
               >
                 <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4">
                   {game.imageUrl ? (
-                    <img src={game.imageUrl} className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover flex-shrink-0" alt="" />
+                    <img src={game.imageUrl} className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover flex-shrink-0" alt=""
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                   ) : (
                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex-shrink-0" style={{ background: `linear-gradient(135deg, ${game.gradient.from}, ${game.gradient.to})` }}>
                       <div className="w-full h-full flex items-center justify-center">
@@ -173,6 +228,7 @@ export default function Games() {
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-slate-500 text-xs flex items-center gap-1"><Package className="w-3 h-3" />{game.productCount || 0} products</span>
                       <span className="text-slate-500 text-xs flex items-center gap-1"><FolderOpen className="w-3 h-3" />{gameCats.length} cats</span>
+                      <ClaimTimeStatus game={game} />
                     </div>
                   </div>
 
