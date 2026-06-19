@@ -260,7 +260,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
                     {msg.text}
                   </div>
                   <p className="text-slate-600 text-[10px]">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(msg.timestamp))}
                   </p>
                 </div>
               )}
