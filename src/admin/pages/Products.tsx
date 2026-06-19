@@ -10,13 +10,13 @@ import { adminApi } from "../api";
 import type { Product, Category, Game } from "../types";
 import ImageUpload from "../components/ImageUpload";
 
-type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; imageUrl: string };
+type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; onHand: string; imageUrl: string };
 
 const DEFAULT_FORM = {
   name: "", description: "", game: "", category: "", price: "",
   originalPrice: "", gradFrom: "#7c3aed", gradTo: "#4c1d95",
   imageUrl: "" as string | string[], featured: false, bestSeller: false,
-  stock: "-1", tags: "", active: true, outOfStock: false,
+  stock: "-1", onHand: "-1", tags: "", active: true, outOfStock: false,
 };
 
 const FILTER_TABS = [
@@ -55,7 +55,7 @@ export default function Products() {
   const [editingStock, setEditingStock] = useState<{ id: string; value: string } | null>(null);
   const [stockSaving, setStockSaving] = useState<string | null>(null);
   const [bulkQueue, setBulkQueue] = useState<BulkRow[]>([]);
-  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" });
+  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "" });
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [bulkResult, setBulkResult] = useState<{ total: number; errors: { name: string; error: string }[] } | null>(null);
@@ -90,7 +90,7 @@ export default function Products() {
       price: String(p.price), originalPrice: String(p.originalPrice || ""),
       gradFrom: p.gradient.from, gradTo: p.gradient.to,
       imageUrl: p.imageUrl || "", featured: p.featured, bestSeller: p.bestSeller,
-      stock: String(p.stock), tags: p.tags?.join(", ") || "",
+      stock: String(p.stock), onHand: String(p.onHand ?? -1), tags: p.tags?.join(", ") || "",
       active: p.active !== false, outOfStock: p.outOfStock || false,
     });
     setEditing(p); setFormError(""); setModal("edit");
@@ -116,6 +116,7 @@ export default function Products() {
       fd.append("featured", String(form.featured));
       fd.append("bestSeller", String(form.bestSeller));
       fd.append("stock", form.stock);
+      fd.append("onHand", form.onHand);
       fd.append("outOfStock", String(form.outOfStock));
       fd.append("active", String(form.active));
       if (form.tags) fd.append("tags", form.tags.split(",").map(t => t.trim()).filter(Boolean).join(","));
@@ -164,7 +165,7 @@ export default function Products() {
     }
   };
 
-  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" };
+  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "" };
 
   const addToQueue = () => {
     const { name, game, category, price } = bulkDraft;
@@ -187,6 +188,7 @@ export default function Products() {
         price: parseFloat(r.price),
         ...(r.originalPrice ? { originalPrice: parseFloat(r.originalPrice) } : {}),
         stock: parseInt(r.stock) || -1,
+        onHand: parseInt(r.onHand) || -1,
         ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
       }));
       const res = await adminApi.products.bulkCreate(payload);
@@ -214,7 +216,7 @@ export default function Products() {
           <p className="text-sm text-slate-500 mt-0.5">{total} total products</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => { setBulkQueue([]); setBulkDraft({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", imageUrl: "" }); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
+          <button onClick={() => { setBulkQueue([]); setBulkDraft(EMPTY_DRAFT); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
             style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
             <Layers className="w-4 h-4" /> Bulk Add
@@ -312,7 +314,8 @@ export default function Products() {
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Product</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Game</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Price</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Stock</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">On Hand</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">In Stock</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Sales</th>
                   <th className="px-4 py-3 w-20"></th>
@@ -359,6 +362,13 @@ export default function Products() {
                           {p.originalPrice ? <p className="text-xs text-slate-400 line-through">${p.originalPrice.toFixed(2)}</p> : null}
                         </div>
                       </td>
+                      <td className="px-4 py-3.5">
+                        <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-red-500" : (p.onHand ?? -1) === -1 ? "text-slate-400" : ""}`}
+                          style={(p.onHand ?? -1) > 0 ? { color: "#1e1b4b" } : undefined}
+                          title="Physical quantity on hand">
+                          {(p.onHand ?? -1) === -1 ? "∞" : (p.onHand ?? 0)}
+                        </span>
+                      </td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
                         {isEditingThisStock ? (
                           <input
@@ -374,7 +384,7 @@ export default function Products() {
                         ) : (
                           <button onClick={() => setEditingStock({ id: p._id, value: String(p.stock) })}
                             className="flex items-center gap-1 group text-left"
-                            title="Click to edit stock">
+                            title="Click to edit available stock">
                             {stockSaving === p._id
                               ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
                               : null}
@@ -476,8 +486,14 @@ export default function Products() {
                     <input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => setF("originalPrice", e.target.value)} className={inputCls} style={inpStyle} placeholder="0.00" />
                   </div>
                   <div>
-                    <label className={labelCls} style={labelStyle}>Stock <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
+                    <label className={labelCls} style={labelStyle}>In Stock <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
                     <input type="number" value={form.stock} onChange={e => setF("stock", e.target.value)} className={inputCls} style={inpStyle} />
+                    <p className="text-[10px] text-slate-400 mt-1">Available for customers to order</p>
+                  </div>
+                  <div>
+                    <label className={labelCls} style={labelStyle}>On Hand <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
+                    <input type="number" value={form.onHand} onChange={e => setF("onHand", e.target.value)} className={inputCls} style={inpStyle} />
+                    <p className="text-[10px] text-slate-400 mt-1">Physical quantity in your account</p>
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Description</label>
@@ -574,7 +590,6 @@ export default function Products() {
               </div>
 
               <div className="p-6 space-y-5">
-                {/* Quick entry form */}
                 <div className="rounded-xl p-4 space-y-3" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">New Product</p>
                   <div className="grid grid-cols-2 gap-3">
@@ -606,19 +621,22 @@ export default function Products() {
                         onChange={e => setBulkDraft(d => ({ ...d, price: e.target.value }))}
                         placeholder="Price *" className={`${inputCls} pl-7`} style={inpStyle} />
                     </div>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                        <input type="number" step="0.01" min="0" value={bulkDraft.originalPrice}
-                          onChange={e => setBulkDraft(d => ({ ...d, originalPrice: e.target.value }))}
-                          placeholder="Orig price" className={`${inputCls} pl-7`} style={inpStyle} />
-                      </div>
-                      <input type="number" value={bulkDraft.stock}
-                        onChange={e => setBulkDraft(d => ({ ...d, stock: e.target.value }))}
-                        placeholder="Stock"
-                        title="Stock (-1 = unlimited)"
-                        className={`${inputCls} w-24`} style={inpStyle} />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                      <input type="number" step="0.01" min="0" value={bulkDraft.originalPrice}
+                        onChange={e => setBulkDraft(d => ({ ...d, originalPrice: e.target.value }))}
+                        placeholder="Orig price" className={`${inputCls} pl-7`} style={inpStyle} />
                     </div>
+                    <input type="number" value={bulkDraft.stock}
+                      onChange={e => setBulkDraft(d => ({ ...d, stock: e.target.value }))}
+                      placeholder="In Stock (-1=∞)"
+                      title="Available for sale (-1 = unlimited)"
+                      className={inputCls} style={inpStyle} />
+                    <input type="number" value={bulkDraft.onHand}
+                      onChange={e => setBulkDraft(d => ({ ...d, onHand: e.target.value }))}
+                      placeholder="On Hand (-1=∞)"
+                      title="Physical quantity on hand (-1 = unlimited)"
+                      className={inputCls} style={inpStyle} />
                     <div className="col-span-2">
                       <ImageUpload
                         value={bulkDraft.imageUrl}
@@ -640,7 +658,6 @@ export default function Products() {
                   </button>
                 </div>
 
-                {/* Queue */}
                 {bulkQueue.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -657,7 +674,7 @@ export default function Products() {
                               <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
                               <p className="text-xs text-slate-400 truncate">
                                 {item.game} · {(catName as any)?.name || item.category} · ${parseFloat(item.price || "0").toFixed(2)}
-                                {item.stock !== "-1" && item.stock ? ` · ${item.stock} in stock` : " · ∞ unlimited"}
+                                {item.onHand !== "-1" && item.onHand ? ` · ${item.onHand} on hand` : " · ∞ on hand"}
                               </p>
                             </div>
                             <button onClick={() => removeFromQueue(i)}
