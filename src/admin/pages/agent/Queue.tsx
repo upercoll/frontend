@@ -219,23 +219,20 @@ function ProfilePanel({
             <CheckCircle className="w-3.5 h-3.5" />
             Mark as Completed
           </motion.button>
+          {onCloseChat && (
+            <button
+              onClick={onCloseChat}
+              className="w-full py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+            >
+              <Archive className="w-3.5 h-3.5" />
+              Close Chat
+            </button>
+          )}
           <button
             onClick={onEnd}
             className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-xl text-xs font-medium transition-colors"
           >
             End Chat
-          </button>
-        </div>
-      )}
-
-      {isMyCompletedSession && onCloseChat && (
-        <div className="px-4 py-4 flex-shrink-0">
-          <button
-            onClick={onCloseChat}
-            className="w-full py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <Archive className="w-3.5 h-3.5" />
-            Close Chat
           </button>
         </div>
       )}
