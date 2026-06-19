@@ -653,14 +653,23 @@ export default function Queue() {
                 </span>
               )}
               {isMyActive && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  onClick={() => setPodMode(true)}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex-shrink-0"
-                >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  Mark as Completed
-                </motion.button>
+                <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => setPodMode(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Mark as Completed
+                  </motion.button>
+                  <button
+                    onClick={() => setClosingSession(selectedSession)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-colors"
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    Close Chat
+                  </button>
+                </div>
               )}
               <button onClick={() => setShowProfile(p => !p)}
                 className={cn("hidden md:flex w-8 h-8 rounded-lg items-center justify-center transition-colors flex-shrink-0",
@@ -674,13 +683,20 @@ export default function Queue() {
             </div>
 
             {isMyActive && (
-              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0">
+              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0 flex gap-2">
                 <button
                   onClick={() => setPodMode(true)}
-                  className="w-full py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle className="w-3.5 h-3.5" />
                   Mark as Completed
+                </button>
+                <button
+                  onClick={() => setClosingSession(selectedSession)}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold text-purple-400 hover:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  Close Chat
                 </button>
               </div>
             )}
