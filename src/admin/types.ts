@@ -107,10 +107,14 @@ export interface Product {
   gradient?: { from: string; to: string };
   features?: string[];
   stock: number;
+  onHand: number;
   outOfStock: boolean;
   featured: boolean;
+  bestSeller?: boolean;
   active: boolean;
   sortOrder: number;
+  salesCount?: number;
+  tags?: string[];
   createdAt: string;
 }
 
@@ -251,6 +255,24 @@ export interface Stocker {
   totalCommission: number;
   requestCount?: number;
   stockedCount?: number;
+  cryptoAddress?: string;
+  cryptoNetwork?: string;
+  lastPayoutAt?: string;
+  createdAt: string;
+}
+
+export interface StockerPayout {
+  _id: string;
+  stocker: string;
+  amount: number;
+  commissionRate: number;
+  deliveryCount: number;
+  periodStart?: string;
+  periodEnd?: string;
+  notes?: string;
+  markedPaidBy?: string;
+  cryptoAddress?: string;
+  cryptoNetwork?: string;
   createdAt: string;
 }
 
@@ -285,6 +307,32 @@ export interface StockRequest {
   rejectedAt?: string;
   stockedBy?: string;
   createdAt: string;
+}
+
+export interface CustomerAdmin {
+  _id: string;
+  email: string;
+  robloxUsername?: string;
+  createdAt: string;
+  orderCount?: number;
+  totalSpent?: number;
+  lastOrderAt?: string;
+  banned?: boolean;
+  notes?: string;
+}
+
+export interface AgentStatsSummary {
+  _id?: string;
+  agentId: string;
+  agentName?: string;
+  agentEmail?: string;
+  totalClaims: number;
+  completedClaims: number;
+  activeClaims: number;
+  avgResponseTimeMs?: number;
+  totalCommission?: number;
+  lastActiveAt?: string;
+  isOnline?: boolean;
 }
 
 export const ALL_PERMISSIONS: { key: string; label: string; description: string; group: string }[] = [
