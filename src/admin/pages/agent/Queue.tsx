@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle, RefreshCw, Inbox, ArrowLeft, Mail,
   Gamepad2, Package, Hash, Clock,
-  Wifi, WifiOff, X, AlertCircle, User, MessageSquare, Archive,
+  Wifi, WifiOff, X, AlertCircle, User, MessageSquare, Archive, XCircle,
 } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -156,10 +156,10 @@ function ConvoItem({
 
 // ── ProfilePanel ─────────────────────────────────────────────────────────────
 function ProfilePanel({
-  session, liveStatus, isMyActiveSession, isMyCompletedSession, onClose, onDeliver, onEnd, onCloseChat,
+  session, liveStatus, isMyActiveSession, isMyCompletedSession, onClose, onDeliver, onEnd, onCloseChat, onCancel,
 }: {
   session: ClaimSession; liveStatus?: LiveStatus; isMyActiveSession: boolean; isMyCompletedSession?: boolean;
-  onClose: () => void; onDeliver: () => void; onEnd: () => void; onCloseChat?: () => void;
+  onClose: () => void; onDeliver: () => void; onEnd: () => void; onCloseChat?: () => void; onCancel?: () => void;
 }) {
   const effStatus = liveStatus?.status || session.status;
   const effAgent  = liveStatus?.agentName || session.assignedAgent?.name;
@@ -219,6 +219,15 @@ function ProfilePanel({
             <CheckCircle className="w-3.5 h-3.5" />
             Mark as Completed
           </motion.button>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              Cancel Order
+            </button>
+          )}
           {onCloseChat && (
             <button
               onClick={onCloseChat}
@@ -476,6 +485,22 @@ export default function Queue() {
     refetch();
   };
 
+  const cancelOrder = async () => {
+    if (!selectedSession?.orderRef) {
+      alert("No order linked to this session.");
+      return;
+    }
+    if (!confirm("Cancel this order? This will mark it as cancelled and end the chat.")) return;
+    try {
+      await adminApi.orders.updateStatus(selectedSession.orderRef, "cancelled");
+      socket?.emit("claim:end", { roomId: selectedSession.roomId });
+      setSelectedSession(s => s ? { ...s, status: "ended" } : s);
+      refetch();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to cancel order");
+    }
+  };
+
   const confirmCloseChat = () => {
     if (!socket || !closingSession) return;
     socket.emit("claim:close", { roomId: closingSession.roomId });
@@ -709,6 +734,7 @@ export default function Queue() {
                 onDeliver={() => setPodMode(true)}
                 onEnd={endChat}
                 onCloseChat={() => setClosingSession(selectedSession)}
+                onCancel={cancelOrder}
               />
             </div>
           </motion.div>
