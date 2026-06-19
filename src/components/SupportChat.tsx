@@ -357,6 +357,17 @@ export default function SupportChat() {
       setTimeout(() => setClaimStep("review"), 1500);
     });
 
+    socket.on("claim:closed", ({ message }: { message: string }) => {
+      setMessages(prev => [...prev, {
+        id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
+      }]);
+      setClaimStep("ended");
+      setChatOutcome("ended");
+      const stored = loadClaimSession();
+      if (stored) saveClaimSession({ ...stored, status: "ended" });
+      setTimeout(() => setClaimStep("review"), 1500);
+    });
+
     socket.on("claim:marked_claimed", ({ message }: { message: string }) => {
       setMessages(prev => [...prev, {
         id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
