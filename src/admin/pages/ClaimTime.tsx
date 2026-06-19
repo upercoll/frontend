@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Clock, Loader2, Gamepad2, Save, CheckCircle2, XCircle } from "lucide-react";
+import { Clock, Loader2, Gamepad2, Save, CheckCircle2, XCircle, Plus, X } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game } from "../types";
 
@@ -18,6 +18,14 @@ function isInWindow(from: string, to: string): boolean {
     : hhmm >= from || hhmm <= to;
 }
 
+function fmtTime(hhmm: string): string {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 function fmtCountdown(toHhmm: string) {
   const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
   const [toH, toM] = toHhmm.split(":").map(Number);
@@ -32,12 +40,23 @@ function fmtCountdown(toHhmm: string) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function nextOpenSlot(slots: { from: string; to: string }[]): string | null {
+  const hhmm = getGmt3Hhmm();
+  const valid = slots.filter(s => s.from && s.to);
+  const upcoming = valid.filter(s => s.from > hhmm).sort((a, b) => a.from.localeCompare(b.from));
+  if (upcoming.length) return upcoming[0].from;
+  const earliest = valid.sort((a, b) => a.from.localeCompare(b.from));
+  return earliest.length ? earliest[0].from : null;
+}
+
 function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
   const qc = useQueryClient();
 
-  const existingSlot = game.claimSchedule?.[0];
-  const [from, setFrom] = useState<string>(existingSlot?.from ?? "");
-  const [to, setTo]   = useState<string>(existingSlot?.to ?? "");
+  const [slots, setSlots] = useState<{ from: string; to: string }[]>(
+    game.claimSchedule?.length
+      ? game.claimSchedule.map(s => ({ from: s.from ?? "", to: s.to ?? "" }))
+      : []
+  );
   const [dirty, setDirty] = useState(false);
   const [, setTick] = useState(0);
 
@@ -46,7 +65,8 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
     return () => clearInterval(id);
   }, []);
 
-  const active = from && to ? isInWindow(from, to) : false;
+  const activeSlot = slots.find(s => s.from && s.to && isInWindow(s.from, s.to));
+  const nextOpen = !activeSlot ? nextOpenSlot(slots) : null;
 
   const saveMut = useMutation({
     mutationFn: async () => {
@@ -54,11 +74,9 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
       form.append("name", game.name);
       form.append("slug", game.slug);
       form.append("claimTime", "0");
-      if (from && to) {
-        form.append("claimSchedule", JSON.stringify([{ from, to, minutes: 1, label: "Claim Window" }]));
-      } else {
-        form.append("claimSchedule", JSON.stringify([]));
-      }
+      form.append("claimSchedule", JSON.stringify(
+        slots.filter(s => s.from && s.to).map(s => ({ from: s.from, to: s.to, minutes: 1, label: "Claim Window" }))
+      ));
       return adminApi.games.update(game.slug, form);
     },
     onSuccess: () => {
@@ -67,15 +85,18 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
     },
   });
 
-  function change(field: "from" | "to", val: string) {
-    if (field === "from") setFrom(val);
-    else setTo(val);
+  function addSlot() {
+    setSlots(prev => [...prev, { from: "", to: "" }]);
     setDirty(true);
   }
 
-  function clear() {
-    setFrom("");
-    setTo("");
+  function removeSlot(i: number) {
+    setSlots(prev => prev.filter((_, j) => j !== i));
+    setDirty(true);
+  }
+
+  function changeSlot(i: number, field: "from" | "to", val: string) {
+    setSlots(prev => prev.map((s, j) => j === i ? { ...s, [field]: val } : s));
     setDirty(true);
   }
 
@@ -84,7 +105,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
-      className="bg-[#0d1f3c] border border-white/5 rounded-xl p-4"
+      className="bg-[#0d1f3c] border border-white/5 rounded-xl p-4 space-y-4"
     >
       <div className="flex items-center gap-3">
         {game.imageUrl ? (
@@ -106,15 +127,15 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
         <div className="flex-1 min-w-0">
           <p className="text-white font-medium text-sm">{game.name}</p>
           <div className="mt-0.5">
-            {!from && !to ? (
-              <span className="text-[11px] text-slate-600">No claim window set — always closed</span>
-            ) : active ? (
+            {slots.filter(s => s.from && s.to).length === 0 ? (
+              <span className="text-[11px] text-slate-600">No windows set — always closed</span>
+            ) : activeSlot ? (
               <span
                 className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg"
                 style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ade80" }}
               >
                 <CheckCircle2 className="w-3 h-3" />
-                OPEN · closes in {fmtCountdown(to)}
+                OPEN · {fmtTime(activeSlot.from)} – {fmtTime(activeSlot.to)} · closes in {fmtCountdown(activeSlot.to)}
               </span>
             ) : (
               <span
@@ -122,50 +143,69 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
                 style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}
               >
                 <XCircle className="w-3 h-3" />
-                CLOSED · opens at {from} GMT+3 in {fmtCountdown(from)}
+                CLOSED{nextOpen ? ` · opens at ${fmtTime(nextOpen)} GMT+3 in ${fmtCountdown(nextOpen)}` : ""}
               </span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-end gap-3">
-        <div className="flex-1 min-w-[110px]">
-          <label className="text-slate-400 text-[11px] font-medium block mb-1">Open from (GMT+3)</label>
-          <input
-            type="time"
-            value={from}
-            onChange={e => change("from", e.target.value)}
-            className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50"
-          />
-        </div>
-
-        <div className="flex-1 min-w-[110px]">
-          <label className="text-slate-400 text-[11px] font-medium block mb-1">Until (GMT+3)</label>
-          <input
-            type="time"
-            value={to}
-            onChange={e => change("to", e.target.value)}
-            className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 pb-0.5">
-          {(from || to) && !dirty && (
+      <div className="space-y-2">
+        {slots.map((slot, i) => (
+          <div key={i} className="flex items-center gap-2 bg-[#0a1628] border border-white/8 rounded-xl px-3 py-2.5">
+            <div className="flex-1 flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-1 min-w-[120px]">
+                <label className="text-slate-500 text-[10px] w-7 flex-shrink-0">From</label>
+                <input
+                  type="time"
+                  value={slot.from}
+                  onChange={e => changeSlot(i, "from", e.target.value)}
+                  className="flex-1 bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500/50"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 flex-1 min-w-[120px]">
+                <label className="text-slate-500 text-[10px] w-7 flex-shrink-0">To</label>
+                <input
+                  type="time"
+                  value={slot.to}
+                  onChange={e => changeSlot(i, "to", e.target.value)}
+                  className="flex-1 bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-indigo-500/50"
+                />
+              </div>
+              {slot.from && slot.to && (
+                <span className="text-[10px] text-slate-500 flex-shrink-0">
+                  {fmtTime(slot.from)} – {fmtTime(slot.to)}
+                  {isInWindow(slot.from, slot.to) && (
+                    <span className="ml-1 text-emerald-400 font-semibold">● OPEN</span>
+                  )}
+                </span>
+              )}
+            </div>
             <button
-              onClick={clear}
-              className="px-3 py-2 rounded-xl text-xs text-slate-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 transition-colors border border-white/5"
+              onClick={() => removeSlot(i)}
+              className="w-6 h-6 rounded flex items-center justify-center text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
             >
-              Clear
+              <X className="w-3.5 h-3.5" />
             </button>
-          )}
+          </div>
+        ))}
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={addSlot}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/15 border border-indigo-500/20 transition-colors"
+          >
+            <Plus className="w-3 h-3" />
+            Add Window
+          </button>
+
           {dirty && (
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={() => saveMut.mutate()}
               disabled={saveMut.isPending}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
               style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
             >
               {saveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
@@ -173,11 +213,11 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
             </motion.button>
           )}
         </div>
-      </div>
 
-      {saveMut.isError && (
-        <p className="text-red-400 text-xs mt-2">Failed to save. Please try again.</p>
-      )}
+        {saveMut.isError && (
+          <p className="text-red-400 text-xs">Failed to save. Please try again.</p>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -205,7 +245,7 @@ export default function ClaimTime() {
           Claim Time
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Set the daily window when claim time is open for each game (GMT+3). Outside these hours it will show as closed.
+          Set daily windows when claims are open for each game (GMT+3). Add multiple windows per game — claims close automatically outside these hours.
         </p>
       </div>
 
