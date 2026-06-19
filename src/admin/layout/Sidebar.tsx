@@ -6,7 +6,7 @@ import {
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
   ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell, Eye, X,
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
-  Archive, ClipboardList,
+  Archive, ClipboardList, Clock,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -30,6 +30,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/products",  label: "Products",         icon: Package,         permission: "view_products",    group: "Commerce" },
   { href: "/admin/promos",    label: "Promo Codes",      icon: Tag,             permission: "manage_promos",    group: "Commerce" },
   { href: "/admin/games",     label: "Games & Categories", icon: Gamepad2,      permission: "view_games",       group: "Content" },
+  { href: "/admin/claim-time", label: "Claim Time",        icon: Clock,         permission: "view_games",       group: "Content" },
   { href: "/admin/site-content", label: "Site Content", icon: PenSquare,       permission: "edit_site_content", group: "Content" },
   { href: "/admin/tutorials", label: "Tutorials",        icon: BookOpen,        permission: "edit_site_content", group: "Content" },
   { href: "/admin/roles",     label: "Roles",            icon: Shield,          permission: "manage_roles",     group: "Team" },
@@ -531,7 +532,8 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.5)"; }}
           >
             {profile?.profilePicture ? (
-              <img src={profile.profilePicture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+              <img src={profile.profilePicture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
             ) : (
               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
