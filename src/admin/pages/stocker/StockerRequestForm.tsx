@@ -204,6 +204,22 @@ export default function StockerRequestForm() {
                           </div>
                         )}
                       </div>
+                      {/* In Stock vs On Hand */}
+                      <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: "1px solid #F3F4F6" }}>
+                        <div className="flex-1 text-center">
+                          <p className="text-[10px] text-slate-400">In Stock</p>
+                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock < 0 ? "#9ca3af" : (product as any).stock === 0 ? "#EF4444" : "#1D4ED8" }}>
+                            {(product as any).stock < 0 ? "∞" : (product as any).stock}
+                          </p>
+                        </div>
+                        <div className="w-px h-5" style={{ background: "#E9EBF5" }} />
+                        <div className="flex-1 text-center">
+                          <p className="text-[10px] text-slate-400">On Hand</p>
+                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock < 0 ? "#9ca3af" : "#065F46" }}>
+                            {(product as any).stock < 0 ? "∞" : ((product as any).onHand ?? (product as any).stock)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 );
