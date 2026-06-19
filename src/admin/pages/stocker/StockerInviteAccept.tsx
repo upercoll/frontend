@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { adminApi } from "../../api";
-import { useAdminAuth } from "../../context/AdminAuthContext";
-import type { AdminUser, AdminProfile } from "../../types";
 import { Archive, Mail, Lock, User, Loader2, ChevronRight, Check } from "lucide-react";
+
+const BASE = import.meta.env.VITE_API_URL || "";
+
+async function stockerReq(method: string, path: string, body?: unknown) {
+  const res = await fetch(`${BASE}/api/stocker${path}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+}
 
 type Step = "loading" | "send_code" | "verify" | "setup" | "error";
 
@@ -12,7 +22,6 @@ export default function StockerInviteAccept() {
   const [, params] = useRoute("/stocker/invite/:token");
   const [, navigate] = useLocation();
   const token = params?.token || "";
-  const { login } = useAdminAuth();
 
   const [step, setStep] = useState<Step>("loading");
   const [email, setEmail] = useState("");
@@ -26,7 +35,7 @@ export default function StockerInviteAccept() {
 
   useEffect(() => {
     if (!token) return;
-    adminApi.stockerPanel.validateInvite(token)
+    stockerReq("GET", `/auth/invite/${token}`)
       .then(res => {
         setEmail(res.data.email);
         setStep("send_code");
@@ -41,7 +50,7 @@ export default function StockerInviteAccept() {
     setIsLoading(true);
     setError("");
     try {
-      await adminApi.stockerPanel.sendCode(token);
+      await stockerReq("POST", `/auth/invite/${token}/send-code`);
       setCodeSent(true);
       setStep("verify");
     } catch (e: any) {
@@ -65,12 +74,12 @@ export default function StockerInviteAccept() {
     setIsLoading(true);
     setError("");
     try {
-      const res = await adminApi.stockerPanel.verifyAndActivate(token, {
+      const res = await stockerReq("POST", `/auth/invite/${token}/verify`, {
         code,
         password,
         displayName: displayName || email.split("@")[0],
       });
-      login(res.token, res.data.user as AdminUser, res.data.profile as AdminProfile);
+      localStorage.setItem("stocker_token", res.token);
       navigate("/stocker/dashboard");
     } catch (e: any) {
       setError(e.message || "Setup failed");
@@ -138,12 +147,11 @@ export default function StockerInviteAccept() {
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={handleSendCode}
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
-              >
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                Send Verification Code
+                disabled={isLoading || codeSent}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : codeSent ? <Check className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
+                {codeSent ? "Code Sent" : "Send Verification Code"}
               </motion.button>
             </div>
           )}
@@ -151,16 +159,15 @@ export default function StockerInviteAccept() {
           {step === "verify" && (
             <form onSubmit={handleVerify} className="space-y-5">
               <div className="text-center text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-                A 6-digit code was sent to <span style={{ color: "#a5b4fc" }}>{email}</span>
+                Enter the 6-digit code sent to <span className="text-white font-medium">{email}</span>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1.5" style={{ color: "rgba(255,255,255,0.7)" }}>Verification Code</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>Verification Code</label>
                 <input
-                  type="text" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="000000"
-                  className="w-full rounded-xl px-4 py-3 text-center text-xl font-bold tracking-widest focus:outline-none"
-                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
-                  autoFocus
+                  type="text" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="000000" maxLength={6}
+                  className="w-full rounded-xl px-4 py-3 text-sm text-center tracking-widest font-mono focus:outline-none"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", fontSize: "1.2rem" }}
                 />
               </div>
               {error && (
@@ -170,59 +177,48 @@ export default function StockerInviteAccept() {
                 </div>
               )}
               <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={code.length !== 6}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
-              >
-                <ChevronRight className="w-4 h-4" />
-                Verify Code
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                Verify Code <ChevronRight className="w-4 h-4" />
               </motion.button>
-              <button type="button" onClick={handleSendCode} disabled={isLoading}
-                className="w-full text-center text-xs disabled:opacity-50"
-                style={{ color: "rgba(165,180,252,0.6)" }}>
-                Didn't receive it? Resend
-              </button>
             </form>
           )}
 
           {step === "setup" && (
             <form onSubmit={handleSetup} className="space-y-4">
-              <p className="text-sm text-center" style={{ color: "rgba(255,255,255,0.6)" }}>Set up your stocker account</p>
+              <div className="text-center text-sm font-semibold text-white mb-2">Set up your account</div>
               <div>
-                <label className="text-sm font-medium block mb-1.5" style={{ color: "rgba(255,255,255,0.7)" }}>Display Name</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>Display Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <input
-                    type="text" value={displayName} onChange={e => setDisplayName(e.target.value)}
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                  <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)}
                     placeholder={email.split("@")[0]}
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1.5" style={{ color: "rgba(255,255,255,0.7)" }}>Password</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <input
-                    type="password" value={password} onChange={e => setPassword(e.target.value)} required
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
                   />
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1.5" style={{ color: "rgba(255,255,255,0.7)" }}>Confirm Password</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.5)" }}>Confirm Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <input
-                    type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required
-                    placeholder="Repeat password"
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                  <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Repeat your password"
+                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
                   />
                 </div>
               </div>
@@ -233,14 +229,12 @@ export default function StockerInviteAccept() {
                 </div>
               )}
               <motion.button
+                type="submit" disabled={isLoading}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
-              >
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                Activate Account
+                Complete Setup
               </motion.button>
             </form>
           )}
