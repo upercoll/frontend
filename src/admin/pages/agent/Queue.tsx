@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle, RefreshCw, Inbox, ArrowLeft, Mail,
   Gamepad2, Package, Hash, Clock,
-  Wifi, WifiOff, X, AlertCircle, User, MessageSquare,
+  Wifi, WifiOff, X, AlertCircle, User, MessageSquare, Archive,
 } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -15,14 +15,15 @@ import type { ClaimSession } from "../../types";
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 const STATUS_CFG = {
-  pending: { dot: "bg-red-400",     pill: "bg-red-500/15 text-red-400",         label: "Waiting",     pulse: true  },
-  active:  { dot: "bg-amber-400",   pill: "bg-amber-500/15 text-amber-400",     label: "In Progress", pulse: true  },
-  claimed: { dot: "bg-emerald-400", pill: "bg-emerald-500/15 text-emerald-400", label: "Delivered",   pulse: false },
-  ended:   { dot: "bg-slate-500",   pill: "bg-slate-500/15 text-slate-400",     label: "Ended",       pulse: false },
+  pending: { dot: "bg-red-400",     pill: "bg-red-500/15 text-red-400",           label: "Waiting",     pulse: true  },
+  active:  { dot: "bg-amber-400",   pill: "bg-amber-500/15 text-amber-400",       label: "In Progress", pulse: true  },
+  claimed: { dot: "bg-emerald-400", pill: "bg-emerald-500/15 text-emerald-400",   label: "Delivered",   pulse: false },
+  ended:   { dot: "bg-slate-500",   pill: "bg-slate-500/15 text-slate-400",       label: "Ended",       pulse: false },
+  closed:  { dot: "bg-purple-400",  pill: "bg-purple-500/15 text-purple-400",     label: "Closed",      pulse: false },
 } as const;
 
 type LiveStatus = { status: ClaimSession["status"]; agentName?: string };
-type Tab = "waiting" | "active" | "completed";
+type Tab = "waiting" | "active" | "completed" | "closed";
 
 function playPing() {
   try {
@@ -73,10 +74,11 @@ function avatarColor(username: string): string {
 
 // ── ConvoItem ────────────────────────────────────────────────────────────────
 function ConvoItem({
-  session, liveStatus, selected, onClick, unreadCount, livePreview,
+  session, liveStatus, selected, onClick, unreadCount, livePreview, canClose, onClose,
 }: {
   session: ClaimSession; liveStatus?: LiveStatus; selected: boolean;
   onClick: () => void; unreadCount: number; livePreview?: string;
+  canClose?: boolean; onClose?: (e: React.MouseEvent) => void;
 }) {
   const effStatus = liveStatus?.status || session.status;
   const cfg = STATUS_CFG[effStatus] || STATUS_CFG.ended;
@@ -85,10 +87,13 @@ function ConvoItem({
   const hasUnread = unreadCount > 0;
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={e => e.key === "Enter" && onClick()}
       className={cn(
-        "w-full text-left px-3 py-3.5 flex items-start gap-3 border-b border-white/[0.04] transition-colors",
+        "w-full text-left px-3 py-3.5 flex items-start gap-3 border-b border-white/[0.04] transition-colors cursor-pointer relative group",
         selected
           ? "bg-indigo-600/10 border-l-2 border-l-indigo-500"
           : hasUnread
@@ -130,7 +135,17 @@ function ConvoItem({
           )}
         </div>
       </div>
-    </button>
+
+      {canClose && (
+        <button
+          onClick={e => { e.stopPropagation(); onClose?.(e); }}
+          title="Close chat"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded-md flex items-center justify-center text-slate-500 hover:text-purple-400 hover:bg-purple-500/10"
+        >
+          <Archive className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -228,6 +243,9 @@ export default function Queue() {
   const [lastActivity, setLastActivity] = useState<Map<string, number>>(new Map());
   const [livePreview, setLivePreview]   = useState<Map<string, string>>(new Map());
 
+  // Close confirmation modal
+  const [closingSession, setClosingSession] = useState<ClaimSession | null>(null);
+
   // POD modal
   const [podMode, setPodMode]           = useState(false);
   const [proofFiles, setProofFiles]     = useState<File[]>([]);
@@ -245,9 +263,11 @@ export default function Queue() {
   const pending:   ClaimSession[] = (data as any)?.data?.pending   || [];
   const mine:      ClaimSession[] = (data as any)?.data?.mine      || [];
   const completed: ClaimSession[] = (data as any)?.data?.completed || [];
+  const closedRaw: ClaimSession[] = (data as any)?.data?.closed    || [];
 
   const allSessions = useMemo<ClaimSession[]>(() => {
     const map = new Map<string, ClaimSession>();
+    closedRaw.forEach(s => map.set(s.roomId, s));
     completed.forEach(s => map.set(s.roomId, s));
     mine.forEach(s => map.set(s.roomId, s));
     pending.forEach(s => map.set(s.roomId, s));
@@ -262,7 +282,7 @@ export default function Queue() {
       }
     });
     return Array.from(map.values());
-  }, [pending, mine, completed, pendingClaims]);
+  }, [pending, mine, completed, closedRaw, pendingClaims]);
 
   const getEffStatus = (s: ClaimSession) => liveStatuses.get(s.roomId)?.status || s.status;
 
@@ -271,7 +291,7 @@ export default function Queue() {
     liveStatuses.get(s.roomId)?.agentName === user?.name,
   [user, liveStatuses]);
 
-  // Waiting: all unclaimed (already filtered by games from backend)
+  // Waiting
   const waitingSessions = useMemo(() =>
     allSessions
       .filter(s => getEffStatus(s) === "pending")
@@ -305,16 +325,23 @@ export default function Queue() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
   [allSessions, liveStatuses, isMySession]);
 
+  // Closed: only THIS agent's closed chats
+  const myClosedSessions = useMemo(() =>
+    allSessions
+      .filter(s => getEffStatus(s) === "closed" && isMySession(s))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  [allSessions, liveStatuses, isMySession]);
+
   const waitingUnread = waitingSessions.reduce((acc, s) => acc + (unread.get(s.roomId) || 0), 0);
   const activeUnread  = myActiveSessions.reduce((acc, s) => acc + (unread.get(s.roomId) || 0), 0);
   const totalBadge    = waitingSessions.length + waitingUnread + activeUnread;
 
   const tabSessions: ClaimSession[] =
-    activeTab === "waiting"   ? waitingSessions :
-    activeTab === "active"    ? myActiveSessions :
-    myCompletedSessions;
+    activeTab === "waiting"   ? waitingSessions   :
+    activeTab === "active"    ? myActiveSessions  :
+    activeTab === "completed" ? myCompletedSessions :
+    myClosedSessions;
 
-  // Sync ref
   useEffect(() => { selectedRoomIdRef.current = selectedSession?.roomId ?? null; }, [selectedSession?.roomId]);
 
   // Socket listeners
@@ -338,6 +365,13 @@ export default function Queue() {
       removePendingClaim(roomId);
       refetch();
     };
+    const onClosed = ({ roomId }: { roomId: string }) => {
+      setLiveStatuses(p => { const n = new Map(p); n.set(roomId, { status: "closed", agentName: p.get(roomId)?.agentName }); return n; });
+      removePendingClaim(roomId);
+      refetch();
+      setSelectedSession(s => s?.roomId === roomId ? { ...s, status: "closed" } : s);
+      if (roomId === selectedRoomIdRef.current) setActiveTab("closed");
+    };
     const onAutoAssigned = ({ roomId, session }: { roomId: string; session: ClaimSession }) => {
       removePendingClaim(roomId);
       refetch();
@@ -357,6 +391,7 @@ export default function Queue() {
     socket.on("queue:claim_taken",         onTaken);
     socket.on("queue:claim_completed",     onCompleted);
     socket.on("queue:claim_ended",         onEnded);
+    socket.on("queue:claim_closed",        onClosed);
     socket.on("queue:claim_auto_assigned", onAutoAssigned);
     socket.on("queue:customer_message",    onCustomerMsg);
 
@@ -364,6 +399,7 @@ export default function Queue() {
       socket.off("queue:claim_taken",         onTaken);
       socket.off("queue:claim_completed",     onCompleted);
       socket.off("queue:claim_ended",         onEnded);
+      socket.off("queue:claim_closed",        onClosed);
       socket.off("queue:claim_auto_assigned", onAutoAssigned);
       socket.off("queue:customer_message",    onCustomerMsg);
     };
@@ -426,6 +462,12 @@ export default function Queue() {
     refetch();
   };
 
+  const confirmCloseChat = () => {
+    if (!socket || !closingSession) return;
+    socket.emit("claim:close", { roomId: closingSession.roomId });
+    setClosingSession(null);
+  };
+
   const selLive      = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
   const selEffStatus = selLive?.status || selectedSession?.status;
   const isMyActive   = selEffStatus === "active" && !!selectedSession && isMySession(selectedSession);
@@ -434,6 +476,7 @@ export default function Queue() {
     { key: "waiting",   label: "Waiting",     count: waitingSessions.length,    badge: waitingUnread || undefined },
     { key: "active",    label: "In Progress",  count: myActiveSessions.length,   badge: activeUnread || undefined },
     { key: "completed", label: "Completed",    count: myCompletedSessions.length },
+    { key: "closed",    label: "Closed",       count: myClosedSessions.length },
   ];
 
   return (
@@ -505,27 +548,36 @@ export default function Queue() {
             <div className="px-4 py-12 text-center">
               <Inbox className="w-8 h-8 text-slate-700 mx-auto mb-2" />
               <p className="text-slate-600 text-sm font-medium">
-                {activeTab === "waiting"   ? "No waiting chats" :
-                 activeTab === "active"    ? "No active chats" :
-                 "No completed chats yet"}
+                {activeTab === "waiting"   ? "No waiting chats"    :
+                 activeTab === "active"    ? "No active chats"     :
+                 activeTab === "completed" ? "No completed chats yet" :
+                 "No closed chats yet"}
               </p>
               <p className="text-slate-700 text-xs mt-0.5">
-                {activeTab === "waiting" ? "New claims appear here" :
-                 activeTab === "active"  ? "Claim a chat to see it here" :
-                 "Chats you complete appear here"}
+                {activeTab === "waiting"   ? "New claims appear here"          :
+                 activeTab === "active"    ? "Claim a chat to see it here"     :
+                 activeTab === "completed" ? "Chats you complete appear here"  :
+                 "Close a completed chat to archive it here"}
               </p>
             </div>
           ) : (
-            tabSessions.map(s => (
-              <ConvoItem
-                key={s.roomId} session={s}
-                liveStatus={liveStatuses.get(s.roomId)}
-                selected={selectedSession?.roomId === s.roomId}
-                onClick={() => openSession(s)}
-                unreadCount={unread.get(s.roomId) || 0}
-                livePreview={livePreview.get(s.roomId)}
-              />
-            ))
+            tabSessions.map(s => {
+              const canClose =
+                (getEffStatus(s) === "claimed" || getEffStatus(s) === "ended") &&
+                isMySession(s);
+              return (
+                <ConvoItem
+                  key={s.roomId} session={s}
+                  liveStatus={liveStatuses.get(s.roomId)}
+                  selected={selectedSession?.roomId === s.roomId}
+                  onClick={() => openSession(s)}
+                  unreadCount={unread.get(s.roomId) || 0}
+                  livePreview={livePreview.get(s.roomId)}
+                  canClose={canClose}
+                  onClose={() => setClosingSession(s)}
+                />
+              );
+            })
           )}
         </div>
       </div>
@@ -560,7 +612,6 @@ export default function Queue() {
                   <AlertCircle className="w-3 h-3" /> Unclaimed
                 </span>
               )}
-              {/* Mark as Completed — always visible in the header for your active sessions */}
               {isMyActive && (
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -582,7 +633,6 @@ export default function Queue() {
               </button>
             </div>
 
-            {/* Mobile Mark as Completed bar */}
             {isMyActive && (
               <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0">
                 <button
@@ -595,7 +645,6 @@ export default function Queue() {
               </div>
             )}
 
-            {/* key prop prevents message merging between sessions */}
             <div className="flex-1 overflow-hidden">
               <ChatWindow
                 key={selectedSession.roomId}
@@ -616,6 +665,7 @@ export default function Queue() {
                 ["bg-red-400",     "Waiting — no agent yet, type to claim"],
                 ["bg-amber-400",   "In Progress — actively helping a customer"],
                 ["bg-emerald-400", "Completed — order delivery confirmed"],
+                ["bg-purple-400",  "Closed — archived by you, read-only"],
               ] as const).map(([color, label]) => (
                 <div key={label} className="flex items-center gap-3">
                   <span className={cn("w-2.5 h-2.5 rounded-full flex-shrink-0", color)} />
@@ -738,6 +788,50 @@ export default function Queue() {
                   {submittingPod
                     ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" />Submitting…</>
                     : <><CheckCircle className="w-3.5 h-3.5" />Mark as Completed</>}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════ Close Chat Confirmation Modal ══════ */}
+      <AnimatePresence>
+        {closingSession && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            onClick={() => setClosingSession(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="px-6 py-5">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
+                  <Archive className="w-5 h-5 text-purple-400" />
+                </div>
+                <h3 className="text-white font-semibold text-base mb-1">Close this chat?</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  This will archive the chat with{" "}
+                  <span className="text-white font-medium">{closingSession.robloxUsername}</span>.
+                  It'll move to your Closed tab — you can still read it, but no further messages can be sent.
+                </p>
+              </div>
+              <div className="px-6 pb-5 flex gap-3">
+                <button
+                  onClick={() => setClosingSession(null)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmCloseChat}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  Close Chat
                 </button>
               </div>
             </motion.div>
