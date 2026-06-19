@@ -376,7 +376,15 @@ export default function Orders() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ background: "rgba(124,58,237,0.2)", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
-                <h3 className="text-white font-semibold">Claim Chat</h3>
+                <h3 className="text-white font-semibold">
+                  {(() => {
+                    const GENERIC = ["general claim", "claim chat"];
+                    const name = viewChat.itemName?.trim();
+                    if (name && !GENERIC.includes(name.toLowerCase())) return name;
+                    const first = viewChat.items?.find(i => i.name && !GENERIC.includes(i.name.trim().toLowerCase()));
+                    return first?.name || `Claim — ${viewChat.robloxUsername}`;
+                  })()}
+                </h3>
                 <button onClick={() => setViewChat(null)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
                   <X className="w-4 h-4" />
                 </button>
