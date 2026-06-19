@@ -243,7 +243,7 @@ export const adminApi = {
     getFullSession: (roomId: string) =>
       get<{ success: boolean; data: { session: import("./types").ClaimSession } }>(`/claims/${roomId}/full`),
     getAgentQueue: () =>
-      get<{ success: boolean; data: { pending: import("./types").ClaimSession[]; mine: import("./types").ClaimSession[]; completed: import("./types").ClaimSession[] } }>("/claims/queue"),
+      get<{ success: boolean; data: { pending: import("./types").ClaimSession[]; mine: import("./types").ClaimSession[]; completed: import("./types").ClaimSession[]; closed: import("./types").ClaimSession[] } }>("/claims/queue"),
   },
 
   tutorials: {
