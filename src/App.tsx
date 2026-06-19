@@ -17,6 +17,8 @@ import NotFound from "@/pages/not-found";
 import CollabInviteAccept from "@/pages/CollabInviteAccept";
 import CollabLogin from "@/pages/CollabLogin";
 import CollabDashboard from "@/pages/CollabDashboard";
+import StockerLogin from "@/pages/StockerLogin";
+import StockerLayout from "@/pages/StockerLayout";
 
 import { AdminAuthProvider } from "@/admin/context/AdminAuthContext";
 import { AdminSocketProvider } from "@/admin/context/AdminSocketContext";
@@ -73,13 +75,16 @@ function isAdminRoute(location: string) {
   return (
     location.startsWith("/admin") ||
     location.startsWith("/panel") ||
-    location.startsWith("/stocker") ||
     location.startsWith("/invite/")
   );
 }
 
 function isCollabRoute(location: string) {
   return location.startsWith("/collab");
+}
+
+function isStockerRoute(location: string) {
+  return location.startsWith("/stocker");
 }
 
 function DiscordFloat() {
@@ -155,191 +160,104 @@ function AdminRouter() {
       <Route path="/admin/profile-setup" component={AdminProfileSetup} />
       <Route path="/panel/profile-setup" component={AdminProfileSetup} />
 
-      <Route path="/stocker/invite/:token" component={StockerInviteAccept} />
-
       <Route path="/admin/dashboard">
-        <AdminLayout>
-          <Dashboard />
-        </AdminLayout>
+        <AdminLayout><Dashboard /></AdminLayout>
       </Route>
       <Route path="/admin/orders/:id">
-        <AdminLayout>
-          <OrderDetail />
-        </AdminLayout>
+        <AdminLayout><OrderDetail /></AdminLayout>
       </Route>
       <Route path="/admin/orders">
-        <AdminLayout>
-          <Orders />
-        </AdminLayout>
+        <AdminLayout><Orders /></AdminLayout>
       </Route>
       <Route path="/admin/analytics">
-        <AdminLayout>
-          <Analytics />
-        </AdminLayout>
+        <AdminLayout><Analytics /></AdminLayout>
       </Route>
       <Route path="/admin/customers">
-        <AdminLayout>
-          <Customers />
-        </AdminLayout>
+        <AdminLayout><Customers /></AdminLayout>
       </Route>
       <Route path="/admin/tutorials">
-        <AdminLayout>
-          <Tutorials />
-        </AdminLayout>
+        <AdminLayout><Tutorials /></AdminLayout>
       </Route>
       <Route path="/admin/products">
-        <AdminLayout>
-          <Products />
-        </AdminLayout>
+        <AdminLayout><Products /></AdminLayout>
       </Route>
       <Route path="/admin/games">
-        <AdminLayout>
-          <Games />
-        </AdminLayout>
+        <AdminLayout><Games /></AdminLayout>
       </Route>
       <Route path="/admin/claim-time">
-        <AdminLayout>
-          <ClaimTime />
-        </AdminLayout>
+        <AdminLayout><ClaimTime /></AdminLayout>
       </Route>
       <Route path="/admin/roles">
-        <AdminLayout>
-          <Roles />
-        </AdminLayout>
+        <AdminLayout><Roles /></AdminLayout>
       </Route>
       <Route path="/admin/team">
-        <AdminLayout>
-          <Team />
-        </AdminLayout>
+        <AdminLayout><Team /></AdminLayout>
       </Route>
       <Route path="/admin/claim-teams">
-        <AdminLayout>
-          <ClaimTeams />
-        </AdminLayout>
+        <AdminLayout><ClaimTeams /></AdminLayout>
       </Route>
       <Route path="/admin/monitor">
-        <AdminLayout>
-          <Monitor />
-        </AdminLayout>
+        <AdminLayout><Monitor /></AdminLayout>
       </Route>
       <Route path="/admin/open-chats">
-        <AdminLayout>
-          <OpenChats />
-        </AdminLayout>
+        <AdminLayout><OpenChats /></AdminLayout>
       </Route>
       <Route path="/admin/site-content">
-        <AdminLayout>
-          <SiteContent />
-        </AdminLayout>
+        <AdminLayout><SiteContent /></AdminLayout>
       </Route>
       <Route path="/admin/proof-of-delivery">
-        <AdminLayout>
-          <ProofOfDelivery />
-        </AdminLayout>
+        <AdminLayout><ProofOfDelivery /></AdminLayout>
       </Route>
       <Route path="/admin/promos">
-        <AdminLayout>
-          <Promos />
-        </AdminLayout>
+        <AdminLayout><Promos /></AdminLayout>
       </Route>
       <Route path="/admin/settings">
-        <AdminLayout>
-          <Settings />
-        </AdminLayout>
+        <AdminLayout><Settings /></AdminLayout>
       </Route>
       <Route path="/admin/role-view">
-        <AdminLayout>
-          <RoleView />
-        </AdminLayout>
+        <AdminLayout><RoleView /></AdminLayout>
       </Route>
       <Route path="/admin/profile">
-        <AdminLayout>
-          <AdminProfilePage />
-        </AdminLayout>
+        <AdminLayout><AdminProfilePage /></AdminLayout>
       </Route>
-
       <Route path="/admin/stock/requests">
-        <AdminLayout>
-          <StockRequests />
-        </AdminLayout>
+        <AdminLayout><StockRequests /></AdminLayout>
       </Route>
       <Route path="/admin/stock/tracking">
-        <AdminLayout>
-          <StockTracking />
-        </AdminLayout>
+        <AdminLayout><StockTracking /></AdminLayout>
       </Route>
-
       <Route path="/panel/dashboard">
-        <AdminLayout>
-          <AgentDashboard />
-        </AdminLayout>
+        <AdminLayout><AgentDashboard /></AdminLayout>
       </Route>
       <Route path="/panel/queue">
-        <AdminLayout>
-          <Queue />
-        </AdminLayout>
+        <AdminLayout><Queue /></AdminLayout>
       </Route>
       <Route path="/panel/stats">
-        <AdminLayout>
-          <AgentStats />
-        </AdminLayout>
+        <AdminLayout><AgentStats /></AdminLayout>
       </Route>
       <Route path="/panel/profile">
-        <AdminLayout>
-          <AdminProfilePage />
-        </AdminLayout>
+        <AdminLayout><AdminProfilePage /></AdminLayout>
       </Route>
-
-      <Route path="/stocker/dashboard">
-        <AdminLayout>
-          <StockerDashboard />
-        </AdminLayout>
-      </Route>
-      <Route path="/stocker/request">
-        <AdminLayout>
-          <StockerRequestForm />
-        </AdminLayout>
-      </Route>
-      <Route path="/stocker/history">
-        <AdminLayout>
-          <StockerHistory />
-        </AdminLayout>
-      </Route>
-
       <Route path="/admin/collaboration/collaborators">
-        <AdminLayout>
-          <CollabCollaborators />
-        </AdminLayout>
+        <AdminLayout><CollabCollaborators /></AdminLayout>
       </Route>
       <Route path="/admin/collaboration/view/:id">
-        <AdminLayout>
-          <CollabView />
-        </AdminLayout>
+        <AdminLayout><CollabView /></AdminLayout>
       </Route>
       <Route path="/admin/collaboration/payouts-all">
-        <AdminLayout>
-          <CollabPayoutsAll />
-        </AdminLayout>
+        <AdminLayout><CollabPayoutsAll /></AdminLayout>
       </Route>
       <Route path="/admin/collaboration/payouts/:id/detail/:payoutId">
-        <AdminLayout>
-          <CollabPayoutDetail />
-        </AdminLayout>
+        <AdminLayout><CollabPayoutDetail /></AdminLayout>
       </Route>
       <Route path="/admin/collaboration/payouts/:id">
-        <AdminLayout>
-          <CollabPayouts />
-        </AdminLayout>
+        <AdminLayout><CollabPayouts /></AdminLayout>
       </Route>
-
       <Route path="/admin">
         {() => { window.location.replace("/admin/login"); return null; }}
       </Route>
       <Route path="/panel">
         {() => { window.location.replace("/panel/dashboard"); return null; }}
-      </Route>
-      <Route path="/stocker">
-        {() => { window.location.replace("/stocker/dashboard"); return null; }}
       </Route>
     </Switch>
   );
@@ -356,11 +274,39 @@ function CollabRouter() {
   );
 }
 
+function StockerRouter() {
+  return (
+    <Switch>
+      <Route path="/stocker/login" component={StockerLogin} />
+      <Route path="/stocker/invite/:token" component={StockerInviteAccept} />
+      <Route path="/stocker/dashboard">
+        <StockerLayout><StockerDashboard /></StockerLayout>
+      </Route>
+      <Route path="/stocker/request">
+        <StockerLayout><StockerRequestForm /></StockerLayout>
+      </Route>
+      <Route path="/stocker/history">
+        <StockerLayout><StockerHistory /></StockerLayout>
+      </Route>
+      <Route path="/stocker/payouts">
+        <StockerLayout><StockerDashboard /></StockerLayout>
+      </Route>
+      <Route path="/stocker">
+        {() => { window.location.replace("/stocker/login"); return null; }}
+      </Route>
+    </Switch>
+  );
+}
+
 function RootRouter() {
   const [location] = useLocation();
 
   if (isCollabRoute(location)) {
     return <CollabRouter />;
+  }
+
+  if (isStockerRoute(location)) {
+    return <StockerRouter />;
   }
 
   if (isAdminRoute(location)) {
