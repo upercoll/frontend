@@ -12,8 +12,9 @@ interface ChatWindowProps {
   onSessionClaimed?: (session: ClaimSession) => void;
 }
 
+const GENERIC_ITEM_NAMES = ["general claim", "claim chat"];
 function cleanItemName(raw?: string): string {
-  if (!raw || raw.trim().toLowerCase() === "general claim") return "";
+  if (!raw || GENERIC_ITEM_NAMES.includes(raw.trim().toLowerCase())) return "";
   return raw.trim();
 }
 
