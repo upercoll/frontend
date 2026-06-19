@@ -73,7 +73,21 @@ function makeId() {
 }
 
 function fmtTime(d: Date) {
-  return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(d));
+}
+
+function fmtSlotCountdown(slotHhmm: string) {
+  const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const [h, m] = slotHhmm.split(":").map(Number);
+  const target = new Date(now);
+  target.setUTCHours(h, m, 0, 0);
+  if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
+  const diff = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
+  const hrs = Math.floor(diff / 3600);
+  const mins = Math.floor((diff % 3600) / 60);
+  const secs = diff % 60;
+  if (hrs > 0) return `${hrs}h ${String(mins).padStart(2, "0")}m`;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
 function loadLastOrder(): LastOrder | null {
@@ -93,6 +107,8 @@ interface StoredClaimSession {
   orderRef: string | null;
   status: string;
   agentName?: string | null;
+  robloxUser?: string;
+  contactEmail?: string;
 }
 
 function saveClaimSession(data: StoredClaimSession) {
@@ -244,8 +260,16 @@ export default function SupportChat() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [chatOutcome, setChatOutcome] = useState<"claimed" | "ended" | null>(null);
+  const [nextSlotAt, setNextSlotAt] = useState<string | null>(null);
+  const [, setSlotTick] = useState(0);
 
   const [lastOrder] = useState<LastOrder | null>(() => loadLastOrder());
+
+  useEffect(() => {
+    if (!nextSlotAt) return;
+    const id = setInterval(() => setSlotTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [nextSlotAt]);
 
   const socketRef = useRef<Socket | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -269,7 +293,12 @@ export default function SupportChat() {
     function handleOpenClaim() {
       setOpen(true);
       setMode("claim");
-      setClaimStep("select");
+      const stored = loadClaimSession();
+      if (stored && (stored.status === "pending" || stored.status === "active")) {
+        handleRejoinSession();
+      } else {
+        setClaimStep("select");
+      }
     }
     window.addEventListener("rbstars:open-claim", handleOpenClaim);
     return () => window.removeEventListener("rbstars:open-claim", handleOpenClaim);
@@ -408,12 +437,15 @@ export default function SupportChat() {
       }));
 
       setMessages(existingMessages);
+      setNextSlotAt(data.data.nextSlotAt || null);
 
       saveClaimSession({
         roomId: rid,
         orderRef: lastOrder?.orderRef || null,
         status: sessionStatus,
         agentName: data.data.assignedAgent?.name || null,
+        robloxUser: robloxUser.trim(),
+        contactEmail: contactEmail.trim(),
       });
 
       if (sessionStatus === "claimed") {
@@ -436,6 +468,65 @@ export default function SupportChat() {
       setFormErrors({ submit: "Something went wrong. Please try again." });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleRejoinSession() {
+    const stored = loadClaimSession();
+    if (!stored?.roomId) { setClaimStep("form"); return; }
+
+    const storedUser = stored.robloxUser || "";
+    const storedEmail = stored.contactEmail || lastOrder?.email || "";
+
+    if (storedUser) setRobloxUser(storedUser);
+    if (storedEmail) setContactEmail(storedEmail);
+
+    setClaimStep("waiting");
+
+    try {
+      const res = await fetch(`${BACKEND}/api/claims`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          robloxUsername: storedUser || "Customer",
+          contactEmail: storedEmail,
+          orderRef: stored.orderRef || null,
+          game: gameSlug || null,
+          items: lastOrder?.items || [],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { setClaimStep("form"); return; }
+
+      const rid = data.data.roomId;
+      const sessionStatus: string = data.data.status || "pending";
+      const existingMessages: Message[] = (data.data.messages || []).map((m: { sender: string; text: string; senderName: string; timestamp: string }) => ({
+        id: makeId(),
+        sender: m.sender as "customer" | "agent" | "system",
+        text: m.text,
+        senderName: m.senderName,
+        timestamp: new Date(m.timestamp),
+      }));
+      setMessages(existingMessages);
+      setNextSlotAt(data.data.nextSlotAt || null);
+
+      if (sessionStatus === "claimed") {
+        setChatOutcome("claimed");
+        setClaimStep("claimed");
+        setTimeout(() => setClaimStep("review"), 1500);
+      } else if (sessionStatus === "ended") {
+        setChatOutcome("ended");
+        setClaimStep("ended");
+        setTimeout(() => setClaimStep("review"), 1500);
+      } else if (sessionStatus === "active") {
+        setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
+        setRoomId(rid);
+        setClaimStep("active");
+      } else {
+        setRoomId(rid);
+      }
+    } catch {
+      setClaimStep("form");
     }
   }
 
@@ -791,11 +882,7 @@ export default function SupportChat() {
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              setSelectedItem({ id: "existing", name: "Claim Chat" });
-              setContactEmail(lastOrder?.email || "");
-              setClaimStep("form");
-            }}
+            onClick={() => handleRejoinSession()}
             className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
             style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
           >
@@ -994,6 +1081,14 @@ export default function SupportChat() {
             <span className="text-xs font-semibold" style={{ color: "#4f46e5" }}>Waiting for claim team…</span>
           </div>
           <p className="text-[10px]" style={{ color: "#9ca3af" }}>Usually responds within 2–5 minutes</p>
+          {nextSlotAt && (
+            <div className="mt-1.5 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
+              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#4338ca" }}>
+              <Clock size={11} />
+              <span>Opens at {nextSlotAt} GMT+3</span>
+              <span className="font-mono opacity-60">({fmtSlotCountdown(nextSlotAt)})</span>
+            </div>
+          )}
         </div>
       </div>
     );
