@@ -298,6 +298,8 @@ export const adminApi = {
       get<{ success: boolean; data: { stockers: import("./types").Stocker[] } }>("/stock/stockers"),
     getStockerDetail: (id: string) =>
       get<{ success: boolean; data: { stocker: import("./types").Stocker; requests: import("./types").StockRequest[]; stats: Record<string, number> } }>(`/stock/stockers/${id}`),
+    getStockerSales: (id: string) =>
+      get<{ success: boolean; data: { stocker: { _id: string; name: string; email: string }; deliveries: any[]; total: number; productSummary: any[] } }>(`/stock/stockers/${id}/sales`),
     inviteStocker: (data: { email: string; name?: string; commissionRate?: number; games?: string[] }) =>
       post<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/stock/stockers/invite", data),
     updateStocker: (id: string, data: { name?: string; status?: string; commissionRate?: number; games?: string[] }) =>
@@ -337,6 +339,8 @@ export const adminApi = {
       spost<{ success: boolean; data: { request: import("./types").StockRequest } }>("/requests", data),
     getMyStats: () =>
       sget<{ success: boolean; data: { stats: Record<string, number>; recentRequests: import("./types").StockRequest[]; productBreakdown: { productName: string; quantityStocked: number; totalValue: number; game?: string; imageUrl?: string }[] } }>("/stats"),
+    getSoldDeliveries: () =>
+      sget<{ success: boolean; data: { deliveries: { roomId: string; robloxUsername: string; game?: string; orderRef?: string; agentName: string; deliveredAt: string; items: { name: string; quantity: number; productName?: string; imageUrl?: string; game?: string }[] }[]; total: number } }>("/sold-deliveries"),
   },
 };
 
