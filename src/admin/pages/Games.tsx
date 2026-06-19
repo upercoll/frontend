@@ -10,16 +10,23 @@ function getGmt3Hhmm() {
   return `${String(gmt3.getUTCHours()).padStart(2, "0")}:${String(gmt3.getUTCMinutes()).padStart(2, "0")}`;
 }
 
-function findActiveSlot(game: Game): { label: string; minutes: number; endsAt: string | null } | null {
+function fmtTime(hhmm: string): string {
+  if (!hhmm) return "";
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function findActiveSlot(game: Game): { from: string; to: string; endsAt: string } | null {
   const hhmm = getGmt3Hhmm();
   if (game.claimSchedule?.length) {
     const slot = game.claimSchedule.find(s => {
-      if (!s.from || !s.to || !s.minutes) return false;
+      if (!s.from || !s.to) return false;
       return s.from <= s.to ? (hhmm >= s.from && hhmm <= s.to) : (hhmm >= s.from || hhmm <= s.to);
     });
-    if (slot) return { label: slot.label || "Scheduled Slot", minutes: slot.minutes, endsAt: slot.to };
+    if (slot) return { from: slot.from, to: slot.to, endsAt: slot.to };
   }
-  if ((game.claimTime || 0) > 0) return { label: "Default", minutes: game.claimTime!, endsAt: null };
   return null;
 }
 
@@ -51,10 +58,8 @@ function ClaimTimeStatus({ game }: { game: Game }) {
     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold flex-shrink-0"
       style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#4ade80" }}>
       <Clock className="w-3 h-3 flex-shrink-0" />
-      <span>{active.label} · {active.minutes}m</span>
-      {active.endsAt && (
-        <span className="opacity-60 font-normal">ends {fmtCountdown(active.endsAt)}</span>
-      )}
+      <span>{fmtTime(active.from)} – {fmtTime(active.to)}</span>
+      <span className="opacity-60 font-normal">ends {fmtCountdown(active.endsAt)}</span>
     </div>
   );
 }
@@ -472,7 +477,7 @@ export default function Games() {
                     </label>
                     <button
                       type="button"
-                      onClick={() => setGameClaimSchedule(prev => [...prev, { label: "", from: "00:00", to: "23:59", minutes: 5 }])}
+                      onClick={() => setGameClaimSchedule(prev => [...prev, { label: "", from: "00:00", to: "23:59", minutes: 1 }])}
                       className="text-[11px] px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors"
                     >
                       + Add Slot
@@ -497,7 +502,7 @@ export default function Games() {
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <div>
                               <p className="text-slate-500 text-[10px] mb-1">From</p>
                               <input type="time" value={slot.from}
@@ -508,12 +513,6 @@ export default function Games() {
                               <p className="text-slate-500 text-[10px] mb-1">To</p>
                               <input type="time" value={slot.to}
                                 onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, to: e.target.value } : s))}
-                                className="w-full bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500/40" />
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-[10px] mb-1">Minutes</p>
-                              <input type="number" min="1" max="120" value={slot.minutes}
-                                onChange={e => setGameClaimSchedule(prev => prev.map((s, i) => i === idx ? { ...s, minutes: Math.max(1, parseInt(e.target.value) || 1) } : s))}
                                 className="w-full bg-transparent border border-white/10 text-white rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-500/40" />
                             </div>
                           </div>
