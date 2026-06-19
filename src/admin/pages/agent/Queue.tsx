@@ -51,10 +51,15 @@ function timeAgo(d: string) {
   return new Date(d).toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+const GENERIC_ITEM_NAMES = ["general claim", "claim chat"];
+function isGenericName(name?: string): boolean {
+  return !name || GENERIC_ITEM_NAMES.includes(name.trim().toLowerCase());
+}
+
 function getItemLabel(s: ClaimSession): string {
   const raw = s.itemName;
-  if (raw && raw.toLowerCase() !== "general claim" && raw.trim()) return raw;
-  const first = s.items?.find(i => i.name && i.name.toLowerCase() !== "general claim");
+  if (raw && !isGenericName(raw)) return raw.trim();
+  const first = s.items?.find(i => i.name && !isGenericName(i.name));
   return first?.name || "";
 }
 
@@ -151,10 +156,10 @@ function ConvoItem({
 
 // ── ProfilePanel ─────────────────────────────────────────────────────────────
 function ProfilePanel({
-  session, liveStatus, isMyActiveSession, onClose, onDeliver, onEnd,
+  session, liveStatus, isMyActiveSession, isMyCompletedSession, onClose, onDeliver, onEnd, onCloseChat,
 }: {
-  session: ClaimSession; liveStatus?: LiveStatus; isMyActiveSession: boolean;
-  onClose: () => void; onDeliver: () => void; onEnd: () => void;
+  session: ClaimSession; liveStatus?: LiveStatus; isMyActiveSession: boolean; isMyCompletedSession?: boolean;
+  onClose: () => void; onDeliver: () => void; onEnd: () => void; onCloseChat?: () => void;
 }) {
   const effStatus = liveStatus?.status || session.status;
   const effAgent  = liveStatus?.agentName || session.assignedAgent?.name;
@@ -219,6 +224,18 @@ function ProfilePanel({
             className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-xl text-xs font-medium transition-colors"
           >
             End Chat
+          </button>
+        </div>
+      )}
+
+      {isMyCompletedSession && onCloseChat && (
+        <div className="px-4 py-4 flex-shrink-0">
+          <button
+            onClick={onCloseChat}
+            className="w-full py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+          >
+            <Archive className="w-3.5 h-3.5" />
+            Close Chat
           </button>
         </div>
       )}
@@ -468,9 +485,10 @@ export default function Queue() {
     setClosingSession(null);
   };
 
-  const selLive      = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
-  const selEffStatus = selLive?.status || selectedSession?.status;
-  const isMyActive   = selEffStatus === "active" && !!selectedSession && isMySession(selectedSession);
+  const selLive             = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
+  const selEffStatus        = selLive?.status || selectedSession?.status;
+  const isMyActive          = selEffStatus === "active" && !!selectedSession && isMySession(selectedSession);
+  const isMyCompletedOrEnded = (selEffStatus === "claimed" || selEffStatus === "ended") && !!selectedSession && isMySession(selectedSession);
 
   const TABS: { key: Tab; label: string; count: number; badge?: number }[] = [
     { key: "waiting",   label: "Waiting",     count: waitingSessions.length,    badge: waitingUnread || undefined },
@@ -689,9 +707,11 @@ export default function Queue() {
               <ProfilePanel
                 session={selectedSession} liveStatus={selLive}
                 isMyActiveSession={isMyActive}
+                isMyCompletedSession={isMyCompletedOrEnded}
                 onClose={() => { setShowProfile(false); setMobilePanel(1); }}
                 onDeliver={() => setPodMode(true)}
                 onEnd={endChat}
+                onCloseChat={() => setClosingSession(selectedSession)}
               />
             </div>
           </motion.div>
