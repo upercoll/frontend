@@ -7,6 +7,10 @@ function getToken(): string | null {
   return localStorage.getItem("panel_token");
 }
 
+function getStockerToken(): string | null {
+  return localStorage.getItem("stocker_token");
+}
+
 async function req<T>(
   method: string,
   path: string,
@@ -119,80 +123,82 @@ export const adminApi = {
       post<{ success: boolean; data: { member: import("./types").TeamMember } }>("/team/invite", data),
     update: (id: string, data: { roleId?: string; claimGames?: string[]; claimCategories?: string[]; active?: boolean }) =>
       patch<{ success: boolean; data: { member: import("./types").TeamMember } }>(`/team/${id}`, data),
+    updateCommission: (id: string, commissionRate: number) =>
+      patch<{ success: boolean; data: { member: import("./types").TeamMember } }>(`/team/${id}/commission`, { commissionRate }),
     remove: (id: string) => del(`/team/${id}`),
     hardDelete: (id: string) => del(`/team/${id}/hard-delete`),
     resendInvite: (id: string) => post(`/team/${id}/resend-invite`),
-    updateCommission: (id: string, commissionRate: number) =>
-      patch(`/team/${id}/commission`, { commissionRate }),
   },
 
   orders: {
     list: (params?: Record<string, string>) => {
       const q = new URLSearchParams(params || {}).toString();
-      return get<{ success: boolean; data: { orders: import("./types").Order[]; total: number; pages: number } }>(`/orders${q ? `?${q}` : ""}`);
+      return get<{ success: boolean; data: import("./types").Order[]; total: number; pages: number }>(`/orders${q ? `?${q}` : ""}`);
     },
-    get: (id: string) => get<{ success: boolean; data: { order: import("./types").Order; claimSession: import("./types").ClaimSession } }>(`/orders/${id}`),
-    updateStatus: (id: string, status: string, adminNotes?: string) =>
-      patch(`/orders/${id}/status`, { status, adminNotes }),
-    fulfill: (id: string, data?: { trackingNumber?: string; carrier?: string; notes?: string }) =>
-      post(`/orders/${id}/fulfill`, data || {}),
-    refund: (id: string, data: { amount: number; reason?: string; partial?: boolean; restockItems?: boolean }) =>
-      post<{ success: boolean; data: { order: import("./types").Order; refundAmount: number; isPartial: boolean; message: string } }>(`/orders/${id}/refund`, data),
-    addTimeline: (id: string, action: string, details?: string) =>
-      post(`/orders/${id}/timeline`, { action, details }),
+    get: (id: string) => get<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}`),
+    updateStatus: (id: string, status: string, notes?: string) =>
+      patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/status`, { status, notes }),
+    fulfill: (id: string, data: { trackingNumber?: string; carrier?: string; notes?: string }) =>
+      post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/fulfill`, data),
+    refund: (id: string, data: { amount?: number; reason?: string }) =>
+      post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/refund`, data),
+    addTimeline: (id: string, data: { action: string; details?: string }) =>
+      post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/timeline`, data),
     updateTags: (id: string, tags: string[]) =>
-      patch(`/orders/${id}/tags`, { tags }),
+      patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/tags`, { tags }),
+    bulkUpdateStatus: (ids: string[], status: string) =>
+      patch<{ success: boolean }>("/orders/bulk-status", { ids, status }),
+    syncStripe: () => post("/orders/sync-stripe"),
     getClaimChat: (orderId: string) =>
-      get<{ success: boolean; data: { claimSession: import("./types").ClaimSession } }>(`/orders/${orderId}/claim-chat`),
-    bulkUpdateStatus: (orderIds: string[], status: string) =>
-      patch("/orders/bulk-status", { orderIds, status }),
-    syncStripe: () =>
-      post<{ success: boolean; message: string; data: { checked: number; fixed: number; alreadyFailed: number; stillPending: number; fixedOrders: string[] } }>("/orders/sync-stripe"),
+      get<{ success: boolean; data: any }>(`/orders/${orderId}/claim-chat`),
+  },
+
+  products: {
+    list: (params?: Record<string, string>) => {
+      const q = new URLSearchParams(params || {}).toString();
+      return get<{ success: boolean; data: import("./types").Product[]; total: number; pages: number }>(`/products${q ? `?${q}` : ""}`);
+    },
+    get: (id: string) => get<{ success: boolean; data: import("./types").Product }>(`/products/${id}`),
+    create: (form: FormData) => postForm<{ success: boolean; data: import("./types").Product }>("/products", form),
+    update: (id: string, form: FormData) => patchForm<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, form),
+    partialUpdate: (id: string, data: Partial<import("./types").Product>) =>
+      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, data),
+    delete: (id: string) => del(`/products/${id}`),
+    toggleActive: (id: string) => patch(`/products/${id}/toggle-active`),
+    bulkCreate: (products: any[]) => post<{ success: boolean; data: { total: number; errors: { name: string; error: string }[] } }>("/products/bulk", { products }),
   },
 
   games: {
-    list: (active?: boolean) => get<{ success: boolean; data: { games: import("./types").Game[] } }>(`/games${active !== undefined ? `?active=${active}` : ""}`),
-    get: (slug: string) => get<{ success: boolean; data: { game: import("./types").Game; categories: import("./types").Category[]; productCount: number } }>(`/games/${slug}`),
+    list: () => get<{ success: boolean; data: { games: import("./types").Game[] } }>("/games"),
+    get: (slug: string) => get<{ success: boolean; data: { game: import("./types").Game } }>(`/games/${slug}`),
     create: (form: FormData) => postForm<{ success: boolean; data: { game: import("./types").Game } }>("/games", form),
     update: (slug: string, form: FormData) => patchForm<{ success: boolean; data: { game: import("./types").Game } }>(`/games/${slug}`, form),
     delete: (slug: string) => del(`/games/${slug}`),
   },
 
   categories: {
-    all: (game?: string) => get<{ success: boolean; data: import("./types").Category[] }>(`/categories${game ? `?game=${game}` : ""}`),
-    byGame: (game: string) => get<{ success: boolean; data: import("./types").Category[] }>(`/categories/game/${game}`),
-    create: (data: Partial<import("./types").Category>) => post<{ success: boolean; data: import("./types").Category }>("/categories", data),
-    update: (id: string, data: Partial<import("./types").Category>) => patch<{ success: boolean; data: import("./types").Category }>(`/categories/${id}`, data),
+    all: () => get<{ success: boolean; data: import("./types").Category[] }>("/categories"),
+    byGame: (game: string) => get<{ success: boolean; data: { categories: import("./types").Category[] } }>(`/categories/game/${game}`),
+    create: (data: { name: string; game: string; description?: string; sortOrder?: number }) =>
+      post<{ success: boolean; data: { category: import("./types").Category } }>("/categories", data),
+    update: (id: string, data: Partial<import("./types").Category>) =>
+      patch<{ success: boolean; data: { category: import("./types").Category } }>(`/categories/${id}`, data),
     delete: (id: string) => del(`/categories/${id}`),
-    addSubcategory: (id: string, data: { name: string; slug?: string }) =>
-      post<{ success: boolean; data: import("./types").Category }>(`/categories/${id}/subcategories`, data),
+    addSubcategory: (id: string, data: { name: string; sortOrder?: number }) =>
+      post<{ success: boolean; data: { category: import("./types").Category } }>(`/categories/${id}/subcategories`, data),
     removeSubcategory: (id: string, subId: string) =>
-      del<{ success: boolean; data: import("./types").Category }>(`/categories/${id}/subcategories/${subId}`),
-  },
-
-  products: {
-    list: (params?: Record<string, string>) => {
-      const q = new URLSearchParams(params || {}).toString();
-      return get<{ success: boolean; data: import("./types").Product[]; total: number }>(`/products${q ? `?${q}` : ""}`);
-    },
-    get: (id: string) => get<{ success: boolean; data: import("./types").Product }>(`/products/${id}`),
-    create: (form: FormData) => postForm<{ success: boolean; data: import("./types").Product }>("/products", form),
-    update: (id: string, form: FormData) => patchForm<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, form),
-    partialUpdate: (id: string, data: Record<string, unknown>) =>
-      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, data),
-    toggleActive: (id: string) =>
-      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}/toggle-active`),
-    bulkCreate: (products: unknown[]) =>
-      post<{ success: boolean; data: { created: import("./types").Product[]; errors: unknown[]; total: number }; message: string }>("/products/bulk", { products }),
-    delete: (id: string) => del(`/products/${id}`),
+      del(`/categories/${id}/subcategories/${subId}`),
   },
 
   siteContent: {
-    all: () => get<{ success: boolean; data: { content: Record<string, import("./types").SiteContentItem[]>; flat: import("./types").SiteContentItem[] } }>("/site-content"),
-    section: (s: string) => get<{ success: boolean; data: { items: import("./types").SiteContentItem[] } }>(`/site-content/section/${s}`),
-    update: (key: string, value: unknown) => patch<{ success: boolean; data: { item: import("./types").SiteContentItem } }>(`/site-content/${encodeURIComponent(key)}`, { value }),
-    bulkUpdate: (updates: { key: string; value: unknown }[]) => post("/site-content/bulk-update", { updates }),
-    reset: (key: string) => post(`/site-content/${encodeURIComponent(key)}/reset`),
+    getAll: () => get<{ success: boolean; data: import("./types").SiteContentItem[] }>("/site-content"),
+    getSection: (section: string) => get<{ success: boolean; data: import("./types").SiteContentItem[] }>(`/site-content/section/${section}`),
+    update: (key: string, value: unknown) =>
+      patch<{ success: boolean; data: { item: import("./types").SiteContentItem } }>(`/site-content/${key}`, { value }),
+    bulkUpdate: (updates: { key: string; value: unknown }[]) =>
+      post<{ success: boolean }>("/site-content/bulk-update", { updates }),
+    reset: (key: string) =>
+      post<{ success: boolean; data: { item: import("./types").SiteContentItem } }>(`/site-content/${key}/reset`),
   },
 
   proof: {
@@ -201,85 +207,42 @@ export const adminApi = {
       return get<{ success: boolean; data: { proofs: import("./types").ProofOfDelivery[]; total: number; unviewedCount: number } }>(`/proof${q ? `?${q}` : ""}`);
     },
     get: (id: string) => get<{ success: boolean; data: { proof: import("./types").ProofOfDelivery } }>(`/proof/${id}`),
-    submit: (form: FormData) => postForm<{ success: boolean; data: { proof: import("./types").ProofOfDelivery } }>("/proof/submit", form),
-    addNotes: (id: string, notes: string) => patch(`/proof/${id}/notes`, { notes }),
+    addNotes: (id: string, notes: string) =>
+      patch<{ success: boolean; data: { proof: import("./types").ProofOfDelivery } }>(`/proof/${id}/notes`, { notes }),
+    submit: (form: FormData) =>
+      postForm<{ success: boolean; data: { proof: import("./types").ProofOfDelivery } }>("/proof/submit", form),
   },
 
   agentStats: {
-    all: (params?: Record<string, string>) => {
-      const q = new URLSearchParams(params || {}).toString();
-      return get<{ success: boolean; data: { agents: { member: import("./types").TeamMember; profile: import("./types").AdminProfile; stats: import("./types").AgentStatsSummary }[] } }>(`/agent-stats${q ? `?${q}` : ""}`);
-    },
-    me: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary; recentSessions: import("./types").ClaimSession[]; completionRate: number } }>("/agent-stats/me"),
-    detail: (id: string) => get<{ success: boolean; data: { member: import("./types").TeamMember; profile: import("./types").AdminProfile; stats: import("./types").AgentStatsSummary; recentSessions: import("./types").ClaimSession[] } }>(`/agent-stats/${id}`),
-  },
-
-  upload: {
-    single: (form: FormData, params?: Record<string, string>) => {
-      const q = new URLSearchParams(params || {}).toString();
-      return postForm<{ success: boolean; data: { url: string; publicId: string } }>(`/upload/single${q ? `?${q}` : ""}`, form);
-    },
-    multiple: (form: FormData) => postForm<{ success: boolean; data: { files: { url: string; publicId: string }[] } }>("/upload/multiple", form),
-    delete: (publicId: string) => del("/upload", { publicId }),
+    getAll: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary[] } }>("/agent-stats"),
+    getMe: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary } }>("/agent-stats/me"),
+    getDetail: (id: string) => get<{ success: boolean; data: any }>(`/agent-stats/${id}`),
   },
 
   promos: {
-    list: () => get<{ success: boolean; data: unknown[] }>("/promos"),
-    create: (data: unknown) => post("/promos", data),
-    update: (id: string, data: unknown) => patch(`/promos/${id}`, data),
+    list: () => get<{ success: boolean; data: { promos: any[] } }>("/promos"),
+    create: (data: any) => post<{ success: boolean; data: { promo: any } }>("/promos", data),
+    update: (id: string, data: any) => patch<{ success: boolean; data: { promo: any } }>(`/promos/${id}`, data),
     delete: (id: string) => del(`/promos/${id}`),
   },
 
   settings: {
-    get: () => get<{ success: boolean; data: { salesTaxRate: number; taxLabel: string; taxEnabled: boolean } }>("/settings"),
-    update: (data: { salesTaxRate?: number; taxLabel?: string; taxEnabled?: boolean }) =>
-      patch<{ success: boolean; data: { salesTaxRate: number; taxLabel: string; taxEnabled: boolean } }>("/settings", data),
+    get: () => get<{ success: boolean; data: { settings: any } }>("/settings"),
+    update: (data: any) => patch<{ success: boolean; data: { settings: any } }>("/settings", data),
   },
 
-  claimSessions: {
-    active: () => get<{ success: boolean; data: { sessions: import("./types").ClaimSession[] } }>("/claims/active"),
-    getSession: (roomId: string) =>
-      get<{ success: boolean; data: { roomId: string; status: string; assignedAgent: import("./types").ClaimSession["assignedAgent"]; messages: import("./types").ClaimSession["messages"] } }>(`/claims/${roomId}`),
-    getFullSession: (roomId: string) =>
-      get<{ success: boolean; data: { session: import("./types").ClaimSession } }>(`/claims/${roomId}/full`),
-    getAgentQueue: () =>
-      get<{ success: boolean; data: { pending: import("./types").ClaimSession[]; mine: import("./types").ClaimSession[]; completed: import("./types").ClaimSession[]; closed: import("./types").ClaimSession[] } }>("/claims/queue"),
+  upload: {
+    single: (form: FormData) => postForm<{ success: boolean; data: { url: string } }>("/upload/single", form),
+    multiple: (form: FormData) => postForm<{ success: boolean; data: { urls: string[] } }>("/upload/multiple", form),
+    delete: (url: string) => del<{ success: boolean }>("/upload", { url }),
   },
 
   tutorials: {
-    list: () => get<{ success: boolean; data: { tutorials: import("./types").Tutorial[] } }>("/tutorials"),
-    create: (data: Partial<import("./types").Tutorial>) =>
-      post<{ success: boolean; data: { tutorial: import("./types").Tutorial } }>("/tutorials", data),
-    update: (id: string, data: Partial<import("./types").Tutorial>) =>
-      patch<{ success: boolean; data: { tutorial: import("./types").Tutorial } }>(`/tutorials/${id}`, data),
+    list: () => get<{ success: boolean; data: { tutorials: any[] } }>("/tutorials"),
+    create: (data: any) => post<{ success: boolean; data: { tutorial: any } }>("/tutorials", data),
+    update: (id: string, data: any) => patch<{ success: boolean; data: { tutorial: any } }>(`/tutorials/${id}`, data),
+    reorder: (ids: string[]) => patch<{ success: boolean }>("/tutorials/reorder", { ids }),
     delete: (id: string) => del(`/tutorials/${id}`),
-  },
-
-  collab: {
-    listCollaborators: () =>
-      cget<any>("/"),
-    getCollaborator: (id: string) =>
-      cget<any>(`/${id}`),
-    invite: (name: string, email: string) =>
-      cpost<any>("/invite", { name, email }),
-    delete: (id: string) =>
-      cdel<any>(`/${id}`),
-    getAvailableProducts: (id: string) =>
-      cget<any>(`/${id}/available-products`),
-    addProduct: (id: string, productId: string, cut: number) =>
-      cpost<any>(`/${id}/products`, { productId, cut }),
-    updateProduct: (id: string, cpId: string, cut: number) =>
-      cpatch<any>(`/${id}/products/${cpId}`, { cut }),
-    removeProduct: (id: string, cpId: string) =>
-      cdel<any>(`/${id}/products/${cpId}`),
-    getCollaboratorPayouts: (id: string) =>
-      cget<any>(`/${id}/payouts`),
-    getPayoutDetail: (id: string, payoutId: string) =>
-      cget<any>(`/${id}/payouts/${payoutId}`),
-    markPayoutPaid: (id: string) =>
-      cpost<any>(`/${id}/payouts/mark-paid`, {}),
-    listAllPayouts: () =>
-      cget<any>("/payouts"),
   },
 
   customers: {
@@ -300,9 +263,13 @@ export const adminApi = {
       get<{ success: boolean; data: { stocker: import("./types").Stocker; requests: import("./types").StockRequest[]; stats: Record<string, number> } }>(`/stock/stockers/${id}`),
     getStockerSales: (id: string) =>
       get<{ success: boolean; data: { stocker: { _id: string; name: string; email: string }; deliveries: any[]; total: number; productSummary: any[] } }>(`/stock/stockers/${id}/sales`),
+    getStockerPayouts: (id: string) =>
+      get<{ success: boolean; data: { stocker: import("./types").Stocker; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; unpaidDeliveryCount: number } }>(`/stock/stockers/${id}/payouts`),
+    markStockerPaid: (id: string, data?: { notes?: string }) =>
+      post<{ success: boolean; data: { payout: import("./types").StockerPayout } }>(`/stock/stockers/${id}/payouts/mark-paid`, data || {}),
     inviteStocker: (data: { email: string; name?: string; commissionRate?: number; games?: string[] }) =>
       post<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/stock/stockers/invite", data),
-    updateStocker: (id: string, data: { name?: string; status?: string; commissionRate?: number; games?: string[] }) =>
+    updateStocker: (id: string, data: { name?: string; status?: string; commissionRate?: number; games?: string[]; cryptoAddress?: string; cryptoNetwork?: string }) =>
       patch<{ success: boolean; data: { stocker: import("./types").Stocker } }>(`/stock/stockers/${id}`, data),
     deleteStocker: (id: string) =>
       del(`/stock/stockers/${id}`),
@@ -332,7 +299,7 @@ export const adminApi = {
       stockerReq<{ success: boolean; token: string; data: { user: import("./types").AdminUser; profile: import("./types").AdminProfile } }>("POST", `/auth/invite/${token}/verify`, body),
     me: () => sget<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/auth/me"),
     getProducts: (game?: string) =>
-      sget<{ success: boolean; data: { products: import("./types").Product[] } }>(`/products${game ? `?game=${game}` : ""}`),
+      sget<{ success: boolean; data: { products: (import("./types").Product & { pendingClaims?: number; onHand?: number; availableForSale?: number })[] } }>(`/products${game ? `?game=${game}` : ""}`),
     getMyRequests: () =>
       sget<{ success: boolean; data: { requests: import("./types").StockRequest[] } }>("/requests"),
     submitRequest: (data: { game: string; items: { productId: string; quantity: number }[] }) =>
@@ -341,9 +308,45 @@ export const adminApi = {
       sget<{ success: boolean; data: { stats: Record<string, number>; recentRequests: import("./types").StockRequest[]; productBreakdown: { productName: string; quantityStocked: number; totalValue: number; game?: string; imageUrl?: string }[] } }>("/stats"),
     getSoldDeliveries: () =>
       sget<{ success: boolean; data: { deliveries: { roomId: string; robloxUsername: string; game?: string; orderRef?: string; agentName: string; deliveredAt: string; items: { name: string; quantity: number; productName?: string; imageUrl?: string; game?: string }[] }[]; total: number } }>("/sold-deliveries"),
+    getMyPayouts: () =>
+      sget<{ success: boolean; data: { stocker: any; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; totalPaid: number } }>("/payouts"),
+  },
+
+  collab: {
+    listCollaborators: () =>
+      cget<any>("/collaborators"),
+    getCollaborator: (id: string) =>
+      cget<any>(`/collaborators/${id}`),
+    inviteCollaborator: (data: any) =>
+      cpost<any>("/collaborators/invite", data),
+    updateCollaborator: (id: string, data: any) =>
+      cpatch<any>(`/collaborators/${id}`, data),
+    deleteCollaborator: (id: string) =>
+      cdel(`/collaborators/${id}`),
+    getCollaboratorSales: (id: string) =>
+      cget<any>(`/${id}/sales`),
+    getCollaboratorPayouts: (id: string) =>
+      cget<any>(`/${id}/payouts`),
+    markPaid: (id: string) =>
+      cpost<any>(`/${id}/payouts/mark-paid`, {}),
+    listAllPayouts: () =>
+      cget<any>("/payouts"),
   },
 };
 
 function stockerReq<T>(method: string, path: string, body?: unknown, isFormData = false): Promise<T> {
-  return req<T>(method, path, body, isFormData, STOCKER_BASE);
+  const token = getStockerToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (!isFormData && body) headers["Content-Type"] = "application/json";
+
+  return fetch(`${STOCKER_BASE}${path}`, {
+    method,
+    headers,
+    body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
+  }).then(async res => {
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Request failed");
+    return data;
+  });
 }
