@@ -23,7 +23,21 @@ function makeId() {
 }
 
 function fmtTime(d: Date) {
-  return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(d));
+}
+
+function fmtSlotCountdown(slotHhmm: string) {
+  const now = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const [h, m] = slotHhmm.split(":").map(Number);
+  const target = new Date(now);
+  target.setUTCHours(h, m, 0, 0);
+  if (target <= now) target.setUTCDate(target.getUTCDate() + 1);
+  const diff = Math.max(0, Math.floor((target.getTime() - now.getTime()) / 1000));
+  const hrs = Math.floor(diff / 3600);
+  const mins = Math.floor((diff % 3600) / 60);
+  const secs = diff % 60;
+  if (hrs > 0) return `${hrs}h ${String(mins).padStart(2, "0")}m`;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
 function Field({
@@ -117,6 +131,14 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
 
   const [robloxUser, setRobloxUser] = useState("");
   const [contactEmail, setContactEmail] = useState(orderEmail);
+  const [nextSlotAt, setNextSlotAt] = useState<string | null>(null);
+  const [, setSlotTick] = useState(0);
+
+  useEffect(() => {
+    if (!nextSlotAt) return;
+    const id = setInterval(() => setSlotTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [nextSlotAt]);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -251,6 +273,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         timestamp: new Date(m.timestamp),
       }));
       setMessages(seedMsgs);
+      setNextSlotAt(data.data.nextSlotAt || null);
       setStep("waiting");
     } catch (err) {
       setFormErrors({ submit: err instanceof Error ? err.message : "Something went wrong. Please try again." });
@@ -350,6 +373,14 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>Waiting for claim team…</span>
             </div>
             <p className="text-[10px]" style={{ color: "#4a3a6b" }}>Usually responds within 2–5 minutes</p>
+            {nextSlotAt && (
+              <div className="mt-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
+                style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
+                <Clock size={11} />
+                <span>Opens at {nextSlotAt} GMT+3</span>
+                <span className="font-mono opacity-70">({fmtSlotCountdown(nextSlotAt)})</span>
+              </div>
+            )}
           </div>
         </div>
       );
