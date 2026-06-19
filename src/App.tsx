@@ -43,6 +43,7 @@ import RoleView from "@/admin/pages/RoleView";
 import OpenChats from "@/admin/pages/OpenChats";
 
 import Analytics from "@/admin/pages/Analytics";
+import ClaimTime from "@/admin/pages/ClaimTime";
 import Customers from "@/admin/pages/Customers";
 import Tutorials from "@/admin/pages/Tutorials";
 import OrderDetail from "@/admin/pages/OrderDetail";
@@ -194,6 +195,11 @@ function AdminRouter() {
       <Route path="/admin/games">
         <AdminLayout>
           <Games />
+        </AdminLayout>
+      </Route>
+      <Route path="/admin/claim-time">
+        <AdminLayout>
+          <ClaimTime />
         </AdminLayout>
       </Route>
       <Route path="/admin/roles">
