@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Info } from "lucide-react";
+import { Send, User, Info, Lock } from "lucide-react";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import type { ClaimSession, ClaimMessage } from "../types";
@@ -49,7 +49,6 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   const joinedRef = useRef(false);
   const pendingMsgIds = useRef(new Set<string>());
 
-  // Reset messages when session changes (key-based remount handles this, but keep as safety net)
   useEffect(() => {
     setMessages(session.messages || []);
     setSessionStatus(session.status);
@@ -127,7 +126,8 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       onSessionClaimed?.(assignedSession);
     };
     const handleClaimed = () => setSessionStatus("claimed");
-    const handleEnded = () => setSessionStatus("ended");
+    const handleEnded  = () => setSessionStatus("ended");
+    const handleClosed = () => setSessionStatus("closed");
 
     socket.on("claim:new_message",         handleNewMsg);
     socket.on("claim:message_ack",         handleMsgAck);
@@ -136,6 +136,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     socket.on("queue:claim_auto_assigned", handleAutoAssigned);
     socket.on("claim:marked_claimed",      handleClaimed);
     socket.on("claim:ended",               handleEnded);
+    socket.on("claim:closed",              handleClosed);
 
     return () => {
       socket.off("claim:new_message",         handleNewMsg);
@@ -145,6 +146,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       socket.off("queue:claim_auto_assigned", handleAutoAssigned);
       socket.off("claim:marked_claimed",      handleClaimed);
       socket.off("claim:ended",               handleEnded);
+      socket.off("claim:closed",              handleClosed);
     };
   }, [socket, session.roomId, addMessage, onSessionClaimed]);
 
@@ -180,19 +182,21 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
   };
 
-  const isEnded = sessionStatus === "claimed" || sessionStatus === "ended";
+  const isReadOnly = sessionStatus === "claimed" || sessionStatus === "ended" || sessionStatus === "closed";
 
   const statusLabel: Record<string, string> = {
     pending: "Waiting",
-    active: "In Progress",
+    active:  "In Progress",
     claimed: "Delivered",
-    ended: "Ended",
+    ended:   "Ended",
+    closed:  "Closed",
   };
   const statusColor: Record<string, string> = {
     pending: "bg-yellow-400/10 text-yellow-400",
     active:  "bg-emerald-400/10 text-emerald-400",
     claimed: "bg-blue-400/10 text-blue-400",
     ended:   "bg-slate-400/10 text-slate-400",
+    closed:  "bg-purple-400/10 text-purple-400",
   };
 
   return (
@@ -224,6 +228,14 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
             </p>
           </div>
         )}
+
+        {sessionStatus === "closed" && (
+          <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs text-purple-300/70 bg-purple-500/5 border border-purple-500/10">
+            <Lock className="w-3 h-3 flex-shrink-0" />
+            This chat is closed — read-only view
+          </div>
+        )}
+
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => (
             <motion.div
@@ -233,7 +245,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
               transition={{ duration: 0.2 }}
               className={cn(
                 "flex",
-                msg.sender === "agent" ? "justify-end" :
+                msg.sender === "agent"  ? "justify-end" :
                 msg.sender === "system" ? "justify-center" :
                 "justify-start"
               )}
@@ -287,7 +299,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
       </div>
 
       {/* Input */}
-      {!isEnded ? (
+      {!isReadOnly ? (
         <div className="p-2.5 md:p-3 border-t border-white/5 flex-shrink-0">
           <div className="flex gap-2 items-end">
             <textarea
@@ -312,7 +324,11 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
         </div>
       ) : (
         <div className="p-3 border-t border-white/5 text-center flex-shrink-0">
-          <p className="text-slate-500 text-xs">This session has ended</p>
+          <p className="text-slate-500 text-xs flex items-center justify-center gap-1.5">
+            {sessionStatus === "closed"
+              ? <><Lock className="w-3 h-3 text-purple-400/50" /> Chat closed</>
+              : "This session has ended"}
+          </p>
         </div>
       )}
     </div>
