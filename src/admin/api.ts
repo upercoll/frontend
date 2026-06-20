@@ -312,6 +312,17 @@ export const adminApi = {
       sget<{ success: boolean; data: { stocker: any; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; totalPaid: number } }>("/payouts"),
   },
 
+  claimSessions: {
+    getAgentQueue: () =>
+      get<{ success: boolean; data: { pending: any[]; mine: any[]; completed: any[]; closed: any[] } }>("/claims/queue"),
+    active: () =>
+      get<{ success: boolean; data: { sessions: any[] } }>("/claims/active"),
+    getSession: (roomId: string) =>
+      get<{ success: boolean; data: { session: any; messages: any[] } }>(`/claims/${roomId}`),
+    getFullSession: (roomId: string) =>
+      get<{ success: boolean; data: { session: any } }>(`/claims/${roomId}/full`),
+  },
+
   collab: {
     listCollaborators: () =>
       cget<any>("/collaborators"),
