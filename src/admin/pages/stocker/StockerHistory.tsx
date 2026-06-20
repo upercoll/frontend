@@ -140,42 +140,55 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
               <table className="w-full">
                 <thead>
                   <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
-                    {["Product", "Game", "Qty", "Unit Price", "Total"].map(h => (
-                      <th key={h} className="text-left px-4 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide last:text-right">{h}</th>
+                    {["Product", "Qty", "Store Price", "Your Price", "Diff", "Total"].map(h => (
+                      <th key={h} className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide last:text-right">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {req.items.map((item, i) => (
-                    <tr key={i} style={{ borderBottom: i < req.items.length - 1 ? "1px solid #F3F4F6" : "none" }}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          {item.imageUrl ? (
-                            <img src={item.imageUrl} alt={item.productName}
-                              className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
-                          ) : (
-                            <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
-                              style={{ background: (item as any).gradient ? `linear-gradient(135deg,${(item as any).gradient.from},${(item as any).gradient.to})` : "#E9EBF5" }}>
-                              <Package className="w-4 h-4 text-white/70" />
+                  {req.items.map((item, i) => {
+                    const storePrice = item.storePrice ?? item.salePrice;
+                    const hasCustom = item.customPrice != null && Math.abs(item.customPrice - storePrice) > 0.001;
+                    const diff = hasCustom ? (item.customPrice! - storePrice) : 0;
+                    return (
+                      <tr key={i} style={{ borderBottom: i < req.items.length - 1 ? "1px solid #F3F4F6" : "none" }}>
+                        <td className="px-3 py-3">
+                          <div className="flex items-center gap-2.5">
+                            {item.imageUrl ? (
+                              <img src={item.imageUrl} alt={item.productName} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center"
+                                style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient.from},${item.gradient.to})` : "#E9EBF5" }}>
+                                <Package className="w-4 h-4 text-white/70" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{item.productName}</p>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                                {item.game || req.game}
+                              </span>
                             </div>
-                          )}
-                          <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{item.productName}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-0.5 rounded-md" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
-                          {(item as any).game || req.game}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold" style={{ color: "#1e1b4b" }}>×{item.quantity}</td>
-                      <td className="px-4 py-3 text-sm text-slate-500">
-                        ${item.salePrice != null ? Number(item.salePrice).toFixed(2) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-emerald-600 text-right">
-                        ${item.totalSaleValue.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: "#1e1b4b" }}>×{item.quantity}</td>
+                        <td className="px-3 py-3 text-sm text-slate-400">${storePrice.toFixed(2)}</td>
+                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: hasCustom ? "#6366f1" : "#374151" }}>
+                          ${(hasCustom ? item.customPrice! : storePrice).toFixed(2)}
+                        </td>
+                        <td className="px-3 py-3">
+                          {hasCustom ? (
+                            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                              style={{ background: diff > 0 ? "#ECFDF5" : "#FEF2F2", color: diff > 0 ? "#059669" : "#DC2626" }}>
+                              {diff > 0 ? "+" : ""}{diff.toFixed(2)}
+                            </span>
+                          ) : <span className="text-xs text-slate-300">—</span>}
+                        </td>
+                        <td className="px-3 py-3 text-sm font-semibold text-emerald-600 text-right">
+                          ${item.totalSaleValue.toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
