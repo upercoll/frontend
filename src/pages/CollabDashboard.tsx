@@ -117,8 +117,8 @@ export default function CollabDashboard() {
             className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { label: "Assigned Products", value: products.length, icon: Package, color: "#a78bfa" },
-              { label: "Total Sales Logged", value: sales.length, icon: ShoppingBag, color: "#60a5fa" },
-              { label: "Total Payout", value: `$${unpaidEarnings.toFixed(2)}`, icon: DollarSign, color: "#4ade80", sub: "unpaid balance" },
+              { label: "Paid Orders", value: sales.length, icon: ShoppingBag, color: "#60a5fa", sub: "from paid customers only" },
+              { label: "Pending Commission", value: `$${unpaidEarnings.toFixed(2)}`, icon: DollarSign, color: "#4ade80", sub: "owed to you, not yet paid out" },
             ].map((stat, i) => (
               <div key={i} className="rounded-2xl p-5"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -189,6 +189,9 @@ export default function CollabDashboard() {
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <h2 className="font-bold text-white text-sm">Sales Log ({sales.length})</h2>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                All entries below are from paid customer orders. "Commission" shows whether your cut has been paid to you yet.
+              </p>
             </div>
             {sales.length === 0 ? (
               <div className="p-12 text-center">
@@ -205,7 +208,7 @@ export default function CollabDashboard() {
                       <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>Product</th>
                       <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>Qty</th>
                       <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>Sale Price</th>
-                      <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>Status</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>Commission</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -223,7 +226,7 @@ export default function CollabDashboard() {
                             style={s.isPaid
                               ? { background: "rgba(74,222,128,0.15)", color: "#4ade80" }
                               : { background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
-                            {s.isPaid ? "Paid Out" : "Pending"}
+                            {s.isPaid ? "Paid to You" : "Owed to You"}
                           </span>
                         </td>
                       </tr>
