@@ -208,6 +208,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
     socket.on("claim:marked_claimed", () => {
       setStep("claimed");
       setAgentTyping(false);
+      try { localStorage.removeItem("rbstars_last_order"); } catch {}
     });
 
     return () => {
