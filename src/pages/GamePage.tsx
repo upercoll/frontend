@@ -618,10 +618,33 @@ export default function GamePage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>(sharedReviews);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
+  const [inStockOnly, setInStockOnly] = useState(false);
 
   function handleSelect(id: string) {
     setSelectedProductId(prev => prev === id ? null : id);
   }
+
+  useEffect(() => {
+    fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.data?.reviews?.length >= 3) {
+          const mapped: Review[] = data.data.reviews.map((r: { name: string; rating: number; comment: string; submittedAt: string }) => ({
+            id: r.submittedAt + r.name,
+            name: r.name,
+            country: "Verified",
+            daysAgo: Math.floor((Date.now() - new Date(r.submittedAt).getTime()) / 86400000),
+            stars: r.rating,
+            text: r.comment,
+          }));
+          setReviews(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!slug) return;
@@ -688,9 +711,16 @@ export default function GamePage() {
     return products.filter(p => p.categoryId === activeTab);
   })();
 
-  const filteredProducts = searchQuery
-    ? tabProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : tabProducts;
+  const filteredProducts = useMemo(() => {
+    let list = searchQuery
+      ? tabProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      : tabProducts;
+    if (inStockOnly) list = list.filter(p => !p.outOfStock);
+    if (sortBy === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
+    else if (sortBy === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sortBy === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [tabProducts, searchQuery, inStockOnly, sortBy]);
 
   const isMainView = activeTab === "best-sellers";
   const gameGradient: [string, string] = [gameInfo?.gradient.from || "#4F46E5", gameInfo?.gradient.to || "#1E1B4B"];
@@ -749,14 +779,72 @@ export default function GamePage() {
               className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-[#6b5c8a]" />
           </div>
           <motion.button whileHover={{scale:1.08}} whileTap={{scale:0.92}}
+            onClick={() => setFilterOpen(v => !v)}
             className="relative overflow-hidden flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold flex-shrink-0"
-            style={{ background:"rgba(79,70,229,0.15)", border:"1.5px solid rgba(165,180,252,0.18)", color:"#A5B4FC" }}>
+            style={{
+              background: filterOpen || inStockOnly || sortBy !== "featured" ? "rgba(79,70,229,0.35)" : "rgba(79,70,229,0.15)",
+              border: `1.5px solid ${filterOpen || inStockOnly || sortBy !== "featured" ? "rgba(165,180,252,0.45)" : "rgba(165,180,252,0.18)"}`,
+              color: "#A5B4FC",
+            }}>
             <div className="rb-glare rb-glare-d3" style={{ opacity: 0.5 }} />
             <SlidersHorizontal size={13} className="relative z-10" />
-            <span className="relative z-10">Filter</span>
+            <span className="relative z-10">Filter{(inStockOnly || sortBy !== "featured") ? " •" : ""}</span>
           </motion.button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {filterOpen && (
+          <motion.div
+            key="filter-panel"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="relative px-4 overflow-hidden flex-shrink-0 z-10"
+            style={{ borderBottom: "1px solid rgba(165,180,252,0.1)" }}
+          >
+            <div className="py-3 flex flex-col gap-3">
+              <div>
+                <p className="text-[10px] font-semibold mb-2" style={{ color: "#64748B" }}>SORT BY</p>
+                <div className="flex flex-wrap gap-2">
+                  {([ ["featured","Featured"] , ["price-asc","Price ↑"] , ["price-desc","Price ↓"] , ["name","Name A-Z"] ] as const).map(([val, label]) => (
+                    <button key={val} onClick={() => setSortBy(val)}
+                      className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
+                      style={{
+                        background: sortBy === val ? "rgba(79,70,229,0.4)" : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${sortBy === val ? "rgba(165,180,252,0.5)" : "rgba(165,180,252,0.12)"}`,
+                        color: sortBy === val ? "#A5B4FC" : "#64748B",
+                      }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold" style={{ color: "#94A3B8" }}>In Stock Only</p>
+                <button onClick={() => setInStockOnly(v => !v)}
+                  className="relative w-10 h-5 rounded-full transition-all duration-200 flex-shrink-0"
+                  style={{ background: inStockOnly ? "#4F46E5" : "rgba(255,255,255,0.08)", border: "1.5px solid rgba(165,180,252,0.2)" }}>
+                  <motion.div
+                    animate={{ x: inStockOnly ? 20 : 2 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    className="absolute top-0.5 w-3.5 h-3.5 rounded-full"
+                    style={{ background: inStockOnly ? "white" : "#64748B" }}
+                  />
+                </button>
+              </div>
+              {(inStockOnly || sortBy !== "featured") && (
+                <button onClick={() => { setSortBy("featured"); setInStockOnly(false); }}
+                  className="text-[10px] font-semibold self-start px-2.5 py-1 rounded-full"
+                  style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {}
       <div className="relative px-4 pt-3 pb-2 flex-shrink-0 z-10">
@@ -850,7 +938,7 @@ export default function GamePage() {
                 </div>
 
                 <div className="mt-2">
-                  <TestimonialsSection reviews={sharedReviews} />
+                  <TestimonialsSection reviews={reviews} />
                 </div>
                 <FAQSection items={sharedFAQ} />
                 <SEOSection items={genericSEO} />
