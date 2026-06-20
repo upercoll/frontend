@@ -284,6 +284,8 @@ export interface StockRequestItem {
   imageUrl?: string;
   gradient?: { from: string; to: string };
   quantity: number;
+  storePrice?: number;
+  customPrice?: number;
   salePrice: number;
   totalSaleValue: number;
 }
