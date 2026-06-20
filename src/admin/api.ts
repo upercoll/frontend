@@ -325,17 +325,27 @@ export const adminApi = {
 
   collab: {
     listCollaborators: () =>
-      cget<any>("/collaborators"),
+      cget<any>(""),
     getCollaborator: (id: string) =>
-      cget<any>(`/collaborators/${id}`),
-    inviteCollaborator: (data: any) =>
-      cpost<any>("/collaborators/invite", data),
+      cget<any>(`/${id}`),
+    invite: (name: string, email: string) =>
+      cpost<any>("/invite", { name, email }),
+    inviteCollaborator: (name: string, email: string) =>
+      cpost<any>("/invite", { name, email }),
     updateCollaborator: (id: string, data: any) =>
-      cpatch<any>(`/collaborators/${id}`, data),
+      cpatch<any>(`/${id}`, data),
+    delete: (id: string) =>
+      cdel(`/${id}`),
     deleteCollaborator: (id: string) =>
-      cdel(`/collaborators/${id}`),
-    getCollaboratorSales: (id: string) =>
-      cget<any>(`/${id}/sales`),
+      cdel(`/${id}`),
+    getAvailableProducts: (id: string) =>
+      cget<any>(`/${id}/available-products`),
+    addProduct: (id: string, productId: string, cut: number) =>
+      cpost<any>(`/${id}/products`, { productId, cut }),
+    updateProduct: (id: string, cpId: string, cut: number) =>
+      cpatch<any>(`/${id}/products/${cpId}`, { cut }),
+    removeProduct: (id: string, cpId: string) =>
+      cdel(`/${id}/products/${cpId}`),
     getCollaboratorPayouts: (id: string) =>
       cget<any>(`/${id}/payouts`),
     markPaid: (id: string) =>
