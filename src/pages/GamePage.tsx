@@ -622,10 +622,19 @@ export default function GamePage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [pendingSortBy, setPendingSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
+  const [pendingInStockOnly, setPendingInStockOnly] = useState(false);
 
   function handleSelect(id: string) {
     setSelectedProductId(prev => prev === id ? null : id);
   }
+
+  useEffect(() => {
+    if (filterOpen) {
+      setPendingSortBy(sortBy);
+      setPendingInStockOnly(inStockOnly);
+    }
+  }, [filterOpen]);
 
   useEffect(() => {
     fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
@@ -809,12 +818,12 @@ export default function GamePage() {
                 <p className="text-[10px] font-semibold mb-2" style={{ color: "#64748B" }}>SORT BY</p>
                 <div className="flex flex-wrap gap-2">
                   {([ ["featured","Featured"] , ["price-asc","Price ↑"] , ["price-desc","Price ↓"] , ["name","Name A-Z"] ] as const).map(([val, label]) => (
-                    <button key={val} onClick={() => setSortBy(val)}
+                    <button key={val} onClick={() => setPendingSortBy(val)}
                       className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
                       style={{
-                        background: sortBy === val ? "rgba(79,70,229,0.4)" : "rgba(255,255,255,0.05)",
-                        border: `1px solid ${sortBy === val ? "rgba(165,180,252,0.5)" : "rgba(165,180,252,0.12)"}`,
-                        color: sortBy === val ? "#A5B4FC" : "#64748B",
+                        background: pendingSortBy === val ? "rgba(79,70,229,0.4)" : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${pendingSortBy === val ? "rgba(165,180,252,0.5)" : "rgba(165,180,252,0.12)"}`,
+                        color: pendingSortBy === val ? "#A5B4FC" : "#64748B",
                       }}>
                       {label}
                     </button>
@@ -823,24 +832,37 @@ export default function GamePage() {
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold" style={{ color: "#94A3B8" }}>In Stock Only</p>
-                <button onClick={() => setInStockOnly(v => !v)}
+                <button onClick={() => setPendingInStockOnly(v => !v)}
                   className="relative w-10 h-5 rounded-full transition-all duration-200 flex-shrink-0"
-                  style={{ background: inStockOnly ? "#4F46E5" : "rgba(255,255,255,0.08)", border: "1.5px solid rgba(165,180,252,0.2)" }}>
+                  style={{ background: pendingInStockOnly ? "#4F46E5" : "rgba(255,255,255,0.08)", border: "1.5px solid rgba(165,180,252,0.2)" }}>
                   <motion.div
-                    animate={{ x: inStockOnly ? 20 : 2 }}
+                    animate={{ x: pendingInStockOnly ? 20 : 2 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     className="absolute top-0.5 w-3.5 h-3.5 rounded-full"
-                    style={{ background: inStockOnly ? "white" : "#64748B" }}
+                    style={{ background: pendingInStockOnly ? "white" : "#64748B" }}
                   />
                 </button>
               </div>
-              {(inStockOnly || sortBy !== "featured") && (
-                <button onClick={() => { setSortBy("featured"); setInStockOnly(false); }}
-                  className="text-[10px] font-semibold self-start px-2.5 py-1 rounded-full"
-                  style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
-                  Clear Filters
-                </button>
-              )}
+              <div className="flex items-center gap-2 pt-1">
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setSortBy(pendingSortBy);
+                    setInStockOnly(pendingInStockOnly);
+                    setFilterOpen(false);
+                  }}
+                  className="flex-1 py-2 rounded-xl text-xs font-bold"
+                  style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", color: "white" }}>
+                  Apply Filters
+                </motion.button>
+                {(pendingInStockOnly || pendingSortBy !== "featured") && (
+                  <button onClick={() => { setPendingSortBy("featured"); setPendingInStockOnly(false); }}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold"
+                    style={{ background: "rgba(239,68,68,0.1)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
