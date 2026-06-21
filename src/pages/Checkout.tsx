@@ -780,7 +780,14 @@ export default function Checkout() {
           game: currentItems[0]?.game || null,
           items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
         };
-        try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
+        try {
+          localStorage.setItem("rbstars_last_order", JSON.stringify(orderData));
+          const _raw = localStorage.getItem("rbstars_orders");
+          const _arr: typeof orderData[] = _raw ? JSON.parse(_raw) : [];
+          const _filtered = Array.isArray(_arr) ? _arr.filter(o => o.orderRef !== orderData.orderRef) : [];
+          _filtered.push(orderData);
+          localStorage.setItem("rbstars_orders", JSON.stringify(_filtered));
+        } catch {}
 
         const { error } = await (stripe as any).confirmPayment({
           elements,
@@ -934,7 +941,14 @@ export default function Checkout() {
         game: items[0]?.game || null,
         items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
       };
-      try { localStorage.setItem("rbstars_last_order", JSON.stringify(orderData)); } catch {}
+      try {
+        localStorage.setItem("rbstars_last_order", JSON.stringify(orderData));
+        const _raw = localStorage.getItem("rbstars_orders");
+        const _arr: typeof orderData[] = _raw ? JSON.parse(_raw) : [];
+        const _filtered = Array.isArray(_arr) ? _arr.filter(o => o.orderRef !== orderData.orderRef) : [];
+        _filtered.push(orderData);
+        localStorage.setItem("rbstars_orders", JSON.stringify(_filtered));
+      } catch {}
       clearCart();
       navigate("/order-success");
     } catch (err) {
