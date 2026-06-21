@@ -375,32 +375,28 @@ export default function SupportChat() {
       typingTimerRef.current = setTimeout(() => setAgentTyping(false), 3000);
     });
 
-    socket.on("claim:ended", ({ message }: { message: string }) => {
-      setMessages(prev => [...prev, {
-        id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
-      }]);
-      setClaimStep("ended");
-      setChatOutcome("ended");
-      const stored = loadClaimSession();
-      if (stored) saveClaimSession({ ...stored, status: "ended" });
-      setTimeout(() => setClaimStep("review"), 1500);
-    });
-
-    socket.on("claim:closed", () => {
+    socket.on("claim:ended", () => {
       const ordRef = sessionOrderRef.current;
       clearClaimSession();
       if (ordRef) removeOrderFromStorage(ordRef);
       sessionOrderRef.current = null;
-      setOpen(false);
-      setMode(null);
-      setClaimStep("select");
-      setRoomId(null);
+      // keep roomId so review submission can POST to /api/claims/:roomId/feedback
       setMessages([]);
       setAgentName(null);
       setAgentTyping(false);
       setSelectedItem(null);
       setSelectedOrder(null);
       setOrders([]);
+      setChatOutcome("ended");
+      setClaimStep("review");
+      socket.disconnect();
+    });
+
+    socket.on("claim:closed", () => {
+      // Non-disruptive: just clear the persisted session.
+      // Don't reset UI — customer may be mid-review or mid-chat and we don't
+      // want a hard reset to stomp on that. The socket disconnect is sufficient.
+      clearClaimSession();
       socket.disconnect();
     });
 
@@ -409,16 +405,15 @@ export default function SupportChat() {
       clearClaimSession();
       if (ordRef) removeOrderFromStorage(ordRef);
       sessionOrderRef.current = null;
-      setOpen(false);
-      setMode(null);
-      setClaimStep("select");
-      setRoomId(null);
+      // keep roomId so review submission can POST to /api/claims/:roomId/feedback
       setMessages([]);
       setAgentName(null);
       setAgentTyping(false);
       setSelectedItem(null);
       setSelectedOrder(null);
       setOrders([]);
+      setChatOutcome("claimed");
+      setClaimStep("review");
       socket.disconnect();
     });
 
@@ -508,13 +503,15 @@ export default function SupportChat() {
       });
 
       if (sessionStatus === "claimed") {
+        clearClaimSession();
+        setRoomId(rid);
         setChatOutcome("claimed");
-        setClaimStep("claimed");
-        setTimeout(() => setClaimStep("review"), 1500);
-      } else if (sessionStatus === "ended") {
+        setClaimStep("review");
+      } else if (sessionStatus === "ended" || sessionStatus === "closed") {
+        clearClaimSession();
+        setRoomId(rid);
         setChatOutcome("ended");
-        setClaimStep("ended");
-        setTimeout(() => setClaimStep("review"), 1500);
+        setClaimStep("review");
       } else if (sessionStatus === "active") {
         setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
         setRoomId(rid);
@@ -570,13 +567,15 @@ export default function SupportChat() {
       setNextSlotAt(data.data.nextSlotAt || null);
 
       if (sessionStatus === "claimed") {
+        clearClaimSession();
+        setRoomId(rid);
         setChatOutcome("claimed");
-        setClaimStep("claimed");
-        setTimeout(() => setClaimStep("review"), 1500);
-      } else if (sessionStatus === "ended") {
+        setClaimStep("review");
+      } else if (sessionStatus === "ended" || sessionStatus === "closed") {
+        clearClaimSession();
+        setRoomId(rid);
         setChatOutcome("ended");
-        setClaimStep("ended");
-        setTimeout(() => setClaimStep("review"), 1500);
+        setClaimStep("review");
       } else if (sessionStatus === "active") {
         setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
         setRoomId(rid);
@@ -884,7 +883,7 @@ export default function SupportChat() {
     const storedSession = loadClaimSession();
     const orderDelivered =
       storedSession &&
-      storedSession.orderRef === lastOrder?.orderRef &&
+      storedSession.orderRef === (lastOrder?.orderRef ?? null) &&
       storedSession.status === "claimed";
 
     if (orderDelivered) {
