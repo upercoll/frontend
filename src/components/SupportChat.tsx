@@ -31,7 +31,7 @@ interface LastOrder {
 }
 
 type ChatMode = null | "general" | "claim";
-type ClaimStep = "select" | "form" | "waiting" | "active" | "ended" | "claimed" | "review";
+type ClaimStep = "order-select" | "select" | "form" | "waiting" | "active" | "ended" | "claimed" | "review";
 
 const FAQ = [
   {
@@ -124,6 +124,23 @@ function loadClaimSession(): StoredClaimSession | null {
 
 function clearClaimSession() {
   try { localStorage.removeItem(CLAIM_SESSION_KEY); } catch {}
+}
+
+function loadOrders(): LastOrder[] {
+  try {
+    const raw = localStorage.getItem("rbstars_orders");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+}
+
+function removeOrderFromStorage(orderRef: string) {
+  try {
+    const remaining = loadOrders().filter(o => o.orderRef !== orderRef);
+    if (remaining.length > 0) localStorage.setItem("rbstars_orders", JSON.stringify(remaining));
+    else localStorage.removeItem("rbstars_orders");
+  } catch {}
 }
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
@@ -263,7 +280,14 @@ export default function SupportChat() {
   const [nextSlotAt, setNextSlotAt] = useState<string | null>(null);
   const [, setSlotTick] = useState(0);
 
-  const [lastOrder] = useState<LastOrder | null>(() => loadLastOrder());
+  const [orders, setOrders] = useState<LastOrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<LastOrder | null>(null);
+  // Alias so existing code that references lastOrder keeps working
+  const lastOrder: LastOrder | null = selectedOrder;
+
+  // Tracks the orderRef of the current active claim session — captured at socket-setup
+  // time to avoid stale-closure issues inside the socket useEffect.
+  const sessionOrderRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!nextSlotAt) return;
@@ -293,10 +317,15 @@ export default function SupportChat() {
     function handleOpenClaim() {
       setOpen(true);
       setMode("claim");
+      const storedOrders = loadOrders();
+      setOrders(storedOrders);
       const stored = loadClaimSession();
       if (stored && (stored.status === "pending" || stored.status === "active")) {
         handleRejoinSession();
+      } else if (storedOrders.length > 1) {
+        setClaimStep("order-select");
       } else {
+        if (storedOrders.length === 1) setSelectedOrder(storedOrders[0]);
         setClaimStep("select");
       }
     }
@@ -357,26 +386,14 @@ export default function SupportChat() {
       setTimeout(() => setClaimStep("review"), 1500);
     });
 
-    socket.on("claim:closed", ({ message }: { message: string }) => {
-      setMessages(prev => [...prev, {
-        id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
-      }]);
-      setClaimStep("ended");
-      setChatOutcome("ended");
-      const stored = loadClaimSession();
-      if (stored) saveClaimSession({ ...stored, status: "ended" });
-      setTimeout(() => setClaimStep("review"), 1500);
+    socket.on("claim:closed", () => {
+      clearClaimSession();
+      closeAndReset(sessionOrderRef.current ?? undefined);
     });
 
-    socket.on("claim:marked_claimed", ({ message }: { message: string }) => {
-      setMessages(prev => [...prev, {
-        id: makeId(), sender: "system", text: message, senderName: "System", timestamp: new Date(),
-      }]);
-      setClaimStep("claimed");
-      setChatOutcome("claimed");
-      const stored = loadClaimSession();
-      if (stored) saveClaimSession({ ...stored, status: "claimed" });
-      setTimeout(() => setClaimStep("review"), 1500);
+    socket.on("claim:marked_claimed", () => {
+      clearClaimSession();
+      closeAndReset(sessionOrderRef.current ?? undefined);
     });
 
     return () => {
@@ -385,11 +402,14 @@ export default function SupportChat() {
     };
   }, [roomId]);
 
-  const closeAndReset = useCallback(() => {
+  const closeAndReset = useCallback((claimedOrderRef?: string) => {
+    if (claimedOrderRef) removeOrderFromStorage(claimedOrderRef);
     setOpen(false);
     setMode(null);
     setClaimStep("select");
     setSelectedItem(null);
+    setSelectedOrder(null);
+    setOrders([]);
     setRoomId(null);
     setMessages([]);
     setAgentName(null);
@@ -407,6 +427,7 @@ export default function SupportChat() {
     setReviewSubmitting(false);
     setReviewSubmitted(false);
     setChatOutcome(null);
+    sessionOrderRef.current = null;
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
@@ -422,6 +443,7 @@ export default function SupportChat() {
     setSubmitting(true);
 
     try {
+      sessionOrderRef.current = lastOrder?.orderRef || null;
       const res = await fetch(`${BACKEND}/api/claims`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -431,7 +453,7 @@ export default function SupportChat() {
           orderRef: lastOrder?.orderRef || null,
           itemName: (selectedItem?.id && selectedItem.id !== "general" && selectedItem.name !== "General Claim") ? selectedItem.name : null,
           items: lastOrder?.items || [],
-          game: gameSlug || null,
+          game: selectedOrder?.game || gameSlug || null,
         }),
       });
       const data = await res.json();
@@ -706,7 +728,17 @@ export default function SupportChat() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => { setMode("claim"); setClaimStep("select"); }}
+            onClick={() => {
+              setMode("claim");
+              const storedOrders = loadOrders();
+              setOrders(storedOrders);
+              if (storedOrders.length > 1) {
+                setClaimStep("order-select");
+              } else {
+                if (storedOrders.length === 1) setSelectedOrder(storedOrders[0]);
+                setClaimStep("select");
+              }
+            }}
             className="w-full rounded-2xl p-4 text-left flex items-center gap-3 transition-all relative overflow-hidden"
             style={{
               background: "linear-gradient(135deg,#fff1f2,#ffe4e6)",
@@ -731,7 +763,10 @@ export default function SupportChat() {
                 </span>
               </p>
               <p className="text-[11px] mt-0.5" style={{ color: "#9f1239" }}>
-                {lastOrder?.items?.length ? `${lastOrder.items.length} item${lastOrder.items.length !== 1 ? "s" : ""} ready to claim` : "Receive your purchased items"}
+                {(() => {
+                  const n = loadOrders().reduce((s, o) => s + (o.items?.length || 0), 0);
+                  return n > 0 ? `${n} item${n !== 1 ? "s" : ""} ready to claim` : "Receive your purchased items";
+                })()}
               </p>
             </div>
             <ChevronRight size={15} color="#f43f5e" />
@@ -940,6 +975,51 @@ export default function SupportChat() {
                 <Package size={11} color="#dc2626" />
                 <span className="text-[10px] font-extrabold" style={{ color: "#dc2626" }}>Claim</span>
               </div>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  function renderOrderSelect() {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-4 pb-2 text-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
+            style={{ background: "#fee2e2", border: "1px solid #fecaca" }}>
+            <Package size={18} color="#dc2626" />
+          </div>
+          <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>Which order to claim?</p>
+          <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>You have multiple orders — select one below</p>
+        </div>
+        <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 mt-1">
+          {orders.map(order => (
+            <motion.button
+              key={order.orderRef}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                setSelectedOrder(order);
+                setContactEmail(order.email || "");
+                setClaimStep("select");
+              }}
+              className="w-full text-left rounded-xl p-3 flex items-center gap-3"
+              style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+                <Package size={14} color="white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold mb-0.5" style={{ color: "#9ca3af" }}>
+                  Order #{order.orderRef}
+                </p>
+                <p className="text-[11px] font-extrabold truncate" style={{ color: "#1e1b4b" }}>
+                  {order.items?.map(i => `${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join(", ") || "Items"}
+                </p>
+              </div>
+              <ChevronRight size={14} color="#9ca3af" className="flex-shrink-0" />
             </motion.button>
           ))}
         </div>
@@ -1376,6 +1456,7 @@ export default function SupportChat() {
     if (mode === null) return renderModeSelect();
     if (mode === "general") return renderGeneralSupport();
     if (mode === "claim") {
+      if (claimStep === "order-select") return renderOrderSelect();
       if (claimStep === "select") return renderClaimSelect();
       if (claimStep === "form") return renderClaimForm();
       if (claimStep === "waiting") return renderWaiting();
