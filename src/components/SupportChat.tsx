@@ -387,13 +387,39 @@ export default function SupportChat() {
     });
 
     socket.on("claim:closed", () => {
+      const ordRef = sessionOrderRef.current;
       clearClaimSession();
-      closeAndReset(sessionOrderRef.current ?? undefined);
+      if (ordRef) removeOrderFromStorage(ordRef);
+      sessionOrderRef.current = null;
+      setOpen(false);
+      setMode(null);
+      setClaimStep("select");
+      setRoomId(null);
+      setMessages([]);
+      setAgentName(null);
+      setAgentTyping(false);
+      setSelectedItem(null);
+      setSelectedOrder(null);
+      setOrders([]);
+      socket.disconnect();
     });
 
     socket.on("claim:marked_claimed", () => {
+      const ordRef = sessionOrderRef.current;
       clearClaimSession();
-      closeAndReset(sessionOrderRef.current ?? undefined);
+      if (ordRef) removeOrderFromStorage(ordRef);
+      sessionOrderRef.current = null;
+      setOpen(false);
+      setMode(null);
+      setClaimStep("select");
+      setRoomId(null);
+      setMessages([]);
+      setAgentName(null);
+      setAgentTyping(false);
+      setSelectedItem(null);
+      setSelectedOrder(null);
+      setOrders([]);
+      socket.disconnect();
     });
 
     return () => {
@@ -888,8 +914,30 @@ export default function SupportChat() {
 
     const pendingSession =
       storedSession &&
-      storedSession.orderRef === lastOrder?.orderRef &&
+      storedSession.orderRef === (lastOrder?.orderRef ?? null) &&
       (storedSession.status === "pending" || storedSession.status === "active");
+
+    if (pendingSession) {
+      return (
+        <div className="flex flex-col h-full justify-center p-4 gap-4">
+          <div className="rounded-2xl p-4 text-center" style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}>
+            <MessageSquare size={28} color="#6366f1" className="mx-auto mb-2" />
+            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Chat In Progress</p>
+            <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
+              You already have an active claim session for this order.
+            </p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => handleRejoinSession()}
+            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+          >
+            <MessageSquare size={15} />Continue Chat
+          </motion.button>
+        </div>
+      );
+    }
 
     if (!lastOrder || !lastOrder.items?.length) {
       return (
@@ -911,28 +959,6 @@ export default function SupportChat() {
             style={{ background: "#ede9fe", border: "1.5px solid #c4b5fd", color: "#4f46e5" }}
           >
             Open General Claim Chat
-          </motion.button>
-        </div>
-      );
-    }
-
-    if (pendingSession) {
-      return (
-        <div className="flex flex-col h-full justify-center p-4 gap-4">
-          <div className="rounded-2xl p-4 text-center" style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}>
-            <MessageSquare size={28} color="#6366f1" className="mx-auto mb-2" />
-            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Chat In Progress</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
-              You already have an active claim session for this order.
-            </p>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => handleRejoinSession()}
-            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
-          >
-            <MessageSquare size={15} />Continue Chat
           </motion.button>
         </div>
       );
