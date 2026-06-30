@@ -32,7 +32,7 @@ export default function CollabPayouts() {
     if (!confirm(`Mark $${unpaidTotal.toFixed(2)} as paid to ${collab?.name}?`)) return;
     setMarking(true); setMarkError("");
     try {
-      await adminApi.collab.markPayoutPaid(id);
+      await adminApi.collab.markPaid(id);
       qc.invalidateQueries({ queryKey: ["collab-payouts", id] });
       qc.invalidateQueries({ queryKey: ["collab-view", id] });
       qc.invalidateQueries({ queryKey: ["collab-list"] });
