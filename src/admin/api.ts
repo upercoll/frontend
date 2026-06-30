@@ -163,6 +163,8 @@ export const adminApi = {
     update: (id: string, form: FormData) => patchForm<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, form),
     partialUpdate: (id: string, data: Partial<import("./types").Product>) =>
       patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}`, data),
+    updateStockFields: (id: string, data: { stock?: number; onHand?: number; outOfStock?: boolean }) =>
+      patch<{ success: boolean; data: import("./types").Product }>(`/products/${id}/stock-fields`, data),
     delete: (id: string) => del(`/products/${id}`),
     toggleActive: (id: string) => patch(`/products/${id}/toggle-active`),
     bulkCreate: (products: any[]) => post<{ success: boolean; data: { total: number; errors: { name: string; error: string }[] } }>("/products/bulk", { products }),
