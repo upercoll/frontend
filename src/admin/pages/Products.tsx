@@ -54,6 +54,8 @@ export default function Products() {
   const [bulkDropOpen, setBulkDropOpen] = useState(false);
   const [editingStock, setEditingStock] = useState<{ id: string; value: string } | null>(null);
   const [stockSaving, setStockSaving] = useState<string | null>(null);
+  const [editingOnHand, setEditingOnHand] = useState<{ id: string; value: string } | null>(null);
+  const [onHandSaving, setOnHandSaving] = useState<string | null>(null);
   const [bulkQueue, setBulkQueue] = useState<BulkRow[]>([]);
   const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "" });
   const [bulkSaving, setBulkSaving] = useState(false);
@@ -139,11 +141,24 @@ export default function Products() {
     if (isNaN(num)) { setEditingStock(null); return; }
     setStockSaving(id);
     try {
-      await adminApi.products.partialUpdate(id, { stock: num, outOfStock: num === 0 });
+      await adminApi.products.updateStockFields(id, { stock: num, outOfStock: num === 0 });
       qc.invalidateQueries({ queryKey: ["panel-products"] });
     } catch {}
     setEditingStock(null);
     setStockSaving(null);
+  };
+
+  const saveOnHand = async (id: string) => {
+    if (!editingOnHand || editingOnHand.id !== id) return;
+    const num = parseInt(editingOnHand.value);
+    if (isNaN(num)) { setEditingOnHand(null); return; }
+    setOnHandSaving(id);
+    try {
+      await adminApi.products.updateStockFields(id, { onHand: num });
+      qc.invalidateQueries({ queryKey: ["panel-products"] });
+    } catch {}
+    setEditingOnHand(null);
+    setOnHandSaving(null);
   };
 
   const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -362,12 +377,32 @@ export default function Products() {
                           {p.originalPrice ? <p className="text-xs text-slate-400 line-through">${p.originalPrice.toFixed(2)}</p> : null}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5">
-                        <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-red-500" : (p.onHand ?? -1) === -1 ? "text-slate-400" : ""}`}
-                          style={(p.onHand ?? -1) > 0 ? { color: "#1e1b4b" } : undefined}
-                          title="Physical quantity on hand">
-                          {(p.onHand ?? -1) === -1 ? "∞" : (p.onHand ?? 0)}
-                        </span>
+                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                        {editingOnHand?.id === p._id ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            value={editingOnHand.value}
+                            onChange={e => setEditingOnHand({ id: p._id, value: e.target.value })}
+                            onBlur={() => saveOnHand(p._id)}
+                            onKeyDown={e => { if (e.key === "Enter") saveOnHand(p._id); if (e.key === "Escape") setEditingOnHand(null); }}
+                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                          />
+                        ) : (
+                          <button onClick={() => setEditingOnHand({ id: p._id, value: String(p.onHand ?? -1) })}
+                            className="flex items-center gap-1 group text-left"
+                            title="Click to edit on hand quantity">
+                            {onHandSaving === p._id
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                              : null}
+                            <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-red-500" : (p.onHand ?? -1) === -1 ? "text-slate-400" : ""}`}
+                              style={(p.onHand ?? -1) > 0 ? { color: "#1e1b4b" } : undefined}>
+                              {(p.onHand ?? -1) === -1 ? "∞" : (p.onHand ?? 0)}
+                            </span>
+                            <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
                         {isEditingThisStock ? (
