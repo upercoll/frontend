@@ -337,6 +337,42 @@ export interface AgentStatsSummary {
   isOnline?: boolean;
 }
 
+export interface SocialSubmission {
+  _id: string;
+  collaborator: string | { _id: string; name: string; email: string };
+  platform: "youtube" | "tiktok";
+  url: string;
+  videoId?: string;
+  title?: string;
+  thumbnail?: string;
+  channelName?: string;
+  views: number;
+  likes: number;
+  status: "in_review" | "reviewed" | "accepted" | "paid";
+  rateType?: "per_view" | "auto";
+  ratePerView?: number;
+  offeredAmount?: number;
+  adminNote?: string;
+  reviewedAt?: string;
+  reviewedBy?: string;
+  acceptedAt?: string;
+  paidAt?: string;
+  paidBy?: string;
+  createdAt: string;
+}
+
+export interface SocialPayout {
+  _id: string;
+  collaborator: string;
+  amount: number;
+  submissionCount: number;
+  submissionIds: string[];
+  periodEnd?: string;
+  paidAt?: string;
+  paidBy?: string;
+  createdAt: string;
+}
+
 export const ALL_PERMISSIONS: { key: string; label: string; description: string; group: string }[] = [
   { key: "view_analytics", label: "View Analytics", description: "Access the analytics dashboard", group: "Analytics" },
 
@@ -376,4 +412,7 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
   { key: "view_stock", label: "View Stock", description: "View stock requests and stocker tracking", group: "Stock" },
   { key: "manage_stock", label: "Manage Stock", description: "Approve, reject, and mark stock requests as stocked", group: "Stock" },
   { key: "manage_stockers", label: "Manage Stockers", description: "Invite and manage stocker accounts", group: "Stock" },
+
+  { key: "view_socials", label: "View Socials", description: "View video submissions and creator stats", group: "Socials" },
+  { key: "manage_socials", label: "Manage Socials", description: "Set rates, review videos, and mark payouts as paid", group: "Socials" },
 ];
