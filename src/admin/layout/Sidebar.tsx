@@ -6,7 +6,7 @@ import {
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
   ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell, Eye, X,
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
-  Archive, ClipboardList, Clock,
+  Archive, ClipboardList, Clock, Video, Film,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -41,6 +41,8 @@ const ownerNav: NavItem[] = [
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod",    group: "Team" },
   { href: "/admin/stock/requests", label: "Stock Requests", icon: ClipboardList, permission: "view_stock",    group: "Stock" },
   { href: "/admin/stock/tracking", label: "Stocker Tracking", icon: Archive,   permission: "manage_stockers", group: "Stock" },
+  { href: "/admin/socials",          label: "Submissions",    icon: Video,         permission: "view_socials",    group: "Socials" },
+  { href: "/admin/socials/creators", label: "Creators",       icon: Film,          permission: "view_socials",    group: "Socials" },
   { href: "/admin/role-view", label: "Role View",       icon: Eye,             ownerOnly: true,                group: "System" },
   { href: "/admin/settings",  label: "Settings",        icon: Settings,        ownerOnly: true,                group: "System" },
 ];
@@ -58,7 +60,7 @@ const stockerNavItems: NavItem[] = [
 
 const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users,
-  System: Settings, Operations: Inbox, Stock: Archive,
+  System: Settings, Operations: Inbox, Stock: Archive, Socials: Video,
 };
 
 const collabSubItems = [
@@ -181,12 +183,12 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
   const groups: string[] | undefined = isStocker
     ? ["Overview", "Stock"]
     : isOwner && !viewAsRole
-    ? ["Overview", "Commerce", "Content", "Team", "Stock", "System"]
+    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials", "System"]
     : isOwner && viewAsRole && isViewingAsAgentRole
     ? ["Overview", "Operations"]
     : isOwner && viewAsRole && !isViewingAsAgentRole
-    ? ["Overview", "Commerce", "Content", "Team", "Stock"]
-    : ["Overview", "Commerce", "Content", "Team", "Stock"];
+    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials"]
+    : ["Overview", "Commerce", "Content", "Team", "Stock", "Socials"];
 
   const dashboardHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/dashboard" : "/panel/dashboard";
   const profileHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/profile" : "/panel/profile";
