@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { adminApi } from "../api";
 import {
   Users, Loader2, ChevronRight, DollarSign, Video, UserPlus,
-  X, AlertCircle, CheckCircle, Clock,
+  X, AlertCircle, CheckCircle, Clock, Trash2,
 } from "lucide-react";
 
 function fmtDate(d: string | null) {
@@ -146,9 +146,68 @@ function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pend
   );
 }
 
+function DeleteModal({ creator, onClose }: { creator: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [deleting, setDeleting] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleDelete = async () => {
+    setDeleting(true); setErr("");
+    try {
+      await adminApi.socials.deleteCreator(creator._id);
+      qc.invalidateQueries({ queryKey: ["socials-creators"] });
+      onClose();
+    } catch (e: any) {
+      setErr(e.message || "Failed to remove creator");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6" style={{ border: "1px solid #E9EBF5" }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#FEF2F2" }}>
+            <Trash2 className="w-5 h-5 text-red-500" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Remove Creator</h3>
+            <p className="text-xs text-slate-400">{creator.name}</p>
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 mb-5">
+          This permanently removes <strong style={{ color: "#1e1b4b" }}>{creator.name}</strong> from the social creator portal.
+          Creators with pending or unpaid submissions cannot be removed.
+        </p>
+        {err && (
+          <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {err}
+          </div>
+        )}
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+            Cancel
+          </button>
+          <button onClick={handleDelete} disabled={deleting}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+            style={{ background: "#DC2626" }}>
+            {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SocialsCreators() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [markPaidTarget, setMarkPaidTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["socials-creators"],
@@ -167,6 +226,7 @@ export default function SocialsCreators() {
           onClose={() => setMarkPaidTarget(null)}
         />
       )}
+      {deleteTarget && <DeleteModal creator={deleteTarget} onClose={() => setDeleteTarget(null)} />}
 
       <div className="flex items-center justify-between">
         <div>
@@ -271,6 +331,15 @@ export default function SocialsCreators() {
                             <DollarSign className="w-3 h-3" /> Pay
                           </button>
                         )}
+                        <button
+                          onClick={() => setDeleteTarget(c)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                          style={{ background: "#FEF2F2", color: "#DC2626" }}
+                          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "#FEE2E2"}
+                          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "#FEF2F2"}
+                          title="Remove creator">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                         <Link href={`/admin/socials/creators/${c._id}`}>
                           <button className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                             style={{ background: "#EEF2FF", color: "#4f46e5" }}
