@@ -355,6 +355,20 @@ export const adminApi = {
     listAllPayouts: () =>
       cget<any>("/payouts"),
   },
+
+  socials: {
+    list: (params?: { status?: string; platform?: string }) => {
+      const q = params ? new URLSearchParams(params as Record<string, string>).toString() : "";
+      return get<any>(`/socials${q ? `?${q}` : ""}`);
+    },
+    listCreators: () => get<any>("/socials/creators"),
+    getCreator: (collabId: string) => get<any>(`/socials/creators/${collabId}`),
+    setRate: (id: string, data: { rateType: "per_view" | "auto"; ratePerView?: number; offeredAmount?: number; adminNote?: string }) =>
+      patch<any>(`/socials/${id}/rate`, data),
+    markPaid: (collabId: string) => post<any>(`/socials/creators/${collabId}/mark-paid`),
+    inviteCreator: (name: string, email: string) =>
+      cpost<any>("/invite", { name, email, inviteType: "social" }),
+  },
 };
 
 function stockerReq<T>(method: string, path: string, body?: unknown, isFormData = false): Promise<T> {
