@@ -17,6 +17,9 @@ import NotFound from "@/pages/not-found";
 import CollabInviteAccept from "@/pages/CollabInviteAccept";
 import CollabLogin from "@/pages/CollabLogin";
 import CollabDashboard from "@/pages/CollabDashboard";
+import SocialsLogin from "@/pages/SocialsLogin";
+import SocialsInviteAccept from "@/pages/SocialsInviteAccept";
+import SocialsDashboard from "@/pages/SocialsDashboard";
 import StockerLogin from "@/pages/StockerLogin";
 import StockerLayout from "@/pages/StockerLayout";
 
@@ -62,6 +65,10 @@ import AgentStats from "@/admin/pages/agent/AgentStats";
 import StockRequests from "@/admin/pages/stock/StockRequests";
 import StockTracking from "@/admin/pages/stock/StockTracking";
 
+import SocialsAdmin from "@/admin/pages/SocialsAdmin";
+import SocialsCreators from "@/admin/pages/SocialsCreator";
+import SocialsTrackerDetail from "@/admin/pages/SocialsTrackerDetail";
+
 import StockerDashboard from "@/admin/pages/stocker/StockerDashboard";
 import StockerRequestForm from "@/admin/pages/stocker/StockerRequestForm";
 import StockerHistory from "@/admin/pages/stocker/StockerHistory";
@@ -81,6 +88,10 @@ function isAdminRoute(location: string) {
 
 function isCollabRoute(location: string) {
   return location.startsWith("/collab");
+}
+
+function isSocialsRoute(location: string) {
+  return location.startsWith("/socials");
 }
 
 function isStockerRoute(location: string) {
@@ -253,6 +264,15 @@ function AdminRouter() {
       <Route path="/admin/collaboration/payouts/:id">
         <AdminLayout><CollabPayouts /></AdminLayout>
       </Route>
+      <Route path="/admin/socials/creators/:id">
+        <AdminLayout><SocialsTrackerDetail /></AdminLayout>
+      </Route>
+      <Route path="/admin/socials/creators">
+        <AdminLayout><SocialsCreators /></AdminLayout>
+      </Route>
+      <Route path="/admin/socials">
+        <AdminLayout><SocialsAdmin /></AdminLayout>
+      </Route>
       <Route path="/admin">
         {() => { window.location.replace("/admin/login"); return null; }}
       </Route>
@@ -270,6 +290,17 @@ function CollabRouter() {
       <Route path="/collab/login" component={CollabLogin} />
       <Route path="/collab/dashboard" component={CollabDashboard} />
       <Route path="/collab">{() => { window.location.replace("/collab/login"); return null; }}</Route>
+    </Switch>
+  );
+}
+
+function SocialsRouter() {
+  return (
+    <Switch>
+      <Route path="/socials/invite/:token" component={SocialsInviteAccept} />
+      <Route path="/socials/login" component={SocialsLogin} />
+      <Route path="/socials/dashboard" component={SocialsDashboard} />
+      <Route path="/socials">{() => { window.location.replace("/socials/login"); return null; }}</Route>
     </Switch>
   );
 }
@@ -300,6 +331,10 @@ function StockerRouter() {
 
 function RootRouter() {
   const [location] = useLocation();
+
+  if (isSocialsRoute(location)) {
+    return <SocialsRouter />;
+  }
 
   if (isCollabRoute(location)) {
     return <CollabRouter />;
