@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { adminApi } from "../api";
 import {
   Video, Loader2, X, ExternalLink, CheckCircle, AlertCircle,
-  ChevronDown, Eye, TrendingUp,
+  Eye, TrendingUp, ChevronDown, BarChart2, Calendar, User, Hash,
 } from "lucide-react";
 
 function fmtNum(n: number) {
@@ -16,6 +16,10 @@ function fmtNum(n: number) {
 function fmtDate(d: string) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+function fmtDateTime(d?: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 const STATUS_TABS = [
@@ -112,7 +116,6 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
           </button>
         </div>
 
-        {/* Video preview inside modal */}
         <div className="px-6 pt-4 flex gap-3">
           <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: "#F7F8FC" }}>
             {sub.thumbnail
@@ -132,7 +135,6 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Rate type toggle */}
           <div>
             <label className="block text-xs font-semibold mb-2 text-slate-500">Rate Type</label>
             <div className="flex gap-2">
@@ -218,9 +220,139 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
   );
 }
 
+function AnalyticsModal({ sub, onClose, onSetRate }: { sub: any; onClose: () => void; onSetRate: () => void }) {
+  const st = STATUS_STYLES[sub.status] || STATUS_STYLES.in_review;
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={onClose}>
+      <motion.div initial={{ scale: 0.96, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 20 }}
+        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
+        style={{ border: "1px solid #E9EBF5" }}
+        onClick={e => e.stopPropagation()}>
+
+        {/* Thumbnail header */}
+        <div className="relative w-full h-48 overflow-hidden" style={{ background: "#0f0f0f" }}>
+          {sub.thumbnail
+            ? <img src={sub.thumbnail} alt="" className="w-full h-full object-cover opacity-90" />
+            : <div className="w-full h-full flex items-center justify-center">
+                {sub.platform === "youtube"
+                  ? <YouTubeIcon className="w-16 h-16 text-red-500 opacity-60" />
+                  : <TikTokIcon className="w-16 h-16 text-white opacity-60" />}
+              </div>}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
+
+          <button onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-white"
+            style={{ background: "rgba(0,0,0,0.4)" }}>
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="absolute bottom-3 left-3 right-12">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                style={{ background: sub.platform === "youtube" ? "rgba(255,0,0,0.9)" : "rgba(0,0,0,0.85)", color: "#fff" }}>
+                {sub.platform === "youtube" ? <YouTubeIcon className="w-3 h-3" /> : <TikTokIcon className="w-3 h-3" />}
+                {sub.platform === "youtube" ? "YouTube" : "TikTok"}
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold border"
+                style={{ background: st.bg, color: st.text, borderColor: st.border }}>
+                {STATUS_LABELS[sub.status] || sub.status}
+              </span>
+            </div>
+            <p className="font-bold text-white text-sm leading-snug line-clamp-2">{sub.title || "Untitled"}</p>
+            <p className="text-xs text-white/70 mt-0.5">{sub.channelName}</p>
+          </div>
+        </div>
+
+        {/* Analytics grid */}
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl p-3" style={{ background: "#F0F9FF", border: "1px solid #BAE6FD" }}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Eye className="w-3.5 h-3.5 text-sky-500" />
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-600">Views</p>
+              </div>
+              <p className="text-2xl font-bold" style={{ color: "#0c4a6e" }}>{fmtNum(sub.views)}</p>
+              {sub.views > 0 && <p className="text-[10px] text-sky-500 mt-0.5">{sub.views.toLocaleString()} total</p>}
+            </div>
+            <div className="rounded-xl p-3" style={{ background: "#FFF1F2", border: "1px solid #FECDD3" }}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <TrendingUp className="w-3.5 h-3.5 text-rose-400" />
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500">Likes</p>
+              </div>
+              <p className="text-2xl font-bold" style={{ color: "#881337" }}>{sub.likes > 0 ? fmtNum(sub.likes) : "—"}</p>
+              {sub.likes > 0 && <p className="text-[10px] text-rose-400 mt-0.5">{sub.likes.toLocaleString()} total</p>}
+            </div>
+          </div>
+
+          {/* Meta info */}
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+            {[
+              { icon: User, label: "Creator", value: sub.collaborator?.name || "—" },
+              { icon: Calendar, label: "Submitted", value: fmtDate(sub.createdAt) },
+              sub.reviewedAt && { icon: CheckCircle, label: "Reviewed", value: fmtDateTime(sub.reviewedAt) },
+              sub.paidAt && { icon: Hash, label: "Paid", value: fmtDateTime(sub.paidAt) },
+              sub.reviewedBy && { icon: User, label: "Reviewed by", value: sub.reviewedBy },
+            ].filter(Boolean).map((row: any, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: i < 4 ? "1px solid #F3F4F6" : "none" }}>
+                <row.icon className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
+                <span className="text-xs font-semibold text-slate-400 w-24 flex-shrink-0">{row.label}</span>
+                <span className="text-xs font-medium text-slate-700 truncate">{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Payout info */}
+          {sub.offeredAmount != null && (
+            <div className="rounded-xl p-4" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Offered Amount</p>
+                  <p className="text-2xl font-bold text-emerald-700 mt-0.5">${sub.offeredAmount.toFixed(2)}</p>
+                </div>
+                {sub.rateType === "per_view" && sub.ratePerView != null && (
+                  <div className="text-right">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Rate / View</p>
+                    <p className="text-sm font-bold text-emerald-700 mt-0.5">${sub.ratePerView}</p>
+                  </div>
+                )}
+              </div>
+              {sub.adminNote && (
+                <p className="text-xs text-emerald-700 mt-2 pt-2" style={{ borderTop: "1px solid #BBF7D0" }}>
+                  Note: {sub.adminNote}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <a href={sub.url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+              <ExternalLink className="w-3.5 h-3.5" /> Open Video
+            </a>
+            {sub.status !== "paid" && (
+              <button onClick={() => { onClose(); onSetRate(); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white ml-auto"
+                style={{ background: sub.offeredAmount ? "#4f46e5" : "#1e1b4b" }}>
+                <BarChart2 className="w-3.5 h-3.5" />
+                {sub.offeredAmount ? "Edit Rate" : "Set Rate"}
+              </button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function SocialsAdmin() {
   const [statusFilter, setStatusFilter] = useState("");
   const [platformFilter, setPlatformFilter] = useState("");
+  const [selectedSub, setSelectedSub] = useState<any>(null);
   const [ratingModal, setRatingModal] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
@@ -235,7 +367,7 @@ export default function SocialsAdmin() {
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       <div>
         <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
-        <p className="text-sm text-slate-500 mt-0.5">{total} total submissions</p>
+        <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
       </div>
 
       {/* Filters */}
@@ -291,7 +423,7 @@ export default function SocialsAdmin() {
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Offered</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Submitted</th>
-                <th className="px-5 py-3 w-24"></th>
+                <th className="px-5 py-3 w-28"></th>
               </tr>
             </thead>
             <tbody>
@@ -299,10 +431,11 @@ export default function SocialsAdmin() {
                 const st = STATUS_STYLES[s.status] || STATUS_STYLES.in_review;
                 return (
                   <tr key={s._id}
-                    className="transition-colors"
+                    className="cursor-pointer transition-colors"
                     style={{ borderBottom: "1px solid #F3F4F6" }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    onClick={() => setSelectedSub(s)}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 relative" style={{ background: "#F7F8FC", minWidth: 80 }}>
@@ -315,10 +448,9 @@ export default function SocialsAdmin() {
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate max-w-[200px]" style={{ color: "#1e1b4b" }}>{s.title || "Untitled"}</p>
                           <p className="text-xs text-slate-400 truncate">{s.channelName}</p>
-                          <a href={s.url} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-600 mt-0.5">
-                            <ExternalLink className="w-2.5 h-2.5" /> View video
-                          </a>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400 mt-0.5">
+                            <Eye className="w-2.5 h-2.5" /> Click to view analytics
+                          </span>
                         </div>
                       </div>
                     </td>
@@ -352,7 +484,7 @@ export default function SocialsAdmin() {
                         : <span className="text-xs text-slate-400">—</span>}
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
                       {s.status !== "paid" && (
                         <button onClick={() => setRatingModal(s)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
@@ -370,6 +502,13 @@ export default function SocialsAdmin() {
       </div>
 
       <AnimatePresence>
+        {selectedSub && (
+          <AnalyticsModal
+            sub={selectedSub}
+            onClose={() => setSelectedSub(null)}
+            onSetRate={() => setRatingModal(selectedSub)}
+          />
+        )}
         {ratingModal && <RateModal sub={ratingModal} onClose={() => setRatingModal(null)} />}
       </AnimatePresence>
     </div>
