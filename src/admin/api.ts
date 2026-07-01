@@ -358,7 +358,8 @@ export const adminApi = {
 
   socials: {
     list: (params?: { status?: string; platform?: string }) => {
-      const q = params ? new URLSearchParams(params as Record<string, string>).toString() : "";
+      const clean = Object.fromEntries(Object.entries(params || {}).filter(([, v]) => v));
+      const q = Object.keys(clean).length ? new URLSearchParams(clean).toString() : "";
       return get<any>(`/socials${q ? `?${q}` : ""}`);
     },
     listCreators: () => get<any>("/socials/creators"),
