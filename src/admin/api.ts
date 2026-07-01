@@ -366,8 +366,9 @@ export const adminApi = {
     setRate: (id: string, data: { rateType: "per_view" | "auto"; ratePerView?: number; offeredAmount?: number; adminNote?: string }) =>
       patch<any>(`/socials/${id}/rate`, data),
     markPaid: (collabId: string) => post<any>(`/socials/creators/${collabId}/mark-paid`),
+    deleteCreator: (collabId: string) => del<any>(`/socials/creators/${collabId}`),
     inviteCreator: (name: string, email: string) =>
-      cpost<any>("/invite", { name, email, inviteType: "social" }),
+      post<any>("/socials/creators/invite", { name, email }),
   },
 };
 
