@@ -1,13 +1,21 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { adminApi } from "../api";
-import { Users, Loader2, ChevronRight, DollarSign, Video, UserPlus, X, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Users, Loader2, ChevronRight, DollarSign, Video, UserPlus,
+  X, AlertCircle, CheckCircle, Clock,
+} from "lucide-react";
 
 function fmtDate(d: string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
+
+const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  active:  { bg: "#ECFDF5", text: "#065F46" },
+  invited: { bg: "#FEF9C3", text: "#854D0E" },
+};
 
 function InviteModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
@@ -44,7 +52,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <p className="text-sm text-slate-500 mb-5">
-          They'll receive an email with a link to set up their account on the Creator Portal.
+          They'll receive an invite link to set up their account on the Creator Portal.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -88,8 +96,60 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pendingPayout: number; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [marking, setMarking] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleConfirm = async () => {
+    setMarking(true); setErr("");
+    try {
+      await adminApi.socials.markPaid(creator._id);
+      qc.invalidateQueries({ queryKey: ["socials-creators"] });
+      onClose();
+    } catch (e: any) {
+      setErr(e.message || "Failed to mark as paid");
+    } finally {
+      setMarking(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6" style={{ border: "1px solid #E9EBF5" }}
+        onClick={e => e.stopPropagation()}>
+        <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
+        <p className="text-sm text-slate-500 mb-5">
+          Mark <strong className="text-emerald-700">${pendingPayout.toFixed(2)}</strong> as paid to <strong style={{ color: "#1e1b4b" }}>{creator.name}</strong>?
+          This marks all their accepted videos as paid and cannot be undone.
+        </p>
+        {err && (
+          <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" /> {err}
+          </div>
+        )}
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+            Cancel
+          </button>
+          <button onClick={handleConfirm} disabled={marking}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
+            style={{ background: "#059669" }}>
+            {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+            Mark as Paid
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SocialsCreators() {
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [markPaidTarget, setMarkPaidTarget] = useState<any>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ["socials-creators"],
     queryFn: () => adminApi.socials.listCreators(),
@@ -100,11 +160,18 @@ export default function SocialsCreators() {
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       {inviteOpen && <InviteModal onClose={() => setInviteOpen(false)} />}
+      {markPaidTarget && (
+        <MarkPaidModal
+          creator={markPaidTarget}
+          pendingPayout={markPaidTarget.socialStats?.pendingPayout || 0}
+          onClose={() => setMarkPaidTarget(null)}
+        />
+      )}
 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Social Creators</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{creators.length} active creator{creators.length !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-slate-500 mt-0.5">{creators.length} creator{creators.length !== 1 ? "s" : ""}</p>
         </div>
         <button onClick={() => setInviteOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
@@ -123,7 +190,7 @@ export default function SocialsCreators() {
         ) : creators.length === 0 ? (
           <div className="p-16 text-center text-slate-400">
             <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">No active creators yet.</p>
+            <p className="font-medium">No social creators yet.</p>
             <p className="text-sm mt-1">Use the "Invite Creator" button above to get started.</p>
           </div>
         ) : (
@@ -131,19 +198,21 @@ export default function SocialsCreators() {
             <thead>
               <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Creator</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Submissions</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Videos</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">In Review</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Accepted</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Pending Payout</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Total Paid</th>
                 <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Last Payout</th>
-                <th className="px-5 py-3 w-16"></th>
+                <th className="px-5 py-3 w-32"></th>
               </tr>
             </thead>
             <tbody>
               {creators.map((c: any) => {
                 const s = c.socialStats || {};
                 const hasPending = (s.pendingPayout || 0) > 0;
+                const badge = STATUS_BADGE[c.status] || STATUS_BADGE.invited;
                 return (
                   <tr key={c._id}
                     className="transition-colors"
@@ -153,6 +222,12 @@ export default function SocialsCreators() {
                     <td className="px-5 py-4">
                       <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{c.name}</p>
                       <p className="text-xs text-slate-400">{c.email}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize"
+                        style={{ background: badge.bg, color: badge.text }}>
+                        {c.status === "invited" ? <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Invited</span> : "Active"}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5">
@@ -185,14 +260,26 @@ export default function SocialsCreators() {
                       <span className="text-xs text-slate-500">{fmtDate(c.lastSocialPayoutAt)}</span>
                     </td>
                     <td className="px-5 py-4">
-                      <Link href={`/admin/socials/creators/${c._id}`}>
-                        <button className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ background: "#EEF2FF", color: "#4f46e5" }}
-                          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "#E0E7FF"}
-                          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "#EEF2FF"}>
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </Link>
+                      <div className="flex items-center gap-2 justify-end">
+                        {hasPending && (
+                          <button
+                            onClick={() => setMarkPaidTarget(c)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                            style={{ background: "#ECFDF5", color: "#059669", border: "1px solid #6EE7B7" }}
+                            onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#D1FAE5"}
+                            onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "#ECFDF5"}>
+                            <DollarSign className="w-3 h-3" /> Pay
+                          </button>
+                        )}
+                        <Link href={`/admin/socials/creators/${c._id}`}>
+                          <button className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                            style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "#E0E7FF"}
+                            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "#EEF2FF"}>
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 );
