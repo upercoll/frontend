@@ -59,6 +59,7 @@ const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/open-chats",       permission: "monitor_agents" },
   { prefix: "/admin/proof-of-delivery", permission: "view_pod" },
   { prefix: "/admin/stock",            permission: "view_stock" },
+  { prefix: "/admin/socials",          permission: "view_socials" },
 ];
 
 interface AdminLayoutProps {
