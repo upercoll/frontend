@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { Package, LogOut, ShoppingBag, DollarSign, TrendingUp, Loader2, Video } from "lucide-react";
+import { Package, LogOut, ShoppingBag, DollarSign, Loader2 } from "lucide-react";
 
 const BASE = import.meta.env.VITE_API_URL || "";
 
@@ -93,24 +93,6 @@ export default function CollabDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            {/* Nav tabs */}
-            <div className="flex items-center gap-1">
-              {[
-                { label: "Products", href: "/collab/dashboard" },
-                { label: "Socials", href: "/collab/socials" },
-              ].map(({ label, href }) => {
-                const active = href === "/collab/dashboard";
-                return (
-                  <a key={label} href={href}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                    style={active
-                      ? { background: "rgba(99,102,241,0.25)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }
-                      : { color: "rgba(255,255,255,0.4)", border: "1px solid transparent" }}>
-                    {label}
-                  </a>
-                );
-              })}
-            </div>
             <div className="text-right">
               <p className="text-white text-xs font-semibold">{collab?.name}</p>
               <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{collab?.email}</p>
