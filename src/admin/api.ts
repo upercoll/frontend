@@ -138,6 +138,8 @@ export const adminApi = {
     },
     get: (id: string) => get<{ success: boolean; data: import("./types").Order }>(`/orders/${id}`),
     getByRef: (orderNumber: string) => get<{ success: boolean; data: import("./types").Order }>(`/orders/ref/${encodeURIComponent(orderNumber)}`),
+    updateStatusByRef: (orderNumber: string, status: string, notes?: string) =>
+      patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/ref/${encodeURIComponent(orderNumber)}/status`, { status, notes }),
     updateStatus: (id: string, status: string, notes?: string) =>
       patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/status`, { status, notes }),
     fulfill: (id: string, data: { trackingNumber?: string; carrier?: string; notes?: string }) =>
