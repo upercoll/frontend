@@ -170,7 +170,7 @@ function ProfilePanel({
   useEffect(() => {
     if (!session.orderRef) { setOrderData(null); return; }
     adminApi.orders.get(session.orderRef)
-      .then((res: any) => setOrderData(res?.data?.order || null))
+      .then((res: any) => setOrderData(res?.data || null))
       .catch(() => setOrderData(null));
   }, [session.orderRef]);
 
@@ -181,15 +181,15 @@ function ProfilePanel({
     { icon: Clock, label: "Started", value: timeAgo(session.createdAt) },
   ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
 
-  // Prefer order items (with images + prices), fall back to session items
+  // imageUrl is on the populated product ref, not productSnapshot (snapshot schema has no imageUrl field)
   const orderItems: { name: string; qty: number; price?: number; imageUrl?: string; gradient?: { from: string; to: string } }[] =
     orderData?.items?.length
       ? orderData.items.map((i: any) => ({
-          name: i.productSnapshot?.name || i.name,
+          name: i.productSnapshot?.name || i.product?.name || i.name,
           qty: i.quantity,
           price: i.unitPrice,
-          imageUrl: i.productSnapshot?.imageUrl,
-          gradient: i.productSnapshot?.gradient,
+          imageUrl: i.product?.imageUrl,
+          gradient: i.productSnapshot?.gradient || i.product?.gradient,
         }))
       : (session.items || []).map(i => ({ name: i.name, qty: i.quantity }));
 
