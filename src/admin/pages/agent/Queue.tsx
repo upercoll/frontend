@@ -164,18 +164,38 @@ function ProfilePanel({
   const effStatus = liveStatus?.status || session.status;
   const effAgent  = liveStatus?.agentName || session.assignedAgent?.name;
   const cfg  = STATUS_CFG[effStatus] || STATUS_CFG.ended;
-  const item = getItemLabel(session);
 
-  const rows = [
+  const [orderData, setOrderData] = useState<any>(null);
+
+  useEffect(() => {
+    if (!session.orderRef) { setOrderData(null); return; }
+    adminApi.orders.get(session.orderRef)
+      .then((res: any) => setOrderData(res?.data?.order || null))
+      .catch(() => setOrderData(null));
+  }, [session.orderRef]);
+
+  const infoRows = [
     session.contactEmail && { icon: Mail,    label: "Email",   value: session.contactEmail },
     session.game         && { icon: Gamepad2, label: "Game",    value: session.game },
-    item                 && { icon: Package,  label: "Product", value: item },
-    session.orderRef     && { icon: Hash,     label: "Order",   value: session.orderRef },
+    session.orderRef     && { icon: Hash,     label: "Order",   value: `#${session.orderRef.slice(-8)}` },
     { icon: Clock, label: "Started", value: timeAgo(session.createdAt) },
   ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
 
+  // Prefer order items (with images + prices), fall back to session items
+  const orderItems: { name: string; qty: number; price?: number; imageUrl?: string; gradient?: { from: string; to: string } }[] =
+    orderData?.items?.length
+      ? orderData.items.map((i: any) => ({
+          name: i.productSnapshot?.name || i.name,
+          qty: i.quantity,
+          price: i.unitPrice,
+          imageUrl: i.productSnapshot?.imageUrl,
+          gradient: i.productSnapshot?.gradient,
+        }))
+      : (session.items || []).map(i => ({ name: i.name, qty: i.quantity }));
+
   return (
     <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto">
+      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
         <p className="text-white text-sm font-semibold">Profile</p>
         <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
@@ -183,7 +203,8 @@ function ProfilePanel({
         </button>
       </div>
 
-      <div className="px-4 pt-5 pb-4 border-b border-white/5 text-center">
+      {/* Avatar + name + status */}
+      <div className="px-4 pt-5 pb-4 border-b border-white/5 text-center flex-shrink-0">
         <div className={cn("w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mx-auto mb-3", avatarColor(session.robloxUsername))}>
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
         </div>
@@ -197,8 +218,9 @@ function ProfilePanel({
         </div>
       </div>
 
-      <div className="px-4 py-4 space-y-3 border-b border-white/5">
-        {rows.map(({ icon: Icon, label, value }) => (
+      {/* Info rows */}
+      <div className="px-4 py-4 space-y-3 border-b border-white/5 flex-shrink-0">
+        {infoRows.map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-start gap-3">
             <Icon className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
@@ -209,6 +231,57 @@ function ProfilePanel({
         ))}
       </div>
 
+      {/* Ordered items product grid */}
+      {orderItems.length > 0 && (
+        <div className="px-4 py-4 border-b border-white/5 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Order Items</p>
+            {orderData?.pricing?.total != null && (
+              <span className="text-emerald-400 text-xs font-semibold">${orderData.pricing.total.toFixed(2)}</span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {orderItems.map((item, i) => (
+              <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-16 object-cover" />
+                ) : (
+                  <div
+                    className="w-full h-16 flex items-center justify-center"
+                    style={item.gradient
+                      ? { background: `linear-gradient(135deg, ${item.gradient.from}, ${item.gradient.to})` }
+                      : { background: "rgba(99,102,241,0.1)" }}
+                  >
+                    <Package className="w-5 h-5 text-white/40" />
+                  </div>
+                )}
+                <div className="p-2">
+                  <p className="text-white text-[11px] font-medium leading-tight line-clamp-2">{item.name}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-slate-500 text-[10px]">×{item.qty}</span>
+                    {item.price != null && (
+                      <span className="text-emerald-400 text-[10px] font-semibold">${item.price.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {orderData?.status && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-slate-600 text-[10px]">Status:</span>
+              <span className={cn(
+                "text-[10px] px-2 py-0.5 rounded-full font-medium capitalize",
+                orderData.status === "paid" ? "bg-emerald-500/15 text-emerald-400" :
+                orderData.status === "cancelled" ? "bg-red-500/15 text-red-400" :
+                "bg-slate-500/15 text-slate-400"
+              )}>{orderData.status}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Actions */}
       {isMyActiveSession && (
         <div className="px-4 py-4 space-y-2 flex-shrink-0">
           <motion.button
