@@ -408,6 +408,8 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
   { key: "remove_team", label: "Remove Members", description: "Remove or disable team members", group: "Team" },
   { key: "manage_roles", label: "Manage Roles", description: "Create and edit permission roles", group: "Team" },
   { key: "manage_collaborators", label: "Manage Collaborators", description: "Manage collaborator accounts and products", group: "Team" },
+  { key: "view_deliverers", label: "View Delivery Team", description: "View delivery team members and their stats", group: "Team" },
+  { key: "manage_deliverers", label: "Manage Delivery Team", description: "Invite, edit, and pay out delivery team members", group: "Team" },
 
   { key: "view_stock", label: "View Stock", description: "View stock requests and stocker tracking", group: "Stock" },
   { key: "manage_stock", label: "Manage Stock", description: "Approve, reject, and mark stock requests as stocked", group: "Stock" },
