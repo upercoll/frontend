@@ -169,7 +169,7 @@ function ProfilePanel({
 
   useEffect(() => {
     if (!session.orderRef) { setOrderData(null); return; }
-    adminApi.orders.get(session.orderRef)
+    adminApi.orders.getByRef(session.orderRef)
       .then((res: any) => setOrderData(res?.data || null))
       .catch(() => setOrderData(null));
   }, [session.orderRef]);
@@ -574,7 +574,7 @@ export default function Queue() {
     }
     if (!confirm("Cancel this order? This will mark it as cancelled and end the chat.")) return;
     try {
-      await adminApi.orders.updateStatus(selectedSession.orderRef, "cancelled");
+      await adminApi.orders.updateStatusByRef(selectedSession.orderRef, "cancelled");
       socket?.emit("claim:end", { roomId: selectedSession.roomId });
       setSelectedSession(s => s ? { ...s, status: "ended" } : s);
       refetch();
