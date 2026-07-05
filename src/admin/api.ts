@@ -136,7 +136,8 @@ export const adminApi = {
       const q = new URLSearchParams(params || {}).toString();
       return get<{ success: boolean; data: import("./types").Order[]; total: number; pages: number }>(`/orders${q ? `?${q}` : ""}`);
     },
-    get: (id: string) => get<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}`),
+    get: (id: string) => get<{ success: boolean; data: import("./types").Order }>(`/orders/${id}`),
+    getByRef: (orderNumber: string) => get<{ success: boolean; data: import("./types").Order }>(`/orders/ref/${encodeURIComponent(orderNumber)}`),
     updateStatus: (id: string, status: string, notes?: string) =>
       patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/status`, { status, notes }),
     fulfill: (id: string, data: { trackingNumber?: string; carrier?: string; notes?: string }) =>
@@ -315,6 +316,17 @@ export const adminApi = {
       sget<{ success: boolean; data: { stocker: any; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; totalPaid: number } }>("/payouts"),
     markRequestStocked: (id: string) =>
       spatch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/requests/${id}/stocked`, {}),
+  },
+
+  delivery: {
+    list: () => get<{ success: boolean; data: { deliverers: any[] } }>("/admin/deliverers"),
+    get: (id: string) => get<{ success: boolean; data: { deliverer: any; records: any[]; stats: any } }>(`/admin/deliverers/${id}`),
+    invite: (body: { email: string; name?: string; commissionRate?: number }) =>
+      post<{ success: boolean; data: { deliverer: any } }>("/admin/deliverers/invite", body),
+    update: (id: string, body: { commissionRate?: number; name?: string; status?: string }) =>
+      patch<{ success: boolean; data: { deliverer: any } }>(`/admin/deliverers/${id}`, body),
+    markPaid: (id: string) =>
+      post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; lastPayoutAt: string } }>(`/admin/deliverers/${id}/mark-paid`, {}),
   },
 
   claimSessions: {
