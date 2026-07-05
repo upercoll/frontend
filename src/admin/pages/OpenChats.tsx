@@ -314,18 +314,27 @@ function OrderProfilePanel({ session, onClose }: { session: ClaimSession; onClos
           <div className="grid grid-cols-2 gap-2">
             {displayItems.map((item, i) => (
               <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-16 object-cover" />
-                ) : (
+                {/* Gradient always shown as base; image overlaid on top — matches product card style sitewide */}
+                <div
+                  className="relative w-full h-16 overflow-hidden flex-shrink-0"
+                  style={{
+                    background: item.gradient
+                      ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)`
+                      : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                  }}
+                >
                   <div
-                    className="w-full h-16 flex items-center justify-center"
-                    style={item.gradient
-                      ? { background: `linear-gradient(135deg, ${item.gradient.from}, ${item.gradient.to})` }
-                      : { background: "rgba(99,102,241,0.12)" }}
-                  >
-                    <Package className="w-5 h-5 text-white/40" />
-                  </div>
-                )}
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage:
+                        "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)",
+                      backgroundSize: "12px 12px",
+                    }}
+                  />
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                  )}
+                </div>
                 <div className="p-2">
                   <p className="text-white text-[11px] font-medium leading-tight line-clamp-2">{item.name}</p>
                   <div className="flex items-center justify-between mt-1">
