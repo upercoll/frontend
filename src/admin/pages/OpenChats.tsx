@@ -208,7 +208,7 @@ function OrderProfilePanel({ session, onClose }: { session: ClaimSession; onClos
 
   useEffect(() => {
     if (!session.orderRef) { setOrderData(null); return; }
-    adminApi.orders.get(session.orderRef)
+    adminApi.orders.getByRef(session.orderRef)
       .then((res: any) => setOrderData(res?.data || null))
       .catch(() => setOrderData(null));
   }, [session.orderRef]);
