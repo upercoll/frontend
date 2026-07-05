@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, User, Gamepad2, Clock, Package, Mail, RefreshCw,
-  ChevronRight, AlertCircle, ArrowLeft, ChevronDown,
+  ChevronRight, AlertCircle, ArrowLeft, ChevronDown, Hash, X,
 } from "lucide-react";
 import { adminApi } from "../api";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -120,49 +120,29 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 md:px-5 py-4 border-b border-white/5 flex-shrink-0">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-white font-semibold text-base">{session.robloxUsername}</h3>
-              <StatusBadge status={session.status} agentName={session.assignedAgent?.name} />
-            </div>
-            <div className="flex items-center gap-3 mt-1 flex-wrap">
-              <span className="flex items-center gap-1 text-slate-500 text-xs">
-                <Mail className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[180px]">{session.contactEmail}</span>
-              </span>
-              {session.game && (
-                <span className="flex items-center gap-1 text-slate-500 text-xs">
-                  <Gamepad2 className="w-3 h-3" />
-                  {session.game}
-                </span>
-              )}
-              {session.orderRef && (
-                <span className="text-slate-500 text-xs">Order #{session.orderRef}</span>
-              )}
-            </div>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-slate-500 text-xs flex items-center gap-1 justify-end">
-              <Clock className="w-3 h-3" />
-              {formatTime(session.createdAt)}
-            </p>
-            {session.assignedAgent && (
-              <p className="text-slate-400 text-[11px] mt-0.5 font-medium">Agent: {session.assignedAgent.name}</p>
-            )}
-          </div>
+      {/* Minimal chat header — just username + status */}
+      <div className="px-4 md:px-5 py-3 border-b border-white/5 flex-shrink-0 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+          <User className="w-4 h-4 text-blue-400" />
         </div>
-        {session.items?.length > 0 && (
-          <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <Package className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
-            {session.items.map((item, i) => (
-              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/5">
-                {item.name}{item.quantity > 1 ? ` ×${item.quantity}` : ""}
-              </span>
-            ))}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-white font-semibold text-sm">{session.robloxUsername}</h3>
+            <StatusBadge status={session.status} agentName={session.assignedAgent?.name} />
           </div>
-        )}
+          <p className="text-slate-600 text-xs mt-0.5 truncate">
+            {[session.contactEmail, session.game].filter(Boolean).join(" · ")}
+          </p>
+        </div>
+        <div className="flex-shrink-0 text-right">
+          <p className="text-slate-600 text-[10px] flex items-center gap-1 justify-end">
+            <Clock className="w-3 h-3" />
+            {formatTime(session.createdAt)}
+          </p>
+          {session.assignedAgent && (
+            <p className="text-slate-500 text-[10px] mt-0.5">Agent: {session.assignedAgent.name}</p>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-5 py-4 space-y-3">
@@ -218,6 +198,148 @@ function ChatPane({ session, messages, loading }: ChatPaneProps) {
         )}
         <div ref={bottomRef} />
       </div>
+    </div>
+  );
+}
+
+// ── OrderProfilePanel ─────────────────────────────────────────────────────────
+function OrderProfilePanel({ session, onClose }: { session: ClaimSession; onClose: () => void }) {
+  const [orderData, setOrderData] = useState<any>(null);
+
+  useEffect(() => {
+    if (!session.orderRef) { setOrderData(null); return; }
+    adminApi.orders.get(session.orderRef)
+      .then((res: any) => setOrderData(res?.data?.order || null))
+      .catch(() => setOrderData(null));
+  }, [session.orderRef]);
+
+  // Merge order items (with images) or fall back to session items
+  const displayItems: { name: string; qty: number; price?: number; imageUrl?: string; gradient?: { from: string; to: string } }[] =
+    orderData?.items?.length
+      ? orderData.items.map((i: any) => ({
+          name: i.productSnapshot?.name || i.name,
+          qty: i.quantity,
+          price: i.unitPrice,
+          imageUrl: i.productSnapshot?.imageUrl,
+          gradient: i.productSnapshot?.gradient,
+        }))
+      : (session.items || []).map(i => ({ name: i.name, qty: i.quantity }));
+
+  return (
+    <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto w-72 flex-shrink-0">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
+        <p className="text-white text-sm font-semibold">Profile</p>
+        <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Avatar + name + status */}
+      <div className="px-4 pt-5 pb-4 border-b border-white/5 text-center flex-shrink-0">
+        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">
+          {session.robloxUsername[0]?.toUpperCase() ?? "?"}
+        </div>
+        <p className="text-white font-semibold text-sm">{session.robloxUsername}</p>
+        <p className="text-slate-500 text-xs mt-0.5">Customer</p>
+        <div className="flex items-center justify-center mt-2">
+          <StatusBadge status={session.status} agentName={session.assignedAgent?.name} />
+        </div>
+      </div>
+
+      {/* Info rows */}
+      <div className="px-4 py-4 space-y-3 border-b border-white/5 flex-shrink-0">
+        {session.contactEmail && (
+          <div className="flex items-start gap-3">
+            <Mail className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-slate-600 text-[10px] mb-0.5">Email</p>
+              <p className="text-slate-300 text-xs break-all">{session.contactEmail}</p>
+            </div>
+          </div>
+        )}
+        {session.game && (
+          <div className="flex items-start gap-3">
+            <Gamepad2 className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-slate-600 text-[10px] mb-0.5">Game</p>
+              <p className="text-slate-300 text-xs">{session.game}</p>
+            </div>
+          </div>
+        )}
+        {session.orderRef && (
+          <div className="flex items-start gap-3">
+            <Hash className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-slate-600 text-[10px] mb-0.5">Order</p>
+              <p className="text-slate-300 text-xs font-mono">#{session.orderRef.slice(-8)}</p>
+              {orderData?.status && (
+                <span className={cn(
+                  "inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium",
+                  orderData.status === "paid" ? "bg-emerald-500/15 text-emerald-400" :
+                  orderData.status === "cancelled" ? "bg-red-500/15 text-red-400" :
+                  "bg-slate-500/15 text-slate-400"
+                )}>{orderData.status}</span>
+              )}
+            </div>
+          </div>
+        )}
+        <div className="flex items-start gap-3">
+          <Clock className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <p className="text-slate-600 text-[10px] mb-0.5">Started</p>
+            <p className="text-slate-300 text-xs">{timeAgo(session.createdAt)}</p>
+          </div>
+        </div>
+        {session.assignedAgent && (
+          <div className="flex items-start gap-3">
+            <User className="w-3.5 h-3.5 text-slate-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-slate-600 text-[10px] mb-0.5">Agent</p>
+              <p className="text-slate-300 text-xs">{session.assignedAgent.name}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Product grid */}
+      {displayItems.length > 0 && (
+        <div className="px-4 py-4 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Order Items</p>
+            {orderData?.pricing?.total != null && (
+              <span className="text-emerald-400 text-xs font-semibold">${orderData.pricing.total.toFixed(2)}</span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {displayItems.map((item, i) => (
+              <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-16 object-cover" />
+                ) : (
+                  <div
+                    className="w-full h-16 flex items-center justify-center"
+                    style={item.gradient
+                      ? { background: `linear-gradient(135deg, ${item.gradient.from}, ${item.gradient.to})` }
+                      : { background: "rgba(99,102,241,0.12)" }}
+                  >
+                    <Package className="w-5 h-5 text-white/40" />
+                  </div>
+                )}
+                <div className="p-2">
+                  <p className="text-white text-[11px] font-medium leading-tight line-clamp-2">{item.name}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-slate-500 text-[10px]">×{item.qty}</span>
+                    {item.price != null && (
+                      <span className="text-emerald-400 text-[10px] font-semibold">${item.price.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -291,6 +413,7 @@ function GameGroup({
 export default function OpenChats() {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [showChatMobile, setShowChatMobile] = useState(false);
+  const [showProfile, setShowProfile] = useState(true);
   const { activeClaims } = useAdminSocket();
 
   const { data: listData, isLoading: listLoading, refetch: refetchList } = useQuery({
@@ -427,33 +550,73 @@ export default function OpenChats() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              className="flex flex-col h-full"
+              className="flex h-full overflow-hidden"
             >
-              <div className="md:hidden flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0"
-                style={{ background: "rgba(6,9,28,0.8)" }}>
-                <button
-                  onClick={() => setShowChatMobile(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex-shrink-0"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <span className="text-white text-sm font-medium truncate">{selectedSession.robloxUsername}</span>
-                <div className="ml-auto flex-shrink-0">
-                  <StatusBadge status={selectedSession.status} agentName={selectedSession.assignedAgent?.name} />
+              {/* Chat area */}
+              <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+                <div className="md:hidden flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0"
+                  style={{ background: "rgba(6,9,28,0.8)" }}>
+                  <button
+                    onClick={() => setShowChatMobile(false)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors flex-shrink-0"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-white text-sm font-medium truncate">{selectedSession.robloxUsername}</span>
+                  <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+                    <StatusBadge status={selectedSession.status} agentName={selectedSession.assignedAgent?.name} />
+                    <button
+                      onClick={() => setShowProfile(p => !p)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
+
+                {selectedSession.status === "pending" && (
+                  <div className="px-4 md:px-5 py-2.5 flex items-center gap-2 bg-red-500/8 border-b border-red-500/15 flex-shrink-0">
+                    <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                    <p className="text-red-400 text-xs font-medium">Unclaimed — no agent has answered this chat yet</p>
+                  </div>
+                )}
+                <ChatPane
+                  session={selectedSession}
+                  messages={messages}
+                  loading={sessionLoading}
+                />
               </div>
 
-              {selectedSession.status === "pending" && (
-                <div className="px-4 md:px-5 py-2.5 flex items-center gap-2 bg-red-500/8 border-b border-red-500/15 flex-shrink-0">
-                  <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-                  <p className="text-red-400 text-xs font-medium">Unclaimed — no agent has answered this chat yet</p>
+              {/* Right profile panel */}
+              <AnimatePresence>
+                {showProfile && (
+                  <motion.div
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: 288, opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="flex flex-col overflow-hidden flex-shrink-0"
+                  >
+                    <OrderProfilePanel
+                      session={selectedSession}
+                      onClose={() => setShowProfile(false)}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Toggle profile button (when panel is hidden) */}
+              {!showProfile && (
+                <div className="flex flex-col border-l border-white/5 flex-shrink-0">
+                  <button
+                    onClick={() => setShowProfile(true)}
+                    className="m-2 w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/5 transition-colors"
+                    title="Show profile"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
                 </div>
               )}
-              <ChatPane
-                session={selectedSession}
-                messages={messages}
-                loading={sessionLoading}
-              />
             </motion.div>
           </AnimatePresence>
         )}
