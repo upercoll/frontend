@@ -62,6 +62,7 @@ const patchForm = <T>(path: string, form: FormData) => req<T>("PATCH", path, for
 
 const sget = <T>(path: string) => stockerReq<T>("GET", path);
 const spost = <T>(path: string, body?: unknown) => stockerReq<T>("POST", path, body);
+const spatch = <T>(path: string, body?: unknown) => stockerReq<T>("PATCH", path, body);
 
 export const adminApi = {
   auth: {
@@ -312,6 +313,8 @@ export const adminApi = {
       sget<{ success: boolean; data: { deliveries: { roomId: string; robloxUsername: string; game?: string; orderRef?: string; agentName: string; deliveredAt: string; items: { name: string; quantity: number; productName?: string; imageUrl?: string; game?: string }[] }[]; total: number } }>("/sold-deliveries"),
     getMyPayouts: () =>
       sget<{ success: boolean; data: { stocker: any; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; totalPaid: number } }>("/payouts"),
+    markRequestStocked: (id: string) =>
+      spatch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/requests/${id}/stocked`, {}),
   },
 
   claimSessions: {
