@@ -321,11 +321,28 @@ export default function StockerHistory() {
   const [activeTab, setActiveTab] = useState<"requests" | "sales">("requests");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<StockRequest | null>(null);
+  const [stockingId, setStockingId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["stocker-requests"],
     queryFn: adminApi.stockerPanel.getMyRequests,
   });
+
+  const handleMarkStocked = async (e: React.MouseEvent, req: StockRequest) => {
+    e.stopPropagation();
+    if (stockingId) return;
+    if (!confirm(`Mark "${req.game}" request as stocked? This confirms you have added the items to the store.`)) return;
+    setStockingId(req._id);
+    try {
+      await adminApi.stockerPanel.markRequestStocked(req._id);
+      await refetch();
+      if (selectedRequest?._id === req._id) setSelectedRequest(null);
+    } catch (err: any) {
+      alert(err.message || "Failed to mark as stocked");
+    } finally {
+      setStockingId(null);
+    }
+  };
 
   const { data: salesData, isLoading: salesLoading } = useQuery({
     queryKey: ["stocker-sold-deliveries"],
@@ -476,15 +493,30 @@ export default function StockerHistory() {
 
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {req.status === "approved" && (
-                          <div className="text-xs px-2 py-1 rounded-lg font-medium"
-                            style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
-                            ${req.paymentAmount.toFixed(2)} payment
+                          <div className="flex items-center gap-2">
+                            <div className="text-xs px-2 py-1 rounded-lg font-medium"
+                              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
+                              ${req.paymentAmount.toFixed(2)} payment
+                            </div>
+                            <button
+                              onClick={e => handleMarkStocked(e, req)}
+                              disabled={stockingId === req._id}
+                              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-semibold text-white disabled:opacity-50 transition-colors"
+                              style={{ background: "rgba(74,222,128,0.9)", border: "1px solid rgba(74,222,128,0.4)" }}
+                            >
+                              {stockingId === req._id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <BadgeCheck className="w-3 h-3" />
+                              )}
+                              Mark Stocked
+                            </button>
                           </div>
                         )}
                         {req.status === "stocked" && (
                           <div className="text-xs px-2 py-1 rounded-lg font-medium"
                             style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.2)" }}>
-                            ✓ Delivered
+                            ✓ Stocked
                           </div>
                         )}
                         <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
