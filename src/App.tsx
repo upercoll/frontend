@@ -23,6 +23,13 @@ import SocialsDashboard from "@/pages/SocialsDashboard";
 import StockerLogin from "@/pages/StockerLogin";
 import StockerLayout from "@/pages/StockerLayout";
 
+import DelivererLogin from "@/pages/DelivererLogin";
+import DelivererInviteAccept from "@/pages/DelivererInviteAccept";
+import DelivererLayout from "@/pages/DelivererLayout";
+import DelivererDashboard from "@/admin/pages/deliverer/DelivererDashboard";
+import DelivererQueue from "@/admin/pages/deliverer/DelivererQueue";
+import DelivererHistory from "@/admin/pages/deliverer/DelivererHistory";
+
 import { AdminAuthProvider } from "@/admin/context/AdminAuthContext";
 import { AdminSocketProvider } from "@/admin/context/AdminSocketContext";
 import AdminLayout from "@/admin/layout/AdminLayout";
@@ -41,6 +48,9 @@ import Monitor from "@/admin/pages/Monitor";
 import SiteContent from "@/admin/pages/SiteContent";
 import ProofOfDelivery from "@/admin/pages/ProofOfDelivery";
 import AdminProfilePage from "@/admin/pages/Profile";
+
+import DeliveryTeam from "@/admin/pages/delivery/DeliveryTeam";
+import DeliveryMemberDetail from "@/admin/pages/delivery/DeliveryMemberDetail";
 
 import Promos from "@/admin/pages/Promos";
 import Settings from "@/admin/pages/Settings";
@@ -96,6 +106,10 @@ function isSocialsRoute(location: string) {
 
 function isStockerRoute(location: string) {
   return location.startsWith("/stocker");
+}
+
+function isDelivererRoute(location: string) {
+  return location.startsWith("/deliverer");
 }
 
 function DiscordFloat() {
@@ -219,6 +233,12 @@ function AdminRouter() {
       <Route path="/admin/proof-of-delivery">
         <AdminLayout><ProofOfDelivery /></AdminLayout>
       </Route>
+      <Route path="/admin/delivery-team/:id">
+        <AdminLayout><DeliveryMemberDetail /></AdminLayout>
+      </Route>
+      <Route path="/admin/delivery-team">
+        <AdminLayout><DeliveryTeam /></AdminLayout>
+      </Route>
       <Route path="/admin/promos">
         <AdminLayout><Promos /></AdminLayout>
       </Route>
@@ -329,6 +349,27 @@ function StockerRouter() {
   );
 }
 
+function DelivererRouter() {
+  return (
+    <Switch>
+      <Route path="/deliverer/login" component={DelivererLogin} />
+      <Route path="/deliverer/invite/:token" component={DelivererInviteAccept} />
+      <Route path="/deliverer/dashboard">
+        <DelivererLayout><DelivererDashboard /></DelivererLayout>
+      </Route>
+      <Route path="/deliverer/queue">
+        <DelivererLayout><DelivererQueue /></DelivererLayout>
+      </Route>
+      <Route path="/deliverer/history">
+        <DelivererLayout><DelivererHistory /></DelivererLayout>
+      </Route>
+      <Route path="/deliverer">
+        {() => { window.location.replace("/deliverer/login"); return null; }}
+      </Route>
+    </Switch>
+  );
+}
+
 function RootRouter() {
   const [location] = useLocation();
 
@@ -342,6 +383,10 @@ function RootRouter() {
 
   if (isStockerRoute(location)) {
     return <StockerRouter />;
+  }
+
+  if (isDelivererRoute(location)) {
+    return <DelivererRouter />;
   }
 
   if (isAdminRoute(location)) {
