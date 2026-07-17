@@ -8,8 +8,6 @@ import {
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
 import AnimatedGrid from "@/components/AnimatedGrid";
-import RobloxJourneyScene from "@/components/three/RobloxJourneyScene";
-import FloatingCrate from "@/components/three/FloatingCrate";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -217,11 +215,6 @@ export default function Home() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 40%,rgba(49,46,128,.22) 0%,transparent 70%)" }} />
         <ParticleField count={28} light={false} />
 
-        {/* Idle-animated 3D crate — purely decorative, hidden on very small screens for perf */}
-        <div className="hidden sm:block absolute top-24 right-6 md:right-16 w-24 h-24 md:w-32 md:h-32 z-10 pointer-events-none">
-          <FloatingCrate />
-        </div>
-
         <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-center px-4 pt-24 pb-16">
 
           {}
@@ -283,11 +276,6 @@ export default function Home() {
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4" style={{ color: "#1E1B4B", letterSpacing: "-0.02em" }}>How RBstars Works?</h2>
             <p className="text-base leading-relaxed max-w-md mx-auto" style={{ color: "#5B5EA8" }}>Getting your favourite Roblox items is simple, fast, and reliable. Here's how:</p>
-          </div>
-
-          {/* Scroll-driven 3D journey: character walks Choose -> Claim -> Receive as you scroll */}
-          <div className="mb-12">
-            <RobloxJourneyScene />
           </div>
 
           {/* Steps with animated rail attached to card left edge */}
