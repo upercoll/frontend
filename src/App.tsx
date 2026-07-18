@@ -6,6 +6,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import CartDrawer from "@/components/CartDrawer";
 import Navbar from "@/components/Navbar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import SupportChat from "@/components/SupportChat";
 import AuthModal from "@/components/AuthModal";
@@ -173,6 +174,7 @@ function StorefrontRouter() {
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
+      {!isCheckout && !isSuccess && <MobileBottomNav />}
       <DiscordFloat />
     </>
   );
