@@ -242,9 +242,9 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
         {/* Add-to-cart button */}
         {!outOfStock && (
           <motion.button
-            whileTap={{ scale: 0.8 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleAdd}
-            className="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+            className="absolute bottom-2 right-2 z-20 h-8 px-3 rounded-full flex items-center gap-1.5 shadow-lg text-white text-xs font-semibold"
             style={{
               background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
               border: "1.5px solid rgba(255,255,255,0.28)",
@@ -253,14 +253,16 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
           >
             <AnimatePresence mode="wait">
               {justAdded ? (
-                <motion.span key="c" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
+                <motion.span key="c" className="flex items-center gap-1.5" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 22 }}>
                   <Check size={13} color="white" strokeWidth={3} />
+                  Added!
                 </motion.span>
               ) : (
-                <motion.span key="s" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                <motion.span key="s" className="flex items-center gap-1.5" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                   transition={{ duration: 0.14 }}>
                   <ShoppingCart size={13} color="white" />
+                  Add to Cart
                 </motion.span>
               )}
             </AnimatePresence>
