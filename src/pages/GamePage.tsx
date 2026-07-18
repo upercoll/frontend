@@ -30,7 +30,7 @@ interface FAQItem { q: string; a: string; }
 interface SEOItem { q: string; a: string; }
 
 interface ApiCategory { _id: string; name: string; slug: string; icon?: string; game: string; }
-interface ApiGame { _id: string; name: string; gradient: { from: string; to: string }; imageUrl?: string; slug: string; }
+interface ApiGame { _id: string; name: string; gradient: { from: string; to: string }; imageUrl?: string; bgImageUrl?: string; slug: string; }
 
 const iconMap: Record<string, LucideIcon> = {
   flame: Flame, sword: Sword, target: Target, heart: Heart,
@@ -122,9 +122,9 @@ function GlareCard({ children, className, style, delayClass = "" }: {
 }
 
 function ProductCard({
-  product, index, compact = false, selected = false, onSelect,
+  product, index, compact = false, selected = false, onSelect, gameBgImageUrl,
 }: {
-  product: Product; index: number; compact?: boolean; selected?: boolean; onSelect?: () => void;
+  product: Product; index: number; compact?: boolean; selected?: boolean; onSelect?: () => void; gameBgImageUrl?: string;
 }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
@@ -179,14 +179,21 @@ function ProductCard({
       )}
 
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
-        {/* Static gradient */}
-        <div
-          className="absolute inset-0"
-          style={{ background: `linear-gradient(135deg,${product.gradient[0]} 0%,${product.gradient[1]} 100%)` }}
-        >
-          <div className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-        </div>
+        {/* Static gradient or game background image */}
+        {gameBgImageUrl ? (
+          <div className="absolute inset-0">
+            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+          </div>
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg,${product.gradient[0]} 0%,${product.gradient[1]} 100%)` }}
+          >
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+          </div>
+        )}
 
         {/* Product image */}
         {product.imageUrl && (
@@ -258,10 +265,10 @@ function ProductCard({
 const DESKTOP_PER_PAGE = 8;
 
 function SectionBlock({
-  title, icon: Icon, products, onViewAll, selectedId, onSelect,
+  title, icon: Icon, products, onViewAll, selectedId, onSelect, gameBgImageUrl,
 }: {
   title: string; icon: LucideIcon; products: Product[]; onViewAll: () => void;
-  selectedId?: string; onSelect?: (id: string) => void;
+  selectedId?: string; onSelect?: (id: string) => void; gameBgImageUrl?: string;
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
 
@@ -332,6 +339,7 @@ function SectionBlock({
               product={product} index={i}
               selected={selectedId === product.id}
               onSelect={() => onSelect?.(product.id)}
+              gameBgImageUrl={gameBgImageUrl}
             />
           </div>
         ))}
@@ -892,6 +900,7 @@ export default function GamePage() {
                       onViewAll={() => setActiveTab("best-sellers")}
                       selectedId={selectedProductId ?? undefined}
                       onSelect={handleSelect}
+                      gameBgImageUrl={gameInfo?.bgImageUrl}
                     />
 
                     {}
@@ -907,6 +916,7 @@ export default function GamePage() {
                           onViewAll={() => setActiveTab(cat._id)}
                           selectedId={selectedProductId ?? undefined}
                           onSelect={handleSelect}
+                          gameBgImageUrl={gameInfo?.bgImageUrl}
                         />
                       );
                     })}
@@ -956,6 +966,7 @@ export default function GamePage() {
                         key={pr.id} product={pr} index={i} compact
                         selected={selectedProductId === pr.id}
                         onSelect={() => handleSelect(pr.id)}
+                        gameBgImageUrl={gameInfo?.bgImageUrl}
                       />
                     ))}
                   </div>
