@@ -373,7 +373,7 @@ function SectionBlock({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -12 }}
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+          className="hidden md:grid grid-cols-2 gap-4"
         >
           {desktopSlice.map((product, i) => (
             <ProductCard
@@ -999,7 +999,7 @@ export default function GamePage() {
                     <p className="text-sm">{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category yet."}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     {filteredProducts.map((pr, i) => (
                       <ProductCard
                         key={pr.id} product={pr} index={i} compact
