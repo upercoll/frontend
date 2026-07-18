@@ -251,17 +251,17 @@ function ProductCard({
         )}
       </div>
 
-      <div className="p-3">
+      <div className="p-3 md:p-4">
         <div className="flex items-baseline gap-1.5 mb-0.5">
-          <span className="text-sm font-extrabold"
+          <span className="text-sm md:text-base font-extrabold"
             style={{ color: selected ? "#818CF8" : "#A5B4FC", transition: "color 0.2s" }}>
             ${product.price.toFixed(2)}
           </span>
           {product.originalPrice && (
-            <span className="text-[11px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>
+            <span className="text-[11px] md:text-xs line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>
           )}
         </div>
-        <p className="text-[11px] font-medium leading-tight line-clamp-2"
+        <p className="text-[11px] md:text-[13px] font-medium leading-tight line-clamp-2"
           style={{ color: selected ? "#C7D2FE" : "rgba(255,255,255,0.88)", transition: "color 0.2s" }}>
           {product.name}
         </p>
@@ -303,7 +303,7 @@ function SectionBlock({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 md:hidden">
             <motion.button
               whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
               onClick={() => scrollRow("left")}
@@ -338,11 +338,11 @@ function SectionBlock({
 
       <div
         ref={rowRef}
-        className="flex gap-3 overflow-x-auto pb-2"
+        className="flex gap-3 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
       >
         {products.map((product, i) => (
-          <div key={product.id} className="flex-shrink-0" style={{ width: 148 }}>
+          <div key={product.id} className="flex-shrink-0 w-[148px] md:w-auto">
             <ProductCard
               product={product} index={i}
               selected={selectedId === product.id}
@@ -968,7 +968,7 @@ export default function GamePage() {
                     <p className="text-sm">{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category yet."}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
                     {filteredProducts.map((pr, i) => (
                       <ProductCard
                         key={pr.id} product={pr} index={i} compact
