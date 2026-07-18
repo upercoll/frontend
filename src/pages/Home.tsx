@@ -1,13 +1,14 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from "framer-motion";
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
   Zap, Lock, Headphones, LayoutGrid,
-  ChevronDown, ChevronLeft, ChevronRight, Search, ArrowRight, Package,
+  ChevronDown, ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag,
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
 import AnimatedGrid from "@/components/AnimatedGrid";
 import { useLocation } from "wouter";
+import { useCart } from "@/context/CartContext";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -39,6 +40,16 @@ type ShopGame = {
   imageUrl?: string;
   active?: boolean;
   productCount?: number;
+};
+
+type MiniProduct = {
+  _id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  imageUrl?: string;
+  stock?: number;
+  gradient: { from: string; to: string };
 };
 
 const FALLBACK_GAMES: ShopGame[] = [
@@ -142,6 +153,244 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+/* ── Mini product card (used in Top Picks section) ─────────── */
+function MiniProductCard({ product, game, index }: { product: MiniProduct; game: ShopGame; index: number }) {
+  const { addItem } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+
+  function handleAdd(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (product.stock === 0) return;
+    addItem({
+      id: product._id,
+      name: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      gradient: [product.gradient.from, product.gradient.to],
+      image: product.imageUrl,
+      game: game.slug,
+    });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1400);
+  }
+
+  const savings = product.originalPrice
+    ? (product.originalPrice - product.price).toFixed(2)
+    : null;
+  const outOfStock = product.stock === 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 36, scale: 0.88 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ delay: 0.1 + index * 0.14, duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col rounded-2xl overflow-hidden relative group"
+      style={{
+        background: "rgba(255,255,255,0.055)",
+        border: "1.5px solid rgba(165,180,252,0.13)",
+        boxShadow: "0 2px 16px rgba(10,8,40,0.18)",
+      }}
+      whileHover={{
+        y: -6,
+        boxShadow: `0 22px 48px ${game.gradient.from}38, 0 2px 16px rgba(10,8,40,0.24)`,
+        borderColor: "rgba(165,180,252,0.32)",
+      }}
+    >
+      {/* Image / gradient area — image is outside the animated div so it never floats */}
+      <div className="relative overflow-hidden" style={{ paddingTop: "82%" }}>
+        {/* Static gradient bg */}
+        <div
+          className="absolute inset-0"
+          style={{ background: `linear-gradient(135deg, ${product.gradient.from} 0%, ${product.gradient.to} 100%)` }}
+        >
+          <div className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "16px 16px" }} />
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 55% at 50% 0%,rgba(255,255,255,0.22) 0%,transparent 70%)" }} />
+        </div>
+        {/* Shimmer on hover — purely decorative overlay */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%)", x: "-110%" }}
+          variants={{ hover: { x: "110%", transition: { duration: 0.52, ease: "easeInOut" } } }}
+        />
+        {/* Product image — stationary, never animates y */}
+        {product.imageUrl && (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ pointerEvents: "none" }}
+          />
+        )}
+        {/* Badges */}
+        {savings && !outOfStock && (
+          <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+            style={{ background: "#dc2626", color: "white" }}>
+            <Tag size={8} /> Save ${savings}
+          </div>
+        )}
+        {outOfStock && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center"
+            style={{ background: "rgba(10,8,30,0.62)", backdropFilter: "blur(2px)" }}>
+            <span className="text-xs font-bold" style={{ color: "#818CF8" }}>Out of Stock</span>
+          </div>
+        )}
+        {/* Add-to-cart button */}
+        {!outOfStock && (
+          <motion.button
+            whileTap={{ scale: 0.8 }}
+            onClick={handleAdd}
+            className="absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+            style={{
+              background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
+              border: "1.5px solid rgba(255,255,255,0.28)",
+              transition: "background 0.22s ease",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {justAdded ? (
+                <motion.span key="c" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}>
+                  <Check size={13} color="white" strokeWidth={3} />
+                </motion.span>
+              ) : (
+                <motion.span key="s" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                  transition={{ duration: 0.14 }}>
+                  <ShoppingCart size={13} color="white" />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        )}
+      </div>
+
+      {/* Info row */}
+      <div className="p-3 flex flex-col gap-1">
+        <p className="text-[11px] font-semibold leading-tight text-white line-clamp-2">{product.name}</p>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-sm font-extrabold" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
+          {product.originalPrice && (
+            <span className="text-[10px] line-through" style={{ color: "#475569" }}>${product.originalPrice.toFixed(2)}</span>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slug: string) => void }) {
+  const [products, setProducts] = useState<MiniProduct[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(rowRef, { once: true, margin: "-100px" });
+
+  useEffect(() => {
+    if (!isInView || loaded) return;
+    setLoaded(true);
+    fetch(`${BACKEND}/api/products/game/${game.slug}?limit=3`)
+      .then(r => r.json())
+      .then(data => {
+        const raw: MiniProduct[] = (data.data || []).slice(0, 3).map((p: Record<string, unknown>) => ({
+          _id: p._id as string,
+          name: p.name as string,
+          price: p.price as number,
+          originalPrice: p.originalPrice as number | undefined,
+          imageUrl: p.imageUrl as string | undefined,
+          stock: p.stock as number | undefined,
+          gradient: (p.gradient as { from: string; to: string }) || { from: game.gradient?.from || "#4F46E5", to: game.gradient?.to || "#1E1B4B" },
+        }));
+        setProducts(raw);
+      })
+      .catch(() => {});
+  }, [isInView, loaded, game.slug]);
+
+  const c1 = game.gradient?.from || "#4F46E5";
+  const c2 = game.gradient?.to   || "#1E1B4B";
+
+  return (
+    <div ref={rowRef} className="mb-10">
+      {/* Game banner */}
+      <motion.div
+        initial={{ opacity: 0, x: -32 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: "-60px" }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="flex items-center justify-between mb-4"
+      >
+        <div className="flex items-center gap-3">
+          {/* Game icon */}
+          <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`, boxShadow: `0 4px 14px ${c1}55` }}>
+            {game.imageUrl ? (
+              <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Gamepad2 size={18} color="rgba(255,255,255,0.9)" />
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "rgba(165,180,252,0.55)" }}>Top Picks</p>
+            <h3 className="text-[15px] font-extrabold text-white leading-tight">{game.name}</h3>
+          </div>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.06, background: "rgba(255,255,255,0.12)" }}
+          whileTap={{ scale: 0.94 }}
+          onClick={() => onNavigate(game.slug)}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold"
+          style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC", transition: "background 0.18s" }}
+        >
+          View All <ArrowRight size={11} />
+        </motion.button>
+      </motion.div>
+
+      {/* Product cards grid */}
+      <div className="grid grid-cols-3 gap-3">
+        {products.length > 0
+          ? products.map((p, i) => <MiniProductCard key={p._id} product={p} game={game} index={i} />)
+          : [0, 1, 2].map(i => (
+              <div key={i} className="rounded-2xl animate-pulse"
+                style={{ paddingTop: "calc(82% + 64px)", background: "rgba(255,255,255,0.035)", border: "1.5px dashed rgba(165,180,252,0.08)" }} />
+            ))
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ── Marquee ticker ─────────────────────────────────────────── */
+const TICKER_ITEMS = [
+  "⚡ Instant Delivery", "🔒 Secure Payments", "🎮 10+ Games Supported",
+  "⭐ 4.9 Rating", "🛡️ 2,000+ Orders", "💬 24/7 Live Support",
+  "🔥 New Stock Added Daily", "✅ Verified Sellers",
+];
+
+function MarqueeTicker() {
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  return (
+    <div className="relative overflow-hidden py-3" style={{ background: "linear-gradient(90deg,#1E1B4B 0%,#312E80 50%,#1E1B4B 100%)", borderTop: "1px solid rgba(165,180,252,0.15)", borderBottom: "1px solid rgba(165,180,252,0.15)" }}>
+      {/* Left/right fade masks */}
+      <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to right,#1E1B4B,transparent)" }} />
+      <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to left,#1E1B4B,transparent)" }} />
+      <motion.div
+        className="flex items-center gap-8 whitespace-nowrap"
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ repeat: Infinity, duration: 22, ease: "linear" }}
+        style={{ width: "max-content" }}
+      >
+        {items.map((item, i) => (
+          <span key={i} className="text-xs font-semibold flex items-center gap-2" style={{ color: "rgba(165,180,252,0.85)" }}>
+            {item}
+            <span className="w-1 h-1 rounded-full inline-block ml-2" style={{ background: "rgba(165,180,252,0.3)" }} />
+          </span>
+        ))}
+      </motion.div>
+    </div>
   );
 }
 
@@ -307,6 +556,11 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
+          MARQUEE TICKER
+      ══════════════════════════════════════════ */}
+      <MarqueeTicker />
+
+      {/* ══════════════════════════════════════════
           SHOP BY GAME  (replaces Tutorials)
       ══════════════════════════════════════════ */}
       <section
@@ -436,6 +690,86 @@ export default function Home() {
               </motion.button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          TOP PICKS BY GAME (scroll-reveal products)
+      ══════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden line-grid-dark" style={{ backgroundColor: "#0F0C2E" }}>
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%,rgba(79,70,229,.13) 0%,transparent 65%)" }} />
+        <ParticleField count={20} light={false} />
+
+        <div className="max-w-5xl mx-auto relative z-10">
+          {/* Section header */}
+          <div className="text-center mb-14">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(165,180,252,.1)", border: "1px solid rgba(165,180,252,.22)" }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#22c55e", boxShadow: "0 0 6px #22c55e" }}
+              />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#A5B4FC" }}>Live Stock</span>
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="font-display text-3xl sm:text-4xl font-extrabold text-white"
+              style={{ letterSpacing: "-0.025em" }}
+            >
+              Top Picks,{" "}
+              <span style={{ background: "linear-gradient(90deg,#818CF8,#C4B5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                Every Game
+              </span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.16 }}
+              className="mt-3 text-sm max-w-md mx-auto"
+              style={{ color: "rgba(165,180,252,0.7)" }}
+            >
+              Scroll to reveal our hottest recommended items — add them straight to your cart.
+            </motion.p>
+          </div>
+
+          {/* Game rows */}
+          {games.slice(0, 6).map(game => (
+            <GameProductRow key={game._id} game={game} onNavigate={slug => navigate(`/game/${slug}`)} />
+          ))}
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mt-6"
+          >
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 0 36px rgba(79,70,229,0.55)" }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setShopOpen(true)}
+              className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-white"
+              style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)", boxShadow: "0 8px 28px rgba(49,46,128,0.45)" }}
+            >
+              <ShoppingCart size={16} /> Browse All Games
+            </motion.button>
+          </motion.div>
         </div>
       </section>
 
