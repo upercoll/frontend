@@ -159,6 +159,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 /* ── Mini product card (used in Top Picks section) ─────────── */
 function MiniProductCard({ product, game, index }: { product: MiniProduct; game: ShopGame; index: number }) {
   const { addItem } = useCart();
+  const [, navigate] = useLocation();
   const [justAdded, setJustAdded] = useState(false);
 
   function handleAdd(e: React.MouseEvent) {
@@ -188,7 +189,8 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ delay: 0.1 + index * 0.14, duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col rounded-2xl overflow-hidden relative group"
+      onClick={() => navigate(`/product/${product._id}`)}
+      className="flex flex-col rounded-2xl overflow-hidden relative group cursor-pointer"
       style={{
         background: "rgba(255,255,255,0.055)",
         border: "1.5px solid rgba(165,180,252,0.13)",
