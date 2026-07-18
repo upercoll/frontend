@@ -653,7 +653,7 @@ const COUNTRIES = [
 ];
 
 export default function Checkout() {
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice, clearCart, removeItem } = useCart();
   const [, navigate] = useLocation();
   const { user, openAuthModal } = useAuth();
 
@@ -1222,13 +1222,24 @@ export default function Checkout() {
 
                       {/* Items */}
                       <div className="px-5 py-3 space-y-3 max-h-52 overflow-y-auto" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
+                        <AnimatePresence initial={false}>
                         {items.map((item, i) => (
-                          <motion.div key={item.id} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06 + i * 0.04 }} className="flex items-center gap-3">
+                          <motion.div key={item.id} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8, scale: 0.95 }} transition={{ delay: 0.06 + i * 0.04 }} className="flex items-center gap-3">
                             <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
-                              <div className="w-full h-full rounded-xl overflow-hidden relative" style={{ background: `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` }}>
-                                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
+                              <div className="w-full h-full rounded-xl overflow-hidden relative">
+                                {item.bgImageUrl ? (
+                                  <>
+                                    <img src={item.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                                    <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` }} />
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
+                                  </>
+                                )}
                                 {item.image && (
-                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />
+                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-contain" style={{ padding: "3px" }} />
                                 )}
                               </div>
                               {item.quantity > 1 && (
@@ -1242,8 +1253,17 @@ export default function Checkout() {
                               {item.originalPrice && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${item.originalPrice.toFixed(2)}</p>}
                             </div>
                             <span className="text-sm font-extrabold flex-shrink-0" style={{ color: "#A5B4FC" }}>${(item.price * item.quantity).toFixed(2)}</span>
+                            <motion.button
+                              whileTap={{ scale: 0.88 }}
+                              onClick={() => removeItem(item.id)}
+                              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                              style={{ background: "rgba(255,255,255,0.07)", color: "#64748B" }}
+                            >
+                              <X size={10} strokeWidth={2.5} />
+                            </motion.button>
                           </motion.div>
                         ))}
+                        </AnimatePresence>
                       </div>
 
                       {/* Promo code */}
