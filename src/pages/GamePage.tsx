@@ -134,7 +134,7 @@ function ProductCard({
     e.stopPropagation();
     if (product.outOfStock) return;
     const gameSlug = window.location.pathname.match(/^\/game\/([^/]+)/)?.[1];
-    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl, game: gameSlug });
+    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl, game: gameSlug, bgImageUrl: gameBgImageUrl });
     setJustAdded(true);
     setBounce(true);
     setTimeout(() => setJustAdded(false), 1400);
@@ -142,7 +142,7 @@ function ProductCard({
   }
 
   const savings = product.originalPrice && !product.outOfStock
-    ? (product.originalPrice - product.price).toFixed(2) : null;
+    ? Math.round((product.originalPrice - product.price) / product.originalPrice * 100) : null;
 
   return (
     <motion.div
@@ -216,7 +216,7 @@ function ProductCard({
         ) : savings ? (
           <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
             style={{ background: "#dc2626", color: "white" }}>
-            <Tag size={8} /> Save ${savings}
+            <Tag size={8} /> Save {savings}%
           </div>
         ) : null}
 
