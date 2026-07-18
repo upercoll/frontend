@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck } from "lucide-react";
+import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck, Gamepad2, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -19,17 +19,43 @@ interface NavbarProps {
   dark?: boolean;
 }
 
+/* ── Desktop nav link ───────────────────────────────────── */
+function DesktopNavLink({
+  label, onClick, lightMode,
+}: { label: string; onClick: () => void; lightMode: boolean }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className="px-3 py-1.5 rounded-full text-sm font-semibold transition-colors duration-200"
+      style={{
+        color: lightMode ? "#312E80" : "rgba(255,255,255,0.85)",
+        background: "transparent",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = lightMode
+          ? "rgba(49,46,128,0.08)"
+          : "rgba(255,255,255,0.1)";
+      }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+    >
+      {label}
+    </motion.button>
+  );
+}
+
 export default function Navbar({ dark = false }: NavbarProps) {
-  const [scrolled, setScrolled]   = useState(false);
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [, navigate]              = useLocation();
-  const { totalItems, openCart }  = useCart();
-  const { user, logout, openAuthModal } = useAuth();
-  const [cartBounce, setCartBounce] = useState(false);
-  const [tappedGame, setTappedGame] = useState<string | null>(null);
-  const [games, setGames]         = useState<NavGame[]>([]);
-  const [gamesLoading, setGamesLoading] = useState(false);
+  const [scrolled,      setScrolled]      = useState(false);
+  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [profileOpen,   setProfileOpen]   = useState(false);
+  const [, navigate]                      = useLocation();
+  const { totalItems,   openCart }        = useCart();
+  const { user, logout, openAuthModal }   = useAuth();
+  const [cartBounce,    setCartBounce]    = useState(false);
+  const [tappedGame,    setTappedGame]    = useState<string | null>(null);
+  const [games,         setGames]         = useState<NavGame[]>([]);
+  const [gamesLoading,  setGamesLoading]  = useState(false);
   const prevTotalRef = useState(totalItems);
   const dropdownRef  = useRef<HTMLDivElement>(null);
 
@@ -83,6 +109,26 @@ export default function Navbar({ dark = false }: NavbarProps) {
     }, 480);
   }
 
+  /* Smooth scroll helpers for desktop nav links */
+  function scrollToShop() {
+    const el = document.getElementById("shop-games");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      navigate("/");
+      window.dispatchEvent(new Event("rbstars:open-shop"));
+    }
+  }
+
+  function scrollToHowItWorks() {
+    const el = document.getElementById("how-it-works");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      navigate("/");
+    }
+  }
+
   const lightMode = !dark && scrolled;
 
   return (
@@ -98,6 +144,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
         }`}
         style={lightMode ? { borderBottom: "1px solid rgba(49,46,128,0.1)" } : {}}
       >
+        {/* Promo banner */}
         <div
           className="relative overflow-hidden text-center py-2 px-4"
           style={{ background: "linear-gradient(90deg,#1e1b4b,#4f46e5,#7c3aed,#4f46e5,#1e1b4b)", backgroundSize: "200% 100%" }}
@@ -116,34 +163,50 @@ export default function Navbar({ dark = false }: NavbarProps) {
             FOR 10% OFF ON YOUR PURCHASES!
           </p>
         </div>
+
+        {/* Main nav bar */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
 
-            <motion.button
-              data-testid="button-hamburger"
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={() => setMenuOpen(true)}
-              className="flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-200"
-              style={lightMode
-                ? { borderColor: "rgba(49,46,128,0.25)", color: "#312E80", background: "rgba(49,46,128,0.04)" }
-                : { borderColor: "rgba(255,255,255,0.3)", color: "white" }
-              }
-            >
-              <Menu size={20} />
-            </motion.button>
+            {/* ── Left group: hamburger (mobile) + logo + desktop nav ── */}
+            <div className="flex items-center gap-3">
+              {/* Mobile hamburger */}
+              <motion.button
+                data-testid="button-hamburger"
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={() => setMenuOpen(true)}
+                className="md:hidden flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-200"
+                style={lightMode
+                  ? { borderColor: "rgba(49,46,128,0.25)", color: "#312E80", background: "rgba(49,46,128,0.04)" }
+                  : { borderColor: "rgba(255,255,255,0.3)", color: "white" }
+                }
+              >
+                <Menu size={20} />
+              </motion.button>
 
-            <Link href="/" data-testid="link-logo">
-              <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2 cursor-pointer select-none">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#312E80" }}>
-                  <Star size={16} fill="white" color="white" />
-                </div>
-                <span className="text-xl font-bold tracking-tight transition-colors duration-300" style={{ color: lightMode ? "#1E1B4B" : "white" }}>
-                  RB<span style={{ color: lightMode ? "#312E80" : "#A5B4FC" }}>stars</span>
-                </span>
-              </motion.div>
-            </Link>
+              {/* Logo */}
+              <Link href="/" data-testid="link-logo">
+                <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2 cursor-pointer select-none">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#312E80" }}>
+                    <Star size={16} fill="white" color="white" />
+                  </div>
+                  <span className="text-xl font-bold tracking-tight transition-colors duration-300" style={{ color: lightMode ? "#1E1B4B" : "white" }}>
+                    RB<span style={{ color: lightMode ? "#312E80" : "#A5B4FC" }}>stars</span>
+                  </span>
+                </motion.div>
+              </Link>
 
+              {/* Desktop nav links */}
+              <nav className="hidden md:flex items-center gap-0.5 ml-4">
+                <DesktopNavLink label="Shop" onClick={scrollToShop} lightMode={lightMode} />
+                <DesktopNavLink label="How It Works" onClick={scrollToHowItWorks} lightMode={lightMode} />
+              </nav>
+            </div>
+
+            {/* ── Right group: cart + profile + desktop CTA ── */}
             <div className="flex items-center gap-2">
+
+              {/* Cart */}
               <motion.button
                 data-testid="button-cart"
                 animate={cartBounce ? { scale: [1, 1.35, 0.88, 1.12, 1] } : {}}
@@ -173,6 +236,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 </AnimatePresence>
               </motion.button>
 
+              {/* Profile / Login */}
               {user ? (
                 <div ref={dropdownRef} className="relative">
                   <motion.button
@@ -186,7 +250,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
                       : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.18)" }
                     }
                   >
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
+                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
                         : <User size={13} color="white" />
@@ -203,42 +268,27 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   <AnimatePresence>
                     {profileOpen && (
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.92, y: -8 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.92, y: -8 }}
-                        transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute right-0 top-[calc(100%+8px)] w-64 rounded-2xl overflow-hidden"
-                        style={{ background: "#0F0C2E", border: "1.5px solid rgba(49,46,128,0.35)", boxShadow: "0 24px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(165,180,252,0.05)" }}
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                        className="absolute right-0 top-full mt-2 w-52 rounded-2xl p-2 z-50"
+                        style={{ background: "#1a1730", border: "1.5px solid rgba(165,180,252,0.15)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}
                       >
-                        <div className="px-4 py-4" style={{ borderBottom: "1px solid rgba(165,180,252,0.08)" }}>
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
-                              {user.robloxAvatarUrl
-                                ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                                : <User size={20} color="white" />
-                              }
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
-                              <p className="text-[11px] truncate" style={{ color: "#A5B4FC" }}>@{user.robloxUsername}</p>
-                              {!user.emailVerified && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
-                                  Email unverified
-                                </span>
-                              )}
-                              {user.emailVerified && (
-                                <span className="text-[10px] font-bold flex items-center gap-0.5 mt-0.5" style={{ color: "#4ade80" }}>
-                                  <ShieldCheck size={9} />Verified
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                        <div className="px-3 py-2.5 mb-1">
+                          <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
+                          <p className="text-[11px]" style={{ color: "#A5B4FC" }}>@{user.robloxUsername}</p>
                         </div>
-                        <div className="py-2 px-2">
-                          <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile" onClick={() => { setProfileOpen(false); openAuthModal("edit"); }} />
-                          <div className="my-1.5 mx-2" style={{ height: "1px", background: "rgba(165,180,252,0.08)" }} />
-                          <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out" danger onClick={() => { logout(); setProfileOpen(false); }} />
-                        </div>
+                        <div className="h-px mb-1" style={{ background: "rgba(165,180,252,0.1)" }} />
+                        <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile"
+                          onClick={() => { setProfileOpen(false); navigate("/profile"); }} />
+                        {user.isAdmin && (
+                          <ProfileDropdownItem icon={<ShieldCheck size={14} />} label="Admin Panel"
+                            onClick={() => { setProfileOpen(false); navigate("/admin"); }} />
+                        )}
+                        <div className="h-px my-1" style={{ background: "rgba(165,180,252,0.1)" }} />
+                        <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out"
+                          onClick={() => { logout(); setProfileOpen(false); }} danger />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -246,133 +296,136 @@ export default function Navbar({ dark = false }: NavbarProps) {
               ) : (
                 <motion.button
                   data-testid="button-login"
-                  whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(49,46,128,0.4)" }}
+                  whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => openAuthModal("login")}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold shadow-lg transition-colors duration-200"
-                  style={{ background: "#1E1B4B" }}
+                  className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all"
+                  style={lightMode
+                    ? { background: "rgba(49,46,128,0.08)", border: "1.5px solid rgba(49,46,128,0.22)", color: "#312E80" }
+                    : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", color: "white" }
+                  }
                 >
-                  <User size={15} /> Log In
+                  <User size={14} /> Log In
                 </motion.button>
               )}
+
+              {/* Desktop Shop Now CTA */}
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: "0 8px 28px rgba(79,70,229,0.5)" }}
+                whileTap={{ scale: 0.96 }}
+                onClick={scrollToShop}
+                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white"
+                style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}
+              >
+                <ShoppingCart size={14} /> Shop Now
+              </motion.button>
             </div>
           </div>
         </div>
       </motion.header>
 
+      {/* ── Mobile Drawer ──────────────────────────────────── */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            key="fullmenu"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] flex flex-col"
+            key="drawer"
+            initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
+            transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
             style={{ background: "#0F0C2E" }}
           >
-            {}
-            <div className="line-grid-dark" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.7 }} />
-            <div className="rb-particle" style={{ width: 6,  height: 6,  background: "#A5B4FC", left: "12%", top: "18%", animationDuration: "7.2s",  animationDelay: "0s",    "--p-op": 0.22 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 9,  height: 9,  background: "#818CF8", left: "78%", top: "10%", animationDuration: "9.5s",  animationDelay: "-2.1s", "--p-op": 0.16 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 5,  height: 5,  background: "#C7D2FE", left: "55%", top: "35%", animationDuration: "8.1s",  animationDelay: "-4.3s", "--p-op": 0.14 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 7,  height: 7,  background: "#6366F1", left: "30%", top: "60%", animationDuration: "10.3s", animationDelay: "-1.5s", "--p-op": 0.18 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 4,  height: 4,  background: "#A5B4FC", left: "88%", top: "55%", animationDuration: "6.8s",  animationDelay: "-3.7s", "--p-op": 0.12 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 8,  height: 8,  background: "#818CF8", left: "20%", top: "80%", animationDuration: "11.0s", animationDelay: "-6.2s", "--p-op": 0.15 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 5,  height: 5,  background: "#C7D2FE", left: "65%", top: "72%", animationDuration: "7.6s",  animationDelay: "-0.9s", "--p-op": 0.13 } as React.CSSProperties} />
-
-            <div className="flex items-center justify-between px-5 h-16 flex-shrink-0" style={{ borderBottom: "1px solid rgba(165,180,252,0.08)", position: "relative" }}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#312E80" }}>
-                  <Star size={15} fill="white" color="white" />
+            {/* Drawer header */}
+            <div className="flex items-center justify-between px-5 pt-12 pb-6 flex-shrink-0">
+              <Link href="/" onClick={() => setMenuOpen(false)}>
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#312E80" }}>
+                    <Star size={16} fill="white" color="white" />
+                  </div>
+                  <span className="text-xl font-bold text-white">
+                    RB<span style={{ color: "#A5B4FC" }}>stars</span>
+                  </span>
                 </div>
-                <span className="text-xl font-bold text-white">RB<span style={{ color: "#A5B4FC" }}>stars</span></span>
-              </div>
+              </Link>
               <motion.button
-                data-testid="button-close-menu"
-                whileHover={{ scale: 1.1, backgroundColor: "rgba(49,46,128,0.3)" }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                 onClick={() => setMenuOpen(false)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors"
-                style={{ border: "1.5px solid rgba(165,180,252,0.15)" }}
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
               >
-                <X size={20} />
+                <X size={18} color="white" />
               </motion.button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4" style={{ position: "relative" }}>
-              <p className="text-[11px] font-bold tracking-widest uppercase mb-3 px-0.5" style={{ color: "rgba(165,180,252,0.45)" }}>
+            {/* Quick action buttons */}
+            <div className="px-5 mb-6 flex flex-col gap-3 flex-shrink-0">
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setTimeout(() => {
+                    const el = document.getElementById("shop-games");
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 350);
+                }}
+                className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}
+              >
+                <ShoppingCart size={16} /> Browse Shop
+              </motion.button>
+            </div>
+
+            {/* Section label */}
+            <div className="px-5 mb-3 flex-shrink-0">
+              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: "rgba(165,180,252,0.5)" }}>
                 Games
               </p>
+            </div>
+
+            {/* Games list */}
+            <div className="flex-1 overflow-y-auto px-5 pb-6">
               {gamesLoading ? (
-                <div className="grid grid-cols-2 gap-2.5 pb-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-2xl animate-pulse" style={{ aspectRatio: "3/2", background: "rgba(165,180,252,0.07)", border: "1px solid rgba(165,180,252,0.1)" }} />
-                  ))}
-                </div>
-              ) : games.length === 0 ? (
-                <div className="py-8 text-center">
-                  <p className="text-sm" style={{ color: "rgba(165,180,252,0.4)" }}>No games yet</p>
+                <div className="flex items-center justify-center py-12">
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-6 h-6 rounded-full border-2 border-t-transparent"
+                    style={{ borderColor: "rgba(165,180,252,0.3)", borderTopColor: "#A5B4FC" }} />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2.5 pb-4">
+                <div className="grid grid-cols-2 gap-3">
                   {games.map((game, i) => {
+                    const c1 = game.gradient?.from || "#6d28d9";
+                    const c2 = game.gradient?.to   || "#4c1d95";
                     const tapped = tappedGame === game.slug;
-                    const c1 = game.gradient?.from || "#4F46E5";
-                    const c2 = game.gradient?.to || "#1E1B4B";
                     return (
                       <motion.button
                         key={game._id}
-                        initial={{ opacity: 0, scale: 0.88, y: 8 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 + 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                        whileHover={!tapped ? { scale: 1.03 } : {}}
-                        whileTap={{ scale: 0.96 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04, duration: 0.3 }}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => goToGame(game.slug)}
-                        data-testid={`link-menu-game-${i + 1}`}
-                        className="relative flex flex-col overflow-hidden rounded-2xl text-left"
+                        className="relative flex flex-col rounded-2xl overflow-hidden"
                         style={{
-                          aspectRatio: "3/2",
-                          background: "rgba(255,255,255,0.055)",
-                          backdropFilter: "blur(20px)",
-                          WebkitBackdropFilter: "blur(20px)",
-                          border: tapped
-                            ? "2px solid rgba(99,102,241,0.9)"
-                            : "1px solid rgba(255,255,255,0.10)",
-                          boxShadow: tapped
-                            ? "0 0 0 4px rgba(79,70,229,0.2), 0 0 24px rgba(79,70,229,0.4)"
-                            : "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07)",
-                          transition: "border 0.18s ease, box-shadow 0.22s ease",
+                          border: tapped ? `2px solid ${c1}` : "1.5px solid rgba(165,180,252,0.12)",
+                          aspectRatio: "1 / 1",
+                          transition: "border-color 0.2s ease",
                         }}
                       >
-                        <AnimatePresence>
-                          {tapped && (
-                            <motion.div
-                              className="absolute inset-0 rounded-2xl pointer-events-none"
-                              style={{ border: "2px solid rgba(99,102,241,0.55)", zIndex: 20 }}
-                              animate={{ opacity: [0.5, 1, 0.5] }}
-                              transition={{ repeat: Infinity, duration: 0.65, ease: "easeInOut" }}
-                            />
-                          )}
-                        </AnimatePresence>
-
-                        <div className="relative flex-1 overflow-hidden">
-                          {game.imageUrl ? (
-                            <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover" />
-                          ) : (
-                            <>
-                              <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)` }} />
-                              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "14px 14px" }} />
-                              <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 70%)" }} />
-                            </>
-                          )}
-                          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${c1}, ${c2})`, pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", top: 8, right: 8, width: 6, height: 6, borderRadius: "50%", background: `linear-gradient(135deg, ${c1}, ${c2})`, boxShadow: `0 0 7px ${c1}dd`, pointerEvents: "none" }} />
-                        </div>
-
-                        <div className="flex-shrink-0 px-2.5 py-2" style={{ background: "rgba(0,0,0,0.32)", backdropFilter: "blur(8px)" }}>
-                          <span className="text-white font-bold text-[12px] leading-tight block truncate" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
-                            {game.name}
-                          </span>
-                        </div>
+                        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${c1} 0%,${c2} 100%)` }} />
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+                        {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-75" />}
+                        <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.8),transparent)" }} />
+                        <span className="absolute bottom-2 left-2 right-2 text-white font-bold text-xs leading-tight text-left" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
+                          {game.name}
+                        </span>
+                        {tapped && (
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="absolute inset-0 flex items-center justify-center rounded-2xl"
+                            style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)" }}>
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                              className="w-6 h-6 rounded-full border-2 border-t-transparent"
+                              style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} />
+                          </motion.div>
+                        )}
                       </motion.button>
                     );
                   })}
@@ -380,11 +433,13 @@ export default function Navbar({ dark = false }: NavbarProps) {
               )}
             </div>
 
-            <div className="px-5 py-5 flex-shrink-0" style={{ borderTop: "1px solid rgba(165,180,252,0.08)", position: "relative" }}>
+            {/* Auth section */}
+            <div className="px-5 pb-8 flex-shrink-0 border-t" style={{ borderColor: "rgba(165,180,252,0.1)", paddingTop: 16 }}>
               {user ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-2xl" style={{ background: "rgba(49,46,128,0.15)", border: "1.5px solid rgba(49,46,128,0.3)" }}>
-                    <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 px-3 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
                         : <User size={16} color="white" />
