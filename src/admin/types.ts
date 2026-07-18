@@ -82,6 +82,7 @@ export interface Game {
   description?: string;
   imageUrl?: string;
   bannerUrl?: string;
+  bgImageUrl?: string;
   gradient: { from: string; to: string };
   active: boolean;
   featured: boolean;
