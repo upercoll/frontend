@@ -307,6 +307,12 @@
   }
 }
 
+/* ── Marquee ticker (infinite, seamless) ── */
+@keyframes rbTicker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-25%); }
+}
+
 /* ── Particle float ── */
 @keyframes rbParticleFloat {
   0%   { transform: translate(0px, 0px) scale(1);    opacity: var(--p-op, 0.18); }
