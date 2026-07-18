@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -149,6 +149,7 @@
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
+  --app-font-display: 'Space Grotesk', 'Inter', sans-serif;
   --radius: 0.5rem;
 
   --shadow-2xs: 0px 1px 2px 0px rgba(49, 46, 128, 0.06);
@@ -361,6 +362,26 @@
     linear-gradient(rgba(165,180,252,0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(165,180,252,0.045) 1px, transparent 1px);
   background-size: 44px 44px;
+}
+
+/* ── Display / accent font ── */
+.font-display {
+  font-family: var(--app-font-display);
+}
+
+/* ── Gradient text utilities ── */
+.gradient-text {
+  background: linear-gradient(135deg, #A5B4FC 0%, #6366F1 50%, #C7D2FE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-purple {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 60%, #6366F1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ── Indigo glare (for light/white card surfaces) ── */
