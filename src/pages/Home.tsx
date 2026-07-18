@@ -174,6 +174,7 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
       gradient: [product.gradient.from, product.gradient.to],
       image: product.imageUrl,
       game: game.slug,
+      bgImageUrl: game.bgImageUrl,
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1400);
@@ -290,12 +291,12 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
       </div>
 
       {/* Info row */}
-      <div className="p-3 flex flex-col gap-1">
-        <p className="text-[11px] font-semibold leading-tight text-white line-clamp-2">{product.name}</p>
+      <div className="p-3 md:p-4 flex flex-col gap-1">
+        <p className="text-[11px] md:text-[13px] font-semibold leading-tight text-white line-clamp-2">{product.name}</p>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-extrabold" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
+          <span className="text-sm md:text-base font-extrabold" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
           {product.originalPrice && (
-            <span className="text-[10px] line-through" style={{ color: "#475569" }}>${product.originalPrice.toFixed(2)}</span>
+            <span className="text-[10px] md:text-xs line-through" style={{ color: "#475569" }}>${product.originalPrice.toFixed(2)}</span>
           )}
         </div>
       </div>
@@ -374,7 +375,7 @@ function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slu
       </motion.div>
 
       {/* Product cards grid */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
         {products.length > 0
           ? products.map((p, i) => <MiniProductCard key={p._id} product={p} game={game} index={i} />)
           : [0, 1, 2].map(i => (
