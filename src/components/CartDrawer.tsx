@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ShoppingCart, Minus, Plus, Trash2, Star } from "lucide-react";
+import { X, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "wouter";
 import GameSelectModal from "@/components/GameSelectModal";
@@ -212,33 +212,12 @@ export default function CartDrawer() {
                 <div className="flex-shrink-0 px-4 pb-8 pt-3 space-y-3"
                   style={{ borderTop: "1px solid rgba(165,180,252,0.08)" }}>
 
-                  <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
-                    style={{ background: "linear-gradient(135deg,#1E1B4B 0%,#3730A3 55%,#4F46E5 100%)" }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: "rgba(255,255,255,0.18)" }}>
-                        <Star size={16} fill="white" color="white" />
-                      </div>
-                      <div>
-                        <p className="text-white font-extrabold text-[11px] tracking-widest uppercase">RBstars Members</p>
-                        <motion.button
-                          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                          className="mt-1 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold"
-                          style={{ background: "rgba(255,255,255,0.22)", color: "white" }}>
-                          ✦ GET 10% OFF
-                        </motion.button>
-                      </div>
-                    </div>
-                    <span className="text-white font-extrabold text-sm">10% OFF</span>
-                  </div>
-
                   <div className="rounded-2xl p-4"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.12)" }}>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-extrabold text-white">${discountedTotal.toFixed(2)}</span>
-                      <span className="text-sm line-through" style={{ color: "#64748B" }}>${totalPrice.toFixed(2)}</span>
+                      <span className="text-xl font-extrabold text-white">${totalPrice.toFixed(2)}</span>
                     </div>
-                    <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>Discounts Applied at Checkout</p>
+                    <p className="text-xs mt-0.5" style={{ color: "#64748B" }}>Total</p>
                   </div>
 
                   <CheckoutBurstButton onClick={handleCheckout} />
