@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -274,12 +274,12 @@ function SectionBlock({
   title: string; icon: LucideIcon; products: Product[]; onViewAll: () => void;
   selectedId?: string; onSelect?: (id: string) => void;
 }) {
-  const [page, setPage] = useState(0);
-  const totalPages = Math.ceil(products.length / DESKTOP_PER_PAGE);
-  const desktopSlice = products.slice(page * DESKTOP_PER_PAGE, (page + 1) * DESKTOP_PER_PAGE);
+  const rowRef = useRef<HTMLDivElement>(null);
 
-  const canPrev = page > 0;
-  const canNext = page < totalPages - 1;
+  function scrollRow(dir: "left" | "right") {
+    if (!rowRef.current) return;
+    rowRef.current.scrollBy({ left: dir === "right" ? 320 : -320, behavior: "smooth" });
+  }
 
   return (
     <motion.div
@@ -289,7 +289,7 @@ function SectionBlock({
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className="mb-8"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{ background: "rgba(79,70,229,0.2)", border: "1px solid rgba(165,180,252,0.2)" }}>
@@ -299,41 +299,22 @@ function SectionBlock({
         </div>
 
         <div className="flex items-center gap-2">
-          {totalPages > 1 && (
-            <div className="hidden md:flex items-center gap-1">
-              <motion.button
-                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
-                onClick={() => setPage(p => Math.max(0, p - 1))}
-                disabled={!canPrev}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{
-                  background: canPrev ? "rgba(79,70,229,0.2)" : "rgba(255,255,255,0.04)",
-                  border: "1.5px solid rgba(165,180,252,0.2)",
-                  color: canPrev ? "#A5B4FC" : "rgba(165,180,252,0.25)",
-                  cursor: canPrev ? "pointer" : "not-allowed",
-                  transition: "all 0.2s",
-                }}>
-                <ChevronLeft size={13} />
-              </motion.button>
-              <span className="text-[10px] font-semibold tabular-nums px-1" style={{ color: "rgba(165,180,252,0.5)" }}>
-                {page + 1}/{totalPages}
-              </span>
-              <motion.button
-                whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
-                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={!canNext}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{
-                  background: canNext ? "rgba(79,70,229,0.2)" : "rgba(255,255,255,0.04)",
-                  border: "1.5px solid rgba(165,180,252,0.2)",
-                  color: canNext ? "#A5B4FC" : "rgba(165,180,252,0.25)",
-                  cursor: canNext ? "pointer" : "not-allowed",
-                  transition: "all 0.2s",
-                }}>
-                <ChevronRight size={13} />
-              </motion.button>
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            <motion.button
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
+              onClick={() => scrollRow("left")}
+              className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(79,70,229,0.2)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}>
+              <ChevronLeft size={13} />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
+              onClick={() => scrollRow("right")}
+              className="w-7 h-7 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(79,70,229,0.2)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}>
+              <ChevronRight size={13} />
+            </motion.button>
+          </div>
 
           <motion.button
             whileHover={{ scale: 1.06, boxShadow: "0 0 18px rgba(79,70,229,0.4)" }}
@@ -352,7 +333,8 @@ function SectionBlock({
       </div>
 
       <div
-        className="md:hidden flex gap-3 overflow-x-auto pb-2"
+        ref={rowRef}
+        className="flex gap-3 overflow-x-auto pb-2"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
       >
         {products.map((product, i) => (
@@ -365,28 +347,6 @@ function SectionBlock({
           </div>
         ))}
       </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={page}
-          initial={{ opacity: 0, x: 12 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -12 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden md:grid grid-cols-2 gap-4"
-        >
-          {desktopSlice.map((product, i) => (
-            <ProductCard
-              key={product.id} product={product} index={i} compact
-              selected={selectedId === product.id}
-              onSelect={() => onSelect?.(product.id)}
-            />
-          ))}
-          {Array.from({ length: DESKTOP_PER_PAGE - desktopSlice.length }).map((_, i) => (
-            <div key={`ghost-${i}`} className="rounded-xl" style={{ background: "rgba(255,255,255,0.015)", border: "1.5px dashed rgba(165,180,252,0.06)" }} />
-          ))}
-        </motion.div>
-      </AnimatePresence>
     </motion.div>
   );
 }
