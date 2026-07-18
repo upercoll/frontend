@@ -13,6 +13,7 @@ import AuthModal from "@/components/AuthModal";
 import WelcomeModal from "@/components/WelcomeModal";
 import Home from "@/pages/Home";
 import GamePage from "@/pages/GamePage";
+import ProductPage from "@/pages/ProductPage";
 import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import NotFound from "@/pages/not-found";
@@ -156,20 +157,22 @@ function DiscordFloat() {
 function StorefrontRouter() {
   const [location] = useLocation();
   const isGamePage = location.startsWith("/game/");
+  const isProductPage = location.startsWith("/product/");
   const isCheckout = location === "/checkout";
   const isSuccess = location === "/order-success";
 
   return (
     <>
-      {!isCheckout && !isSuccess && <Navbar dark={isGamePage} />}
+      {!isCheckout && !isSuccess && <Navbar dark={isGamePage || isProductPage} />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
+        <Route path="/product/:id" component={ProductPage} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/order-success" component={PaymentSuccess} />
         <Route component={NotFound} />
       </Switch>
-      {!isGamePage && !isCheckout && !isSuccess && <Footer />}
+      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && <Footer />}
       <SupportChat />
       <CartDrawer />
       <AuthModal />
