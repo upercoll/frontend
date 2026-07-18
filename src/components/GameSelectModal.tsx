@@ -54,9 +54,9 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm" style={{ zIndex: zBase - 10 }} onClick={onClose} />
 
           <motion.div key="sheet"
-            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-0 left-0 right-0 flex flex-col rounded-t-3xl overflow-hidden"
-            style={{ zIndex: zBase, background: "#0F0C2E", maxHeight: "90vh", border: "1.5px solid rgba(165,180,252,0.12)", borderBottom: "none" }}>
+            initial={{ opacity: 0, scale: 0.95, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 24 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-x-4 bottom-4 top-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:w-full sm:max-w-[520px] sm:max-h-[85vh] flex flex-col rounded-3xl overflow-hidden"
+            style={{ zIndex: zBase, background: "#0F0C2E", border: "1.5px solid rgba(165,180,252,0.15)" }}>
 
             <div className="line-grid-dark" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.65, borderRadius: "inherit" }} />
             <div className="rb-particle" style={{ width: 7, height: 7, background: "#A5B4FC", left: "8%",  top: "15%", animationDuration: "8.4s",  animationDelay: "0s",    "--p-op": 0.20 } as React.CSSProperties} />
@@ -65,11 +65,7 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
             <div className="rb-particle" style={{ width: 4, height: 4, background: "#C7D2FE", left: "25%", top: "65%", animationDuration: "6.9s",  animationDelay: "-1.8s", "--p-op": 0.18 } as React.CSSProperties} />
             <div className="rb-particle" style={{ width: 6, height: 6, background: "#818CF8", left: "72%", top: "58%", animationDuration: "9.0s",  animationDelay: "-3.4s", "--p-op": 0.14 } as React.CSSProperties} />
 
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0" style={{ position: "relative" }}>
-              <div className="w-12 h-1.5 rounded-full" style={{ background: "rgba(165,180,252,0.3)" }} />
-            </div>
-
-            <div className="flex items-center justify-between px-5 py-3 flex-shrink-0" style={{ position: "relative" }}>
+            <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ position: "relative" }}>
               <h2 className="text-xl font-extrabold" style={{
                 background: "linear-gradient(135deg,#A5B4FC 0%,#4F46E5 60%,#818CF8 100%)",
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
