@@ -182,21 +182,26 @@ function ProductCard({
 
       <div className={`rb-glare ${glareDelay}`} style={{ opacity: 0.4 }} />
 
-      <div className="relative overflow-hidden" style={{ paddingTop: "75%" }}>
-        <motion.div
+      <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
+        {/* Static gradient — no y-translate so image never drifts */}
+        <div
           className="absolute inset-0"
           style={{ background: `linear-gradient(135deg,${product.gradient[0]} 0%,${product.gradient[1]} 100%)` }}
-          animate={{ y: [0, -6, 0] }}
-          transition={{ repeat: Infinity, duration: 3.5 + (index % 5) * 0.4, ease: "easeInOut", delay: index * 0.22 }}
         >
           <div className="absolute inset-0 opacity-10"
             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 70%)" }} />
-        </motion.div>
+          {/* Subtle shimmer overlay — animates opacity, not position */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.22) 0%, transparent 70%)" }}
+            animate={{ opacity: [0.7, 1, 0.7] }}
+            transition={{ repeat: Infinity, duration: 3 + (index % 5) * 0.4, ease: "easeInOut", delay: index * 0.18 }}
+          />
+        </div>
 
+        {/* Product image — sits above gradient, never animates position */}
         {product.imageUrl && (
-          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
         )}
 
         {product.outOfStock ? (
@@ -240,18 +245,18 @@ function ProductCard({
         )}
       </div>
 
-      <div className="p-2">
-        <div className="flex items-baseline gap-1 mb-0.5">
-          <span className="text-xs font-extrabold"
+      <div className="p-3">
+        <div className="flex items-baseline gap-1.5 mb-0.5">
+          <span className="text-sm font-extrabold"
             style={{ color: selected ? "#818CF8" : "#A5B4FC", transition: "color 0.2s" }}>
             ${product.price.toFixed(2)}
           </span>
           {product.originalPrice && (
-            <span className="text-[10px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>
+            <span className="text-[11px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>
           )}
         </div>
-        <p className="text-[10px] font-medium leading-tight"
-          style={{ color: selected ? "#C7D2FE" : "white", transition: "color 0.2s" }}>
+        <p className="text-[11px] font-medium leading-tight line-clamp-2"
+          style={{ color: selected ? "#C7D2FE" : "rgba(255,255,255,0.88)", transition: "color 0.2s" }}>
           {product.name}
         </p>
       </div>
@@ -259,7 +264,7 @@ function ProductCard({
   );
 }
 
-const DESKTOP_PER_PAGE = 6;
+const DESKTOP_PER_PAGE = 8;
 
 function SectionBlock({
   title, icon: Icon, products, onViewAll, selectedId, onSelect,
@@ -366,7 +371,7 @@ function SectionBlock({
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -12 }}
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden md:grid grid-cols-6 gap-3"
+          className="hidden md:grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
         >
           {desktopSlice.map((product, i) => (
             <ProductCard
@@ -991,7 +996,7 @@ export default function GamePage() {
                     <p className="text-sm">{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category yet."}</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {filteredProducts.map((pr, i) => (
                       <ProductCard
                         key={pr.id} product={pr} index={i} compact
