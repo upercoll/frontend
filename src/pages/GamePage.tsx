@@ -224,7 +224,7 @@ function ProductCard({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleAddToCart}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold whitespace-nowrap"
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 md:h-8 px-2.5 md:px-3.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] md:text-xs font-semibold whitespace-nowrap"
             style={{
               background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
               border: "1.5px solid rgba(255,255,255,0.25)",
@@ -282,7 +282,8 @@ function SectionBlock({
 
   function scrollRow(dir: "left" | "right") {
     if (!rowRef.current) return;
-    rowRef.current.scrollBy({ left: dir === "right" ? 320 : -320, behavior: "smooth" });
+    const amount = window.innerWidth >= 1024 ? 700 : window.innerWidth >= 768 ? 520 : 320;
+    rowRef.current.scrollBy({ left: dir === "right" ? amount : -amount, behavior: "smooth" });
   }
 
   return (
@@ -303,7 +304,7 @@ function SectionBlock({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-1">
             <motion.button
               whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.88 }}
               onClick={() => scrollRow("left")}
@@ -338,11 +339,11 @@ function SectionBlock({
 
       <div
         ref={rowRef}
-        className="flex gap-3 overflow-x-auto pb-2 md:overflow-visible md:pb-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5"
+        className="flex gap-3 overflow-x-auto pb-2"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
       >
         {products.map((product, i) => (
-          <div key={product.id} className="flex-shrink-0 w-[148px] md:w-auto">
+          <div key={product.id} className="flex-shrink-0 w-[148px] md:w-[200px] lg:w-[220px]">
             <ProductCard
               product={product} index={i}
               selected={selectedId === product.id}
