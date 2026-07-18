@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SupportChat from "@/components/SupportChat";
 import AuthModal from "@/components/AuthModal";
+import WelcomeModal from "@/components/WelcomeModal";
 import Home from "@/pages/Home";
 import GamePage from "@/pages/GamePage";
 import Checkout from "@/pages/Checkout";
@@ -171,6 +172,7 @@ function StorefrontRouter() {
       <SupportChat />
       <CartDrawer />
       <AuthModal />
+      <WelcomeModal />
       <DiscordFloat />
     </>
   );
