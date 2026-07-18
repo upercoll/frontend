@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle, Clock } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game, Category } from "../types";
+import ImageUpload from "../components/ImageUpload";
 
 function getGmt3Hhmm() {
   const gmt3 = new Date(Date.now() + 3 * 60 * 60 * 1000);
@@ -80,6 +81,7 @@ export default function Games() {
   const [gameGradFrom, setGameGradFrom] = useState("#1e3a5f");
   const [gameGradTo, setGameGradTo] = useState("#0f172a");
   const [gameImage, setGameImage] = useState<File | null>(null);
+  const [gameBgImageUrl, setGameBgImageUrl] = useState("");
   const [gameFeatured, setGameFeatured] = useState(false);
   const [gameClaimTime, setGameClaimTime] = useState(0);
   const [gameClaimSchedule, setGameClaimSchedule] = useState<{label: string; from: string; to: string; minutes: number}[]>([]);
@@ -130,13 +132,13 @@ export default function Games() {
   });
 
   const openCreate = () => {
-    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameFeatured(false); setGameClaimTime(0); setGameClaimSchedule([]); setError("");
+    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameBgImageUrl(""); setGameFeatured(false); setGameClaimTime(0); setGameClaimSchedule([]); setError("");
     setEditingGame(null);
     setShowGameModal("create");
   };
 
   const openEdit = (game: Game) => {
-    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameClaimTime(game.claimTime || 0); setGameClaimSchedule(game.claimSchedule?.map(s => ({ label: s.label || "", from: s.from, to: s.to, minutes: s.minutes })) || []); setGameImage(null); setError("");
+    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameClaimTime(game.claimTime || 0); setGameClaimSchedule(game.claimSchedule?.map(s => ({ label: s.label || "", from: s.from, to: s.to, minutes: s.minutes })) || []); setGameImage(null); setGameBgImageUrl(game.bgImageUrl || ""); setError("");
     setEditingGame(game);
     setShowGameModal("edit");
   };
@@ -154,6 +156,7 @@ export default function Games() {
       form.append("featured", String(gameFeatured));
       form.append("claimTime", String(gameClaimTime));
       form.append("claimSchedule", JSON.stringify(gameClaimSchedule));
+      form.append("bgImageUrl", gameBgImageUrl);
       if (gameImage) form.append("image", gameImage);
 
       if (showGameModal === "create") {
@@ -451,9 +454,23 @@ export default function Games() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Game Image</label>
+                  <label className="text-slate-300 text-sm font-medium block mb-1.5">Game Icon <span className="text-slate-500 font-normal text-xs">(shown in game list)</span></label>
                   <input type="file" accept="image/*" onChange={(e) => setGameImage(e.target.files?.[0] || null)}
                     className="w-full bg-[#0a1628] border border-white/10 text-slate-400 rounded-xl px-4 py-2 text-sm focus:outline-none" />
+                </div>
+                <div>
+                  <ImageUpload
+                    value={gameBgImageUrl}
+                    onChange={(val) => setGameBgImageUrl(val as string)}
+                    folder="rbstars/game-backgrounds"
+                    label="Background Image"
+                  />
+                  {gameBgImageUrl && (
+                    <p className="text-slate-500 text-xs mt-1">This image will be used as the card background for all products in this game.</p>
+                  )}
+                  {!gameBgImageUrl && (
+                    <p className="text-slate-500 text-xs mt-1">Optional — if set, replaces the gradient on all product cards for this game.</p>
+                  )}
                 </div>
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">
