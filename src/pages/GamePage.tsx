@@ -144,8 +144,6 @@ function ProductCard({
   const savings = product.originalPrice && !product.outOfStock
     ? (product.originalPrice - product.price).toFixed(2) : null;
 
-  const glareDelay = index % 4 === 0 ? "rb-glare-d1" : index % 4 === 1 ? "rb-glare-d2" : index % 4 === 2 ? "rb-glare-d3" : "rb-glare-d4";
-
   return (
     <motion.div
       onClick={onSelect}
@@ -159,7 +157,7 @@ function ProductCard({
         : { delay: index * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }
       }
       whileHover={!selected ? { scale: 1.025 } : {}}
-      className="flex flex-col rounded-xl overflow-hidden cursor-pointer relative"
+      className="flex flex-col rounded-xl overflow-hidden cursor-pointer relative h-full"
       style={{
         background: "rgba(255,255,255,0.05)",
         border: selected
@@ -180,26 +178,17 @@ function ProductCard({
         />
       )}
 
-      <div className={`rb-glare ${glareDelay}`} style={{ opacity: 0.18 }} />
-
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
-        {/* Static gradient — no y-translate so image never drifts */}
+        {/* Static gradient */}
         <div
           className="absolute inset-0"
           style={{ background: `linear-gradient(135deg,${product.gradient[0]} 0%,${product.gradient[1]} 100%)` }}
         >
           <div className="absolute inset-0 opacity-10"
             style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-          {/* Subtle shimmer overlay — animates opacity, not position */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 70%)" }}
-            animate={{ opacity: [0.25, 0.4, 0.25] }}
-            transition={{ repeat: Infinity, duration: 3 + (index % 5) * 0.4, ease: "easeInOut", delay: index * 0.18 }}
-          />
         </div>
 
-        {/* Product image — sits above gradient, never animates position */}
+        {/* Product image */}
         {product.imageUrl && (
           <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
         )}
@@ -220,7 +209,7 @@ function ProductCard({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleAddToCart}
-            className="absolute bottom-1.5 right-1.5 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold"
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold whitespace-nowrap"
             style={{
               background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
               border: "1.5px solid rgba(255,255,255,0.25)",
