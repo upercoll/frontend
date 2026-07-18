@@ -376,17 +376,18 @@ const TICKER_ITEMS = [
 ];
 
 function MarqueeTicker() {
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS];
+  // 4 copies so the -25% scroll = exactly one full set → seamless infinite loop
+  const items = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
     <div className="relative overflow-hidden py-3" style={{ background: "linear-gradient(90deg,#1E1B4B 0%,#312E80 50%,#1E1B4B 100%)", borderTop: "1px solid rgba(165,180,252,0.15)", borderBottom: "1px solid rgba(165,180,252,0.15)" }}>
-      {/* Left/right fade masks */}
       <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to right,#1E1B4B,transparent)" }} />
       <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to left,#1E1B4B,transparent)" }} />
-      <motion.div
+      <div
         className="flex items-center gap-8 whitespace-nowrap"
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ repeat: Infinity, duration: 22, ease: "linear" }}
-        style={{ width: "max-content" }}
+        style={{
+          width: "max-content",
+          animation: "rbTicker 32s linear infinite",
+        }}
       >
         {items.map((item, i) => (
           <span key={i} className="text-xs font-semibold flex items-center gap-2" style={{ color: "rgba(165,180,252,0.85)" }}>
@@ -394,7 +395,7 @@ function MarqueeTicker() {
             <span className="w-1 h-1 rounded-full inline-block ml-2" style={{ background: "rgba(165,180,252,0.3)" }} />
           </span>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
