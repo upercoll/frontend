@@ -265,6 +265,7 @@ export default function ProductPage() {
   const [buying, setBuying] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showAllRelated, setShowAllRelated] = useState(false);
+  const [gameBgImageUrl, setGameBgImageUrl] = useState<string | undefined>(undefined);
   const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -276,6 +277,7 @@ export default function ProductPage() {
     setShowAllRelated(false);
     window.scrollTo(0, 0);
 
+    setGameBgImageUrl(undefined);
     fetch(`${BACKEND}/api/products/${params.id}`)
       .then(r => r.json())
       .then(data => {
@@ -285,6 +287,12 @@ export default function ProductPage() {
           .then(r => r.json())
           .then(rd => setRelated(rd.data || []))
           .catch(() => {});
+        if (data.data.game) {
+          fetch(`${BACKEND}/api/games/${data.data.game}`)
+            .then(r => r.json())
+            .then(gd => { if (gd.data?.game?.bgImageUrl) setGameBgImageUrl(gd.data.game.bgImageUrl); })
+            .catch(() => {});
+        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
@@ -405,17 +413,34 @@ export default function ProductPage() {
               className="relative overflow-hidden rounded-2xl mb-2.5"
               style={{ paddingTop: "90%", border: "1.5px solid rgba(165,180,252,0.16)" }}
             >
-              <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
-                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "22px 22px" }} />
-              </div>
+              {gameBgImageUrl ? (
+                <div className="absolute inset-0">
+                  <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+                  <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+                </div>
+              ) : (
+                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "22px 22px" }} />
+                </div>
+              )}
               <AnimatePresence mode="wait">
                 {gallery[activeImage] && (
-                  <motion.img
-                    key={gallery[activeImage]}
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-                    src={gallery[activeImage]} alt={product.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  gameBgImageUrl ? (
+                    <motion.img
+                      key={gallery[activeImage]}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                      src={gallery[activeImage]} alt={product.name}
+                      className="absolute object-contain"
+                      style={{ inset: "6% 8%", width: "84%", height: "88%", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }}
+                    />
+                  ) : (
+                    <motion.img
+                      key={gallery[activeImage]}
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                      src={gallery[activeImage]} alt={product.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  )
                 )}
               </AnimatePresence>
 
