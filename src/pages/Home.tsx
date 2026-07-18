@@ -38,6 +38,7 @@ type ShopGame = {
   slug: string;
   gradient: { from: string; to: string };
   imageUrl?: string;
+  bgImageUrl?: string;
   active?: boolean;
   productCount?: number;
 };
@@ -204,15 +205,22 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
     >
       {/* Image / gradient area — image is outside the animated div so it never floats */}
       <div className="relative overflow-hidden" style={{ paddingTop: "82%" }}>
-        {/* Static gradient bg */}
-        <div
-          className="absolute inset-0"
-          style={{ background: `linear-gradient(135deg, ${product.gradient.from} 0%, ${product.gradient.to} 100%)` }}
-        >
-          <div className="absolute inset-0 opacity-[0.07]"
-            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "16px 16px" }} />
-          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 55% at 50% 0%,rgba(255,255,255,0.22) 0%,transparent 70%)" }} />
-        </div>
+        {/* Static gradient bg or game background image */}
+        {game.bgImageUrl ? (
+          <div className="absolute inset-0">
+            <img src={game.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+          </div>
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg, ${product.gradient.from} 0%, ${product.gradient.to} 100%)` }}
+          >
+            <div className="absolute inset-0 opacity-[0.07]"
+              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "16px 16px" }} />
+            <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 55% at 50% 0%,rgba(255,255,255,0.22) 0%,transparent 70%)" }} />
+          </div>
+        )}
         {/* Shimmer on hover — purely decorative overlay */}
         <motion.div
           className="absolute inset-0 pointer-events-none z-10"
