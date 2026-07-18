@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ShoppingCart, Zap, KeyRound, ShieldCheck, MessageCircle,
   Star, Tag, Check, ChevronLeft, ChevronRight, Package, Loader2,
-  Flame, ArrowRight,
+  Flame, ArrowRight, ChevronDown, Minus, Plus,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import Footer from "@/components/Footer";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -34,6 +34,16 @@ interface ApiProduct {
   tags?: string[];
 }
 
+interface FAQItem { q: string; a: string; }
+
+const sharedFAQ: FAQItem[] = [
+  { q: "Is RBstars legit?", a: "Yes — RBstars is a trusted, independent marketplace for Roblox game items. We have thousands of satisfied customers and use secure payment systems to protect every transaction." },
+  { q: "What is your refund policy?", a: "We offer refunds within 24 hours if your item was not delivered. Contact our live chat support and we'll resolve it immediately." },
+  { q: "Can I get free items?", a: "Occasionally we run promotions and giveaways on our Discord and social media. Follow us to stay updated. You can also use discount codes for 10% off your purchase." },
+  { q: "How do I claim my items?", a: "After checkout, enter your in-game username. Click the chat icon in the bottom-right corner and select 'How To Claim Items.' Provide your username and order number — our team will trade you the items." },
+  { q: "What if I don't receive my item?", a: "If delivery takes longer than 15 minutes, open our live chat. We have 24/7 support and will either resend your items or issue a full refund immediately — no questions asked." },
+];
+
 function ParticleField({ count = 16 }: { count?: number }) {
   const particles = useMemo(() =>
     Array.from({ length: count }, (_, i) => ({
@@ -59,25 +69,122 @@ function ParticleField({ count = 16 }: { count?: number }) {
   );
 }
 
-function TrustBadge({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle: string }) {
+function FAQSection({ items }: { items: FAQItem[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="relative rounded-2xl overflow-hidden"
+      style={{ background: "rgba(255,255,255,0.03)", border: "1.5px solid rgba(165,180,252,0.12)" }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 50% 40% at 80% 100%, rgba(79,70,229,0.08) 0%, transparent 65%)" }} />
+      <div className="relative z-10 p-4">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold mb-3"
+          style={{ background: "rgba(79,70,229,0.15)", color: "#A5B4FC", border: "1px solid rgba(165,180,252,0.2)" }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#818CF8]" /> FAQ
+        </div>
+        <h3 className="font-display text-base font-extrabold mb-3 text-white">
+          Common <span style={{ color: "#A5B4FC" }}>Questions</span>
+        </h3>
+        <div className="flex flex-col gap-2">
+          {items.map((item, i) => (
+            <div key={i} className="rounded-xl overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.1)" }}>
+              <button onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between px-3.5 py-3 text-left gap-3"
+                style={{ background: open === i ? "rgba(79,70,229,0.1)" : "transparent" }}>
+                <span className="text-xs font-semibold leading-snug text-white">{item.q}</span>
+                <motion.div animate={{ rotate: open === i ? 180 : 0 }} transition={{ duration: 0.22 }} className="flex-shrink-0">
+                  <ChevronDown size={14} color="#818CF8" />
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {open === i && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
+                    <p className="px-3.5 pb-3 text-xs leading-relaxed" style={{ color: "#94A3B8" }}>{item.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* Large product card matching GamePage grid style */
+function LargeRelatedCard({ product, index, onNavigate }: { product: ApiProduct; index: number; onNavigate: (id: string) => void }) {
+  const { addItem } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+  const savings = product.originalPrice && !product.outOfStock
+    ? (product.originalPrice - product.price).toFixed(2) : null;
+
+  function handleAdd(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (product.outOfStock) return;
+    addItem({
+      id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
+    });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1300);
+  }
+
   return (
     <motion.div
-      whileHover={{ y: -2, borderColor: "rgba(165,180,252,0.35)" }}
-      className="relative overflow-hidden flex items-start gap-2.5 p-3 rounded-xl"
-      style={{ background: "rgba(255,255,255,0.045)", border: "1.5px solid rgba(165,180,252,0.14)" }}
+      onClick={() => onNavigate(product._id)}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.025 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex flex-col rounded-xl overflow-hidden cursor-pointer relative h-full"
+      style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.14)" }}
     >
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(79,70,229,0.22)", border: "1px solid rgba(165,180,252,0.2)" }}>
-        <Icon size={15} color="#A5B4FC" />
+      <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
+        <div className="absolute inset-0"
+          style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+          <div className="absolute inset-0 opacity-10"
+            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+        </div>
+        {product.imageUrl && (
+          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+        )}
+        {product.outOfStock ? (
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
+            style={{ background: "rgba(15,12,46,0.85)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.2)" }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#6b5c8a]" /> Out of Stock
+          </div>
+        ) : savings ? (
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+            style={{ background: "#dc2626", color: "white" }}>
+            <Tag size={8} /> Save ${savings}
+          </div>
+        ) : null}
+        {!product.outOfStock && (
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleAdd}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold whitespace-nowrap"
+            style={{
+              background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
+              border: "1.5px solid rgba(255,255,255,0.25)",
+              transition: "background 0.25s ease",
+            }}>
+            {justAdded ? (<><Check size={11} color="white" strokeWidth={3} /> Added!</>) : (<><ShoppingCart size={11} color="white" /> Add to Cart</>)}
+          </motion.button>
+        )}
       </div>
-      <div className="min-w-0">
-        <p className="text-xs font-bold text-white leading-tight">{title}</p>
-        <p className="text-[10.5px] leading-snug mt-0.5" style={{ color: "#8b87ad" }}>{subtitle}</p>
+      <div className="p-3">
+        <div className="flex items-baseline gap-1.5 mb-0.5">
+          <span className="text-sm font-extrabold font-display" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
+          {product.originalPrice && <span className="text-[11px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>}
+        </div>
+        <p className="text-[11px] font-medium leading-tight line-clamp-2" style={{ color: "rgba(255,255,255,0.88)" }}>{product.name}</p>
       </div>
     </motion.div>
   );
 }
 
+/* Small horizontal scroll card (original compact style) */
 function RelatedCard({ product, index, onNavigate }: { product: ApiProduct; index: number; onNavigate: (id: string) => void }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
@@ -147,7 +254,7 @@ function RelatedCard({ product, index, onNavigate }: { product: ApiProduct; inde
 export default function ProductPage() {
   const params = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { addItem, openCart } = useCart();
+  const { addItem, updateQty, items, openCart } = useCart();
 
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [related, setRelated] = useState<ApiProduct[]>([]);
@@ -156,6 +263,8 @@ export default function ProductPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [showAllRelated, setShowAllRelated] = useState(false);
   const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -163,6 +272,8 @@ export default function ProductPage() {
     setLoading(true);
     setNotFound(false);
     setActiveImage(0);
+    setQuantity(1);
+    setShowAllRelated(false);
     window.scrollTo(0, 0);
 
     fetch(`${BACKEND}/api/products/${params.id}`)
@@ -170,7 +281,7 @@ export default function ProductPage() {
       .then(data => {
         if (!data.success || !data.data) { setNotFound(true); return; }
         setProduct(data.data);
-        fetch(`${BACKEND}/api/products/${data.data._id}/related?limit=10`)
+        fetch(`${BACKEND}/api/products/${data.data._id}/related?limit=20`)
           .then(r => r.json())
           .then(rd => setRelated(rd.data || []))
           .catch(() => {});
@@ -197,6 +308,11 @@ export default function ProductPage() {
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
       gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
     });
+    // Set qty in cart to match selected quantity
+    const existingQty = items.find(i => i.id === product._id)?.quantity ?? 0;
+    if (quantity > 1) {
+      updateQty(product._id, existingQty + quantity);
+    }
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1500);
     openCart();
@@ -209,6 +325,10 @@ export default function ProductPage() {
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
       gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
     });
+    const existingQty = items.find(i => i.id === product._id)?.quantity ?? 0;
+    if (quantity > 1) {
+      updateQty(product._id, existingQty + quantity);
+    }
     navigate("/checkout");
   }
 
@@ -223,7 +343,7 @@ export default function ProductPage() {
         <div className="flex flex-col items-center gap-4">
           <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
             className="w-10 h-10 rounded-full border-2 border-t-transparent" style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }} />
-          <p className="text-sm font-medium" style={{ color: "#818CF8" }}>Loading product...</p>
+          <p className="text-sm font-medium font-display" style={{ color: "#818CF8" }}>Loading product...</p>
         </div>
       </div>
     );
@@ -233,10 +353,10 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "#0F0C2E" }}>
         <Package size={44} color="rgba(165,180,252,0.25)" />
-        <h1 className="text-lg font-bold text-white">Product not found</h1>
+        <h1 className="text-lg font-bold font-display text-white">Product not found</h1>
         <p className="text-sm" style={{ color: "#64748B" }}>This item may have been removed or is no longer available.</p>
         <motion.button whileTap={{ scale: 0.96 }} onClick={() => navigate("/")}
-          className="mt-2 px-5 py-2.5 rounded-full text-sm font-bold text-white"
+          className="mt-2 px-5 py-2.5 rounded-full text-sm font-bold text-white font-display"
           style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
           Back to Shop
         </motion.button>
@@ -274,7 +394,7 @@ export default function ProductPage() {
         </div>
       </div>
 
-      <div className="flex-1 relative z-10 px-4 pb-40 md:pb-24">
+      <div className="flex-1 relative z-10 px-4 pb-40 md:pb-10">
         <div className="md:grid md:grid-cols-2 md:gap-8 md:max-w-5xl md:mx-auto">
 
           {/* Gallery */}
@@ -377,11 +497,11 @@ export default function ProductPage() {
               </div>
 
               {product.description && (
-                <p className="text-sm leading-relaxed mb-5" style={{ color: "#a8a4c8" }}>{product.description}</p>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: "#a8a4c8" }}>{product.description}</p>
               )}
 
               {product.features && product.features.length > 0 && (
-                <div className="mb-5 space-y-2">
+                <div className="mb-4 space-y-2">
                   {product.features.map((f, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(79,70,229,0.25)" }}>
@@ -394,7 +514,7 @@ export default function ProductPage() {
               )}
 
               {product.tags && product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-5">
+                <div className="flex flex-wrap gap-1.5 mb-4">
                   {product.tags.map(t => (
                     <span key={t} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize"
                       style={{ background: "rgba(255,255,255,0.05)", color: "#94A3B8", border: "1px solid rgba(165,180,252,0.14)" }}>
@@ -404,19 +524,44 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Trust badges */}
-              <div className="grid grid-cols-2 gap-2.5 mb-6">
-                <TrustBadge icon={Zap} title="Instant Delivery" subtitle="Code in your inbox in under 2 min" />
-                <TrustBadge icon={KeyRound} title="No Password. Ever." subtitle="100% code-based, safe & secure" />
-                <TrustBadge icon={ShieldCheck} title="Money-Back Guarantee" subtitle="Full refund if anything goes wrong" />
-                <TrustBadge icon={MessageCircle} title="24/7 Support" subtitle="Our team on Discord round the clock" />
-              </div>
+              {/* Quantity selector */}
+              {!product.outOfStock && (
+                <div className="mb-5">
+                  <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#64748B" }}>Quantity</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center rounded-xl overflow-hidden"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.2)" }}>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                        className="w-10 h-10 flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{ color: quantity <= 1 ? "#3d3a5c" : "#A5B4FC" }}
+                        disabled={quantity <= 1}
+                      >
+                        <Minus size={15} strokeWidth={2.5} />
+                      </motion.button>
+                      <div className="w-12 h-10 flex items-center justify-center">
+                        <span className="font-display text-base font-bold text-white">{quantity}</span>
+                      </div>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setQuantity(q => Math.min(99, q + 1))}
+                        className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                        style={{ color: "#A5B4FC" }}
+                      >
+                        <Plus size={15} strokeWidth={2.5} />
+                      </motion.button>
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: "#4ade80" }}>● In stock — ready to deliver</span>
+                  </div>
+                </div>
+              )}
 
               {/* Desktop CTAs */}
-              <div className="hidden md:flex gap-3">
+              <div className="hidden md:flex gap-3 mb-6">
                 <motion.button whileHover={!product.outOfStock ? { scale: 1.02 } : {}} whileTap={!product.outOfStock ? { scale: 0.97 } : {}}
                   onClick={handleAddToCart} disabled={product.outOfStock}
-                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40 font-display"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.3)", color: "#A5B4FC" }}>
                   <AnimatePresence mode="wait">
                     {justAdded ? (
@@ -433,13 +578,16 @@ export default function ProductPage() {
                 <motion.button whileHover={!product.outOfStock ? { scale: 1.02, boxShadow: "0 0 30px rgba(79,70,229,0.5)" } : {}}
                   whileTap={!product.outOfStock ? { scale: 0.97 } : {}}
                   onClick={handleBuyNow} disabled={product.outOfStock || buying}
-                  className="relative overflow-hidden flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40"
+                  className="relative overflow-hidden flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40 font-display"
                   style={{ background: "linear-gradient(135deg,#4F46E5 0%,#3730A3 100%)" }}>
                   <div className="rb-glare rb-glare-d1" style={{ opacity: 0.5 }} />
                   {buying ? <Loader2 size={16} className="animate-spin relative z-10" /> : <Zap size={16} className="relative z-10" fill="white" />}
                   <span className="relative z-10">{product.outOfStock ? "Out of Stock" : "Buy Now"}</span>
                 </motion.button>
               </div>
+
+              {/* FAQ Section (replaces trust badges) */}
+              <FAQSection items={sharedFAQ} />
             </motion.div>
           </div>
         </div>
@@ -457,27 +605,56 @@ export default function ProductPage() {
                   style={{ background: "rgba(79,70,229,0.2)", border: "1px solid rgba(165,180,252,0.2)" }}>
                   <Star size={15} color="#A5B4FC" />
                 </div>
-                <h2 className="font-display text-base font-bold text-white">You Might Also Like</h2>
+                <h2 className="font-display text-base font-bold text-white">You Might Also <em style={{ color: "#A5B4FC", fontStyle: "italic" }}>like</em></h2>
               </div>
-              {categoryId && (
-                <motion.button
-                  whileHover={{ scale: 1.06, boxShadow: "0 0 18px rgba(79,70,229,0.4)" }} whileTap={{ scale: 0.94 }}
-                  onClick={() => navigate(`/game/${product.game}?category=${categoryId}`)}
-                  className="relative overflow-hidden flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-bold flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, rgba(79,70,229,0.22) 0%, rgba(55,48,163,0.22) 100%)", border: "1.5px solid rgba(165,180,252,0.25)", color: "#A5B4FC" }}>
-                  <div className="rb-glare rb-glare-d2" style={{ opacity: 0.6 }} />
-                  <span className="relative z-10 flex items-center gap-1">View All <ArrowRight size={11} /></span>
-                </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.06, boxShadow: "0 0 18px rgba(79,70,229,0.4)" }} whileTap={{ scale: 0.94 }}
+                onClick={() => setShowAllRelated(v => !v)}
+                className="relative overflow-hidden flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-bold flex-shrink-0 font-display"
+                style={{ background: "linear-gradient(135deg, rgba(79,70,229,0.22) 0%, rgba(55,48,163,0.22) 100%)", border: "1.5px solid rgba(165,180,252,0.25)", color: "#A5B4FC" }}>
+                <div className="rb-glare rb-glare-d2" style={{ opacity: 0.6 }} />
+                <span className="relative z-10 flex items-center gap-1">
+                  {showAllRelated ? "Show Less" : <>View All <ArrowRight size={11} /></>}
+                </span>
+              </motion.button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {showAllRelated ? (
+                <motion.div
+                  key="grid"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  {related.map((p, i) => (
+                    <LargeRelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} />
+                  ))}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="scroll"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex gap-3 overflow-x-auto pb-2"
+                  style={{ scrollbarWidth: "none" } as React.CSSProperties}
+                >
+                  {related.map((p, i) => (
+                    <RelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} />
+                  ))}
+                </motion.div>
               )}
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
-              {related.map((p, i) => (
-                <RelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} />
-              ))}
-            </div>
+            </AnimatePresence>
           </motion.div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Mobile sticky CTA bar */}
       <div className="fixed bottom-[60px] left-0 right-0 z-40 px-3 py-2.5 md:hidden"
@@ -493,11 +670,11 @@ export default function ProductPage() {
             </AnimatePresence>
           </motion.button>
           <motion.button whileTap={!product.outOfStock ? { scale: 0.97 } : {}} onClick={handleBuyNow} disabled={product.outOfStock || buying}
-            className="relative overflow-hidden flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40"
+            className="relative overflow-hidden flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40 font-display"
             style={{ background: "linear-gradient(135deg,#4F46E5 0%,#3730A3 100%)" }}>
             <div className="rb-glare rb-glare-d1" style={{ opacity: 0.5 }} />
             {buying ? <Loader2 size={16} className="animate-spin relative z-10" /> : <Zap size={16} className="relative z-10" fill="white" />}
-            <span className="relative z-10">{product.outOfStock ? "Out of Stock" : "Buy Now"}</span>
+            <span className="relative z-10">{product.outOfStock ? "Out of Stock" : `Buy Now${quantity > 1 ? ` (×${quantity})` : ""}`}</span>
           </motion.button>
         </div>
       </div>
