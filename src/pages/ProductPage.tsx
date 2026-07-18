@@ -113,7 +113,7 @@ function FAQSection({ items }: { items: FAQItem[] }) {
 }
 
 /* Large product card matching GamePage grid style */
-function LargeRelatedCard({ product, index, onNavigate }: { product: ApiProduct; index: number; onNavigate: (id: string) => void }) {
+function LargeRelatedCard({ product, index, onNavigate, gameBgImageUrl }: { product: ApiProduct; index: number; onNavigate: (id: string) => void; gameBgImageUrl?: string }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const savings = product.originalPrice && !product.outOfStock
@@ -142,13 +142,25 @@ function LargeRelatedCard({ product, index, onNavigate }: { product: ApiProduct;
       style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.14)" }}
     >
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
-        <div className="absolute inset-0"
-          style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
-          <div className="absolute inset-0 opacity-10"
-            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-        </div>
+        {gameBgImageUrl ? (
+          <div className="absolute inset-0">
+            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+          </div>
+        ) : (
+          <div className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+          </div>
+        )}
         {product.imageUrl && (
-          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          gameBgImageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }} />
+          ) : (
+            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          )
         )}
         {product.outOfStock ? (
           <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
@@ -185,7 +197,7 @@ function LargeRelatedCard({ product, index, onNavigate }: { product: ApiProduct;
 }
 
 /* Small horizontal scroll card (original compact style) */
-function RelatedCard({ product, index, onNavigate }: { product: ApiProduct; index: number; onNavigate: (id: string) => void }) {
+function RelatedCard({ product, index, onNavigate, gameBgImageUrl }: { product: ApiProduct; index: number; onNavigate: (id: string) => void; gameBgImageUrl?: string }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const savings = product.originalPrice && !product.outOfStock
@@ -215,11 +227,23 @@ function RelatedCard({ product, index, onNavigate }: { product: ApiProduct; inde
       style={{ width: 148, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.14)" }}
     >
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
-        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
-          <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-        </div>
+        {gameBgImageUrl ? (
+          <div className="absolute inset-0">
+            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+          </div>
+        ) : (
+          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+          </div>
+        )}
         {product.imageUrl && (
-          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          gameBgImageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }} />
+          ) : (
+            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          )
         )}
         {product.outOfStock ? (
           <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
@@ -655,7 +679,7 @@ export default function ProductPage() {
                   className="grid grid-cols-2 gap-4"
                 >
                   {related.map((p, i) => (
-                    <LargeRelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} />
+                    <LargeRelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
                   ))}
                 </motion.div>
               ) : (
@@ -669,7 +693,7 @@ export default function ProductPage() {
                   style={{ scrollbarWidth: "none" } as React.CSSProperties}
                 >
                   {related.map((p, i) => (
-                    <RelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} />
+                    <RelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
                   ))}
                 </motion.div>
               )}
