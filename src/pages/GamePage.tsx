@@ -197,7 +197,15 @@ function ProductCard({
 
         {/* Product image */}
         {product.imageUrl && (
-          <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          gameBgImageUrl ? (
+            <img
+              src={product.imageUrl} alt={product.name}
+              className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }}
+            />
+          ) : (
+            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          )
         )}
 
         {product.outOfStock ? (
