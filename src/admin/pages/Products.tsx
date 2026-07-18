@@ -15,7 +15,8 @@ type BulkRow = { name: string; game: string; category: string; price: string; or
 const DEFAULT_FORM = {
   name: "", description: "", game: "", category: "", price: "",
   originalPrice: "", gradFrom: "#7c3aed", gradTo: "#4c1d95",
-  imageUrl: "" as string | string[], featured: false, bestSeller: false,
+  imageUrl: "" as string | string[], images: [] as string[], features: "",
+  featured: false, bestSeller: false,
   stock: "-1", onHand: "-1", tags: "", active: true, outOfStock: false,
 };
 
@@ -91,7 +92,8 @@ export default function Products() {
       category: typeof p.category === "object" ? (p.category as any)._id : p.category as string,
       price: String(p.price), originalPrice: String(p.originalPrice || ""),
       gradFrom: p.gradient.from, gradTo: p.gradient.to,
-      imageUrl: p.imageUrl || "", featured: p.featured, bestSeller: p.bestSeller,
+      imageUrl: p.imageUrl || "", images: p.images || [], features: p.features?.join(", ") || "",
+      featured: p.featured, bestSeller: p.bestSeller,
       stock: String(p.stock), onHand: String(p.onHand ?? -1), tags: p.tags?.join(", ") || "",
       active: p.active !== false, outOfStock: p.outOfStock || false,
     });
@@ -115,6 +117,8 @@ export default function Products() {
       fd.append("gradient[from]", form.gradFrom);
       fd.append("gradient[to]", form.gradTo);
       if (typeof form.imageUrl === "string" && form.imageUrl) fd.append("imageUrl", form.imageUrl);
+      if (form.images.length > 0) fd.append("images", JSON.stringify(form.images));
+      if (form.features.trim()) fd.append("features", JSON.stringify(form.features.split(",").map(f => f.trim()).filter(Boolean)));
       fd.append("featured", String(form.featured));
       fd.append("bestSeller", String(form.bestSeller));
       fd.append("stock", form.stock);
@@ -549,8 +553,16 @@ export default function Products() {
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Product Image</label>
+                    <label className={labelCls} style={labelStyle}>Product Image <span className="text-slate-400 font-normal">(cover / thumbnail)</span></label>
                     <ImageUpload value={form.imageUrl} onChange={url => setF("imageUrl", url)} folder="rbstars/products" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Gallery Images <span className="text-slate-400 font-normal">(shown on the product page)</span></label>
+                    <ImageUpload value={form.images} onChange={urls => setF("images", urls)} multiple maxFiles={8} folder="rbstars/products" label="Upload gallery images" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Key Features <span className="text-slate-400 font-normal">(comma-separated, shown as a checklist)</span></label>
+                    <input value={form.features} onChange={e => setF("features", e.target.value)} className={inputCls} style={inpStyle} placeholder="Instant trade, Untradeable-safe, Limited stock" />
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Tags <span className="text-slate-400 font-normal">(comma-separated)</span></label>
