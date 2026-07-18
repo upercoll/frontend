@@ -413,7 +413,8 @@ export default function Home() {
   const [reviewIndex,  setReviewIndex]  = useState(0);
   const [reviews,      setReviews]      = useState(fallbackReviews);
   const [avgRating,    setAvgRating]    = useState<number | null>(null);
-  const [games,        setGames]        = useState<ShopGame[]>(FALLBACK_GAMES);
+  const [games,        setGames]        = useState<ShopGame[]>([]);
+  const [gamesLoading, setGamesLoading] = useState(true);
   const [searchQuery,  setSearchQuery]  = useState("");
   const [, navigate] = useLocation();
 
@@ -425,7 +426,8 @@ export default function Home() {
     fetch(`${BACKEND}/api/games?active=true`)
       .then(r => r.json())
       .then(d => { const fetched: ShopGame[] = d.data?.games || []; if (fetched.length > 0) setGames(fetched); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setGamesLoading(false));
   }, []);
 
   /* fetch reviews */
@@ -597,12 +599,19 @@ export default function Home() {
 
           {/* Game grid */}
           <AnimatePresence mode="wait">
-            {filteredGames.length === 0 ? (
+            {gamesLoading ? (
+              <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl animate-pulse" style={{ aspectRatio: "4/5", background: "rgba(49,46,128,0.08)", border: "1.5px solid rgba(49,46,128,0.1)" }} />
+                ))}
+              </motion.div>
+            ) : filteredGames.length === 0 ? (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="text-center py-16" style={{ color: "#5B5EA8" }}>
                 <Package size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-semibold">No games found for "{searchQuery}"</p>
-                <button onClick={() => setSearchQuery("")} className="mt-3 text-sm font-bold" style={{ color: "#4F46E5" }}>Clear search</button>
+                <p className="font-semibold">{searchQuery ? `No games found for "${searchQuery}"` : "No games available yet"}</p>
+                {searchQuery && <button onClick={() => setSearchQuery("")} className="mt-3 text-sm font-bold" style={{ color: "#4F46E5" }}>Clear search</button>}
               </motion.div>
             ) : (
               <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
