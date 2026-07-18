@@ -180,7 +180,7 @@ function ProductCard({
         />
       )}
 
-      <div className={`rb-glare ${glareDelay}`} style={{ opacity: 0.4 }} />
+      <div className={`rb-glare ${glareDelay}`} style={{ opacity: 0.18 }} />
 
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
         {/* Static gradient — no y-translate so image never drifts */}
@@ -193,8 +193,8 @@ function ProductCard({
           {/* Subtle shimmer overlay — animates opacity, not position */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.22) 0%, transparent 70%)" }}
-            animate={{ opacity: [0.7, 1, 0.7] }}
+            style={{ background: "radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 70%)" }}
+            animate={{ opacity: [0.25, 0.4, 0.25] }}
             transition={{ repeat: Infinity, duration: 3 + (index % 5) * 0.4, ease: "easeInOut", delay: index * 0.18 }}
           />
         </div>
@@ -218,9 +218,9 @@ function ProductCard({
 
         {!product.outOfStock && (
           <motion.button
-            whileTap={{ scale: 0.82 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleAddToCart}
-            className="absolute bottom-1.5 right-1.5 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
+            className="absolute bottom-1.5 right-1.5 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold"
             style={{
               background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
               border: "1.5px solid rgba(255,255,255,0.25)",
@@ -228,16 +228,18 @@ function ProductCard({
             }}>
             <AnimatePresence mode="wait">
               {justAdded ? (
-                <motion.span key="check"
+                <motion.span key="check" className="flex items-center gap-1.5"
                   initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 20 }}>
-                  <Check size={12} color="white" strokeWidth={3} />
+                  <Check size={11} color="white" strokeWidth={3} />
+                  Added!
                 </motion.span>
               ) : (
-                <motion.span key="cart"
+                <motion.span key="cart" className="flex items-center gap-1.5"
                   initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                   transition={{ duration: 0.15 }}>
-                  <ShoppingCart size={12} color="white" />
+                  <ShoppingCart size={11} color="white" />
+                  Add to Cart
                 </motion.span>
               )}
             </AnimatePresence>
@@ -774,7 +776,7 @@ export default function GamePage() {
         <ParticleField count={22} light={false} />
       </div>
 
-      <div className="h-16 flex-shrink-0" />
+      <div className="h-20 flex-shrink-0" />
 
       {}
       <div className="relative px-4 pt-3 pb-1 flex-shrink-0 z-10">
