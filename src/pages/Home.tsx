@@ -294,7 +294,10 @@ function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slu
     fetch(`${BACKEND}/api/products/game/${game.slug}?limit=3`)
       .then(r => r.json())
       .then(data => {
-        const raw: MiniProduct[] = (data.data || []).slice(0, 3).map((p: Record<string, unknown>) => ({
+        const raw: MiniProduct[] = (data.data || [])
+          .filter((p: Record<string, unknown>) => (p.stock as number) !== 0)
+          .slice(0, 3)
+          .map((p: Record<string, unknown>) => ({
           _id: p._id as string,
           name: p.name as string,
           price: p.price as number,
@@ -365,9 +368,9 @@ function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slu
 
 /* ── Marquee ticker ─────────────────────────────────────────── */
 const TICKER_ITEMS = [
-  "⚡ Instant Delivery", "🔒 Secure Payments", "🎮 10+ Games Supported",
-  "⭐ 4.9 Rating", "🛡️ 2,000+ Orders", "💬 24/7 Live Support",
-  "🔥 New Stock Added Daily", "✅ Verified Sellers",
+  "Instant Delivery", "Secure Payments", "10+ Games Supported",
+  "4.9 Rating", "2,000+ Orders Delivered", "24/7 Live Support",
+  "New Stock Added Daily", "Verified Sellers", "Fast & Trusted",
 ];
 
 function MarqueeTicker() {
