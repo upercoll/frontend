@@ -736,7 +736,8 @@ export default function GamePage() {
     return list;
   }, [tabProducts, searchQuery, inStockOnly, sortBy]);
 
-  const isMainView = activeTab === "best-sellers";
+  // Only show the "all sections" layout when no active filters/sort/search override it
+  const isMainView = activeTab === "best-sellers" && !searchQuery && sortBy === "featured" && !inStockOnly;
   const gameGradient: [string, string] = [gameInfo?.gradient.from || "#4F46E5", gameInfo?.gradient.to || "#1E1B4B"];
   const gameName = gameInfo?.name || (slug ? slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "Game");
 
