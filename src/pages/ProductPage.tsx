@@ -124,7 +124,7 @@ function LargeRelatedCard({ product, index, onNavigate, gameBgImageUrl }: { prod
     if (product.outOfStock) return;
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
-      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1300);
@@ -208,7 +208,7 @@ function RelatedCard({ product, index, onNavigate, gameBgImageUrl }: { product: 
     if (product.outOfStock) return;
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
-      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1300);
@@ -338,7 +338,7 @@ export default function ProductPage() {
     if (!product || product.outOfStock) return;
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
-      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
     });
     // Set qty in cart to match selected quantity
     const existingQty = items.find(i => i.id === product._id)?.quantity ?? 0;
@@ -355,7 +355,7 @@ export default function ProductPage() {
     setBuying(true);
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
-      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
     });
     const existingQty = items.find(i => i.id === product._id)?.quantity ?? 0;
     if (quantity > 1) {
@@ -594,9 +594,10 @@ export default function ProductPage() {
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => setQuantity(q => Math.min(99, q + 1))}
+                        onClick={() => setQuantity(q => Math.min(product.onHand ?? product.stock, q + 1))}
                         className="w-10 h-10 flex items-center justify-center flex-shrink-0"
-                        style={{ color: "#A5B4FC" }}
+                        disabled={quantity >= (product.onHand ?? product.stock)}
+                        style={{ color: quantity >= (product.onHand ?? product.stock) ? "#3d3a5c" : "#A5B4FC" }}
                       >
                         <Plus size={15} strokeWidth={2.5} />
                       </motion.button>
