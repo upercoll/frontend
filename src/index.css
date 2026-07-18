@@ -338,7 +338,7 @@
   top: 0; bottom: 0;
   left: 0;
   width: 55%;
-  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.65) 50%, transparent 75%);
+  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.30) 50%, transparent 75%);
   animation: glareSweep 3.6s ease-in-out infinite;
   pointer-events: none;
   z-index: 10;
