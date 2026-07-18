@@ -307,16 +307,11 @@ export default function ProductPage() {
       .then(data => {
         if (!data.success || !data.data) { setNotFound(true); return; }
         setProduct(data.data);
+        if (data.data.gameBgImageUrl) setGameBgImageUrl(data.data.gameBgImageUrl);
         fetch(`${BACKEND}/api/products/${data.data._id}/related?limit=20`)
           .then(r => r.json())
           .then(rd => setRelated(rd.data || []))
           .catch(() => {});
-        if (data.data.game) {
-          fetch(`${BACKEND}/api/games/${data.data.game}`)
-            .then(r => r.json())
-            .then(gd => { if (gd.data?.game?.bgImageUrl) setGameBgImageUrl(gd.data.game.bgImageUrl); })
-            .catch(() => {});
-        }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
