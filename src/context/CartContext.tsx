@@ -9,6 +9,7 @@ export interface CartItem {
   image?: string;
   quantity: number;
   game?: string;
+  bgImageUrl?: string;
 }
 
 interface CartContextType {
