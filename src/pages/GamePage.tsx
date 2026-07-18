@@ -582,7 +582,7 @@ export default function GamePage() {
   const [pendingInStockOnly, setPendingInStockOnly] = useState(false);
 
   function handleSelect(id: string) {
-    setSelectedProductId(prev => prev === id ? null : id);
+    navigate(`/product/${id}`);
   }
 
   useEffect(() => {
@@ -613,7 +613,9 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!slug) return;
-    setActiveTab("best-sellers");
+    const params = new URLSearchParams(window.location.search);
+    const catParam = params.get("category");
+    setActiveTab(catParam || "best-sellers");
     setSearchQuery("");
     setSelectedProductId(null);
     setLoading(true);
