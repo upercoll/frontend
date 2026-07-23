@@ -169,11 +169,13 @@ export interface ClaimSession {
   game?: string;
   itemName?: string;
   items: { name: string; quantity: number }[];
-  status: "pending" | "active" | "claimed" | "ended";
+  status: "pending" | "active" | "claimed" | "ended" | "closed";
   assignedAgent?: { userId: string; name: string; joinedAt: string };
   messages: ClaimMessage[];
   createdAt: string;
   resolvedAt?: string;
+  closedAt?: string;
+  closedBy?: string;
 }
 
 export interface ClaimMessage {
