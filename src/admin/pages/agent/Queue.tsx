@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle, RefreshCw, Inbox, ArrowLeft, Mail,
   Gamepad2, Package, Hash, Clock,
-  Wifi, WifiOff, X, AlertCircle, User, MessageSquare, Archive, XCircle,
+  Wifi, WifiOff, X, AlertCircle, User, MessageSquare, Archive, XCircle, Trash2,
 } from "lucide-react";
 import { useAdminSocket } from "../../context/AdminSocketContext";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -156,10 +156,11 @@ function ConvoItem({
 
 // ── ProfilePanel ─────────────────────────────────────────────────────────────
 function ProfilePanel({
-  session, liveStatus, isMyActiveSession, isMyCompletedSession, onClose, onDeliver, onEnd, onCloseChat, onCancel,
+  session, liveStatus, isMyActiveSession, isMyCompletedSession, onClose, onDeliver, onEnd, onCloseChat, onCancel, onDeleteSession, isOwner,
 }: {
   session: ClaimSession; liveStatus?: LiveStatus; isMyActiveSession: boolean; isMyCompletedSession?: boolean;
   onClose: () => void; onDeliver: () => void; onEnd: () => void; onCloseChat?: () => void; onCancel?: () => void;
+  onDeleteSession?: () => void; isOwner?: boolean;
 }) {
   const effStatus = liveStatus?.status || session.status;
   const effAgent  = liveStatus?.agentName || session.assignedAgent?.name;
@@ -278,12 +279,14 @@ function ProfilePanel({
           </div>
           {orderData?.status && (
             <div className="mt-3 flex items-center gap-2">
-              <span className="text-slate-600 text-[10px]">Status:</span>
+              <span className="text-slate-600 text-[10px]">Order Status:</span>
               <span className={cn(
-                "text-[10px] px-2 py-0.5 rounded-full font-medium capitalize",
-                orderData.status === "paid" ? "bg-emerald-500/15 text-emerald-400" :
-                orderData.status === "cancelled" ? "bg-red-500/15 text-red-400" :
-                "bg-slate-500/15 text-slate-400"
+                "text-[10px] px-1.5 py-0.5 rounded-full capitalize font-medium",
+                orderData.status === "paid" || orderData.status === "completed"
+                  ? "bg-emerald-500/15 text-emerald-400"
+                  : orderData.status === "cancelled"
+                  ? "bg-red-500/15 text-red-400"
+                  : "bg-slate-500/15 text-slate-400"
               )}>{orderData.status}</span>
             </div>
           )}
@@ -291,40 +294,53 @@ function ProfilePanel({
       )}
 
       {/* Actions */}
-      {isMyActiveSession && (
+      {(isMyActiveSession || (isOwner && onDeleteSession)) && (
         <div className="px-4 py-4 space-y-2 flex-shrink-0">
-          <motion.button
-            whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-            onClick={onDeliver}
-            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <CheckCircle className="w-3.5 h-3.5" />
-            Mark as Completed
-          </motion.button>
-          {onCancel && (
+          {isMyActiveSession && (
+            <>
+              <motion.button
+                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+                onClick={onDeliver}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                Mark as Completed
+              </motion.button>
+              {onCancel && (
+                <button
+                  onClick={onCancel}
+                  className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Cancel Order
+                </button>
+              )}
+              {onCloseChat && (
+                <button
+                  onClick={onCloseChat}
+                  className="w-full py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Archive className="w-3.5 h-3.5" />
+                  Close Chat
+                </button>
+              )}
+              <button
+                onClick={onEnd}
+                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-xl text-xs font-medium transition-colors"
+              >
+                End Chat
+              </button>
+            </>
+          )}
+          {isOwner && onDeleteSession && (
             <button
-              onClick={onCancel}
+              onClick={onDeleteSession}
               className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
             >
-              <XCircle className="w-3.5 h-3.5" />
-              Cancel Order
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete Session
             </button>
           )}
-          {onCloseChat && (
-            <button
-              onClick={onCloseChat}
-              className="w-full py-2.5 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 border border-purple-500/20 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-            >
-              <Archive className="w-3.5 h-3.5" />
-              Close Chat
-            </button>
-          )}
-          <button
-            onClick={onEnd}
-            className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-xl text-xs font-medium transition-colors"
-          >
-            End Chat
-          </button>
         </div>
       )}
     </div>
@@ -350,6 +366,10 @@ export default function Queue() {
 
   // Close confirmation modal
   const [closingSession, setClosingSession] = useState<ClaimSession | null>(null);
+
+  // Delete confirmation (owner only)
+  const [deletingSession, setDeletingSession] = useState<ClaimSession | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // POD modal
   const [podMode, setPodMode]           = useState(false);
@@ -587,6 +607,21 @@ export default function Queue() {
     if (!socket || !closingSession) return;
     socket.emit("claim:close", { roomId: closingSession.roomId });
     setClosingSession(null);
+  };
+
+  const handleDeleteSession = async () => {
+    if (!deletingSession) return;
+    setDeleting(true);
+    try {
+      await (adminApi.claimSessions as any).deleteSession(deletingSession.roomId);
+      if (selectedSession?.roomId === deletingSession.roomId) setSelectedSession(null);
+      refetch();
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to delete session");
+    } finally {
+      setDeleting(false);
+      setDeletingSession(null);
+    }
   };
 
   const selLive             = selectedSession ? liveStatuses.get(selectedSession.roomId) : undefined;
@@ -833,6 +868,8 @@ export default function Queue() {
                 onEnd={endChat}
                 onCloseChat={() => setClosingSession(selectedSession)}
                 onCancel={cancelOrder}
+                onDeleteSession={user?.isOwner ? () => setDeletingSession(selectedSession) : undefined}
+                isOwner={user?.isOwner}
               />
             </div>
           </motion.div>
@@ -973,6 +1010,51 @@ export default function Queue() {
                 >
                   <Archive className="w-3.5 h-3.5" />
                   Close Chat
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Session Modal (owner only) */}
+      <AnimatePresence>
+        {deletingSession && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            onClick={() => setDeletingSession(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
+            >
+              <div className="px-6 py-5">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <h3 className="text-white font-semibold text-base mb-1">Delete this session?</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  This permanently removes the claim session for{" "}
+                  <span className="text-white font-medium">{deletingSession.robloxUsername}</span>{" "}
+                  and all its messages. This cannot be undone.
+                </p>
+              </div>
+              <div className="px-6 pb-5 flex gap-3">
+                <button
+                  onClick={() => setDeletingSession(null)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteSession}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+                >
+                  {deleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  {deleting ? "Deleting…" : "Delete"}
                 </button>
               </div>
             </motion.div>
