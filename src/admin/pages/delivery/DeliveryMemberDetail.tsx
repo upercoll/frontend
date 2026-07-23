@@ -4,7 +4,7 @@ import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Truck, DollarSign, CheckCircle, Clock, Package,
-  Loader2, AlertCircle, Settings, X, ChevronLeft,
+  Loader2, AlertCircle, Settings, X, ChevronLeft, Gamepad2,
 } from "lucide-react";
 import { adminApi } from "../../api";
 
@@ -60,10 +60,90 @@ function EditCommissionModal({ deliverer, onClose }: { deliverer: any; onClose: 
   );
 }
 
+function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [selectedGames, setSelectedGames] = useState<string[]>(deliverer.games || []);
+  const [error, setError] = useState("");
+
+  const { data: gamesData } = useQuery({
+    queryKey: ["games-list-edit"],
+    queryFn: adminApi.games.list,
+  });
+  const games: any[] = gamesData?.data?.games || [];
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => adminApi.delivery.update(deliverer._id, { games: selectedGames }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] });
+      qc.invalidateQueries({ queryKey: ["delivery-team"] });
+      onClose();
+    },
+    onError: (err: any) => setError(err.message),
+  });
+
+  function toggleGame(slug: string) {
+    setSelectedGames(prev =>
+      prev.includes(slug) ? prev.filter(g => g !== slug) : [...prev, slug]
+    );
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
+      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
+        className="w-full max-w-sm rounded-2xl p-6"
+        style={{ background: "#0d1525", border: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-white font-bold">Edit Assigned Games</h3>
+          <button onClick={onClose} className="text-white/30 hover:text-white"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="space-y-4">
+          <p className="text-white/40 text-xs">Select which games this deliverer handles. Leave empty to receive all games.</p>
+          {games.length === 0 ? (
+            <p className="text-white/25 text-xs py-4 text-center">No games found</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {games.map((g: any) => {
+                const active = selectedGames.includes(g.slug);
+                return (
+                  <button key={g.slug} type="button" onClick={() => toggleGame(g.slug)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    style={active
+                      ? { background: "rgba(14,165,233,0.2)", border: "1px solid rgba(14,165,233,0.4)", color: "#7dd3fc" }
+                      : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>
+                    {g.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {selectedGames.length === 0 && (
+            <p className="text-amber-400/60 text-[11px] flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3" /> No games selected — deliverer will see all pending chats
+            </p>
+          )}
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+          <div className="flex gap-2 pt-1">
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white"
+              style={{ background: "rgba(255,255,255,0.05)" }}>Cancel</button>
+            <button onClick={() => mutate()} disabled={isPending}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Games
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function DeliveryMemberDetail() {
   const { id } = useParams<{ id: string }>();
   const qc = useQueryClient();
   const [showEditComm, setShowEditComm] = useState(false);
+  const [showEditGames, setShowEditGames] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [paidMsg, setPaidMsg] = useState("");
 
@@ -104,7 +184,10 @@ export default function DeliveryMemberDetail() {
 
   return (
     <div className="space-y-5 max-w-3xl mx-auto">
-      <AnimatePresence>{showEditComm && <EditCommissionModal deliverer={d} onClose={() => setShowEditComm(false)} />}</AnimatePresence>
+      <AnimatePresence>
+        {showEditComm && <EditCommissionModal deliverer={d} onClose={() => setShowEditComm(false)} />}
+        {showEditGames && <EditGamesModal deliverer={d} onClose={() => setShowEditGames(false)} />}
+      </AnimatePresence>
 
       <Link href="/admin/delivery-team">
         <button className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
@@ -130,12 +213,29 @@ export default function DeliveryMemberDetail() {
             <span className="text-white/35 text-xs">{d.commissionRate}% commission</span>
             {d.lastLogin && <span className="text-white/25 text-xs">Last login: {fmtDate(d.lastLogin)}</span>}
           </div>
+          {/* Assigned games display */}
+          {d.games?.length > 0 && (
+            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+              <Gamepad2 className="w-3 h-3 text-sky-400/60" />
+              {d.games.map((g: string) => (
+                <span key={g} className="text-[10px] px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(14,165,233,0.1)", color: "#7dd3fc", border: "1px solid rgba(14,165,233,0.15)" }}>
+                  {g}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
           <button onClick={() => setShowEditComm(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white transition-colors"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <Settings className="w-3.5 h-3.5" /> Commission
+          </button>
+          <button onClick={() => setShowEditGames(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white transition-colors"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <Gamepad2 className="w-3.5 h-3.5" /> Games
           </button>
           <button onClick={handleMarkPaid} disabled={markingPaid || (d.totalRevenue || 0) === 0}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-40 transition-colors"
@@ -168,7 +268,7 @@ export default function DeliveryMemberDetail() {
         ))}
       </div>
 
-      {/* Delivery records — orders-style */}
+      {/* Delivery records */}
       <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
           <h3 className="text-white font-semibold text-sm">Delivery Records ({records.length})</h3>
