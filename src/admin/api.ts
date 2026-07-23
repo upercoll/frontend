@@ -323,9 +323,9 @@ export const adminApi = {
   delivery: {
     list: () => get<{ success: boolean; data: { deliverers: any[] } }>("/admin/deliverers"),
     get: (id: string) => get<{ success: boolean; data: { deliverer: any; records: any[]; stats: any } }>(`/admin/deliverers/${id}`),
-    invite: (body: { email: string; name?: string; commissionRate?: number }) =>
+    invite: (body: { email: string; name?: string; commissionRate?: number; games?: string[] }) =>
       post<{ success: boolean; data: { deliverer: any } }>("/admin/deliverers/invite", body),
-    update: (id: string, body: { commissionRate?: number; name?: string; status?: string }) =>
+    update: (id: string, body: { commissionRate?: number; name?: string; status?: string; games?: string[] }) =>
       patch<{ success: boolean; data: { deliverer: any } }>(`/admin/deliverers/${id}`, body),
     markPaid: (id: string) =>
       post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; lastPayoutAt: string } }>(`/admin/deliverers/${id}/mark-paid`, {}),
