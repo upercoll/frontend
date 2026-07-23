@@ -4,12 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import {
   Truck, Plus, ChevronRight, CheckCircle, Clock, Mail, DollarSign,
-  X, Loader2, AlertCircle, Settings, Users,
+  X, Loader2, AlertCircle, Settings, Users, Gamepad2,
 } from "lucide-react";
 import { adminApi } from "../../api";
 
 function fmt(n: number) { return `$${Number(n || 0).toFixed(2)}`; }
-function fmtDate(iso?: string) { return iso ? new Date(iso).toLocaleDateString() : "Never"; }
 
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { bg: string; text: string; label: string }> = {
@@ -30,13 +29,26 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [commission, setCommission] = useState(20);
+  const [selectedGames, setSelectedGames] = useState<string[]>([]);
   const [error, setError] = useState("");
 
+  const { data: gamesData } = useQuery({
+    queryKey: ["games-list-invite"],
+    queryFn: adminApi.games.list,
+  });
+  const games: any[] = gamesData?.data?.games || [];
+
   const { mutate, isPending } = useMutation({
-    mutationFn: () => adminApi.delivery.invite({ email, name, commissionRate: commission }),
+    mutationFn: () => adminApi.delivery.invite({ email, name, commissionRate: commission, games: selectedGames }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["delivery-team"] }); onClose(); },
     onError: (err: any) => setError(err.message),
   });
+
+  function toggleGame(slug: string) {
+    setSelectedGames(prev =>
+      prev.includes(slug) ? prev.filter(g => g !== slug) : [...prev, slug]
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -67,6 +79,30 @@ function InviteModal({ onClose }: { onClose: () => void }) {
             <input type="number" min={0} max={100} value={commission} onChange={e => setCommission(Number(e.target.value))}
               className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
               style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }} />
+          </div>
+          {/* Game Assignment */}
+          <div>
+            <label className="block text-xs font-semibold mb-1.5 text-white/50 flex items-center gap-1.5">
+              <Gamepad2 className="w-3 h-3" /> Assigned Games <span className="text-white/25 font-normal">(empty = all games)</span>
+            </label>
+            {games.length === 0 ? (
+              <p className="text-white/25 text-xs">No games found</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {games.map((g: any) => {
+                  const active = selectedGames.includes(g.slug);
+                  return (
+                    <button key={g.slug} type="button" onClick={() => toggleGame(g.slug)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium transition-all"
+                      style={active
+                        ? { background: "rgba(14,165,233,0.2)", border: "1px solid rgba(14,165,233,0.4)", color: "#7dd3fc" }
+                        : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>
+                      {g.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
           {error && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-400"
@@ -175,6 +211,11 @@ export default function DeliveryTeam() {
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-white/35 text-xs flex items-center gap-1"><Mail className="w-3 h-3" />{d.email}</span>
                       <span className="text-white/35 text-xs">{d.commissionRate}% commission</span>
+                      {d.games?.length > 0 && (
+                        <span className="text-sky-400/60 text-xs flex items-center gap-1">
+                          <Gamepad2 className="w-3 h-3" />{d.games.join(", ")}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 space-y-0.5">
