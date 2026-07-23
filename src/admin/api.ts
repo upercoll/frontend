@@ -340,6 +340,10 @@ export const adminApi = {
       get<{ success: boolean; data: { session: any; messages: any[] } }>(`/claims/${roomId}`),
     getFullSession: (roomId: string) =>
       get<{ success: boolean; data: { session: any } }>(`/claims/${roomId}/full`),
+    deleteSession: (roomId: string) =>
+      del<{ success: boolean; message: string }>(`/claims/${roomId}`),
+    bulkDeleteClaimed: (data: { email?: string; roomIds?: string[] }) =>
+      post<{ success: boolean; message: string; count: number }>("/claims/bulk-delete", data),
   },
 
   collab: {
