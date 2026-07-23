@@ -274,8 +274,21 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         timestamp: new Date(m.timestamp),
       }));
       setMessages(seedMsgs);
-      setNextSlotAt(data.data.nextSlotAt || null);
-      setStep("waiting");
+
+      const sessionStatus: string = data.data.status;
+      if (sessionStatus === "claimed") {
+        if (data.data.assignedAgent?.name) setAgentName(data.data.assignedAgent.name);
+        setStep("claimed");
+      } else if (sessionStatus === "ended") {
+        if (data.data.assignedAgent?.name) setAgentName(data.data.assignedAgent.name);
+        setStep("ended");
+      } else if (sessionStatus === "active") {
+        if (data.data.assignedAgent?.name) setAgentName(data.data.assignedAgent.name);
+        setStep("active");
+      } else {
+        setNextSlotAt(data.data.nextSlotAt || null);
+        setStep("waiting");
+      }
     } catch (err) {
       setFormErrors({ submit: err instanceof Error ? err.message : "Something went wrong. Please try again." });
     } finally {
