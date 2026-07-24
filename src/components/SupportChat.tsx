@@ -126,6 +126,23 @@ function clearClaimSession() {
   try { localStorage.removeItem(CLAIM_SESSION_KEY); } catch {}
 }
 
+function clearLastOrder() {
+  try { localStorage.removeItem("rbstars_last_order"); } catch {}
+}
+
+/**
+ * Mark an order as delivered in localStorage and fire a window event so the
+ * PaymentSuccess page can hide the "Claim Your Items Now" button in real-time.
+ */
+function signalDelivered(orderRef: string | null) {
+  try {
+    if (orderRef) localStorage.setItem("rbstars_delivered_" + orderRef, "1");
+    window.dispatchEvent(
+      new CustomEvent("rbstars:claim-delivered", { detail: { orderRef } })
+    );
+  } catch {}
+}
+
 function loadOrders(): LastOrder[] {
   try {
     const raw = localStorage.getItem("rbstars_orders");
@@ -317,10 +334,23 @@ export default function SupportChat() {
     function handleOpenClaim() {
       setOpen(true);
       setMode("claim");
+
+      // Clear any stale completed/delivered session — customer should never see
+      // a "Continue Chat" prompt for an already-delivered order.
+      const stored = loadClaimSession();
+      if (stored && (stored.status === "claimed" || stored.status === "ended" || stored.status === "closed")) {
+        clearClaimSession();
+        clearLastOrder();
+        if (stored.orderRef) {
+          removeOrderFromStorage(stored.orderRef);
+          signalDelivered(stored.orderRef);
+        }
+      }
+
       const storedOrders = loadOrders();
       setOrders(storedOrders);
-      const stored = loadClaimSession();
-      if (stored && (stored.status === "pending" || stored.status === "active")) {
+      const freshStored = loadClaimSession();
+      if (freshStored && (freshStored.status === "pending" || freshStored.status === "active")) {
         handleRejoinSession();
       } else if (storedOrders.length > 1) {
         setClaimStep("order-select");
@@ -378,43 +408,34 @@ export default function SupportChat() {
     socket.on("claim:ended", () => {
       const ordRef = sessionOrderRef.current;
       clearClaimSession();
+      clearLastOrder();
       if (ordRef) removeOrderFromStorage(ordRef);
       sessionOrderRef.current = null;
-      // keep roomId so review submission can POST to /api/claims/:roomId/feedback
-      setMessages([]);
-      setAgentName(null);
-      setAgentTyping(false);
-      setSelectedItem(null);
-      setSelectedOrder(null);
-      setOrders([]);
-      setChatOutcome("ended");
-      setClaimStep("review");
       socket.disconnect();
+      // Completely dismiss the widget — no review step
+      closeAndReset();
     });
 
     socket.on("claim:closed", () => {
-      // Non-disruptive: just clear the persisted session.
-      // Don't reset UI — customer may be mid-review or mid-chat and we don't
-      // want a hard reset to stomp on that. The socket disconnect is sufficient.
+      // Admin closed the chat — dismiss the widget entirely
       clearClaimSession();
+      clearLastOrder();
       socket.disconnect();
+      closeAndReset();
     });
 
     socket.on("claim:marked_claimed", () => {
       const ordRef = sessionOrderRef.current;
       clearClaimSession();
-      if (ordRef) removeOrderFromStorage(ordRef);
+      clearLastOrder();
+      if (ordRef) {
+        removeOrderFromStorage(ordRef);
+        signalDelivered(ordRef);
+      }
       sessionOrderRef.current = null;
-      // keep roomId so review submission can POST to /api/claims/:roomId/feedback
-      setMessages([]);
-      setAgentName(null);
-      setAgentTyping(false);
-      setSelectedItem(null);
-      setSelectedOrder(null);
-      setOrders([]);
-      setChatOutcome("claimed");
-      setClaimStep("review");
       socket.disconnect();
+      // Items delivered — hide the widget completely, no review prompt
+      closeAndReset();
     });
 
     return () => {
@@ -503,15 +524,21 @@ export default function SupportChat() {
       });
 
       if (sessionStatus === "claimed") {
+        // Items already delivered — dismiss entirely, signal PaymentSuccess page
         clearClaimSession();
-        setRoomId(rid);
-        setChatOutcome("claimed");
-        setClaimStep("review");
+        clearLastOrder();
+        const oRef = lastOrder?.orderRef || null;
+        if (oRef) {
+          removeOrderFromStorage(oRef);
+          signalDelivered(oRef);
+        }
+        closeAndReset();
       } else if (sessionStatus === "ended" || sessionStatus === "closed") {
+        // Session over — dismiss entirely
         clearClaimSession();
-        setRoomId(rid);
-        setChatOutcome("ended");
-        setClaimStep("review");
+        clearLastOrder();
+        if (lastOrder?.orderRef) removeOrderFromStorage(lastOrder.orderRef);
+        closeAndReset();
       } else if (sessionStatus === "active") {
         setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
         setRoomId(rid);
@@ -568,14 +595,18 @@ export default function SupportChat() {
 
       if (sessionStatus === "claimed") {
         clearClaimSession();
-        setRoomId(rid);
-        setChatOutcome("claimed");
-        setClaimStep("review");
+        clearLastOrder();
+        const oRef = stored.orderRef || null;
+        if (oRef) {
+          removeOrderFromStorage(oRef);
+          signalDelivered(oRef);
+        }
+        closeAndReset();
       } else if (sessionStatus === "ended" || sessionStatus === "closed") {
         clearClaimSession();
-        setRoomId(rid);
-        setChatOutcome("ended");
-        setClaimStep("review");
+        clearLastOrder();
+        if (stored.orderRef) removeOrderFromStorage(stored.orderRef);
+        closeAndReset();
       } else if (sessionStatus === "active") {
         setAgentName(data.data.assignedAgent?.name || "RBstars Agent");
         setRoomId(rid);
