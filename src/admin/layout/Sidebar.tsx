@@ -38,6 +38,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/claim-teams", label: "Claim Teams",   icon: MessageSquare,   permission: "manage_team",      group: "Team" },
   { href: "/admin/monitor",   label: "Agent Monitor",   icon: Activity,        permission: "monitor_agents",   group: "Team" },
   { href: "/admin/open-chats", label: "Open Chats",     icon: MessageSquare,   permission: "monitor_agents",   group: "Team" },
+  { href: "/panel/queue",     label: "Claim Queue",     icon: Inbox,           permission: "monitor_agents",   group: "Team" },
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod",    group: "Team" },
   { href: "/admin/delivery-team", label: "Delivery Team", icon: Truck, permission: "view_deliverers", group: "Team" },
   { href: "/admin/stock/requests", label: "Stock Requests", icon: ClipboardList, permission: "view_stock",    group: "Stock" },
