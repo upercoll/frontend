@@ -168,6 +168,9 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
 
   useEffect(() => {
     if (!roomId) return;
+    // Don't connect to socket for terminal sessions — the order is already
+    // delivered/ended and there's nothing real-time to receive.
+    if (step === "claimed" || step === "ended" || step === "closed" as ChatStep) return;
 
     const socket = io(BACKEND_URL, { transports: ["websocket"] });
     socketRef.current = socket;
