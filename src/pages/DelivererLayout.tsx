@@ -1,6 +1,6 @@
 import { useLocation, Link } from "wouter";
 import { useState, useEffect } from "react";
-import { LogOut, LayoutDashboard, MessageSquare, Clock, Truck } from "lucide-react";
+import { LogOut, LayoutDashboard, MessageSquare, Clock, Truck, ShoppingBag } from "lucide-react";
 
 const BASE = import.meta.env.VITE_API_URL || "";
 export function getDelivererToken() { return localStorage.getItem("deliverer_token") || ""; }
@@ -25,9 +25,21 @@ export async function delivererPost(path: string, body?: unknown) {
   return data;
 }
 
+export async function delivererPostForm(path: string, form: FormData) {
+  const res = await fetch(`${BASE}/api/deliverer${path}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getDelivererToken()}` },
+    body: form,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+}
+
 const navItems = [
-  { href: "/deliverer/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/deliverer/queue",     label: "Claim Queue", icon: MessageSquare },
+  { href: "/deliverer/dashboard", label: "Dashboard",    icon: LayoutDashboard },
+  { href: "/deliverer/queue",     label: "Claim Queue",  icon: MessageSquare },
+  { href: "/deliverer/orders",    label: "Orders",       icon: ShoppingBag },
   { href: "/deliverer/history",   label: "My Deliveries", icon: Clock },
 ];
 
