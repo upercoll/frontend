@@ -32,6 +32,7 @@ import DelivererLayout from "@/pages/DelivererLayout";
 import DelivererDashboard from "@/admin/pages/deliverer/DelivererDashboard";
 import DelivererQueue from "@/admin/pages/deliverer/DelivererQueue";
 import DelivererHistory from "@/admin/pages/deliverer/DelivererHistory";
+import DelivererOrders from "@/admin/pages/deliverer/DelivererOrders";
 
 import { AdminAuthProvider } from "@/admin/context/AdminAuthContext";
 import { AdminSocketProvider } from "@/admin/context/AdminSocketContext";
@@ -366,6 +367,9 @@ function DelivererRouter() {
       </Route>
       <Route path="/deliverer/queue">
         <DelivererLayout><DelivererQueue /></DelivererLayout>
+      </Route>
+      <Route path="/deliverer/orders">
+        <DelivererLayout><DelivererOrders /></DelivererLayout>
       </Route>
       <Route path="/deliverer/history">
         <DelivererLayout><DelivererHistory /></DelivererLayout>
