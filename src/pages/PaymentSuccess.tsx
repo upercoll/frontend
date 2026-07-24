@@ -35,6 +35,27 @@ export default function PaymentSuccess() {
   const [order, setOrder] = useState<LastOrder | null>(() => loadOrder());
   const [claimOpened, setClaimOpened] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  // Hide the claim button once items are confirmed delivered
+  const [delivered, setDelivered] = useState<boolean>(() => {
+    try {
+      const o = loadOrder();
+      if (!o?.orderRef) return false;
+      return localStorage.getItem("rbstars_delivered_" + o.orderRef) === "1";
+    } catch { return false; }
+  });
+
+  useEffect(() => {
+    function onDelivered(e: Event) {
+      const detail = (e as CustomEvent<{ orderRef?: string | null }>).detail;
+      // Hide if the event is for this order (or a broadcast with no ref)
+      if (!detail?.orderRef || detail.orderRef === order?.orderRef) {
+        setDelivered(true);
+        setClaimOpened(false);
+      }
+    }
+    window.addEventListener("rbstars:claim-delivered", onDelivered);
+    return () => window.removeEventListener("rbstars:claim-delivered", onDelivered);
+  }, [order?.orderRef]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -197,36 +218,57 @@ export default function PaymentSuccess() {
         ) : null}
 
         {}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="rounded-2xl p-4 mb-4 relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.15),rgba(159,18,57,0.1))", border: "1.5px solid rgba(220,38,38,0.3)" }}
-        >
+        {delivered ? (
           <motion.div
-            animate={{ x: ["-120%", "220%"] }}
-            transition={{ repeat: Infinity, duration: 3.5, ease: "linear", repeatDelay: 2 }}
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)", width: "40%" }}
-          />
-          <div className="relative flex items-start gap-3">
-            <motion.div
-              animate={{ scale: [1, 1.1, 1], boxShadow: ["0 0 0px rgba(220,38,38,0)", "0 0 16px rgba(220,38,38,0.6)", "0 0 0px rgba(220,38,38,0)"] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.4),rgba(159,18,57,0.3))", border: "1px solid rgba(220,38,38,0.4)" }}
-            >
-              <Package size={18} color="#fca5a5" />
-            </motion.div>
-            <div className="flex-1">
-              <p className="text-sm font-extrabold text-white mb-0.5">Ready to Receive Your Items?</p>
-              <p className="text-[11px] leading-relaxed" style={{ color: "#cd8fa5" }}>
-                Open the Claim Chat below to connect with our delivery team. Have your Roblox account ready!
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="rounded-2xl p-4 mb-4 flex items-center gap-3"
+            style={{ background: "rgba(22,163,74,0.12)", border: "1.5px solid rgba(22,163,74,0.3)" }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(22,163,74,0.2)", border: "1px solid rgba(22,163,74,0.4)" }}>
+              <Check size={18} color="#4ade80" />
+            </div>
+            <div>
+              <p className="text-sm font-extrabold text-white mb-0.5">Items Delivered ✓</p>
+              <p className="text-[11px]" style={{ color: "#86efac" }}>
+                Your items have been delivered. Check your Roblox inventory!
               </p>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="rounded-2xl p-4 mb-4 relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.15),rgba(159,18,57,0.1))", border: "1.5px solid rgba(220,38,38,0.3)" }}
+          >
+            <motion.div
+              animate={{ x: ["-120%", "220%"] }}
+              transition={{ repeat: Infinity, duration: 3.5, ease: "linear", repeatDelay: 2 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.05),transparent)", width: "40%" }}
+            />
+            <div className="relative flex items-start gap-3">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], boxShadow: ["0 0 0px rgba(220,38,38,0)", "0 0 16px rgba(220,38,38,0.6)", "0 0 0px rgba(220,38,38,0)"] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "linear-gradient(135deg,rgba(220,38,38,0.4),rgba(159,18,57,0.3))", border: "1px solid rgba(220,38,38,0.4)" }}
+              >
+                <Package size={18} color="#fca5a5" />
+              </motion.div>
+              <div className="flex-1">
+                <p className="text-sm font-extrabold text-white mb-0.5">Ready to Receive Your Items?</p>
+                <p className="text-[11px] leading-relaxed" style={{ color: "#cd8fa5" }}>
+                  Open the Claim Chat below to connect with our delivery team. Have your Roblox account ready!
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {}
         <motion.div
@@ -235,6 +277,7 @@ export default function PaymentSuccess() {
           transition={{ delay: 0.65 }}
           className="space-y-3"
         >
+          {!delivered && (
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(220,38,38,0.4)" }}
             whileTap={{ scale: 0.97 }}
@@ -252,6 +295,7 @@ export default function PaymentSuccess() {
             {claimOpened ? "Chat Opened ↘" : "Claim Your Items Now"}
             {claimOpened && <Check size={16} className="ml-1" />}
           </motion.button>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <motion.button
