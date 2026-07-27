@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminApi } from "../api";
 import {
   Video, Loader2, X, ExternalLink, CheckCircle, AlertCircle,
-  Eye, TrendingUp, ChevronDown, BarChart2, Calendar, User, Hash,
+  Eye, TrendingUp, ChevronDown, BarChart2, Calendar, User, Hash, RefreshCw,
 } from "lucide-react";
 
 function fmtNum(n: number) {
@@ -354,11 +354,27 @@ export default function SocialsAdmin() {
   const [platformFilter, setPlatformFilter] = useState("");
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [ratingModal, setRatingModal] = useState<any>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["socials-admin", statusFilter, platformFilter],
     queryFn: () => adminApi.socials.list({ status: statusFilter || undefined, platform: platformFilter || undefined }),
   });
+
+  const handleRefreshViews = async (e: React.MouseEvent, sub: any) => {
+    e.stopPropagation();
+    if (refreshingId) return;
+    setRefreshingId(sub._id);
+    try {
+      await adminApi.socials.refreshViews(sub._id);
+      qc.invalidateQueries({ queryKey: ["socials-admin"] });
+    } catch (err: any) {
+      alert(err.message || "Failed to refresh views");
+    } finally {
+      setRefreshingId(null);
+    }
+  };
 
   const submissions: any[] = (data as any)?.data?.submissions || [];
   const total: number = (data as any)?.data?.total || 0;
@@ -485,13 +501,23 @@ export default function SocialsAdmin() {
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
                     <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                      {s.status !== "paid" && (
-                        <button onClick={() => setRatingModal(s)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
-                          {s.offeredAmount ? "Edit Rate" : "Set Rate"}
+                      <div className="flex items-center gap-1.5">
+                        {s.status !== "paid" && (
+                          <button onClick={() => setRatingModal(s)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                            style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
+                            {s.offeredAmount ? "Edit Rate" : "Set Rate"}
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => handleRefreshViews(e, s)}
+                          disabled={refreshingId === s._id}
+                          title="Refresh view count"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40"
+                          style={{ background: "#F0F9FF", color: "#0284c7", border: "1px solid #BAE6FD" }}>
+                          <RefreshCw className={`w-3.5 h-3.5 ${refreshingId === s._id ? "animate-spin" : ""}`} />
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 );
