@@ -74,6 +74,11 @@ export default function StockerRequestForm() {
     });
   };
 
+  const setCartQuantity = (productId: string, qty: number) => {
+    const clamped = Math.max(1, Math.round(qty) || 1);
+    setCart(prev => prev.map(c => c.product._id === productId ? { ...c, quantity: clamped } : c));
+  };
+
   const setCustomPrice = (productId: string, price: number) => {
     setCart(prev => prev.map(c => c.product._id === productId ? { ...c, customPrice: price } : c));
   };
@@ -287,7 +292,14 @@ export default function StockerRequestForm() {
                                 style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
                                 <Minus className="w-2.5 h-2.5" />
                               </button>
-                              <span className="text-xs font-bold min-w-[16px] text-center text-white">{c.quantity}</span>
+                              <input
+                                type="number" min="1"
+                                value={c.quantity}
+                                onChange={e => setCartQuantity(c.product._id, parseInt(e.target.value) || 1)}
+                                onClick={e => (e.target as HTMLInputElement).select()}
+                                className="w-10 text-center text-xs font-bold bg-transparent focus:outline-none rounded px-0.5"
+                                style={{ color: "white", border: "1px solid rgba(255,255,255,0.15)" }}
+                              />
                               <button onClick={() => addToCart(c.product)}
                                 className="w-5 h-5 rounded flex items-center justify-center"
                                 style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
