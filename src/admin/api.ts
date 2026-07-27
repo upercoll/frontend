@@ -101,15 +101,17 @@ export const adminApi = {
       get<{ success: boolean; data: { revenue: number; orders: number; avgOrderValue: number; revenueGrowth?: number; ordersGrowth?: number; statusBreakdown?: Record<string, number> } }>(`/analytics/sales-summary?period=${period}`),
     conversion: () =>
       get<{ success: boolean; data: { totalOrders: number; paidOrders: number; conversionRate: number; abandonmentRate: number } }>("/analytics/conversion"),
+    traffic: () =>
+      get<{ success: boolean; data: { chart: { date: string; label: string; newCustomers: number; orderAttempts: number; paidOrders: number }[]; summary: { totalCustomers: number; newCustomers30d: number; orderAttempts30d: number; engagementSessions30d: number } } }>("/analytics/traffic"),
   },
 
   roles: {
     permissions: () => get<{ success: boolean; data: { permissions: string[] } }>("/roles/permissions"),
     list: () => get<{ success: boolean; data: { roles: import("./types").AdminRole[] } }>("/roles"),
     get: (id: string) => get<{ success: boolean; data: { role: import("./types").AdminRole; members: import("./types").TeamMember[] } }>(`/roles/${id}`),
-    create: (data: { name: string; description?: string; color?: string; permissions: string[] }) =>
+    create: (data: { name: string; description?: string; color?: string; permissions: string[]; claimGames?: string[] }) =>
       post<{ success: boolean; data: { role: import("./types").AdminRole } }>("/roles", data),
-    update: (id: string, data: { name?: string; description?: string; color?: string; permissions?: string[] }) =>
+    update: (id: string, data: { name?: string; description?: string; color?: string; permissions?: string[]; claimGames?: string[] }) =>
       patch<{ success: boolean; data: { role: import("./types").AdminRole } }>(`/roles/${id}`, data),
     delete: (id: string) => del(`/roles/${id}`),
   },
@@ -292,6 +294,8 @@ export const adminApi = {
       patch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}/stocked`, data || {}),
     rejectRequest: (id: string, data?: { adminNotes?: string }) =>
       patch<{ success: boolean; data: { request: import("./types").StockRequest } }>(`/stock/requests/${id}/reject`, data || {}),
+    deleteRequest: (id: string) =>
+      del<{ success: boolean; message: string }>(`/stock/requests/${id}`),
   },
 
   stockerPanel: {
