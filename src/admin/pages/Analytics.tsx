@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, BarChart3, Zap, Target, Percent } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, BarChart3, Zap, Target, Percent, Activity } from "lucide-react";
 import { adminApi } from "../api";
 
 const PERIODS = [
@@ -69,11 +69,19 @@ export default function Analytics() {
     queryFn: adminApi.analytics.topProducts,
   });
 
+  const { data: trafficData } = useQuery({
+    queryKey: ["analytics-traffic"],
+    queryFn: adminApi.analytics.traffic,
+  });
+
   const summary = summaryData?.data;
   const conversion = conversionData?.data;
   const chart = chartData?.data?.chart || [];
   const byGame = byGameData?.data?.byGame || [];
   const topProducts = topProductsData?.data?.topProducts || [];
+  const trafficChart = trafficData?.data?.chart || [];
+  const trafficSummary = trafficData?.data?.summary;
+  const maxTrafficValue = Math.max(...trafficChart.map((d: any) => Math.max(d.newCustomers, d.orderAttempts)), 1);
 
   const maxRevenue = Math.max(...chart.map((c: any) => c.revenue), 1);
   const totalGameRevenue = byGame.reduce((sum: number, g: any) => sum + g.revenue, 0);
@@ -200,6 +208,87 @@ export default function Analytics() {
           ))}
         </div>
       </div>
+
+      {/* ── Site Traffic ── */}
+      {trafficSummary && (
+        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#f0fdf4" }}>
+                <Activity className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold" style={{ color: "#1e1b4b" }}>Site Traffic (Last 30 Days)</h3>
+                <p className="text-xs text-slate-400">New customer signups &amp; order activity</p>
+              </div>
+            </div>
+            <div className="flex gap-4 text-right">
+              <div>
+                <p className="text-lg font-bold text-emerald-600">{trafficSummary.newCustomers30d.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400">New Customers</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold" style={{ color: "#4f46e5" }}>{trafficSummary.orderAttempts30d.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400">Order Attempts</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>{trafficSummary.totalCustomers.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400">Total Customers</p>
+              </div>
+            </div>
+          </div>
+          {trafficChart.length === 0 ? (
+            <div className="h-32 flex items-center justify-center text-slate-300">No data</div>
+          ) : (
+            <>
+              <div className="flex items-end gap-0.5 h-32 mb-2">
+                {trafficChart.map((point: any, i: number) => {
+                  const customerH = maxTrafficValue > 0 ? (point.newCustomers / maxTrafficValue) * 100 : 0;
+                  const orderH = maxTrafficValue > 0 ? (point.orderAttempts / maxTrafficValue) * 100 : 0;
+                  return (
+                    <div key={i} className="flex-1 flex items-end gap-px relative group">
+                      <motion.div
+                        initial={{ height: 0 }} animate={{ height: `${orderH}%` }}
+                        transition={{ delay: i * 0.01, duration: 0.3 }}
+                        className="flex-1 rounded-t-sm"
+                        style={{ background: "#e0e7ff", minHeight: point.orderAttempts > 0 ? 1 : 0 }}
+                      />
+                      <motion.div
+                        initial={{ height: 0 }} animate={{ height: `${customerH}%` }}
+                        transition={{ delay: i * 0.01, duration: 0.3 }}
+                        className="flex-1 rounded-t-sm"
+                        style={{ background: "#34d399", minHeight: point.newCustomers > 0 ? 1 : 0 }}
+                      />
+                      {(point.newCustomers > 0 || point.orderAttempts > 0) && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg pointer-events-none">
+                          <div>{point.label}</div>
+                          <div className="text-emerald-300">+{point.newCustomers} customers</div>
+                          <div className="text-indigo-300">{point.orderAttempts} orders</div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between">
+                {trafficChart.filter((_: any, i: number) => i % 7 === 0).map((point: any, i: number) => (
+                  <span key={i} className="text-[9px] text-slate-300">{point.label}</span>
+                ))}
+              </div>
+              <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-2 rounded-sm" style={{ background: "#34d399" }} />
+                  <span className="text-[11px] text-slate-500">New Customers</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-2 rounded-sm" style={{ background: "#e0e7ff" }} />
+                  <span className="text-[11px] text-slate-500">Order Attempts</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
