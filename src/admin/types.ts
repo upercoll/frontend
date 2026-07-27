@@ -32,6 +32,7 @@ export interface AdminRole {
   description?: string;
   color: string;
   permissions: string[];
+  claimGames?: string[];
   memberCount?: number;
   createdAt?: string;
 }
