@@ -6,7 +6,7 @@ import type { StockRequest, Stocker } from "../../types";
 import {
   ClipboardList, Check, X, Package, ChevronDown, ChevronUp,
   Loader2, Archive, User, Calendar, ShoppingBag, DollarSign,
-  BadgeCheck, Clock, AlertCircle, CheckCircle2,
+  BadgeCheck, Clock, AlertCircle, CheckCircle2, Trash2,
 } from "lucide-react";
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
@@ -153,6 +153,12 @@ function RequestRow({ req }: { req: StockRequest }) {
     onError: (e: Error) => alert(e.message),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: () => adminApi.stock.deleteRequest(req._id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["stock-requests"] }),
+    onError: (e: Error) => alert(e.message),
+  });
+
   const st = STATUS_STYLES[req.status] || STATUS_STYLES.pending;
   const stocker = typeof req.stocker === "object" ? req.stocker as Stocker : null;
   const stockerId = stocker?._id || (typeof req.stocker === "string" ? req.stocker : "");
@@ -224,6 +230,17 @@ function RequestRow({ req }: { req: StockRequest }) {
                 Mark Stocked
               </button>
             )}
+            <button
+              onClick={() => {
+                if (!window.confirm("Permanently delete this stock request? This cannot be undone.")) return;
+                deleteMut.mutate();
+              }}
+              disabled={deleteMut.isPending}
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+              title="Delete request"
+              style={{ background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626" }}>
+              {deleteMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            </button>
             <button onClick={() => setExpanded(e => !e)}
               className="w-7 h-7 rounded-lg flex items-center justify-center"
               style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#6b7280" }}>
