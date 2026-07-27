@@ -5,7 +5,7 @@ import { Link, useRoute } from "wouter";
 import { adminApi } from "../api";
 import {
   ChevronLeft, Loader2, CheckCircle, Video, DollarSign,
-  Eye, TrendingUp, ExternalLink, Clock, AlertCircle,
+  Eye, ExternalLink, Clock, AlertCircle, Hash,
 } from "lucide-react";
 
 function fmtNum(n: number) {
@@ -55,6 +55,7 @@ export default function SocialsTrackerDetail() {
   const [marking, setMarking] = useState(false);
   const [markErr, setMarkErr] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [partialAmount, setPartialAmount] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
   const { data, isLoading } = useQuery({
@@ -76,13 +77,18 @@ export default function SocialsTrackerDetail() {
   const paidCount = allSubmissions.filter(s => s.status === "paid").length;
   const totalPaid = payouts.reduce((sum, p) => sum + (p.amount || 0), 0);
 
+  const partialAmountNum = parseFloat(partialAmount) || 0;
+  const isPartial = partialAmountNum > 0 && partialAmountNum < pendingPayout;
+
   const handleMarkPaid = async () => {
     setMarking(true); setMarkErr("");
     try {
-      await adminApi.socials.markPaid(id);
+      const payload = isPartial ? { partialAmount: partialAmountNum } : undefined;
+      await adminApi.socials.markPaid(id, payload);
       qc.invalidateQueries({ queryKey: ["socials-creator-detail", id] });
       qc.invalidateQueries({ queryKey: ["socials-creators"] });
       setConfirmOpen(false);
+      setPartialAmount("");
     } catch (e: any) {
       setMarkErr(e.message || "Failed to mark as paid");
     } finally {
@@ -337,9 +343,32 @@ export default function SocialsTrackerDetail() {
               onClick={e => e.stopPropagation()}>
               <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
               <p className="text-sm text-slate-500 mb-4">
-                Marking <strong>${pendingPayout.toFixed(2)}</strong> as paid to <strong>{creator?.name}</strong> for{" "}
-                {acceptedSubmissions.length} video{acceptedSubmissions.length !== 1 ? "s" : ""}. This cannot be undone.
+                Pay <strong>{creator?.name}</strong> for accepted videos. Enter a partial amount to pay less than the full balance, or leave blank to pay all.
               </p>
+
+              {/* Partial amount input */}
+              <div className="mb-4 rounded-xl p-4" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
+                  Amount to Pay (USD) <span className="font-normal text-slate-400">— leave blank to pay full ${pendingPayout.toFixed(2)}</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-400">$</span>
+                  <input
+                    type="number" min="0.01" step="0.01" max={pendingPayout}
+                    value={partialAmount}
+                    onChange={e => setPartialAmount(e.target.value)}
+                    placeholder={pendingPayout.toFixed(2)}
+                    className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    style={{ background: "#fff", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                  />
+                </div>
+                {isPartial && (
+                  <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                    <Hash className="w-3 h-3" />
+                    Partial payout: ${partialAmountNum.toFixed(2)} of ${pendingPayout.toFixed(2)} owed. Oldest accepted videos will be marked paid first.
+                  </p>
+                )}
+              </div>
 
               {/* List accepted submissions */}
               <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid #E9EBF5" }}>
@@ -350,7 +379,7 @@ export default function SocialsTrackerDetail() {
                   </div>
                 ))}
                 <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "#F9FAFB" }}>
-                  <p className="text-xs font-bold text-slate-600">Total</p>
+                  <p className="text-xs font-bold text-slate-600">Total owed</p>
                   <span className="text-sm font-bold" style={{ color: "#059669" }}>${pendingPayout.toFixed(2)}</span>
                 </div>
               </div>
@@ -362,16 +391,16 @@ export default function SocialsTrackerDetail() {
               )}
 
               <div className="flex gap-3">
-                <button onClick={() => setConfirmOpen(false)}
+                <button onClick={() => { setConfirmOpen(false); setPartialAmount(""); }}
                   className="flex-1 py-2.5 rounded-lg text-sm font-medium"
                   style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
                   Cancel
                 </button>
-                <button onClick={handleMarkPaid} disabled={marking}
+                <button onClick={handleMarkPaid} disabled={marking || (partialAmountNum > 0 && partialAmountNum > pendingPayout)}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
                   style={{ background: "#059669" }}>
                   {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  Mark as Paid
+                  {isPartial ? `Pay $${partialAmountNum.toFixed(2)}` : `Pay $${pendingPayout.toFixed(2)}`}
                 </button>
               </div>
             </motion.div>
