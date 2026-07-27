@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Shield, Users, Trash2, Edit2, X, Loader2, Check } from "lucide-react";
+import { Plus, Shield, Users, Trash2, Edit2, X, Loader2, Check, Gamepad2 } from "lucide-react";
 import { adminApi } from "../api";
 import PermissionGrid from "../components/PermissionGrid";
 import type { AdminRole } from "../types";
@@ -17,6 +17,8 @@ export default function Roles() {
   const [description, setDescription] = useState("");
   const [color, setColor] = useState(COLORS[0]);
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [claimGames, setClaimGames] = useState<string[]>([]);
+  const [gameInput, setGameInput] = useState("");
   const [error, setError] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
@@ -44,21 +46,35 @@ export default function Roles() {
   });
 
   const openCreate = () => {
-    setName(""); setDescription(""); setColor(COLORS[0]); setPermissions([]); setError("");
+    setName(""); setDescription(""); setColor(COLORS[0]); setPermissions([]); setClaimGames([]); setGameInput(""); setError("");
     setModal({ mode: "create" });
   };
 
   const openEdit = (role: AdminRole) => {
-    setName(role.name); setDescription(role.description || ""); setColor(role.color); setPermissions(role.permissions); setError("");
+    setName(role.name); setDescription(role.description || ""); setColor(role.color); setPermissions(role.permissions);
+    setClaimGames(role.claimGames || []); setGameInput(""); setError("");
     setModal({ mode: "edit", role });
   };
 
   const closeModal = () => { setModal({ mode: null }); setError(""); };
 
+  const isClaimAgent = permissions.includes("claim_agent");
+
+  const addGame = () => {
+    const g = gameInput.trim();
+    if (g && !claimGames.includes(g)) setClaimGames(prev => [...prev, g]);
+    setGameInput("");
+  };
+
+  const removeGame = (g: string) => setClaimGames(prev => prev.filter(x => x !== g));
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) { setError("Name is required"); return; }
-    const payload = { name: name.trim(), description, color, permissions };
+    const payload = {
+      name: name.trim(), description, color, permissions,
+      claimGames: isClaimAgent ? claimGames : [],
+    };
     if (modal.mode === "create") createMut.mutate(payload);
     else if (modal.role) updateMut.mutate({ id: modal.role._id, data: payload });
   };
@@ -123,7 +139,7 @@ export default function Roles() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 mb-3">
+              <div className="flex items-center gap-4 mb-3 flex-wrap">
                 <div className="flex items-center gap-1.5 text-slate-400 text-xs">
                   <Users className="w-3.5 h-3.5" />
                   {role.memberCount || 0} member{role.memberCount !== 1 ? "s" : ""}
@@ -131,6 +147,12 @@ export default function Roles() {
                 <div className="text-slate-400 text-xs">
                   {role.permissions.length} permission{role.permissions.length !== 1 ? "s" : ""}
                 </div>
+                {role.permissions.includes("claim_agent") && role.claimGames && role.claimGames.length > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-blue-400">
+                    <Gamepad2 className="w-3 h-3" />
+                    {role.claimGames.length} game{role.claimGames.length !== 1 ? "s" : ""}
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-1">
@@ -196,8 +218,49 @@ export default function Roles() {
 
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-3">Permissions</label>
-                  <PermissionGrid selected={permissions} onChange={setPermissions} />
+                  <PermissionGrid selected={permissions} onChange={(perms) => {
+                    setPermissions(perms);
+                    if (!perms.includes("claim_agent")) setClaimGames([]);
+                  }} />
                 </div>
+
+                {isClaimAgent && (
+                  <div>
+                    <label className="text-slate-300 text-sm font-medium flex items-center gap-2 mb-2">
+                      <Gamepad2 className="w-4 h-4 text-blue-400" />
+                      Game Assignments
+                      <span className="text-xs text-slate-500 font-normal">— members with this role will only handle chats for these games</span>
+                    </label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        value={gameInput}
+                        onChange={(e) => setGameInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGame(); } }}
+                        placeholder="e.g. Blox Fruits"
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50"
+                      />
+                      <button type="button" onClick={addGame}
+                        className="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-sm transition-colors border border-blue-500/20">
+                        Add
+                      </button>
+                    </div>
+                    {claimGames.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {claimGames.map((g) => (
+                          <span key={g} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                            {g}
+                            <button type="button" onClick={() => removeGame(g)} className="hover:text-red-400 transition-colors">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {claimGames.length === 0 && (
+                      <p className="text-xs text-slate-500">No games assigned — members can handle all games</p>
+                    )}
+                  </div>
+                )}
 
                 {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
 
