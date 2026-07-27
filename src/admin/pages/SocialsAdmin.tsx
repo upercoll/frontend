@@ -457,7 +457,7 @@ export default function SocialsAdmin() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="bg-white rounded-xl overflow-x-auto" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         {isLoading ? (
           <div className="p-5 space-y-2.5">
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />)}
