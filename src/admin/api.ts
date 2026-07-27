@@ -387,7 +387,9 @@ export const adminApi = {
     getCreator: (collabId: string) => get<any>(`/socials/creators/${collabId}`),
     setRate: (id: string, data: { rateType: "per_view" | "auto"; ratePerView?: number; offeredAmount?: number; adminNote?: string }) =>
       patch<any>(`/socials/${id}/rate`, data),
-    markPaid: (collabId: string) => post<any>(`/socials/creators/${collabId}/mark-paid`),
+    refreshViews: (id: string) => post<any>(`/socials/${id}/refresh-views`),
+    markPaid: (collabId: string, data?: { partialAmount?: number }) =>
+      post<any>(`/socials/creators/${collabId}/mark-paid`, data || {}),
     deleteCreator: (collabId: string) => del<any>(`/socials/creators/${collabId}`),
     inviteCreator: (name: string, email: string) =>
       post<any>("/socials/creators/invite", { name, email }),
