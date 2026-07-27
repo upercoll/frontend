@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { adminApi } from "../api";
 import {
   Video, Loader2, X, ExternalLink, CheckCircle, AlertCircle,
-  Eye, TrendingUp, ChevronDown, BarChart2, Calendar, User, Hash,
+  Eye, TrendingUp, RefreshCw, BarChart2, Calendar, User, Hash,
 } from "lucide-react";
 
-function fmtNum(n: number) {
-  if (!n) return "—";
+function fmtNum(n: number | null | undefined) {
+  if (n == null) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
@@ -220,8 +220,23 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
   );
 }
 
-function AnalyticsModal({ sub, onClose, onSetRate }: { sub: any; onClose: () => void; onSetRate: () => void }) {
+function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; onClose: () => void; onSetRate: () => void; onRefreshed: (updated: any) => void }) {
+  const qc = useQueryClient();
   const st = STATUS_STYLES[sub.status] || STATUS_STYLES.in_review;
+
+  const [refreshErr, setRefreshErr] = useState("");
+  const refreshMutation = useMutation({
+    mutationFn: () => adminApi.socials.refreshViews(sub._id),
+    onSuccess: (res: any) => {
+      qc.invalidateQueries({ queryKey: ["socials-admin"] });
+      setRefreshErr("");
+      // Propagate the updated submission data so the modal shows new stats
+      if (res?.data?.submission) onRefreshed(res.data.submission);
+    },
+    onError: (e: any) => {
+      setRefreshErr(e.message || "Refresh failed");
+    },
+  });
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -327,13 +342,30 @@ function AnalyticsModal({ sub, onClose, onSetRate }: { sub: any; onClose: () => 
             </div>
           )}
 
+          {/* Refresh error */}
+          {refreshErr && (
+            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />{refreshErr}
+            </div>
+          )}
+
           {/* Actions */}
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-1 flex-wrap">
             <a href={sub.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
               style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
               <ExternalLink className="w-3.5 h-3.5" /> Open Video
             </a>
+            {sub.status !== "paid" && (
+              <button
+                onClick={() => { setRefreshErr(""); refreshMutation.mutate(); }}
+                disabled={refreshMutation.isPending}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+                {refreshMutation.isPending ? "Refreshing…" : "Refresh Views"}
+              </button>
+            )}
             {sub.status !== "paid" && (
               <button onClick={() => { onClose(); onSetRate(); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white ml-auto"
@@ -354,10 +386,19 @@ export default function SocialsAdmin() {
   const [platformFilter, setPlatformFilter] = useState("");
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [ratingModal, setRatingModal] = useState<any>(null);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["socials-admin", statusFilter, platformFilter],
     queryFn: () => adminApi.socials.list({ status: statusFilter || undefined, platform: platformFilter || undefined }),
+  });
+
+  const rowRefreshMutation = useMutation({
+    mutationFn: (id: string) => adminApi.socials.refreshViews(id),
+    onMutate: (id) => setRefreshingId(id),
+    onSettled: () => setRefreshingId(null),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["socials-admin"] }),
   });
 
   const submissions: any[] = (data as any)?.data?.submissions || [];
@@ -485,13 +526,25 @@ export default function SocialsAdmin() {
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
                     <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                      {s.status !== "paid" && (
-                        <button onClick={() => setRatingModal(s)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
-                          {s.offeredAmount ? "Edit Rate" : "Set Rate"}
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {s.status !== "paid" && (
+                          <button
+                            onClick={() => rowRefreshMutation.mutate(s._id)}
+                            disabled={refreshingId === s._id}
+                            title="Refresh views & likes"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50"
+                            style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+                            <RefreshCw className={`w-3.5 h-3.5 ${refreshingId === s._id ? "animate-spin" : ""}`} />
+                          </button>
+                        )}
+                        {s.status !== "paid" && (
+                          <button onClick={() => setRatingModal(s)}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                            style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
+                            {s.offeredAmount ? "Edit Rate" : "Set Rate"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -507,6 +560,7 @@ export default function SocialsAdmin() {
             sub={selectedSub}
             onClose={() => setSelectedSub(null)}
             onSetRate={() => setRatingModal(selectedSub)}
+            onRefreshed={(updated) => setSelectedSub(updated)}
           />
         )}
         {ratingModal && <RateModal sub={ratingModal} onClose={() => setRatingModal(null)} />}
