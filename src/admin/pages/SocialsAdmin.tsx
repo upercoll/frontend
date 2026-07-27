@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { adminApi } from "../api";
 import {
   Video, Loader2, X, ExternalLink, CheckCircle, AlertCircle,
-  Eye, TrendingUp, RefreshCw, BarChart2, Calendar, User, Hash,
+  Eye, Heart, TrendingUp, RefreshCw, BarChart2, Calendar, User, Hash,
 } from "lucide-react";
 
 function fmtNum(n: number | null | undefined) {
@@ -129,7 +129,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
             <p className="text-xs text-slate-400">{sub.channelName}</p>
             <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
               <span>👁 {fmtNum(sub.views)}</span>
-              {sub.likes > 0 && <span>♥ {fmtNum(sub.likes)}</span>}
+              {sub.likes > 0 && <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(sub.likes)}</span>}
             </div>
           </div>
         </div>
@@ -386,7 +386,6 @@ export default function SocialsAdmin() {
   const [platformFilter, setPlatformFilter] = useState("");
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [ratingModal, setRatingModal] = useState<any>(null);
-  const [refreshingId, setRefreshingId] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -394,21 +393,36 @@ export default function SocialsAdmin() {
     queryFn: () => adminApi.socials.list({ status: statusFilter || undefined, platform: platformFilter || undefined }),
   });
 
-  const rowRefreshMutation = useMutation({
-    mutationFn: (id: string) => adminApi.socials.refreshViews(id),
-    onMutate: (id) => setRefreshingId(id),
-    onSettled: () => setRefreshingId(null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["socials-admin"] }),
-  });
-
   const submissions: any[] = (data as any)?.data?.submissions || [];
   const total: number = (data as any)?.data?.total || 0;
 
+  // Refresh all visible submissions sequentially
+  const [refreshingAll, setRefreshingAll] = useState(false);
+  const handleRefreshAll = async () => {
+    setRefreshingAll(true);
+    const unpaid = submissions.filter(s => s.status !== "paid");
+    for (const s of unpaid) {
+      try { await adminApi.socials.refreshViews(s._id); } catch {}
+    }
+    await qc.invalidateQueries({ queryKey: ["socials-admin"] });
+    setRefreshingAll(false);
+  };
+
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
-        <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
+        </div>
+        <button
+          onClick={handleRefreshAll}
+          disabled={refreshingAll || isLoading || submissions.length === 0}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
+          style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+          <RefreshCw className={`w-4 h-4 ${refreshingAll ? "animate-spin" : ""}`} />
+          {refreshingAll ? "Refreshing…" : "Refresh All Views"}
+        </button>
       </div>
 
       {/* Filters */}
@@ -511,7 +525,7 @@ export default function SocialsAdmin() {
                         <Eye className="w-3.5 h-3.5 text-slate-400" />
                         {fmtNum(s.views)}
                       </div>
-                      {s.likes > 0 && <p className="text-xs text-slate-400">♥ {fmtNum(s.likes)}</p>}
+                      {s.likes > 0 && <p className="text-xs text-slate-400 flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(s.likes)}</p>}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-xs px-2.5 py-1 rounded-full font-semibold border"
@@ -526,25 +540,13 @@ export default function SocialsAdmin() {
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
                     <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1.5">
-                        {s.status !== "paid" && (
-                          <button
-                            onClick={() => rowRefreshMutation.mutate(s._id)}
-                            disabled={refreshingId === s._id}
-                            title="Refresh views & likes"
-                            className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50"
-                            style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
-                            <RefreshCw className={`w-3.5 h-3.5 ${refreshingId === s._id ? "animate-spin" : ""}`} />
-                          </button>
-                        )}
-                        {s.status !== "paid" && (
-                          <button onClick={() => setRatingModal(s)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                            style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
-                            {s.offeredAmount ? "Edit Rate" : "Set Rate"}
-                          </button>
-                        )}
-                      </div>
+                      {s.status !== "paid" && (
+                        <button onClick={() => setRatingModal(s)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
+                          {s.offeredAmount ? "Edit Rate" : "Set Rate"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
