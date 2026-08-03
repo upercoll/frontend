@@ -401,3 +401,4 @@
   pointer-events: none;
   z-index: 10;
 }
+@keyframes yt-trust-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
