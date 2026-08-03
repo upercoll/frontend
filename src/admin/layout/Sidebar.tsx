@@ -41,8 +41,8 @@ const ownerNav: NavItem[] = [
   { href: "/admin/delivery-team", label: "Delivery Team", icon: Truck, permission: "view_deliverers", group: "Team" },
   { href: "/admin/stock/requests", label: "Stock Requests", icon: ClipboardList, permission: "view_stock",    group: "Stock" },
   { href: "/admin/stock/tracking", label: "Stocker Tracking", icon: Archive,   permission: "manage_stockers", group: "Stock" },
-  { href: "/admin/socials",          label: "Submissions",    icon: Video,         permission: "view_socials",    group: "Socials" },
-  { href: "/admin/socials/creators", label: "Creators",       icon: Film,          permission: "view_socials",    group: "Socials" },
+  { href: "/admin/socials",          label: "Videos",         icon: Video,         permission: "view_socials",    group: "Socials" },
+  { href: "/admin/socials/creators", label: "Creators & Payments", icon: Film,      permission: "view_socials",    group: "Socials" },
   { href: "/admin/role-view", label: "Role View",       icon: Eye,             ownerOnly: true,                group: "System" },
   { href: "/admin/settings",  label: "Settings",        icon: Settings,        ownerOnly: true,                group: "System" },
 ];
