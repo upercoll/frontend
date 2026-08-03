@@ -35,6 +35,7 @@ function fmtDate(d: string) {
 }
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
+  active:    { label: "Tracking",   color: "#a5b4fc", bg: "rgba(129,140,248,0.15)" },
   in_review: { label: "In Review",  color: "#d97706", bg: "rgba(251,191,36,0.15)" },
   reviewed:  { label: "Reviewed",   color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
   accepted:  { label: "Accepted",   color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
@@ -58,6 +59,7 @@ function TikTokIcon({ className }: { className?: string }) {
 
 const QUEUE_TABS = [
   { label: "All", value: "" },
+  { label: "Tracking", value: "active" },
   { label: "In Review", value: "in_review" },
   { label: "Reviewed", value: "reviewed" },
   { label: "Accepted", value: "accepted" },
@@ -84,6 +86,8 @@ export default function SocialsDashboard() {
   const [queueDropOpen, setQueueDropOpen] = useState(false);
 
   const [stats, setStats] = useState<any>(null);
+  const [requestingPayout, setRequestingPayout] = useState(false);
+  const [payoutMessage, setPayoutMessage] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("social_token");
@@ -108,6 +112,13 @@ export default function SocialsDashboard() {
   }, []);
 
   useEffect(() => { loadQueue(); loadStats(); }, [loadQueue, loadStats]);
+
+  const requestPayout = async () => {
+    setRequestingPayout(true); setPayoutMessage("");
+    try { await socialFetch("/social/request-payout", "POST"); setPayoutMessage("Payout requested — your manager has been notified."); }
+    catch (e: any) { setPayoutMessage(e.message || "Could not request payout."); }
+    finally { setRequestingPayout(false); }
+  };
 
   const handlePreview = async () => {
     if (!url.trim()) return;
@@ -206,6 +217,12 @@ export default function SocialsDashboard() {
             </motion.div>
           )}
 
+          <div className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
+            <div><p className="text-sm font-bold text-white">Ready for a payout?</p><p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,.55)" }}>Request your available balance directly from your dashboard.</p></div>
+            <button onClick={requestPayout} disabled={requestingPayout || !(stats?.pendingPayout > 0)} className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50" style={{ background: "#4ade80", color: "#09231a" }}>{requestingPayout ? "Requesting…" : "Request payout"}</button>
+          </div>
+          {payoutMessage && <p className="text-xs text-center" style={{ color: payoutMessage.startsWith("Payout") ? "#4ade80" : "#f87171" }}>{payoutMessage}</p>}
+
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.05 }}
             className="rounded-2xl overflow-hidden"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -214,7 +231,7 @@ export default function SocialsDashboard() {
                 <Plus className="w-4 h-4" style={{ color: "#a78bfa" }} /> Submit a Video
               </h2>
               <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                Paste your YouTube or TikTok video link to submit it for review.
+                Paste your YouTube or TikTok video link. Views and earnings start tracking immediately.
               </p>
             </div>
 
