@@ -39,7 +39,13 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   const games: any[] = gamesData?.data?.games || [];
 
   const { mutate, isPending } = useMutation({
-    mutationFn: () => adminApi.delivery.invite({ email, name, commissionRate: commission, games: selectedGames }),
+    mutationFn: () => adminApi.delivery.invite({
+      email,
+      name,
+      commissionRate: commission,
+      games: selectedGames,
+      assignments: selectedGames.map((game) => ({ game, commissionRate: commission })),
+    }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["delivery-team"] }); onClose(); },
     onError: (err: any) => setError(err.message),
   });
