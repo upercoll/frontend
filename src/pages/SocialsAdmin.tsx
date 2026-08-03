@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { adminApi } from "../api";
 import {
   Video, Loader2, X, ExternalLink, CheckCircle, AlertCircle,
-  Eye, TrendingUp, ChevronDown, BarChart2, Calendar, User, Hash, RefreshCw,
+  Eye, Heart, TrendingUp, RefreshCw, BarChart2, Calendar, User, Hash,
 } from "lucide-react";
 
-function fmtNum(n: number) {
-  if (!n) return "—";
+function fmtNum(n: number | null | undefined) {
+  if (n == null) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return n.toLocaleString();
@@ -56,7 +56,7 @@ function TikTokIcon({ className }: { className?: string }) {
 }
 
 interface RateForm {
-  rateType: "per_view" | "auto";
+  rateType: "per_1k" | "per_video";
   ratePerView: string;
   offeredAmount: string;
   adminNote: string;
@@ -65,8 +65,8 @@ interface RateForm {
 function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<RateForm>({
-    rateType: sub.rateType || "per_view",
-    ratePerView: sub.ratePerView ? String(sub.ratePerView) : "",
+    rateType: sub.rateType === "per_video" || sub.rateType === "auto" ? "per_video" : "per_1k",
+    ratePerView: sub.ratePerView ? String(sub.ratePerView * 1000) : "",
     offeredAmount: sub.offeredAmount ? String(sub.offeredAmount) : "",
     adminNote: sub.adminNote || "",
   });
@@ -75,10 +75,10 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
 
   const views = sub.views || 0;
 
-  const computedAmount = form.rateType === "per_view" && form.ratePerView && views
-    ? (parseFloat(form.ratePerView) * views).toFixed(2)
+  const computedAmount = form.rateType === "per_1k" && form.ratePerView && views
+    ? ((parseFloat(form.ratePerView) * views) / 1000).toFixed(2)
     : null;
-  const computedRPV = form.rateType === "auto" && form.offeredAmount && views
+  const computedRPV = form.rateType === "per_video" && form.offeredAmount && views
     ? (parseFloat(form.offeredAmount) / views).toFixed(6)
     : null;
 
@@ -87,8 +87,8 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
     try {
       await adminApi.socials.setRate(sub._id, {
         rateType: form.rateType,
-        ratePerView: form.rateType === "per_view" ? parseFloat(form.ratePerView) : undefined,
-        offeredAmount: form.rateType === "auto" ? parseFloat(form.offeredAmount) : undefined,
+        ratePerView: form.rateType === "per_1k" ? parseFloat(form.ratePerView) : undefined,
+        offeredAmount: form.rateType === "per_video" ? parseFloat(form.offeredAmount) : undefined,
         adminNote: form.adminNote,
       });
       qc.invalidateQueries({ queryKey: ["socials-admin"] });
@@ -129,7 +129,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
             <p className="text-xs text-slate-400">{sub.channelName}</p>
             <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
               <span>👁 {fmtNum(sub.views)}</span>
-              {sub.likes > 0 && <span>♥ {fmtNum(sub.likes)}</span>}
+              {sub.likes > 0 && <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(sub.likes)}</span>}
             </div>
           </div>
         </div>
@@ -138,22 +138,22 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
           <div>
             <label className="block text-xs font-semibold mb-2 text-slate-500">Rate Type</label>
             <div className="flex gap-2">
-              {(["per_view", "auto"] as const).map((rt) => (
+              {(["per_1k", "per_video"] as const).map((rt) => (
                 <button key={rt} onClick={() => setForm(f => ({ ...f, rateType: rt }))}
                   className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={form.rateType === rt
                     ? { background: "#1e1b4b", color: "#fff" }
                     : { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
-                  {rt === "per_view" ? "Rate Per View" : "Fixed Amount (Auto)"}
+                  {rt === "per_1k" ? "Rate Per 1K Views" : "Fixed Per Video"}
                 </button>
               ))}
             </div>
           </div>
 
-          {form.rateType === "per_view" ? (
+          {form.rateType === "per_1k" ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Rate per View ($)</label>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Rate per 1,000 Views ($)</label>
                 <input
                   type="number" step="0.000001" min="0"
                   value={form.ratePerView}
@@ -220,8 +220,23 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
   );
 }
 
-function AnalyticsModal({ sub, onClose, onSetRate }: { sub: any; onClose: () => void; onSetRate: () => void }) {
+function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; onClose: () => void; onSetRate: () => void; onRefreshed: (updated: any) => void }) {
+  const qc = useQueryClient();
   const st = STATUS_STYLES[sub.status] || STATUS_STYLES.in_review;
+
+  const [refreshErr, setRefreshErr] = useState("");
+  const refreshMutation = useMutation({
+    mutationFn: () => adminApi.socials.refreshViews(sub._id),
+    onSuccess: (res: any) => {
+      qc.invalidateQueries({ queryKey: ["socials-admin"] });
+      setRefreshErr("");
+      // Propagate the updated submission data so the modal shows new stats
+      if (res?.data?.submission) onRefreshed(res.data.submission);
+    },
+    onError: (e: any) => {
+      setRefreshErr(e.message || "Refresh failed");
+    },
+  });
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -327,13 +342,30 @@ function AnalyticsModal({ sub, onClose, onSetRate }: { sub: any; onClose: () => 
             </div>
           )}
 
+          {/* Refresh error */}
+          {refreshErr && (
+            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />{refreshErr}
+            </div>
+          )}
+
           {/* Actions */}
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-1 flex-wrap">
             <a href={sub.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
               style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
               <ExternalLink className="w-3.5 h-3.5" /> Open Video
             </a>
+            {sub.status !== "paid" && (
+              <button
+                onClick={() => { setRefreshErr(""); refreshMutation.mutate(); }}
+                disabled={refreshMutation.isPending}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
+                {refreshMutation.isPending ? "Refreshing…" : "Refresh Views"}
+              </button>
+            )}
             {sub.status !== "paid" && (
               <button onClick={() => { onClose(); onSetRate(); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white ml-auto"
@@ -354,7 +386,6 @@ export default function SocialsAdmin() {
   const [platformFilter, setPlatformFilter] = useState("");
   const [selectedSub, setSelectedSub] = useState<any>(null);
   const [ratingModal, setRatingModal] = useState<any>(null);
-  const [refreshingId, setRefreshingId] = useState<string | null>(null);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -362,28 +393,36 @@ export default function SocialsAdmin() {
     queryFn: () => adminApi.socials.list({ status: statusFilter || undefined, platform: platformFilter || undefined }),
   });
 
-  const handleRefreshViews = async (e: React.MouseEvent, sub: any) => {
-    e.stopPropagation();
-    if (refreshingId) return;
-    setRefreshingId(sub._id);
-    try {
-      await adminApi.socials.refreshViews(sub._id);
-      qc.invalidateQueries({ queryKey: ["socials-admin"] });
-    } catch (err: any) {
-      alert(err.message || "Failed to refresh views");
-    } finally {
-      setRefreshingId(null);
-    }
-  };
-
   const submissions: any[] = (data as any)?.data?.submissions || [];
   const total: number = (data as any)?.data?.total || 0;
 
+  // Refresh all visible submissions sequentially
+  const [refreshingAll, setRefreshingAll] = useState(false);
+  const handleRefreshAll = async () => {
+    setRefreshingAll(true);
+    const unpaid = submissions.filter(s => s.status !== "paid");
+    for (const s of unpaid) {
+      try { await adminApi.socials.refreshViews(s._id); } catch {}
+    }
+    await qc.invalidateQueries({ queryKey: ["socials-admin"] });
+    setRefreshingAll(false);
+  };
+
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
-      <div>
-        <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
-        <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
+          <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
+        </div>
+        <button
+          onClick={handleRefreshAll}
+          disabled={refreshingAll || isLoading || submissions.length === 0}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
+          style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+          <RefreshCw className={`w-4 h-4 ${refreshingAll ? "animate-spin" : ""}`} />
+          {refreshingAll ? "Refreshing…" : "Refresh All Views"}
+        </button>
       </div>
 
       {/* Filters */}
@@ -418,7 +457,7 @@ export default function SocialsAdmin() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="bg-white rounded-xl overflow-x-auto" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         {isLoading ? (
           <div className="p-5 space-y-2.5">
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />)}
@@ -486,7 +525,7 @@ export default function SocialsAdmin() {
                         <Eye className="w-3.5 h-3.5 text-slate-400" />
                         {fmtNum(s.views)}
                       </div>
-                      {s.likes > 0 && <p className="text-xs text-slate-400">♥ {fmtNum(s.likes)}</p>}
+                      {s.likes > 0 && <p className="text-xs text-slate-400 flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(s.likes)}</p>}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-xs px-2.5 py-1 rounded-full font-semibold border"
@@ -501,23 +540,13 @@ export default function SocialsAdmin() {
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
                     <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center gap-1.5">
-                        {s.status !== "paid" && (
-                          <button onClick={() => setRatingModal(s)}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                            style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
-                            {s.offeredAmount ? "Edit Rate" : "Set Rate"}
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => handleRefreshViews(e, s)}
-                          disabled={refreshingId === s._id}
-                          title="Refresh view count"
-                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40"
-                          style={{ background: "#F0F9FF", color: "#0284c7", border: "1px solid #BAE6FD" }}>
-                          <RefreshCw className={`w-3.5 h-3.5 ${refreshingId === s._id ? "animate-spin" : ""}`} />
+                      {s.status !== "paid" && (
+                        <button onClick={() => setRatingModal(s)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
+                          {s.offeredAmount ? "Edit Rate" : "Set Rate"}
                         </button>
-                      </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -533,6 +562,7 @@ export default function SocialsAdmin() {
             sub={selectedSub}
             onClose={() => setSelectedSub(null)}
             onSetRate={() => setRatingModal(selectedSub)}
+            onRefreshed={(updated) => setSelectedSub(updated)}
           />
         )}
         {ratingModal && <RateModal sub={ratingModal} onClose={() => setRatingModal(null)} />}
