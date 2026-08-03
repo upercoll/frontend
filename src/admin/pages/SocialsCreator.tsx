@@ -114,11 +114,17 @@ function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pend
   const qc = useQueryClient();
   const [marking, setMarking] = useState(false);
   const [err, setErr] = useState("");
+  const [amount, setAmount] = useState("");
 
   const handleConfirm = async () => {
+    const payoutAmount = Number(amount);
+    if (!Number.isFinite(payoutAmount) || payoutAmount <= 0 || payoutAmount > pendingPayout) {
+      setErr(`Enter an amount from $0.01 to $${pendingPayout.toFixed(2)}`);
+      return;
+    }
     setMarking(true); setErr("");
     try {
-      await adminApi.socials.markPaid(creator._id);
+      await adminApi.socials.markPaid(creator._id, { partialAmount: payoutAmount });
       qc.invalidateQueries({ queryKey: ["socials-creators"] });
       onClose();
     } catch (e: any) {
@@ -133,10 +139,12 @@ function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pend
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6" style={{ border: "1px solid #E9EBF5" }}
         onClick={e => e.stopPropagation()}>
         <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
-        <p className="text-sm text-slate-500 mb-5">
-          Mark <strong className="text-emerald-700">${pendingPayout.toFixed(2)}</strong> as paid to <strong style={{ color: "#1e1b4b" }}>{creator.name}</strong>?
-          This marks all their accepted videos as paid and cannot be undone.
-        </p>
+        <p className="text-sm text-slate-500 mb-4">Enter the exact amount to pay. Any remaining balance stays unpaid for a later payout.</p>
+        <label className="block text-xs font-semibold text-slate-500 mb-5">Amount to pay
+          <input type="number" min="0.01" max={pendingPayout} step="0.01" value={amount} placeholder={pendingPayout.toFixed(2)}
+            onChange={e => setAmount(e.target.value)} className="mt-1.5 w-full rounded-xl px-4 py-2.5 text-sm"
+            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }} />
+        </label>
         {err && (
           <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
             <AlertCircle className="w-4 h-4 flex-shrink-0" /> {err}
@@ -152,7 +160,7 @@ function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pend
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
             style={{ background: "#059669" }}>
             {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-            Mark as Paid
+            Pay amount
           </button>
         </div>
       </div>
