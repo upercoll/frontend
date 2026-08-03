@@ -21,6 +21,10 @@ function InviteModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [rateType, setRateType] = useState<"per_1k" | "per_video">("per_1k");
+  const [rate, setRate] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
+  const [requiresPaymentProof, setRequiresPaymentProof] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -29,7 +33,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
     try {
-      await adminApi.socials.inviteCreator(name.trim(), email.trim());
+      await adminApi.socials.inviteCreator({ name: name.trim(), email: email.trim(), rateType, rate: Number(rate) || 0, paymentMethods, requiresPaymentProof });
       setSuccess(`Invite sent to ${email}`);
       setName(""); setEmail("");
       qc.invalidateQueries({ queryKey: ["socials-creators"] });
@@ -61,6 +65,16 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
               style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }} />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="text-xs font-semibold text-slate-500">Default rate type
+              <select value={rateType} onChange={e => setRateType(e.target.value as "per_1k" | "per_video")} className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}><option value="per_1k">Per 1,000 views</option><option value="per_video">Fixed per video</option></select>
+            </label>
+            <label className="text-xs font-semibold text-slate-500">Default amount ($)
+              <input type="number" min="0" step="0.01" value={rate} onChange={e => setRate(e.target.value)} placeholder="0.00" className="mt-1.5 w-full rounded-xl px-3 py-2.5 text-sm" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }} />
+            </label>
+          </div>
+          <div><p className="text-xs font-semibold text-slate-500 mb-2">Preferred payment methods</p><div className="flex flex-wrap gap-2">{["paypal", "cashapp", "bank", "crypto", "other"].map(method => <label key={method} className="text-xs capitalize px-2.5 py-1.5 rounded-lg cursor-pointer" style={{ background: paymentMethods.includes(method) ? "#E0E7FF" : "#F7F8FC", border: "1px solid #E9EBF5" }}><input className="mr-1.5" type="checkbox" checked={paymentMethods.includes(method)} onChange={e => setPaymentMethods(v => e.target.checked ? [...v, method] : v.filter(x => x !== method))} />{method}</label>)}</div></div>
+          <label className="flex gap-2 items-center text-xs text-slate-600"><input type="checkbox" checked={requiresPaymentProof} onChange={e => setRequiresPaymentProof(e.target.checked)} /> Keep payment proof for this creator</label>
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1.5">Email Address</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="jane@example.com"
@@ -204,6 +218,22 @@ function DeleteModal({ creator, onClose }: { creator: any; onClose: () => void }
   );
 }
 
+function FeaturedYouTubersPanel() {
+  const qc = useQueryClient();
+  const [username, setUsername] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const { data, isLoading } = useQuery({ queryKey: ["featured-youtubers"], queryFn: () => adminApi.socials.featuredYouTubers() });
+  const creators: any[] = (data as any)?.data?.creators || [];
+  const add = async (e: React.FormEvent) => { e.preventDefault(); if (!username.trim()) return; setSaving(true); setError(""); try { await adminApi.socials.addFeaturedYouTuber(username.trim()); setUsername(""); qc.invalidateQueries({ queryKey: ["featured-youtubers"] }); } catch (e: any) { setError(e.message || "Could not add YouTuber"); } finally { setSaving(false); } };
+  return <section className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
+    <div className="flex items-center gap-2"><Video className="w-4 h-4 text-red-500" /><div><h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>YouTubers That Trust Us</h3><p className="text-xs text-slate-500 mt-0.5">Adding a channel here automatically publishes it to the homepage carousel.</p></div></div>
+    <form onSubmit={add} className="flex gap-2 mt-4"><input value={username} onChange={e => setUsername(e.target.value)} placeholder="YouTube username, e.g. MrBeast" className="flex-1 rounded-lg px-3 py-2 text-sm" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }} /><button disabled={saving} className="px-3 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-60" style={{ background: "#dc2626" }}>{saving ? "Fetching…" : "Add YouTuber"}</button></form>
+    {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
+    {!isLoading && creators.length > 0 && <div className="grid sm:grid-cols-2 gap-2 mt-4">{creators.map(c => <div key={c._id} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "#F9FAFB" }}>{c.avatarUrl ? <img src={c.avatarUrl} className="w-8 h-8 rounded-full object-cover" /> : <Video className="w-8 h-8 p-2 rounded-full text-white bg-red-500" />}<span className="text-xs font-semibold flex-1 truncate">{c.name || c.username}</span><button onClick={() => adminApi.socials.deleteFeaturedYouTuber(c._id).then(() => qc.invalidateQueries({ queryKey: ["featured-youtubers"] }))} className="text-xs text-red-600">Remove</button></div>)}</div>}
+  </section>;
+}
+
 export default function SocialsCreators() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [markPaidTarget, setMarkPaidTarget] = useState<any>(null);
@@ -282,6 +312,7 @@ export default function SocialsCreators() {
                     <td className="px-5 py-4">
                       <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{c.name}</p>
                       <p className="text-xs text-slate-400">{c.email}</p>
+                      {c.payoutRequestedAt && <p className="text-[10px] font-bold text-amber-600 mt-1">● Payout requested</p>}
                     </td>
                     <td className="px-5 py-4">
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize"
@@ -357,6 +388,7 @@ export default function SocialsCreators() {
           </table>
         )}
       </div>
+      <FeaturedYouTubersPanel />
     </div>
   );
 }
