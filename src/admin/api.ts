@@ -273,7 +273,7 @@ export const adminApi = {
       get<{ success: boolean; data: { stocker: { _id: string; name: string; email: string }; deliveries: any[]; total: number; productSummary: any[] } }>(`/stock/stockers/${id}/sales`),
     getStockerPayouts: (id: string) =>
       get<{ success: boolean; data: { stocker: import("./types").Stocker; payouts: import("./types").StockerPayout[]; unpaidAmount: number; unpaidDeliveries: any[]; unpaidDeliveryCount: number } }>(`/stock/stockers/${id}/payouts`),
-    markStockerPaid: (id: string, data?: { notes?: string }) =>
+    markStockerPaid: (id: string, data?: { notes?: string; amount?: number }) =>
       post<{ success: boolean; data: { payout: import("./types").StockerPayout } }>(`/stock/stockers/${id}/payouts/mark-paid`, data || {}),
     inviteStocker: (data: { email: string; name?: string; commissionRate?: number; games?: string[] }) =>
       post<{ success: boolean; data: { stocker: import("./types").Stocker } }>("/stock/stockers/invite", data),
@@ -329,10 +329,10 @@ export const adminApi = {
     get: (id: string) => get<{ success: boolean; data: { deliverer: any; records: any[]; stats: any } }>(`/admin/deliverers/${id}`),
     invite: (body: { email: string; name?: string; commissionRate?: number; games?: string[]; assignments?: { game: string; commissionRate: number }[] }) =>
       post<{ success: boolean; data: { deliverer: any } }>("/admin/deliverers/invite", body),
-    update: (id: string, body: { commissionRate?: number; name?: string; status?: string; games?: string[]; assignments?: { game: string; commissionRate: number }[] }) =>
+    update: (id: string, body: { commissionRate?: number; name?: string; status?: string; games?: string[]; assignments?: { game: string; commissionRate: number }[]; amount?: number }) =>
       patch<{ success: boolean; data: { deliverer: any } }>(`/admin/deliverers/${id}`, body),
-    markPaid: (id: string) =>
-      post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; lastPayoutAt: string } }>(`/admin/deliverers/${id}/mark-paid`, {}),
+    markPaid: (id: string, data?: { amount?: number }) =>
+      post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; lastPayoutAt: string } }>(`/admin/deliverers/${id}/mark-paid`, data || {}),
   },
 
   claimSessions: {
