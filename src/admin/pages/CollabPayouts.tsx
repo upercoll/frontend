@@ -16,6 +16,7 @@ export default function CollabPayouts() {
   const qc = useQueryClient();
   const [marking, setMarking] = useState(false);
   const [markError, setMarkError] = useState("");
+  const [amount, setAmount] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["collab-payouts", id],
@@ -29,10 +30,15 @@ export default function CollabPayouts() {
   const unpaidSales: any[] = (data as any)?.data?.unpaidSales || [];
 
   const handleMarkPaid = async () => {
-    if (!confirm(`Mark $${unpaidTotal.toFixed(2)} as paid to ${collab?.name}?`)) return;
+    const payoutAmount = Number(amount);
+    if (!Number.isFinite(payoutAmount) || payoutAmount <= 0 || payoutAmount > unpaidTotal) {
+      setMarkError(`Enter an amount from $0.01 to $${unpaidTotal.toFixed(2)}`);
+      return;
+    }
+    if (!confirm(`Mark $${payoutAmount.toFixed(2)} as paid to ${collab?.name}?`)) return;
     setMarking(true); setMarkError("");
     try {
-      await adminApi.collab.markPaid(id);
+      await adminApi.collab.markPaid(id, { amount: payoutAmount });
       qc.invalidateQueries({ queryKey: ["collab-payouts", id] });
       qc.invalidateQueries({ queryKey: ["collab-view", id] });
       qc.invalidateQueries({ queryKey: ["collab-list"] });
@@ -73,13 +79,17 @@ export default function CollabPayouts() {
             <p className="text-3xl font-bold mt-1" style={{ color: "#059669" }}>${unpaidTotal.toFixed(2)} USD</p>
             <p className="text-xs text-slate-400 mt-1">{unpaidSales.length} sale{unpaidSales.length !== 1 ? "s" : ""} since last payout</p>
           </div>
-          <div>
+          <div className="flex items-end gap-2">
+            <label className="text-xs text-slate-500">Amount to pay
+              <input type="number" min="0.01" max={unpaidTotal} step="0.01" value={amount} placeholder={unpaidTotal.toFixed(2)}
+                onChange={e => setAmount(e.target.value)} className="mt-1 block w-32 rounded-lg px-3 py-2 text-sm" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }} />
+            </label>
             {markError && <p className="text-sm text-red-600 mb-2">{markError}</p>}
             <button onClick={handleMarkPaid} disabled={marking}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
               style={{ background: "#059669" }}>
               {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-              Mark as Paid
+              Pay amount
             </button>
           </div>
         </div>
