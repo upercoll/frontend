@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView 
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
   Zap, Lock, Headphones, LayoutGrid,
-  ChevronDown, ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag,
+  ChevronDown, ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag, Youtube,
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
 import AnimatedGrid from "@/components/AnimatedGrid";
@@ -52,6 +52,26 @@ type MiniProduct = {
   stock?: number;
   gradient: { from: string; to: string };
 };
+type FeaturedYouTuber = { _id: string; name: string; username: string; subscribers: number; avatarUrl?: string; channelUrl: string };
+
+function subscriberLabel(n: number) { return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0)}M` : n >= 1000 ? `${(n / 1000).toFixed(n % 1000 ? 1 : 0)}K` : n.toLocaleString(); }
+
+function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
+  if (!creators.length) return null;
+  const items = [...creators, ...creators];
+  return <section className="relative px-4 py-16 overflow-hidden dot-grid" style={{ background: "#F7FAFF" }}>
+    <div className="max-w-6xl mx-auto relative">
+      <div className="text-center mb-8"><div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}><Youtube size={14} fill="currentColor" /><span className="text-xs font-bold uppercase tracking-widest">Creator community</span></div><h2 className="font-display mt-4 text-3xl sm:text-4xl font-extrabold" style={{ color: "#1E1B4B" }}>YouTubers That <span className="gradient-text-purple">Trust Us</span></h2></div>
+      <div className="relative overflow-hidden rounded-3xl px-3 py-5" style={{ background: "linear-gradient(135deg,#15113d,#302b72)", boxShadow: "0 18px 50px rgba(49,46,128,.25)" }}>
+        <div className="flex gap-3 w-max" style={{ animation: "yt-trust-marquee 32s linear infinite" }}>
+          {items.map((creator, index) => <a key={`${creator._id}-${index}`} href={creator.channelUrl} target="_blank" rel="noreferrer" className="group flex items-center gap-3 w-64 shrink-0 rounded-2xl px-4 py-3 transition-transform hover:-translate-y-1" style={{ background: "rgba(255,255,255,.09)", border: "1px solid rgba(255,255,255,.15)" }}>
+            {creator.avatarUrl ? <img src={creator.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" /> : <div className="h-11 w-11 rounded-full flex items-center justify-center" style={{ background: "#ff0000" }}><Youtube size={20} fill="white" color="white" /></div>}
+            <div className="min-w-0 text-left"><p className="truncate font-bold text-sm text-white">{creator.name || creator.username}</p><p className="text-xs mt-0.5" style={{ color: "#c7d2fe" }}>{subscriberLabel(creator.subscribers)} subscribers</p></div><Youtube size={17} className="ml-auto text-red-400" /></a>)}
+        </div>
+      </div>
+    </div>
+  </section>;
+}
 
 const FALLBACK_GAMES: ShopGame[] = [
   { _id: "1", name: "Murder Mystery 2",         slug: "murder-mystery-2",         gradient: { from: "#6d28d9", to: "#4c1d95" } },
@@ -436,6 +456,7 @@ export default function Home() {
   const [avgRating,    setAvgRating]    = useState<number | null>(null);
   const [games,        setGames]        = useState<ShopGame[]>([]);
   const [gamesLoading, setGamesLoading] = useState(true);
+  const [featuredYouTubers, setFeaturedYouTubers] = useState<FeaturedYouTuber[]>([]);
   const [searchQuery,  setSearchQuery]  = useState("");
   const [, navigate] = useLocation();
 
@@ -450,6 +471,8 @@ export default function Home() {
       .catch(() => {})
       .finally(() => setGamesLoading(false));
   }, []);
+
+  useEffect(() => { fetch(`${BACKEND}/api/socials/featured-youtubers`).then(r => r.json()).then(d => setFeaturedYouTubers(d.data?.creators || [])).catch(() => {}); }, []);
 
   /* fetch reviews */
   useEffect(() => {
@@ -711,6 +734,8 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      <YouTuberTrustBar creators={featuredYouTubers} />
 
       {/* ══════════════════════════════════════════
           TOP PICKS BY GAME (scroll-reveal products)
