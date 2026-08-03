@@ -56,7 +56,12 @@ export default function SocialsTrackerDetail() {
   const [markErr, setMarkErr] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [partialAmount, setPartialAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [proofUrl, setProofUrl] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [editingRate, setEditingRate] = useState(false);
+  const [rateType, setRateType] = useState<"per_1k" | "per_video">("per_1k");
+  const [rate, setRate] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["socials-creator-detail", id],
@@ -77,13 +82,18 @@ export default function SocialsTrackerDetail() {
   const paidCount = allSubmissions.filter(s => s.status === "paid").length;
   const totalPaid = payouts.reduce((sum, p) => sum + (p.amount || 0), 0);
 
+  const saveCreatorRate = async () => {
+    await adminApi.socials.updateCreator(id, { socialRateType: rateType, socialRate: Number(rate) || 0 });
+    setEditingRate(false); qc.invalidateQueries({ queryKey: ["socials-creator-detail", id] }); qc.invalidateQueries({ queryKey: ["socials-creators"] });
+  };
+
   const partialAmountNum = parseFloat(partialAmount) || 0;
   const isPartial = partialAmountNum > 0 && partialAmountNum < pendingPayout;
 
   const handleMarkPaid = async () => {
     setMarking(true); setMarkErr("");
     try {
-      const payload = isPartial ? { partialAmount: partialAmountNum } : undefined;
+      const payload = { ...(isPartial ? { partialAmount: partialAmountNum } : {}), paymentMethod, proofUrl };
       await adminApi.socials.markPaid(id, payload);
       qc.invalidateQueries({ queryKey: ["socials-creator-detail", id] });
       qc.invalidateQueries({ queryKey: ["socials-creators"] });
@@ -159,6 +169,11 @@ export default function SocialsTrackerDetail() {
           </div>
         </div>
       )}
+
+      <div className="bg-white rounded-xl p-4 flex flex-wrap items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
+        <div className="flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Default creator rate</p><p className="text-sm font-bold mt-1" style={{ color: "#1e1b4b" }}>{creator?.socialRateType === "per_video" ? "$" : "$"}{creator?.socialRate || 0}{creator?.socialRateType === "per_video" ? " per video" : " per 1K views"}</p></div>
+        {editingRate ? <><select value={rateType} onChange={e => setRateType(e.target.value as any)} className="rounded-lg p-2 text-xs border"><option value="per_1k">Per 1K views</option><option value="per_video">Per video</option></select><input value={rate} onChange={e => setRate(e.target.value)} type="number" className="w-24 rounded-lg p-2 text-xs border" placeholder="Rate"/><button onClick={saveCreatorRate} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Save</button></> : <button onClick={() => { setRateType(creator?.socialRateType || "per_1k"); setRate(String(creator?.socialRate || "")); setEditingRate(true); }} className="px-3 py-2 rounded-lg text-xs font-bold" style={{ background: "#EEF2FF", color: "#4f46e5" }}>Change default rate</button>}
+      </div>
 
       {pendingPayout <= 0 && (
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
@@ -365,9 +380,11 @@ export default function SocialsTrackerDetail() {
                 {isPartial && (
                   <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
                     <Hash className="w-3 h-3" />
-                    Partial payout: ${partialAmountNum.toFixed(2)} of ${pendingPayout.toFixed(2)} owed. Oldest accepted videos will be marked paid first.
+                    Partial payout: ${partialAmountNum.toFixed(2)} of ${pendingPayout.toFixed(2)} owed. The remainder stays pending automatically.
                   </p>
                 )}
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full mt-3 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid #E9EBF5" }}><option value="">Payment method (optional)</option>{(creator?.paymentMethods?.length ? creator.paymentMethods : ["paypal", "cashapp", "bank", "crypto", "other"]).map((m: string) => <option key={m} value={m}>{m}</option>)}</select>
+                {creator?.requiresPaymentProof && <input value={proofUrl} onChange={e => setProofUrl(e.target.value)} placeholder="Payment proof screenshot URL" className="w-full mt-2 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid #E9EBF5" }} />}
               </div>
 
               {/* List accepted submissions */}
