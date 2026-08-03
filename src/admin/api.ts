@@ -389,14 +389,18 @@ export const adminApi = {
     },
     listCreators: () => get<any>("/socials/creators"),
     getCreator: (collabId: string) => get<any>(`/socials/creators/${collabId}`),
-    setRate: (id: string, data: { rateType: "per_view" | "auto"; ratePerView?: number; offeredAmount?: number; adminNote?: string }) =>
+    setRate: (id: string, data: { rateType: "per_1k" | "per_video"; ratePerView?: number; offeredAmount?: number; adminNote?: string }) =>
       patch<any>(`/socials/${id}/rate`, data),
     refreshViews: (id: string) => post<any>(`/socials/${id}/refresh-views`),
     markPaid: (collabId: string, data?: { partialAmount?: number }) =>
       post<any>(`/socials/creators/${collabId}/mark-paid`, data || {}),
     deleteCreator: (collabId: string) => del<any>(`/socials/creators/${collabId}`),
-    inviteCreator: (name: string, email: string) =>
-      post<any>("/socials/creators/invite", { name, email }),
+    inviteCreator: (data: { name: string; email: string; rateType: "per_1k" | "per_video"; rate: number; paymentMethods: string[]; requiresPaymentProof: boolean }) =>
+      post<any>("/socials/creators/invite", data),
+    updateCreator: (id: string, data: any) => patch<any>(`/socials/creators/${id}`, data),
+    featuredYouTubers: () => get<any>("/socials/youtubers/featured"),
+    addFeaturedYouTuber: (username: string) => post<any>("/socials/youtubers/featured", { username }),
+    deleteFeaturedYouTuber: (id: string) => del<any>(`/socials/youtubers/featured/${id}`),
   },
 };
 
