@@ -124,6 +124,7 @@ interface PayoutModalProps {
 function PayoutModal({ stocker, onClose }: PayoutModalProps) {
   const qc = useQueryClient();
   const [notes, setNotes] = useState("");
+  const [amount, setAmount] = useState("");
   const [marking, setMarking] = useState(false);
   const [error, setError] = useState("");
 
@@ -138,10 +139,15 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
   const payouts: any[] = payoutData?.payouts || [];
 
   const handleMarkPaid = async () => {
-    if (!confirm(`Mark $${unpaidAmount.toFixed(2)} as paid to ${stocker.name || stocker.email}?`)) return;
+    const payoutAmount = Number(amount);
+    if (!Number.isFinite(payoutAmount) || payoutAmount <= 0 || payoutAmount > unpaidAmount) {
+      setError(`Enter an amount from $0.01 to $${unpaidAmount.toFixed(2)}`);
+      return;
+    }
+    if (!confirm(`Mark $${payoutAmount.toFixed(2)} as paid to ${stocker.name || stocker.email}?`)) return;
     setMarking(true); setError("");
     try {
-      await adminApi.stock.markStockerPaid(stocker._id, { notes });
+      await adminApi.stock.markStockerPaid(stocker._id, { notes, amount: payoutAmount });
       qc.invalidateQueries({ queryKey: ["stocker-payouts", stocker._id] });
       qc.invalidateQueries({ queryKey: ["stock-stockers"] });
     } catch (err: any) {
@@ -214,6 +220,12 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Mark as Paid</p>
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
+                    <label className="block text-xs text-slate-400 mb-1">Amount to pay</label>
+                    <input type="number" min="0.01" max={unpaidAmount} step="0.01" value={amount} onChange={e => setAmount(e.target.value)}
+                      placeholder={unpaidAmount.toFixed(2)} className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                      style={inpStyle} />
+                  </div>
+                  <div className="flex-1">
                     <label className="block text-xs text-slate-400 mb-1">Notes (optional)</label>
                     <input className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
                       style={inpStyle} value={notes} onChange={e => setNotes(e.target.value)}
@@ -223,7 +235,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-60 flex-shrink-0"
                     style={{ background: "#065F46" }}>
                     {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                    Mark ${unpaidAmount.toFixed(2)} Paid
+                    Pay amount
                   </button>
                 </div>
                 {error && <p className="text-xs mt-2" style={{ color: "#dc2626" }}>{error}</p>}
