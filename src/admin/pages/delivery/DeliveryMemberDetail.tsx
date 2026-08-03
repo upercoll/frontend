@@ -121,6 +121,7 @@ export default function DeliveryMemberDetail() {
   const [showAssignments, setShowAssignments] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [paidMsg, setPaidMsg] = useState("");
+  const [payoutAmount, setPayoutAmount] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["delivery-member", id],
@@ -132,10 +133,16 @@ export default function DeliveryMemberDetail() {
   const stats = data?.data?.stats;
 
   const handleMarkPaid = async () => {
-    if (!confirm(`Mark all unpaid deliveries as paid for ${d?.name || d?.email}? This will reset their unpaid tracking.`)) return;
+    const amount = Number(payoutAmount);
+    const unpaidCommission = Number(d?.totalCommission || 0);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > unpaidCommission) {
+      setPaidMsg(`Enter an amount from $0.01 to ${fmt(unpaidCommission)}`);
+      return;
+    }
+    if (!confirm(`Mark ${fmt(amount)} as paid to ${d?.name || d?.email}?`)) return;
     setMarkingPaid(true); setPaidMsg("");
     try {
-      const res = await adminApi.delivery.markPaid(id);
+      const res = await adminApi.delivery.markPaid(id, { amount });
       setPaidMsg(`Paid ${fmt(res.data?.paidCommission ?? 0)} commission on ${fmt(res.data?.paidRevenue ?? 0)} revenue`);
       qc.invalidateQueries({ queryKey: ["delivery-member", id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
@@ -206,12 +213,18 @@ export default function DeliveryMemberDetail() {
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <Settings className="w-3.5 h-3.5" /> Assignments
           </button>
-          <button onClick={handleMarkPaid} disabled={markingPaid || (d.totalRevenue || 0) === 0}
+          <div className="flex items-center gap-2">
+            <input type="number" min="0.01" max={d.totalCommission || 0} step="0.01" value={payoutAmount}
+              onChange={e => setPayoutAmount(e.target.value)} placeholder={`Pay up to ${fmt(d.totalCommission || 0)}`}
+              className="w-32 rounded-xl px-3 py-2 text-xs focus:outline-none"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }} />
+          <button onClick={handleMarkPaid} disabled={markingPaid || (d.totalCommission || 0) === 0}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-40 transition-colors"
             style={{ background: "rgba(74,222,128,0.9)", border: "1px solid rgba(74,222,128,0.4)" }}>
             {markingPaid ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-            Mark as Paid
+            Pay amount
           </button>
+          </div>
         </div>
       </div>
 
