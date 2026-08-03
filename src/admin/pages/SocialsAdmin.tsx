@@ -56,7 +56,7 @@ function TikTokIcon({ className }: { className?: string }) {
 }
 
 interface RateForm {
-  rateType: "per_view" | "auto";
+  rateType: "per_1k" | "per_video";
   ratePerView: string;
   offeredAmount: string;
   adminNote: string;
@@ -65,8 +65,8 @@ interface RateForm {
 function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<RateForm>({
-    rateType: sub.rateType || "per_view",
-    ratePerView: sub.ratePerView ? String(sub.ratePerView) : "",
+    rateType: sub.rateType === "per_video" || sub.rateType === "auto" ? "per_video" : "per_1k",
+    ratePerView: sub.ratePerView ? String(sub.ratePerView * 1000) : "",
     offeredAmount: sub.offeredAmount ? String(sub.offeredAmount) : "",
     adminNote: sub.adminNote || "",
   });
@@ -75,10 +75,10 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
 
   const views = sub.views || 0;
 
-  const computedAmount = form.rateType === "per_view" && form.ratePerView && views
-    ? (parseFloat(form.ratePerView) * views).toFixed(2)
+  const computedAmount = form.rateType === "per_1k" && form.ratePerView && views
+    ? ((parseFloat(form.ratePerView) * views) / 1000).toFixed(2)
     : null;
-  const computedRPV = form.rateType === "auto" && form.offeredAmount && views
+  const computedRPV = form.rateType === "per_video" && form.offeredAmount && views
     ? (parseFloat(form.offeredAmount) / views).toFixed(6)
     : null;
 
@@ -87,8 +87,8 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
     try {
       await adminApi.socials.setRate(sub._id, {
         rateType: form.rateType,
-        ratePerView: form.rateType === "per_view" ? parseFloat(form.ratePerView) : undefined,
-        offeredAmount: form.rateType === "auto" ? parseFloat(form.offeredAmount) : undefined,
+        ratePerView: form.rateType === "per_1k" ? parseFloat(form.ratePerView) : undefined,
+        offeredAmount: form.rateType === "per_video" ? parseFloat(form.offeredAmount) : undefined,
         adminNote: form.adminNote,
       });
       qc.invalidateQueries({ queryKey: ["socials-admin"] });
@@ -138,22 +138,22 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
           <div>
             <label className="block text-xs font-semibold mb-2 text-slate-500">Rate Type</label>
             <div className="flex gap-2">
-              {(["per_view", "auto"] as const).map((rt) => (
+              {(["per_1k", "per_video"] as const).map((rt) => (
                 <button key={rt} onClick={() => setForm(f => ({ ...f, rateType: rt }))}
                   className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={form.rateType === rt
                     ? { background: "#1e1b4b", color: "#fff" }
                     : { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
-                  {rt === "per_view" ? "Rate Per View" : "Fixed Amount (Auto)"}
+                  {rt === "per_1k" ? "Rate Per 1K Views" : "Fixed Per Video"}
                 </button>
               ))}
             </div>
           </div>
 
-          {form.rateType === "per_view" ? (
+          {form.rateType === "per_1k" ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Rate per View ($)</label>
+                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Rate per 1,000 Views ($)</label>
                 <input
                   type="number" step="0.000001" min="0"
                   value={form.ratePerView}
