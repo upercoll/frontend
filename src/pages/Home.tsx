@@ -59,14 +59,16 @@ function subscriberLabel(n: number) { return n >= 1_000_000 ? `${(n / 1_000_000)
 function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
   if (!creators.length) return null;
   const items = [...creators, ...creators];
-  return <section className="relative px-4 py-16 overflow-hidden dot-grid" style={{ background: "#F7FAFF" }}>
+  return <section className="relative px-4 py-12 overflow-hidden" style={{ background: "#F7FAFF" }}>
     <div className="max-w-6xl mx-auto relative">
-      <div className="text-center mb-8"><div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}><Youtube size={14} fill="currentColor" /><span className="text-xs font-bold uppercase tracking-widest">Creator community</span></div><h2 className="font-display mt-4 text-3xl sm:text-4xl font-extrabold" style={{ color: "#1E1B4B" }}>YouTubers That <span className="gradient-text-purple">Trust Us</span></h2></div>
-      <div className="relative overflow-hidden rounded-3xl px-3 py-5" style={{ background: "linear-gradient(135deg,#15113d,#302b72)", boxShadow: "0 18px 50px rgba(49,46,128,.25)" }}>
-        <div className="flex gap-3 w-max" style={{ animation: "yt-trust-marquee 32s linear infinite" }}>
-          {items.map((creator, index) => <a key={`${creator._id}-${index}`} href={creator.channelUrl} target="_blank" rel="noreferrer" className="group flex items-center gap-3 w-64 shrink-0 rounded-2xl px-4 py-3 transition-transform hover:-translate-y-1" style={{ background: "rgba(255,255,255,.09)", border: "1px solid rgba(255,255,255,.15)" }}>
-            {creator.avatarUrl ? <img src={creator.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover" /> : <div className="h-11 w-11 rounded-full flex items-center justify-center" style={{ background: "#ff0000" }}><Youtube size={20} fill="white" color="white" /></div>}
-            <div className="min-w-0 text-left"><p className="truncate font-bold text-sm text-white">{creator.name || creator.username}</p><p className="text-xs mt-0.5" style={{ color: "#c7d2fe" }}>{subscriberLabel(creator.subscribers)} subscribers</p></div><Youtube size={17} className="ml-auto text-red-400" /></a>)}
+      <div className="text-center mb-4"><span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: "#312e80" }}>Trusted by top creators</span></div>
+      <div className="relative overflow-hidden rounded-2xl p-3" style={{ background: "#fff", border: "1px solid #dbe5ff", boxShadow: "0 12px 34px rgba(49,46,128,.10)" }}>
+        <div className="flex gap-2.5 w-max" style={{ animation: "yt-trust-marquee 32s linear infinite" }}>
+          {items.map((creator, index) => <a key={`${creator._id}-${index}`} href={creator.channelUrl} target="_blank" rel="noreferrer" className="group flex flex-col items-center justify-center gap-1.5 w-[104px] h-[112px] shrink-0 rounded-xl px-2 text-center transition-transform hover:-translate-y-1" style={{ background: "#f8faff", border: "1px solid #c8d9ff", boxShadow: "0 2px 6px rgba(49,46,128,.08)" }}>
+            {creator.avatarUrl ? <img src={creator.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover ring-2 ring-indigo-100" /> : <div className="h-11 w-11 rounded-full flex items-center justify-center" style={{ background: "#4338ca" }}><Youtube size={20} fill="white" color="white" /></div>}
+            <p className="w-full truncate font-extrabold text-[11px]" style={{ color: "#1e1b4b" }}>{creator.name || creator.username}</p>
+            <p className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "#6b7280" }}><Youtube size={10} color="#dc2626" fill="#dc2626" /> {subscriberLabel(creator.subscribers)}</p>
+          </a>)}
         </div>
       </div>
     </div>
