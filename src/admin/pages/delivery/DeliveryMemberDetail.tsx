@@ -30,7 +30,12 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
   const games: any[] = gamesData?.data?.games || [];
 
   const { mutate, isPending } = useMutation({
-    mutationFn: () => adminApi.delivery.update(deliverer._id, { assignments }),
+    // Send the legacy game list too: other delivery endpoints still consume it,
+    // while assignments preserves the per-game commission rates.
+    mutationFn: () => adminApi.delivery.update(deliverer._id, {
+      assignments,
+      games: assignments.map((assignment) => assignment.game),
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
