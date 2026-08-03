@@ -14,55 +14,13 @@ function fmtDate(iso?: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function EditCommissionModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
+function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
   const qc = useQueryClient();
-  const [rate, setRate] = useState(deliverer.commissionRate ?? 20);
-  const [error, setError] = useState("");
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: () => adminApi.delivery.update(deliverer._id, { commissionRate: rate }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] }); qc.invalidateQueries({ queryKey: ["delivery-team"] }); onClose(); },
-    onError: (err: any) => setError(err.message),
-  });
-
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
-      <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
-        className="w-full max-w-xs rounded-2xl p-6"
-        style={{ background: "#0d1525", border: "1px solid rgba(255,255,255,0.1)" }}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-white font-bold">Edit Commission Rate</h3>
-          <button onClick={onClose} className="text-white/30 hover:text-white"><X className="w-4 h-4" /></button>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold mb-1.5 text-white/50">Commission Rate (%)</label>
-            <input type="number" min={0} max={100} value={rate} onChange={e => setRate(Number(e.target.value))}
-              className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }} />
-            <p className="text-white/25 text-xs mt-1">This affects future deliveries only</p>
-          </div>
-          {error && <p className="text-red-400 text-xs">{error}</p>}
-          <div className="flex gap-2">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm text-white/50 hover:text-white"
-              style={{ background: "rgba(255,255,255,0.05)" }}>Cancel</button>
-            <button onClick={() => mutate()} disabled={isPending}
-              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
-              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+  const [assignments, setAssignments] = useState<{ game: string; commissionRate: number }[]>(
+    deliverer.assignments?.length
+      ? deliverer.assignments
+      : (deliverer.games || []).map((game: string) => ({ game, commissionRate: deliverer.commissionRate ?? 20 }))
   );
-}
-
-function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
-  const qc = useQueryClient();
-  const [selectedGames, setSelectedGames] = useState<string[]>(deliverer.games || []);
   const [error, setError] = useState("");
 
   const { data: gamesData } = useQuery({
@@ -72,7 +30,7 @@ function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () =>
   const games: any[] = gamesData?.data?.games || [];
 
   const { mutate, isPending } = useMutation({
-    mutationFn: () => adminApi.delivery.update(deliverer._id, { games: selectedGames }),
+    mutationFn: () => adminApi.delivery.update(deliverer._id, { assignments }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
@@ -82,9 +40,17 @@ function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () =>
   });
 
   function toggleGame(slug: string) {
-    setSelectedGames(prev =>
-      prev.includes(slug) ? prev.filter(g => g !== slug) : [...prev, slug]
+    setAssignments((current) =>
+      current.some((assignment) => assignment.game === slug)
+        ? current.filter((assignment) => assignment.game !== slug)
+        : [...current, { game: slug, commissionRate: deliverer.commissionRate ?? 20 }]
     );
+  }
+
+  function changeRate(slug: string, commissionRate: number) {
+    setAssignments((current) => current.map((assignment) =>
+      assignment.game === slug ? { ...assignment, commissionRate } : assignment
+    ));
   }
 
   return (
@@ -92,33 +58,43 @@ function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () =>
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}>
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }}
-        className="w-full max-w-sm rounded-2xl p-6"
+        className="w-full max-w-lg rounded-2xl p-6"
         style={{ background: "#0d1525", border: "1px solid rgba(255,255,255,0.1)" }}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-white font-bold">Edit Assigned Games</h3>
+          <h3 className="text-white font-bold">Game Assignments & Commission</h3>
           <button onClick={onClose} className="text-white/30 hover:text-white"><X className="w-4 h-4" /></button>
         </div>
         <div className="space-y-4">
-          <p className="text-white/40 text-xs">Select which games this deliverer handles. Leave empty to receive all games.</p>
+          <p className="text-white/40 text-xs">Choose the games this deliverer handles and set the commission rate for each one.</p>
           {games.length === 0 ? (
             <p className="text-white/25 text-xs py-4 text-center">No games found</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {games.map((g: any) => {
-                const active = selectedGames.includes(g.slug);
+                const assignment = assignments.find((item) => item.game === g.slug);
                 return (
-                  <button key={g.slug} type="button" onClick={() => toggleGame(g.slug)}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                    style={active
-                      ? { background: "rgba(14,165,233,0.2)", border: "1px solid rgba(14,165,233,0.4)", color: "#7dd3fc" }
-                      : { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }}>
-                    {g.name}
-                  </button>
+                  <div key={g.slug} className="flex items-center gap-3 p-2.5 rounded-xl"
+                    style={{ background: assignment ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <button type="button" onClick={() => toggleGame(g.slug)}
+                      className="flex-1 text-left text-xs font-medium"
+                      style={{ color: assignment ? "#7dd3fc" : "rgba(255,255,255,0.45)" }}>
+                      {g.name}
+                    </button>
+                    {assignment ? (
+                      <label className="flex items-center gap-1 text-xs text-white/50">
+                        <input type="number" min={0} max={100} value={assignment.commissionRate}
+                          onChange={(e) => changeRate(g.slug, Number(e.target.value))}
+                          className="w-16 rounded-lg px-2 py-1.5 text-right text-sm focus:outline-none"
+                          style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)" }} />
+                        %
+                      </label>
+                    ) : <span className="text-[10px] text-white/25">Not assigned</span>}
+                  </div>
                 );
               })}
             </div>
           )}
-          {selectedGames.length === 0 && (
+          {assignments.length === 0 && (
             <p className="text-amber-400/60 text-[11px] flex items-center gap-1.5">
               <AlertCircle className="w-3 h-3" /> No games selected — deliverer will see all pending chats
             </p>
@@ -130,7 +106,7 @@ function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () =>
             <button onClick={() => mutate()} disabled={isPending}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
               style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
-              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Games
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Assignments
             </button>
           </div>
         </div>
@@ -142,8 +118,7 @@ function EditGamesModal({ deliverer, onClose }: { deliverer: any; onClose: () =>
 export default function DeliveryMemberDetail() {
   const { id } = useParams<{ id: string }>();
   const qc = useQueryClient();
-  const [showEditComm, setShowEditComm] = useState(false);
-  const [showEditGames, setShowEditGames] = useState(false);
+  const [showAssignments, setShowAssignments] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
   const [paidMsg, setPaidMsg] = useState("");
 
@@ -185,8 +160,7 @@ export default function DeliveryMemberDetail() {
   return (
     <div className="space-y-5 max-w-3xl mx-auto">
       <AnimatePresence>
-        {showEditComm && <EditCommissionModal deliverer={d} onClose={() => setShowEditComm(false)} />}
-        {showEditGames && <EditGamesModal deliverer={d} onClose={() => setShowEditGames(false)} />}
+        {showAssignments && <ManageAssignmentsModal deliverer={d} onClose={() => setShowAssignments(false)} />}
       </AnimatePresence>
 
       <Link href="/admin/delivery-team">
@@ -210,32 +184,27 @@ export default function DeliveryMemberDetail() {
               style={{ background: d.status === "active" ? "rgba(74,222,128,0.1)" : "rgba(251,191,36,0.1)", color: d.status === "active" ? "#4ade80" : "#fbbf24" }}>
               {d.status}
             </span>
-            <span className="text-white/35 text-xs">{d.commissionRate}% commission</span>
+            <span className="text-white/35 text-xs">{d.assignments?.length ? `${d.assignments.length} game rate${d.assignments.length === 1 ? "" : "s"}` : `${d.commissionRate}% commission`}</span>
             {d.lastLogin && <span className="text-white/25 text-xs">Last login: {fmtDate(d.lastLogin)}</span>}
           </div>
           {/* Assigned games display */}
-          {d.games?.length > 0 && (
+          {(d.assignments?.length > 0 || d.games?.length > 0) && (
             <div className="flex items-center gap-1.5 mt-2 flex-wrap">
               <Gamepad2 className="w-3 h-3 text-sky-400/60" />
-              {d.games.map((g: string) => (
-                <span key={g} className="text-[10px] px-2 py-0.5 rounded-full"
+              {(d.assignments?.length ? d.assignments : d.games.map((game: string) => ({ game, commissionRate: d.commissionRate }))).map((assignment: { game: string; commissionRate: number }) => (
+                <span key={assignment.game} className="text-[10px] px-2 py-0.5 rounded-full"
                   style={{ background: "rgba(14,165,233,0.1)", color: "#7dd3fc", border: "1px solid rgba(14,165,233,0.15)" }}>
-                  {g}
+                  {assignment.game} · {assignment.commissionRate}%
                 </span>
               ))}
             </div>
           )}
         </div>
         <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
-          <button onClick={() => setShowEditComm(true)}
+          <button onClick={() => setShowAssignments(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white transition-colors"
             style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <Settings className="w-3.5 h-3.5" /> Commission
-          </button>
-          <button onClick={() => setShowEditGames(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white/60 hover:text-white transition-colors"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <Gamepad2 className="w-3.5 h-3.5" /> Games
+            <Settings className="w-3.5 h-3.5" /> Assignments
           </button>
           <button onClick={handleMarkPaid} disabled={markingPaid || (d.totalRevenue || 0) === 0}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white disabled:opacity-40 transition-colors"
