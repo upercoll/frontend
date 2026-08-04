@@ -162,7 +162,11 @@ export default function DeliveryMemberDetail() {
     setMarkingPaid(true); setPaidMsg("");
     try {
       const res = await adminApi.delivery.markPaid(id, { amount });
-      setPaidMsg(`Paid ${fmt(res.data?.paidCommission ?? 0)} commission on ${fmt(res.data?.paidRevenue ?? 0)} revenue`);
+      setPayoutAmount("");
+      setPaidMsg(
+        `Paid ${fmt(res.data?.paidCommission ?? 0)} commission on ${fmt(res.data?.paidRevenue ?? 0)} revenue. ` +
+        `${fmt(res.data?.remainingCommission ?? 0)} remains unpaid.`
+      );
       qc.invalidateQueries({ queryKey: ["delivery-member", id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
     } catch (err: any) {
