@@ -47,7 +47,6 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
       return adminApi.delivery.update(deliverer._id, {
         assignments,
         games: selectedGames,
-        assignmentRates: Object.fromEntries(assignments.map((assignment) => [assignment.game, assignment.commissionRate])),
       });
     },
     onSuccess: () => {
@@ -211,7 +210,7 @@ export default function DeliveryMemberDetail() {
               style={{ background: d.status === "active" ? "rgba(74,222,128,0.1)" : "rgba(251,191,36,0.1)", color: d.status === "active" ? "#4ade80" : "#fbbf24" }}>
               {d.status}
             </span>
-            <span className="text-white/35 text-xs">{d.assignments?.length ? `${d.assignments.length} game rate${d.assignments.length === 1 ? "" : "s"}` : `${d.commissionRate}% commission`}</span>
+            <span className="text-white/35 text-xs">{d.assignments?.length ? `${d.assignments.length} assigned game${d.assignments.length === 1 ? "" : "s"}` : `${d.commissionRate}% commission`}</span>
             {d.lastLogin && <span className="text-white/25 text-xs">Last login: {fmtDate(d.lastLogin)}</span>}
           </div>
           {/* Assigned games display */}
