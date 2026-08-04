@@ -14,7 +14,7 @@ function fmtDate(iso?: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
+function ManageAssignmentsModal({ deliverer, onClose, onSaved }: { deliverer: any; onClose: () => void; onSaved: (deliverer: any) => void }) {
   const qc = useQueryClient();
   const existingAssignments = deliverer.assignments?.length
     ? deliverer.assignments
@@ -37,19 +37,15 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
   const games: any[] = gamesData?.data?.games || [];
 
   const { mutate, isPending } = useMutation({
-    // Send the legacy game list too: other delivery endpoints still consume it,
-    // while assignments preserves the per-game commission rates.
     mutationFn: () => {
       const assignments = selectedGames.map((game) => ({
         game,
         commissionRate: Number(ratesByGame[game]),
       }));
-      return adminApi.delivery.update(deliverer._id, {
-        assignments,
-        games: selectedGames,
-      });
+      return adminApi.delivery.update(deliverer._id, { assignments });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      onSaved(response.data.deliverer);
       qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
       onClose();
@@ -141,13 +137,14 @@ export default function DeliveryMemberDetail() {
   const [markingPaid, setMarkingPaid] = useState(false);
   const [paidMsg, setPaidMsg] = useState("");
   const [payoutAmount, setPayoutAmount] = useState("");
+  const [savedDeliverer, setSavedDeliverer] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["delivery-member", id],
     queryFn: () => adminApi.delivery.get(id),
   });
 
-  const d = data?.data?.deliverer;
+  const d = savedDeliverer || data?.data?.deliverer;
   const records: any[] = data?.data?.records || [];
   const stats = data?.data?.stats;
 
@@ -190,7 +187,7 @@ export default function DeliveryMemberDetail() {
   return (
     <div className="space-y-5 max-w-3xl mx-auto">
       <AnimatePresence>
-        {showAssignments && <ManageAssignmentsModal deliverer={d} onClose={() => setShowAssignments(false)} />}
+        {showAssignments && <ManageAssignmentsModal deliverer={d} onClose={() => setShowAssignments(false)} onSaved={setSavedDeliverer} />}
       </AnimatePresence>
 
       <Link href="/admin/delivery-team">
