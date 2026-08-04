@@ -16,10 +16,17 @@ function fmtDate(iso?: string) {
 
 function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClose: () => void }) {
   const qc = useQueryClient();
-  const [assignments, setAssignments] = useState<{ game: string; commissionRate: number }[]>(
-    deliverer.assignments?.length
-      ? deliverer.assignments
-      : (deliverer.games || []).map((game: string) => ({ game, commissionRate: deliverer.commissionRate ?? 20 }))
+  const existingAssignments = deliverer.assignments?.length
+    ? deliverer.assignments
+    : (deliverer.games || []).map((game: string) => ({ game, commissionRate: deliverer.commissionRate ?? 20 }));
+  const [selectedGames, setSelectedGames] = useState<string[]>(
+    existingAssignments.map((assignment: { game: string }) => assignment.game)
+  );
+  const [ratesByGame, setRatesByGame] = useState<Record<string, string>>(
+    Object.fromEntries(existingAssignments.map((assignment: { game: string; commissionRate: number }) => [
+      assignment.game,
+      String(assignment.commissionRate ?? deliverer.commissionRate ?? 20),
+    ]))
   );
   const [error, setError] = useState("");
 
@@ -32,10 +39,17 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
   const { mutate, isPending } = useMutation({
     // Send the legacy game list too: other delivery endpoints still consume it,
     // while assignments preserves the per-game commission rates.
-    mutationFn: () => adminApi.delivery.update(deliverer._id, {
-      assignments,
-      games: assignments.map((assignment) => assignment.game),
-    }),
+    mutationFn: () => {
+      const assignments = selectedGames.map((game) => ({
+        game,
+        commissionRate: Number(ratesByGame[game]),
+      }));
+      return adminApi.delivery.update(deliverer._id, {
+        assignments,
+        games: selectedGames,
+        assignmentRates: Object.fromEntries(assignments.map((assignment) => [assignment.game, assignment.commissionRate])),
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["delivery-member", deliverer._id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
@@ -45,17 +59,18 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
   });
 
   function toggleGame(slug: string) {
-    setAssignments((current) =>
-      current.some((assignment) => assignment.game === slug)
-        ? current.filter((assignment) => assignment.game !== slug)
-        : [...current, { game: slug, commissionRate: deliverer.commissionRate ?? 20 }]
-    );
+    setSelectedGames((current) => {
+      if (current.includes(slug)) return current.filter((game) => game !== slug);
+      setRatesByGame((rates) => ({
+        ...rates,
+        [slug]: rates[slug] ?? String(deliverer.commissionRate ?? 20),
+      }));
+      return [...current, slug];
+    });
   }
 
-  function changeRate(slug: string, commissionRate: number) {
-    setAssignments((current) => current.map((assignment) =>
-      assignment.game === slug ? { ...assignment, commissionRate } : assignment
-    ));
+  function changeRate(slug: string, commissionRate: string) {
+    setRatesByGame((rates) => ({ ...rates, [slug]: commissionRate }));
   }
 
   return (
@@ -76,19 +91,19 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
           ) : (
             <div className="space-y-2">
               {games.map((g: any) => {
-                const assignment = assignments.find((item) => item.game === g.slug);
+                const assigned = selectedGames.includes(g.slug);
                 return (
                   <div key={g.slug} className="flex items-center gap-3 p-2.5 rounded-xl"
-                    style={{ background: assignment ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    style={{ background: assigned ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
                     <button type="button" onClick={() => toggleGame(g.slug)}
                       className="flex-1 text-left text-xs font-medium"
-                      style={{ color: assignment ? "#7dd3fc" : "rgba(255,255,255,0.45)" }}>
+                      style={{ color: assigned ? "#7dd3fc" : "rgba(255,255,255,0.45)" }}>
                       {g.name}
                     </button>
-                    {assignment ? (
+                    {assigned ? (
                       <label className="flex items-center gap-1 text-xs text-white/50">
-                        <input type="number" min={0} max={100} value={assignment.commissionRate}
-                          onChange={(e) => changeRate(g.slug, Number(e.target.value))}
+                        <input type="number" min={0} max={100} step="0.01" value={ratesByGame[g.slug] ?? ""}
+                          onChange={(e) => changeRate(g.slug, e.target.value)}
                           className="w-16 rounded-lg px-2 py-1.5 text-right text-sm focus:outline-none"
                           style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.12)" }} />
                         %
@@ -99,7 +114,7 @@ function ManageAssignmentsModal({ deliverer, onClose }: { deliverer: any; onClos
               })}
             </div>
           )}
-          {assignments.length === 0 && (
+          {selectedGames.length === 0 && (
             <p className="text-amber-400/60 text-[11px] flex items-center gap-1.5">
               <AlertCircle className="w-3 h-3" /> No games selected — deliverer will see all pending chats
             </p>
