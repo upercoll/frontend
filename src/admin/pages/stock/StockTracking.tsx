@@ -262,7 +262,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
                           <td className="px-3 py-2.5 text-slate-500">{fmt(d.deliveredAt)}</td>
                           <td className="px-3 py-2.5 font-medium" style={{ color: "#1e1b4b" }}>{d.robloxUsername}</td>
                           <td className="px-3 py-2.5 text-slate-500 max-w-[180px] truncate">
-                            {(d.items || []).map((it: any) => `${it.name}×${it.quantity || 1}`).join(", ")}
+                            {(d.items || []).map((it: any) => `${it.name || "Item"}×${Number.isFinite(it.quantity) && it.quantity > 0 ? it.quantity : 1}`).join(", ")}
                           </td>
                           <td className="px-3 py-2.5 font-semibold text-emerald-600">${(d.revenue || 0).toFixed(2)}</td>
                           <td className="px-3 py-2.5 font-semibold text-indigo-600">${(d.commission || 0).toFixed(2)}</td>
@@ -376,11 +376,11 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                 <p className="text-[10px] text-slate-400">stocked</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-600">${stocker.totalRevenue.toFixed(0)}</p>
+                <p className="text-xs font-bold text-emerald-600">${Number(stocker.totalRevenue || 0).toFixed(0)}</p>
                 <p className="text-[10px] text-slate-400">revenue</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-indigo-600">${stocker.totalCommission.toFixed(0)}</p>
+                <p className="text-xs font-bold text-indigo-600">${Number(stocker.totalCommission || 0).toFixed(0)}</p>
                 <p className="text-[10px] text-slate-400">commission</p>
               </div>
               <div>
@@ -539,8 +539,8 @@ export default function StockTracking() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Total Stockers", value: stockers.length, icon: Users, color: "#6366f1" },
-            { label: "Total Revenue Generated", value: `$${stockers.reduce((s, t) => s + t.totalRevenue, 0).toFixed(0)}`, icon: TrendingUp, color: "#10B981" },
-            { label: "Total Commission Owed", value: `$${stockers.reduce((s, t) => s + t.totalCommission, 0).toFixed(0)}`, icon: Package, color: "#F59E0B" },
+            { label: "Total Revenue Generated", value: `$${stockers.reduce((s, t) => s + Number(t.totalRevenue || 0), 0).toFixed(0)}`, icon: TrendingUp, color: "#10B981" },
+            { label: "Total Commission Owed", value: `$${stockers.reduce((s, t) => s + Number(t.totalCommission || 0), 0).toFixed(0)}`, icon: Package, color: "#F59E0B" },
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
