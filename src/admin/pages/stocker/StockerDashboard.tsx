@@ -150,7 +150,7 @@ export default function StockerDashboard() {
                         <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc" }}>{d.game || "-"}</span>
                       </td>
                       <td className="px-5 py-3.5 text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-                        {(d.items || []).map((it: any) => `${it.name} ×${it.quantity || 1}`).join(", ")}
+                        {(d.items || []).map((it: any) => `${it.name || "Item"} ×${Number.isFinite(it.quantity) && it.quantity > 0 ? it.quantity : 1}`).join(", ")}
                       </td>
                       <td className="px-5 py-3.5 text-sm font-semibold text-white">${(d.revenue || 0).toFixed(2)}</td>
                       <td className="px-5 py-3.5 text-sm font-semibold" style={{ color: "#4ade80" }}>${(d.commission || 0).toFixed(2)}</td>
