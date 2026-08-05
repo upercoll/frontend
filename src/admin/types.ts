@@ -257,6 +257,9 @@ export interface Stocker {
   totalStocked: number;
   totalRevenue: number;
   totalCommission: number;
+  totalCommissionEarned?: number;
+  totalCommissionPaid?: number;
+  totalCommissionOwed?: number;
   requestCount?: number;
   stockedCount?: number;
   cryptoAddress?: string;
