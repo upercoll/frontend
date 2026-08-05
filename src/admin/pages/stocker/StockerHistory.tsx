@@ -290,8 +290,8 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
                             <td className="px-4 py-3 max-w-[160px]">
                               {relevantItems.map((it: any, j: number) => (
                                 <div key={j} className="flex items-center gap-1.5 text-xs" style={{ color: "#374151" }}>
-                                  <span className="font-medium">{it.name}</span>
-                                  {it.quantity > 1 && <span className="text-slate-400">×{it.quantity}</span>}
+                                  <span className="font-medium">{it.name || "Item"}</span>
+                                  {Number(it.quantity) > 1 && <span className="text-slate-400">×{it.quantity}</span>}
                                 </div>
                               ))}
                             </td>
