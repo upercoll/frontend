@@ -376,12 +376,12 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                 <p className="text-[10px] text-slate-400">stocked</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-emerald-600">${Number(stocker.totalRevenue || 0).toFixed(0)}</p>
+                <p className="text-xs font-bold text-emerald-600">${Number((stocker as any).totalRevenue || 0).toFixed(2)}</p>
                 <p className="text-[10px] text-slate-400">revenue</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-indigo-600">${Number(stocker.totalCommission || 0).toFixed(0)}</p>
-                <p className="text-[10px] text-slate-400">commission</p>
+                <p className="text-xs font-bold text-indigo-600">${Number((stocker as any).totalCommissionOwed || 0).toFixed(2)}</p>
+                <p className="text-[10px] text-slate-400">owed</p>
               </div>
               <div>
                 <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{stocker.commissionRate}%</p>
@@ -459,7 +459,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                               <div key={r._id} className="flex items-center justify-between p-2 rounded-lg text-xs" style={{ background: "#F7F8FC" }}>
                                 <span className="text-slate-600">{r.game} · {r.items.length} items</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-emerald-600 font-semibold">${r.totalSaleValue.toFixed(2)}</span>
+                                  <span className="text-slate-500 font-semibold">Stock value: ${Number(r.totalSaleValue || 0).toFixed(2)}</span>
                                   <span className="px-1.5 py-0.5 rounded-full font-medium text-[10px]"
                                     style={{
                                       background: r.status === "stocked" ? "#ECFDF5" : r.status === "pending" ? "#FEF9C3" : r.status === "approved" ? "#EFF6FF" : "#FEF2F2",
@@ -539,8 +539,8 @@ export default function StockTracking() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Total Stockers", value: stockers.length, icon: Users, color: "#6366f1" },
-            { label: "Total Revenue Generated", value: `$${stockers.reduce((s, t) => s + Number(t.totalRevenue || 0), 0).toFixed(0)}`, icon: TrendingUp, color: "#10B981" },
-            { label: "Total Commission Owed", value: `$${stockers.reduce((s, t) => s + Number(t.totalCommission || 0), 0).toFixed(0)}`, icon: Package, color: "#F59E0B" },
+            { label: "Delivered-Sale Revenue", value: `$${stockers.reduce((s, t) => s + Number((t as any).totalRevenue || 0), 0).toFixed(2)}`, icon: TrendingUp, color: "#10B981" },
+            { label: "Commission Currently Owed", value: `$${stockers.reduce((s, t) => s + Number((t as any).totalCommissionOwed || 0), 0).toFixed(2)}`, icon: Package, color: "#F59E0B" },
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
