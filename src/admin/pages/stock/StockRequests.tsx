@@ -104,7 +104,7 @@ function StockedDeliveries({ stockerId, reqItems }: { stockerId: string; reqItem
                     <td className="px-3 py-2.5 text-slate-600 max-w-[160px]">
                       {relevantItems.map((it: any, j: number) => (
                         <span key={j} className="block">
-                          {it.name} ×{it.quantity || 1}
+                          {it.name || "Item"} ×{Number.isFinite(it.quantity) && it.quantity > 0 ? it.quantity : 1}
                         </span>
                       ))}
                     </td>
