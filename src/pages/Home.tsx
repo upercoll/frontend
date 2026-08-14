@@ -465,13 +465,26 @@ export default function Home() {
   const shopRef = useRef<HTMLElement>(null);
   const howRef  = useRef<HTMLElement>(null);
 
-  /* fetch games for shop grid */
+  /* fetch games for shop grid (retry — the backend can be slow to wake up) */
   useEffect(() => {
-    fetch(`${BACKEND}/api/games?active=true`)
-      .then(r => r.json())
-      .then(d => { const fetched: ShopGame[] = d.data?.games || []; if (fetched.length > 0) setGames(fetched); })
-      .catch(() => {})
-      .finally(() => setGamesLoading(false));
+    async function attempt(round: number) {
+      try {
+        const res = await fetch(`${BACKEND}/api/games?active=true`);
+        const d = await res.json();
+        const fetched: ShopGame[] = d.data?.games || [];
+        if (fetched.length > 0) {
+          setGames(fetched);
+          setGamesLoading(false);
+          return;
+        }
+        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
+        else setGamesLoading(false);
+      } catch {
+        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
+        else setGamesLoading(false);
+      }
+    }
+    attempt(1);
   }, []);
 
   useEffect(() => { fetch(`${BACKEND}/api/socials/featured-youtubers`).then(r => r.json()).then(d => setFeaturedYouTubers(d.data?.creators || [])).catch(() => {}); }, []);

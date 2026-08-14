@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Flame, Sword, Target, Heart, PawPrint, Package, Leaf, Sprout, Wrench,
   Apple, Gem, Star, SlidersHorizontal, ArrowLeft, Tag, ChevronDown,
-  ChevronLeft, ChevronRight, ShoppingCart, ExternalLink, Check,
+  ChevronLeft, ChevronRight, ShoppingCart, ExternalLink, Check, AlertTriangle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -591,6 +591,7 @@ export default function GamePage() {
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>(sharedReviews);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
@@ -636,44 +637,59 @@ export default function GamePage() {
     setSearchQuery("");
     setSelectedProductId(null);
     setLoading(true);
+    setLoadError(null);
 
-    Promise.all([
-      fetch(`${BACKEND}/api/games/${slug}`).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(`${BACKEND}/api/categories/game/${slug}`).then(r => r.json()).catch(() => ({ data: [] })),
-      fetch(`${BACKEND}/api/products/game/${slug}?limit=200`).then(r => r.json()).catch(() => ({ data: [] })),
-    ]).then(([gameRes, catsRes, prodsRes]) => {
-      if (gameRes.success && gameRes.data?.game) {
-        setGameInfo(gameRes.data.game);
-      } else {
-        setGameInfo({
-          _id: slug,
-          name: slug.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
-          gradient: { from: "#4F46E5", to: "#1E1B4B" },
-          slug,
-        });
+    // The backend can be slow to wake up (cold start) — retry a few times
+    // before giving up instead of showing a silently empty page.
+    async function attempt(round: number) {
+      try {
+        const [gameRes, catsRes, prodsRes] = await Promise.all([
+          fetch(`${BACKEND}/api/games/${slug}`).then(r => r.json()).catch(() => ({ success: false })),
+          fetch(`${BACKEND}/api/categories/game/${slug}`).then(r => r.json()).catch(() => ({ data: [] })),
+          fetch(`${BACKEND}/api/products/game/${slug}?limit=200`).then(r => r.json()).catch(() => ({ data: [] })),
+        ]);
+        const ok = gameRes.success && catsRes.success && prodsRes.success;
+        if (!ok && round < 3) {
+          setTimeout(() => attempt(round + 1), 800 * round);
+          return;
+        }
+        if (gameRes.success && gameRes.data?.game) {
+          setGameInfo(gameRes.data.game);
+        } else {
+          setGameInfo({
+            _id: slug,
+            name: slug.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+            gradient: { from: "#4F46E5", to: "#1E1B4B" },
+            slug,
+          });
+        }
+
+        setCategories(catsRes.data || []);
+        setLoadError(ok ? null : "Could not load the store. Showing cached content — pull to refresh or retry.");
+
+        const rawProducts: Product[] = (prodsRes.data || []).map((p: Record<string, unknown>) => ({
+          id: p._id as string,
+          name: p.name as string,
+          price: p.price as number,
+          originalPrice: p.originalPrice as number | undefined,
+          outOfStock: (p.stock as number) === 0,
+          gradient: [
+            (p.gradient as { from: string; to: string })?.from || "#4F46E5",
+            (p.gradient as { from: string; to: string })?.to || "#1E1B4B",
+          ] as [string, string],
+          imageUrl: p.imageUrl as string | undefined,
+          categoryId: typeof p.category === "object" && p.category !== null
+            ? (p.category as { _id: string })._id
+            : p.category as string,
+          featured: p.featured as boolean,
+          bestSeller: p.bestSeller as boolean,
+        }));
+        setProducts(rawProducts);
+      } finally {
+        setLoading(false);
       }
-
-      setCategories(catsRes.data || []);
-
-      const rawProducts: Product[] = (prodsRes.data || []).map((p: Record<string, unknown>) => ({
-        id: p._id as string,
-        name: p.name as string,
-        price: p.price as number,
-        originalPrice: p.originalPrice as number | undefined,
-        outOfStock: (p.stock as number) === 0,
-        gradient: [
-          (p.gradient as { from: string; to: string })?.from || "#4F46E5",
-          (p.gradient as { from: string; to: string })?.to || "#1E1B4B",
-        ] as [string, string],
-        imageUrl: p.imageUrl as string | undefined,
-        categoryId: typeof p.category === "object" && p.category !== null
-          ? (p.category as { _id: string })._id
-          : p.category as string,
-        featured: p.featured as boolean,
-        bestSeller: p.bestSeller as boolean,
-      }));
-      setProducts(rawProducts);
-    }).finally(() => setLoading(false));
+    }
+    attempt(1);
   }, [slug]);
 
   const tabs: Tab[] = [
@@ -962,6 +978,22 @@ export default function GamePage() {
                     {filteredProducts.length} items
                   </span>
                 </motion.div>
+
+                {loadError && (
+                  <div className="mb-4 rounded-xl p-3 flex items-center justify-between gap-3"
+                    style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
+                    <p className="text-[11px]" style={{ color: "#fcd34d" }}>
+                      <AlertTriangle size={12} className="inline mr-1" />{loadError}
+                    </p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-[11px] font-bold px-3 py-1.5 rounded-lg flex-shrink-0"
+                      style={{ background: "rgba(251,191,36,0.15)", color: "#fcd34d" }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                )}
 
                 {filteredProducts.length === 0 ? (
                   <div className="text-center py-16" style={{ color:"#64748B" }}>

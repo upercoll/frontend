@@ -3,23 +3,19 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bot, Gamepad2, Mail, ArrowLeft, ArrowRight, Loader2, Check,
-  CheckCheck, ExternalLink, Package, Star, Clock, AlertTriangle, RefreshCw,
+  CheckCheck, Package, Star, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
+
+const AUTO_ONLY_GAME = "grow-a-garden-2";
 
 interface LastOrder {
   orderRef: string;
   email: string;
   game?: string | null;
   items?: { id: string; name: string; quantity: number; gradient?: [string, string] }[];
-}
-
-interface AutoConfig {
-  enabled: boolean;
-  privateServerUrl: string | null;
-  instructions: string | null;
 }
 
 interface SessionInfo {
@@ -29,22 +25,18 @@ interface SessionInfo {
   items: { name: string; quantity: number; category?: string }[];
   game: string | null;
   orderRef: string | null;
-  autoDelivery?: AutoConfig | null;
 }
 
 type Step =
   | "username"
   | "instructions"
-  | "server"
   | "delivering"
-  | "delivered"
-  | "failed";
+  | "delivered";
 
-const DEFAULT_INSTRUCTIONS = [
-  "Join the private server using the link on the next screen.",
-  "Make sure you are logged into the Roblox account matching the username you entered.",
-  "Stay inside the server — our bot will find you and deliver the items automatically.",
-  "Make sure your in-game privacy allows receiving gifts.",
+const DELIVERY_INSTRUCTIONS = [
+  "Join Grow A Garden 2 on the Roblox account matching the username you entered.",
+  "Stay inside the server — our bot will find you and deliver your items automatically.",
+  "Make sure your in-game privacy settings allow receiving gifts.",
   "Delivery usually takes 1–3 minutes. Do not leave the server until you see the delivered confirmation.",
 ];
 
@@ -112,10 +104,6 @@ export default function AutoDelivery() {
   const [contactEmail, setContactEmail] = useState(user?.email || order?.email || "");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const [config, setConfig] = useState<AutoConfig | null>(null);
-  const [configLoading, setConfigLoading] = useState(false);
-  const [configError, setConfigError] = useState<string | null>(null);
-
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -179,36 +167,8 @@ export default function AutoDelivery() {
     if (!contactEmail.includes("@")) e.contactEmail = "Enter a valid email";
     if (Object.keys(e).length) { setFormErrors(e); return; }
     setFormErrors({});
+    setCreateError(null);
     setStep("instructions");
-  }
-
-  async function handleNextToServer() {
-    setConfigLoading(true);
-    setConfigError(null);
-    try {
-      // Resolve the game from the last order first; if unknown, let the server
-      // resolve it from the paid order via the auto endpoint.
-      const gameSlug = order?.game || null;
-      let cfg: AutoConfig | null = null;
-      if (gameSlug) {
-        const res = await fetch(`${BACKEND}/api/games/${gameSlug}`);
-        const data = await res.json();
-        const g = data?.data?.game;
-        if (g?.autoDelivery?.enabled) {
-          cfg = {
-            enabled: true,
-            privateServerUrl: g.autoDelivery.privateServerUrl || null,
-            instructions: g.autoDelivery.instructions || null,
-          };
-        }
-      }
-      setConfig(cfg);
-      setStep("server");
-    } catch {
-      setConfigError("Could not load delivery configuration. Please try again.");
-    } finally {
-      setConfigLoading(false);
-    }
   }
 
   async function handleCreateSession() {
@@ -236,22 +196,47 @@ export default function AutoDelivery() {
     }
   }
 
-  function copyLink() {
-    if (config?.privateServerUrl) {
-      try { navigator.clipboard.writeText(config.privateServerUrl); } catch {}
-    }
-  }
-
   function reset() {
     if (pollRef.current) clearInterval(pollRef.current);
     setStep("username");
     setSession(null);
     setCreateError(null);
-    setConfig(null);
-    setConfigError(null);
   }
 
-  const progressIdx = step === "username" ? 0 : step === "instructions" ? 1 : step === "server" ? 2 : 3;
+  const isGAG2 = !order?.game || order.game === AUTO_ONLY_GAME;
+  const progressIdx = step === "username" ? 0 : step === "instructions" ? 1 : step === "delivering" ? 2 : 3;
+
+  if (!isGAG2) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-4"
+        style={{ background: "linear-gradient(160deg,#0C0B2E 0%,#0F0C2E 50%,#0C0B2E 100%)" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md rounded-2xl p-6 text-center space-y-4"
+          style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}
+        >
+          <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center"
+            style={{ background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)" }}>
+            <AlertTriangle size={22} color="#fcd34d" />
+          </div>
+          <p className="text-base font-extrabold text-white">Auto Delivery is Only Available for Grow A Garden 2</p>
+          <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>
+            This order is for a different game. Please use the Claim Chat to connect with a delivery agent.
+          </p>
+          <button
+            onClick={() => navigate("/")}
+            className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
+            style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
+          >
+            <ArrowLeft size={15} />Back to Store
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -295,7 +280,7 @@ export default function AutoDelivery() {
 
         {/* Stepper */}
         <div className="flex items-center justify-center gap-2 mb-6">
-          {["Username", "Instructions", "Join Server", "Delivered"].map((label, i) => (
+          {["Username", "How It Works", "Delivering", "Delivered"].map((label, i) => (
             <div key={label} className="flex items-center gap-2">
               <div className="flex flex-col items-center gap-1">
                 <StepDot active={progressIdx === i} done={progressIdx > i} />
@@ -370,9 +355,6 @@ export default function AutoDelivery() {
                     </p>
                   </div>
                 )}
-                {formErrors.submit && (
-                  <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{formErrors.submit}</p>
-                )}
                 <button
                   onClick={handleContinueFromUsername}
                   className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
@@ -405,10 +387,7 @@ export default function AutoDelivery() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  {(config?.instructions
-                    ? config.instructions.split("\n").filter(l => l.trim())
-                    : DEFAULT_INSTRUCTIONS
-                  ).map((line, i) => (
+                  {DELIVERY_INSTRUCTIONS.map((line, i) => (
                     <div key={i} className="flex items-start gap-2.5 rounded-xl p-2.5"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(165,180,252,0.1)" }}>
                       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -419,148 +398,28 @@ export default function AutoDelivery() {
                     </div>
                   ))}
                 </div>
-                {configLoading ? (
-                  <button disabled className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", opacity: 0.7 }}>
-                    <Loader2 size={15} className="animate-spin" />Loading…
-                  </button>
-                ) : configError ? (
-                  <>
-                    <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{configError}</p>
-                    <button
-                      onClick={handleNextToServer}
-                      className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
-                    >
-                      <RefreshCw size={14} />Retry
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleNextToServer}
-                      className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
-                    >
-                      Next: Join Server <ArrowRight size={15} />
-                    </button>
-                    <button
-                      onClick={() => setStep("username")}
-                      className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "rgba(79,70,229,0.15)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
-                    >
-                      <ArrowLeft size={13} />Back
-                    </button>
-                  </>
+                {createError && (
+                  <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{createError}</p>
                 )}
+                <button
+                  onClick={handleCreateSession}
+                  disabled={creating}
+                  className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
+                >
+                  {creating ? <><Loader2 size={15} className="animate-spin" />Starting Bot…</> : <><Bot size={15} />Start Delivery</>}
+                </button>
+                <button
+                  onClick={() => setStep("username")}
+                  className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
+                  style={{ background: "rgba(79,70,229,0.15)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
+                >
+                  <ArrowLeft size={13} />Back
+                </button>
               </motion.div>
             )}
 
-            {/* ── STEP 3: private server ── */}
-            {step === "server" && (
-              <motion.div key="server" className="space-y-3"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="text-center mb-1">
-                  <div className="w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center"
-                    style={{ background: "rgba(79,70,229,0.15)", border: "1px solid rgba(165,180,252,0.25)" }}>
-                    <ExternalLink size={18} color="#a5b4fc" />
-                  </div>
-                  <p className="text-sm font-extrabold text-white mb-0.5">Join the Private Server</p>
-                  <p className="text-[11px]" style={{ color: "#64748B" }}>
-                    Our bot is waiting there to deliver your items
-                  </p>
-                </div>
-
-                {config?.privateServerUrl ? (
-                  <>
-                    <a
-                      href={config.privateServerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block rounded-xl p-3.5 text-center"
-                      style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "#3730a3" }}>Private Server Link</p>
-                      <p className="text-[11px] font-semibold break-all" style={{ color: "#1d4ed8" }}>{config.privateServerUrl}</p>
-                    </a>
-                    <button
-                      onClick={copyLink}
-                      className="w-full py-2.5 rounded-xl font-bold text-xs"
-                      style={{ background: "rgba(79,70,229,0.15)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
-                    >
-                      Copy Link
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}>
-                      <AlertTriangle size={20} color="#fcd34d" className="mx-auto mb-2" />
-                      <p className="text-xs font-bold text-white mb-1">No Server Link Configured</p>
-                      {order?.game === "grow-a-garden-2" ? (
-                        <p className="text-[10px] leading-relaxed" style={{ color: "#fcd34d" }}>
-                          Grow A Garden 2 is fully automated. Join the game and stay in the server — the bot finds your username and delivers your items automatically.
-                        </p>
-                      ) : (
-                        <p className="text-[10px] leading-relaxed" style={{ color: "#fcd34d" }}>
-                          Automated delivery is not ready for this game yet. Please use the Claim Chat instead.
-                        </p>
-                      )}
-                    </div>
-                    {createError && (
-                      <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{createError}</p>
-                    )}
-                    {order?.game === "grow-a-garden-2" && (
-                      <button
-                        onClick={handleCreateSession}
-                        disabled={creating}
-                        className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                        style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
-                      >
-                        {creating ? <><Loader2 size={15} className="animate-spin" />Starting Bot…</> : <><Bot size={15} />I'm In the Game — Deliver My Items</>}
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setStep("instructions")}
-                      className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "rgba(79,70,229,0.15)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
-                    >
-                      <ArrowLeft size={13} />Back
-                    </button>
-                  </>
-                )}
-
-                {config?.privateServerUrl && (
-                  <>
-                    <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                      <p className="text-[10px] leading-relaxed" style={{ color: "#86efac" }}>
-                        <Clock size={10} className="inline mr-1" />
-                        Once you're inside the server, click the button below. The bot will deliver your items automatically.
-                      </p>
-                    </div>
-                    {createError && (
-                      <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{createError}</p>
-                    )}
-                    <button
-                      onClick={handleCreateSession}
-                      disabled={creating}
-                      className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
-                    >
-                      {creating ? <><Loader2 size={15} className="animate-spin" />Starting Bot…</> : <><Bot size={15} />I've Joined — Deliver My Items</>}
-                    </button>
-                    <button
-                      onClick={() => setStep("instructions")}
-                      className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "rgba(79,70,229,0.15)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC" }}
-                    >
-                      <ArrowLeft size={13} />Back
-                    </button>
-                  </>
-                )}
-              </motion.div>
-            )}
-
-            {/* ── STEP 4: delivering ── */}
+            {/* ── STEP 3: delivering ── */}
             {step === "delivering" && (
               <motion.div key="delivering" className="py-6 text-center space-y-4"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -575,7 +434,7 @@ export default function AutoDelivery() {
                 <div>
                   <p className="text-base font-extrabold text-white mb-1">Bot Delivering Your Items…</p>
                   <p className="text-[11px]" style={{ color: "#64748B" }}>
-                    Stay inside the private server. This usually takes 1–3 minutes.
+                    Stay inside the game. This usually takes 1–3 minutes.
                   </p>
                 </div>
                 <div className="flex items-center justify-center gap-2">
@@ -622,7 +481,7 @@ export default function AutoDelivery() {
               </motion.div>
             )}
 
-            {/* ── STEP 5: delivered ── */}
+            {/* ── STEP 4: delivered ── */}
             {step === "delivered" && (
               <motion.div key="delivered" className="py-6 text-center space-y-4"
                 initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>

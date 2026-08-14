@@ -281,6 +281,7 @@ export default function PaymentSuccess() {
         >
           {!delivered && (
           <>
+          {isAutoOnlyGame && (
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(22,163,74,0.4)" }}
             whileTap={{ scale: 0.97 }}
@@ -298,6 +299,7 @@ export default function PaymentSuccess() {
             Auto Delivery (Bot)
             <Zap size={14} />
           </motion.button>
+          )}
           {!isAutoOnlyGame && (
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(220,38,38,0.4)" }}
