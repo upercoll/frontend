@@ -785,6 +785,7 @@ export default function SupportChat() {
           </motion.button>
 
           {}
+          {isAutoOnlyGame && (
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -818,6 +819,7 @@ export default function SupportChat() {
             </div>
             <ChevronRight size={15} color="#16a34a" />
           </motion.button>
+          )}
 
           {}
           {!isAutoOnlyGame && (
