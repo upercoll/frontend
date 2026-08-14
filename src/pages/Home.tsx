@@ -78,7 +78,7 @@ function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
 const FALLBACK_GAMES: ShopGame[] = [
   { _id: "1", name: "Murder Mystery 2",         slug: "murder-mystery-2",         gradient: { from: "#6d28d9", to: "#4c1d95" } },
   { _id: "2", name: "Blade Ball",               slug: "blade-ball",               gradient: { from: "#4c1d95", to: "#2e1065" } },
-  { _id: "3", name: "Grow A Garden",            slug: "grow-a-garden",            gradient: { from: "#16a34a", to: "#4ade80" } },
+  { _id: "3", name: "Grow A Garden 2",          slug: "grow-a-garden-2",          gradient: { from: "#16a34a", to: "#4ade80" } },
   { _id: "4", name: "Steal A Brainrot",         slug: "steal-a-brainrot",         gradient: { from: "#ea580c", to: "#f97316" } },
   { _id: "5", name: "Blox Fruits",              slug: "blox-fruits",              gradient: { from: "#d97706", to: "#fbbf24" } },
   { _id: "6", name: "Garden Tower Defense",     slug: "garden-tower-defense",     gradient: { from: "#15803d", to: "#84cc16" } },

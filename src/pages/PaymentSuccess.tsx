@@ -36,7 +36,7 @@ export default function PaymentSuccess() {
   const [claimOpened, setClaimOpened] = useState(false);
   const [verifying, setVerifying] = useState(false);
   // Grow A Garden 2 is fully automated — no manual claim chat for it.
-  const isAutoOnlyGame = order?.game === "grow-a-garden";
+  const isAutoOnlyGame = order?.game === "grow-a-garden-2";
   // Hide the claim button once items are confirmed delivered
   const [delivered, setDelivered] = useState<boolean>(() => {
     try {

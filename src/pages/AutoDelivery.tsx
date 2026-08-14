@@ -496,7 +496,7 @@ export default function AutoDelivery() {
                     <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)" }}>
                       <AlertTriangle size={20} color="#fcd34d" className="mx-auto mb-2" />
                       <p className="text-xs font-bold text-white mb-1">No Server Link Configured</p>
-                      {order?.game === "grow-a-garden" ? (
+                      {order?.game === "grow-a-garden-2" ? (
                         <p className="text-[10px] leading-relaxed" style={{ color: "#fcd34d" }}>
                           Grow A Garden 2 is fully automated. Join the game and stay in the server — the bot finds your username and delivers your items automatically.
                         </p>
@@ -509,7 +509,7 @@ export default function AutoDelivery() {
                     {createError && (
                       <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{createError}</p>
                     )}
-                    {order?.game === "grow-a-garden" && (
+                    {order?.game === "grow-a-garden-2" && (
                       <button
                         onClick={handleCreateSession}
                         disabled={creating}

@@ -258,7 +258,7 @@ export default function SupportChat() {
     return null;
   })();
   // Grow A Garden 2 is fully automated — the manual Claim Chat is hidden for it.
-  const isAutoOnlyGame = gameSlug === "grow-a-garden";
+  const isAutoOnlyGame = gameSlug === "grow-a-garden-2";
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ChatMode>(null);
 
