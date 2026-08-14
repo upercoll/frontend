@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Package, MessageSquare, ArrowLeft, Star } from "lucide-react";
+import { Check, Package, MessageSquare, ArrowLeft, Star, Bot, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 
@@ -35,6 +35,8 @@ export default function PaymentSuccess() {
   const [order, setOrder] = useState<LastOrder | null>(() => loadOrder());
   const [claimOpened, setClaimOpened] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  // Grow A Garden 2 is fully automated — no manual claim chat for it.
+  const isAutoOnlyGame = order?.game === "grow-a-garden";
   // Hide the claim button once items are confirmed delivered
   const [delivered, setDelivered] = useState<boolean>(() => {
     try {
@@ -237,7 +239,7 @@ export default function PaymentSuccess() {
               </p>
             </div>
           </motion.div>
-        ) : (
+        ) : !isAutoOnlyGame ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -268,7 +270,7 @@ export default function PaymentSuccess() {
               </div>
             </div>
           </motion.div>
-        )}
+        ) : null}
 
         {}
         <motion.div
@@ -278,6 +280,25 @@ export default function PaymentSuccess() {
           className="space-y-3"
         >
           {!delivered && (
+          <>
+          <motion.button
+            whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(22,163,74,0.4)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/auto-delivery")}
+            className="w-full py-4 rounded-2xl font-extrabold text-white flex items-center justify-center gap-2.5 text-base relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#16a34a,#15803d)" }}
+          >
+            <motion.div
+              animate={{ x: ["-100%", "220%"] }}
+              transition={{ repeat: Infinity, duration: 2.8, ease: "linear", repeatDelay: 0.8 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)", width: "40%" }}
+            />
+            <Bot size={18} />
+            Auto Delivery (Bot)
+            <Zap size={14} />
+          </motion.button>
+          {!isAutoOnlyGame && (
           <motion.button
             whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(220,38,38,0.4)" }}
             whileTap={{ scale: 0.97 }}
@@ -292,9 +313,11 @@ export default function PaymentSuccess() {
               style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent)", width: "40%" }}
             />
             <MessageSquare size={18} />
-            {claimOpened ? "Chat Opened ↘" : "Claim Your Items Now"}
+            {claimOpened ? "Chat Opened ↘" : "Claim Chat With Agent"}
             {claimOpened && <Check size={16} className="ml-1" />}
           </motion.button>
+          )}
+          </>
           )}
 
           <div className="grid grid-cols-2 gap-3">

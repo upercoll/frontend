@@ -16,6 +16,7 @@ import GamePage from "@/pages/GamePage";
 import ProductPage from "@/pages/ProductPage";
 import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
+import AutoDelivery from "@/pages/AutoDelivery";
 import NotFound from "@/pages/not-found";
 import CollabInviteAccept from "@/pages/CollabInviteAccept";
 import CollabLogin from "@/pages/CollabLogin";
@@ -51,6 +52,7 @@ import ClaimTeams from "@/admin/pages/ClaimTeams";
 import Monitor from "@/admin/pages/Monitor";
 import SiteContent from "@/admin/pages/SiteContent";
 import ProofOfDelivery from "@/admin/pages/ProofOfDelivery";
+import AutoBotLogs from "@/admin/pages/AutoBotLogs";
 import AdminProfilePage from "@/admin/pages/Profile";
 
 import DeliveryTeam from "@/admin/pages/delivery/DeliveryTeam";
@@ -161,24 +163,26 @@ function StorefrontRouter() {
   const isProductPage = location.startsWith("/product/");
   const isCheckout = location === "/checkout";
   const isSuccess = location === "/order-success";
+  const isAutoDelivery = location === "/auto-delivery";
 
   return (
     <>
-      {!isCheckout && !isSuccess && <Navbar dark={isGamePage || isProductPage} />}
+      {!isCheckout && !isSuccess && !isAutoDelivery && <Navbar dark={isGamePage || isProductPage} />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
         <Route path="/product/:id" component={ProductPage} />
         <Route path="/checkout" component={Checkout} />
         <Route path="/order-success" component={PaymentSuccess} />
+        <Route path="/auto-delivery" component={AutoDelivery} />
         <Route component={NotFound} />
       </Switch>
-      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && <Footer />}
+      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && <Footer />}
       <SupportChat />
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
-      {!isCheckout && !isSuccess && <MobileBottomNav />}
+      {!isCheckout && !isSuccess && !isAutoDelivery && <MobileBottomNav />}
       <DiscordFloat />
     </>
   );
@@ -240,6 +244,9 @@ function AdminRouter() {
       </Route>
       <Route path="/admin/proof-of-delivery">
         <AdminLayout><ProofOfDelivery /></AdminLayout>
+      </Route>
+      <Route path="/admin/auto-logs">
+        <AdminLayout><AutoBotLogs /></AdminLayout>
       </Route>
       <Route path="/admin/delivery-team/:id">
         <AdminLayout><DeliveryMemberDetail /></AdminLayout>

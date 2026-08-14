@@ -90,6 +90,11 @@ export interface Game {
   sortOrder: number;
   claimTime?: number;
   claimSchedule?: Array<{ label?: string; from: string; to: string; minutes: number }>;
+  autoDelivery?: {
+    enabled?: boolean;
+    privateServerUrl?: string;
+    instructions?: string;
+  };
   categories?: Category[];
   productCount?: number;
   categoryCount?: number;

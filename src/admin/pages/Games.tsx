@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle, Clock } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Loader2, Gamepad2, Package, FolderOpen, ChevronDown, ChevronUp, Tag, AlertTriangle, Clock, Bot } from "lucide-react";
 import { adminApi } from "../api";
 import type { Game, Category } from "../types";
 import ImageUpload from "../components/ImageUpload";
@@ -85,6 +85,9 @@ export default function Games() {
   const [gameFeatured, setGameFeatured] = useState(false);
   const [gameClaimTime, setGameClaimTime] = useState(0);
   const [gameClaimSchedule, setGameClaimSchedule] = useState<{label: string; from: string; to: string; minutes: number}[]>([]);
+  const [autoEnabled, setAutoEnabled] = useState(false);
+  const [autoPrivateServerUrl, setAutoPrivateServerUrl] = useState("");
+  const [autoInstructions, setAutoInstructions] = useState("");
   const [catName, setCatName] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -132,13 +135,13 @@ export default function Games() {
   });
 
   const openCreate = () => {
-    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameBgImageUrl(""); setGameFeatured(false); setGameClaimTime(0); setGameClaimSchedule([]); setError("");
+    setGameName(""); setGameDesc(""); setGameGradFrom("#1e3a5f"); setGameGradTo("#0f172a"); setGameImage(null); setGameBgImageUrl(""); setGameFeatured(false); setGameClaimTime(0); setGameClaimSchedule([]); setAutoEnabled(false); setAutoPrivateServerUrl(""); setAutoInstructions(""); setError("");
     setEditingGame(null);
     setShowGameModal("create");
   };
 
   const openEdit = (game: Game) => {
-    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameClaimTime(game.claimTime || 0); setGameClaimSchedule(game.claimSchedule?.map(s => ({ label: s.label || "", from: s.from, to: s.to, minutes: s.minutes })) || []); setGameImage(null); setGameBgImageUrl(game.bgImageUrl || ""); setError("");
+    setGameName(game.name); setGameDesc(game.description || ""); setGameGradFrom(game.gradient.from); setGameGradTo(game.gradient.to); setGameFeatured(game.featured); setGameClaimTime(game.claimTime || 0); setGameClaimSchedule(game.claimSchedule?.map(s => ({ label: s.label || "", from: s.from, to: s.to, minutes: s.minutes })) || []); setAutoEnabled(!!game.autoDelivery?.enabled); setAutoPrivateServerUrl(game.autoDelivery?.privateServerUrl || ""); setAutoInstructions(game.autoDelivery?.instructions || ""); setGameImage(null); setGameBgImageUrl(game.bgImageUrl || ""); setError("");
     setEditingGame(game);
     setShowGameModal("edit");
   };
@@ -157,6 +160,11 @@ export default function Games() {
       form.append("claimTime", String(gameClaimTime));
       form.append("claimSchedule", JSON.stringify(gameClaimSchedule));
       form.append("bgImageUrl", gameBgImageUrl);
+      form.append("autoDelivery", JSON.stringify({
+        enabled: autoEnabled,
+        privateServerUrl: autoPrivateServerUrl.trim(),
+        instructions: autoInstructions.trim(),
+      }));
       if (gameImage) form.append("image", gameImage);
 
       if (showGameModal === "create") {
@@ -230,6 +238,11 @@ export default function Games() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-white font-medium text-sm md:text-base">{game.name}</p>
+                      {game.autoDelivery?.enabled && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1 bg-green-400/10 text-green-400">
+                          <Bot className="w-3 h-3" /> Bot ON
+                        </span>
+                      )}
                       {game.featured && <span className="text-[10px] px-1.5 py-0.5 rounded bg-yellow-400/10 text-yellow-400">Featured</span>}
                       {!game.active && <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-400/10 text-slate-400">Inactive</span>}
                     </div>
@@ -543,6 +556,47 @@ export default function Games() {
                   <input type="checkbox" checked={gameFeatured} onChange={(e) => setGameFeatured(e.target.checked)} className="w-4 h-4 accent-blue-600" />
                   <span className="text-slate-300 text-sm">Featured game</span>
                 </label>
+
+                {/* Auto Delivery (Bot) */}
+                <div className="space-y-3 rounded-xl p-4" style={{ background: "rgba(22,163,74,0.07)", border: "1px solid rgba(22,163,74,0.2)" }}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-slate-200 text-sm font-semibold flex items-center gap-1.5">
+                        <Bot className="w-4 h-4 text-green-400" />
+                        Auto Delivery (Bot)
+                      </label>
+                      <p className="text-slate-500 text-[11px] mt-0.5">Customers can get items delivered by the in-game bot.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAutoEnabled(v => !v)}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${autoEnabled ? "bg-green-500" : "bg-white/10"}`}
+                    >
+                      <span className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${autoEnabled ? "left-[22px] bg-white" : "left-0.5 bg-slate-400"}`} />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-medium block mb-1">Private Server Link</label>
+                    <input
+                      value={autoPrivateServerUrl}
+                      onChange={(e) => setAutoPrivateServerUrl(e.target.value)}
+                      placeholder="https://www.roblox.com/games/...?privateServerLinkCode=..."
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-green-500/50"
+                    />
+                    <p className="text-slate-600 text-[10px] mt-1">Customers join this server; the bot script must be running there.</p>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs font-medium block mb-1">Instructions (one step per line)</label>
+                    <textarea
+                      value={autoInstructions}
+                      onChange={(e) => setAutoInstructions(e.target.value)}
+                      rows={3}
+                      placeholder={"Join the private server.\nStay inside — the bot delivers automatically.\nKeep gifts enabled in settings."}
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-green-500/50 resize-none"
+                    />
+                  </div>
+                </div>
+
                 {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setShowGameModal(null)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium">Cancel</button>

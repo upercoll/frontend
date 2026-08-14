@@ -6,7 +6,7 @@ import {
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
   ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Bell, Eye, X,
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
-  Archive, ClipboardList, Clock, Video, Film, Truck,
+  Archive, ClipboardList, Clock, Video, Film, Truck, Bot,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -38,6 +38,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/open-chats", label: "Open Chats",     icon: MessageSquare,   permission: "monitor_agents",   group: "Team" },
   { href: "/panel/queue",     label: "Claim Queue",     icon: Inbox,           permission: "monitor_agents",   group: "Team" },
   { href: "/admin/proof-of-delivery", label: "Proof of Delivery", icon: FileCheck, permission: "view_pod",    group: "Team" },
+  { href: "/admin/auto-logs",      label: "Bot Logs",          icon: Bot,             permission: "view_orders",   group: "Operations" },
   { href: "/admin/delivery-team", label: "Delivery Team", icon: Truck, permission: "view_deliverers", group: "Team" },
   { href: "/admin/stock/requests", label: "Stock Requests", icon: ClipboardList, permission: "view_stock",    group: "Stock" },
   { href: "/admin/stock/tracking", label: "Stocker Tracking", icon: Archive,   permission: "manage_stockers", group: "Stock" },

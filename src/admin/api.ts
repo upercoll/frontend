@@ -221,6 +221,13 @@ export const adminApi = {
       postForm<{ success: boolean; data: { proof: import("./types").ProofOfDelivery } }>("/proof/submit", form),
   },
 
+  autoBotLogs: {
+    list: (params?: Record<string, string>) => {
+      const q = new URLSearchParams(params || {}).toString();
+      return get<{ success: boolean; data: { logs: { _id: string; roomId?: string; orderRef?: string; robloxUsername?: string; game?: string; account?: string; action: string; status?: string; message?: string; items?: { name?: string; quantity?: number; category?: string; delivered?: number }[]; createdAt: string }[] } }>(`/claims/admin/auto-logs${q ? `?${q}` : ""}`);
+    },
+  },
+
   agentStats: {
     getAll: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary[] } }>("/agent-stats"),
     getMe: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary } }>("/agent-stats/me"),

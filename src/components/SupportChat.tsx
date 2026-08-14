@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import { io, Socket } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare, X, Send, Gamepad2, Mail, Star, Loader2,
   CheckCheck, Clock, Headphones, ChevronRight, Package,
-  ArrowLeft, Edit2, Check, ImagePlus,
+  ArrowLeft, Edit2, Check, ImagePlus, Bot,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -246,6 +247,7 @@ function Bubble({ msg }: { msg: Message }) {
 
 export default function SupportChat() {
   const { user } = useAuth();
+  const [, navigate] = useLocation();
   const gameSlug = (() => {
     const m = window.location.pathname.match(/^\/game\/([^/]+)/);
     if (m) return m[1];
@@ -255,6 +257,8 @@ export default function SupportChat() {
     } catch {}
     return null;
   })();
+  // Grow A Garden 2 is fully automated — the manual Claim Chat is hidden for it.
+  const isAutoOnlyGame = gameSlug === "grow-a-garden";
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ChatMode>(null);
 
@@ -784,6 +788,42 @@ export default function SupportChat() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/auto-delivery")}
+            className="w-full rounded-2xl p-4 text-left flex items-center gap-3 transition-all relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+              border: "1.5px solid #bbf7d0",
+            }}
+          >
+            <motion.div
+              animate={{ x: ["-120%", "220%"] }}
+              transition={{ repeat: Infinity, duration: 3.5, ease: "linear", repeatDelay: 2 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent)", width: "40%" }}
+            />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "#dcfce7" }}>
+              <Bot size={18} color="#16a34a" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#1e1b4b" }}>
+                Auto Delivery (Bot)
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "#dcfce7", color: "#16a34a" }}>
+                  INSTANT
+                </span>
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "#166534" }}>
+                Bot delivers your items automatically — no waiting for an agent
+              </p>
+            </div>
+            <ChevronRight size={15} color="#16a34a" />
+          </motion.button>
+
+          {}
+          {!isAutoOnlyGame && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => {
               setMode("claim");
               const storedOrders = loadOrders();
@@ -827,6 +867,7 @@ export default function SupportChat() {
             </div>
             <ChevronRight size={15} color="#f43f5e" />
           </motion.button>
+          )}
         </div>
 
         <div className="px-4 pb-4">
