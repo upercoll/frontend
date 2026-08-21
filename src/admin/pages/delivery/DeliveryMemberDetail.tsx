@@ -4,7 +4,7 @@ import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Truck, DollarSign, CheckCircle, Clock, Package,
-  Loader2, AlertCircle, Settings, X, ChevronLeft, Gamepad2,
+  Loader2, AlertCircle, Settings, X, ChevronLeft, Gamepad2, Receipt,
 } from "lucide-react";
 import { adminApi } from "../../api";
 
@@ -144,9 +144,15 @@ export default function DeliveryMemberDetail() {
     queryFn: () => adminApi.delivery.get(id),
   });
 
+  const { data: payoutsData } = useQuery({
+    queryKey: ["delivery-member-payouts", id],
+    queryFn: () => adminApi.delivery.getPayouts(id),
+  });
+
   const d = savedDeliverer || data?.data?.deliverer;
   const records: any[] = data?.data?.records || [];
   const stats = data?.data?.stats;
+  const payouts: any[] = payoutsData?.data?.payouts || [];
 
   const handleMarkPaid = async () => {
     const amount = Number(payoutAmount);
@@ -165,6 +171,7 @@ export default function DeliveryMemberDetail() {
         `${fmt(res.data?.remainingCommission ?? 0)} remains unpaid.`
       );
       qc.invalidateQueries({ queryKey: ["delivery-member", id] });
+      qc.invalidateQueries({ queryKey: ["delivery-member-payouts", id] });
       qc.invalidateQueries({ queryKey: ["delivery-team"] });
     } catch (err: any) {
       setPaidMsg("Error: " + err.message);
@@ -307,6 +314,48 @@ export default function DeliveryMemberDetail() {
                   <p className="text-emerald-400 text-sm font-bold">{fmt(r.commission)}</p>
                   <p className="text-white/25 text-[10px]">{r.commissionRate}% of {fmt(r.orderTotal)}</p>
                   <p className="text-white/20 text-[10px] mt-0.5">{fmtDate(r.deliveredAt)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Payout history */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-white/30" /> Payout History ({payouts.length})
+          </h3>
+          {payouts.length > 0 && (
+            <span className="text-white/30 text-xs">
+              Total paid: {fmt(payouts.reduce((sum, p) => sum + (p.amount || 0), 0))}
+            </span>
+          )}
+        </div>
+        {payouts.length === 0 ? (
+          <div className="py-10 text-center text-white/25 text-sm">
+            <Receipt className="w-8 h-8 mx-auto mb-2 opacity-20" /> No payouts yet
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {payouts.map((p: any) => (
+              <div key={p._id} className="flex items-center gap-4 px-5 py-3.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(74,222,128,0.08)" }}>
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-semibold">{fmt(p.amount)}</p>
+                  <p className="text-white/35 text-xs mt-0.5">
+                    {p.deliveryCount} deliver{p.deliveryCount === 1 ? "y" : "ies"} covered
+                    {p.markedPaidBy && ` · by ${p.markedPaidBy}`}
+                  </p>
+                  {p.notes && <p className="text-white/25 text-[10px] mt-0.5 italic">{p.notes}</p>}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-white/40 text-xs">{fmtDate(p.createdAt)}</p>
+                  <p className="text-white/20 text-[10px] mt-0.5">{fmt(p.remainingCommissionAfter)} left after</p>
                 </div>
               </div>
             ))}
