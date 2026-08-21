@@ -4,7 +4,7 @@ import { useParams, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Truck, DollarSign, CheckCircle, Clock, Package,
-  Loader2, AlertCircle, Settings, X, ChevronLeft, Gamepad2, Receipt,
+  Loader2, AlertCircle, Settings, X, ChevronLeft, ChevronRight, Gamepad2, Receipt,
 } from "lucide-react";
 import { adminApi } from "../../api";
 
@@ -138,10 +138,12 @@ export default function DeliveryMemberDetail() {
   const [paidMsg, setPaidMsg] = useState("");
   const [payoutAmount, setPayoutAmount] = useState("");
   const [savedDeliverer, setSavedDeliverer] = useState<any>(null);
+  const [page, setPage] = useState(1);
+  const RECORDS_PER_PAGE = 20;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["delivery-member", id],
-    queryFn: () => adminApi.delivery.get(id),
+    queryKey: ["delivery-member", id, page],
+    queryFn: () => adminApi.delivery.get(id, { page, limit: RECORDS_PER_PAGE }),
   });
 
   const { data: payoutsData } = useQuery({
@@ -152,6 +154,7 @@ export default function DeliveryMemberDetail() {
   const d = savedDeliverer || data?.data?.deliverer;
   const records: any[] = data?.data?.records || [];
   const stats = data?.data?.stats;
+  const pagination = data?.data?.pagination;
   const payouts: any[] = payoutsData?.data?.payouts || [];
 
   const handleMarkPaid = async () => {
@@ -280,7 +283,7 @@ export default function DeliveryMemberDetail() {
       {/* Delivery records */}
       <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-white font-semibold text-sm">Delivery Records ({records.length})</h3>
+          <h3 className="text-white font-semibold text-sm">Delivery Records {pagination ? `(${pagination.total})` : ""}</h3>
           {d.lastPayoutAt && <span className="text-white/30 text-xs">Last paid: {fmtDate(d.lastPayoutAt)}</span>}
         </div>
         {records.length === 0 ? (
@@ -317,6 +320,21 @@ export default function DeliveryMemberDetail() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {pagination && pagination.pages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              <ChevronLeft className="w-3.5 h-3.5" /> Prev
+            </button>
+            <span className="text-white/35 text-xs">Page {pagination.page} of {pagination.pages}</span>
+            <button onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} disabled={page >= pagination.pages}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white/50 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              Next <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
       </div>
