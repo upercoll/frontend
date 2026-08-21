@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, DollarSign, Package, Clock, Truck, ChevronRight, Receipt } from "lucide-react";
+import { TrendingUp, DollarSign, Package, Clock, Truck, ChevronRight, Receipt, Gamepad2 } from "lucide-react";
 import { Link } from "wouter";
 import { delivererGet } from "@/pages/DelivererLayout";
 
@@ -31,12 +31,14 @@ export default function DelivererDashboard() {
   const d = data?.deliverer;
   const records: any[] = data?.recentDeliveries || [];
   const payouts: any[] = payoutsData?.payouts || [];
+  const assignments: { game: string; commissionRate: number }[] = d?.assignments?.length
+    ? d.assignments
+    : (d?.games || []).map((game: string) => ({ game, commissionRate: d?.commissionRate ?? 20 }));
 
   const stats = [
     { label: "Unpaid Revenue",   value: fmt(d?.totalRevenue ?? 0),    icon: DollarSign, color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.15)" },
     { label: "Unpaid Commission",value: fmt(d?.totalCommission ?? 0),  icon: TrendingUp, color: "#a78bfa", bg: "rgba(167,139,250,0.08)",  border: "rgba(167,139,250,0.15)" },
     { label: "Total Delivered",  value: d?.totalDelivered ?? 0,        icon: Package,    color: "#7dd3fc", bg: "rgba(125,211,252,0.08)",  border: "rgba(125,211,252,0.15)" },
-    { label: "Commission Rate",  value: `${d?.commissionRate ?? 20}%`, icon: Truck,      color: "#fbbf24", bg: "rgba(251,191,36,0.08)",   border: "rgba(251,191,36,0.15)" },
   ];
 
   if (loading) {
@@ -59,7 +61,7 @@ export default function DelivererDashboard() {
         <p className="text-sm mt-0.5 text-white/40">Here's your delivery summary</p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {stats.map((s, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
             className="rounded-2xl p-4 flex flex-col gap-3"
@@ -71,6 +73,28 @@ export default function DelivererDashboard() {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Assigned games & commission rates */}
+      <div className="rounded-2xl p-4" style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <Gamepad2 className="w-4 h-4" style={{ color: "#fbbf24" }} />
+          <p className="text-white/70 text-xs font-semibold">Your Assigned Games & Commission Rates</p>
+        </div>
+        {assignments.length === 0 ? (
+          <p className="text-white/30 text-xs">
+            No specific game assignments — you're set to handle all games at {d?.commissionRate ?? 20}% commission.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {assignments.map((a) => (
+              <span key={a.game} className="text-xs px-3 py-1.5 rounded-xl font-medium"
+                style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)" }}>
+                {a.game} · {a.commissionRate}%
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {d?.lastPayoutAt && (
@@ -98,11 +122,14 @@ export default function DelivererDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-medium truncate">{r.robloxUsername || "Unknown"}</p>
-                  <p className="text-white/30 text-xs">{r.game || "—"} · {r.items?.length ?? 0} item{r.items?.length !== 1 ? "s" : ""}</p>
+                  <p className="text-white/30 text-xs">{r.game || "—"} · {r.items?.length ?? 0} item{r.items?.length !== 1 ? "s" : ""} · {r.commissionRate}% of {fmt(r.orderTotal || 0)}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-emerald-400 text-sm font-semibold">{fmt(r.commission)}</p>
                   <p className="text-white/25 text-xs">{timeAgo(r.deliveredAt)}</p>
+                  {r.paidOut
+                    ? <span className="text-[9px] px-1.5 py-0.5 rounded-full inline-block mt-0.5" style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>Paid</span>
+                    : <span className="text-[9px] px-1.5 py-0.5 rounded-full inline-block mt-0.5" style={{ background: "rgba(14,165,233,0.1)", color: "#7dd3fc" }}>Unpaid</span>}
                 </div>
               </div>
             ))}
