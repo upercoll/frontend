@@ -338,8 +338,10 @@ export const adminApi = {
       post<{ success: boolean; data: { deliverer: any } }>("/admin/deliverers/invite", body),
     update: (id: string, body: { commissionRate?: number; name?: string; status?: string; games?: string[]; assignments?: { game: string; commissionRate: number }[]; amount?: number }) =>
       patch<{ success: boolean; data: { deliverer: any } }>(`/admin/deliverers/${id}`, body),
-    markPaid: (id: string, data?: { amount?: number }) =>
-      post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; remainingCommission: number; remainingRevenue: number; lastPayoutAt: string } }>(`/admin/deliverers/${id}/mark-paid`, data || {}),
+    markPaid: (id: string, data?: { amount?: number; notes?: string }) =>
+      post<{ success: boolean; data: { paidRevenue: number; paidCommission: number; remainingCommission: number; remainingRevenue: number; lastPayoutAt: string; payout: any } }>(`/admin/deliverers/${id}/mark-paid`, data || {}),
+    getPayouts: (id: string) =>
+      get<{ success: boolean; data: { payouts: any[]; totalPaid: number } }>(`/admin/deliverers/${id}/payouts`),
   },
 
   claimSessions: {
