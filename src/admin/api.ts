@@ -333,7 +333,10 @@ export const adminApi = {
 
   delivery: {
     list: () => get<{ success: boolean; data: { deliverers: any[] } }>("/admin/deliverers"),
-    get: (id: string) => get<{ success: boolean; data: { deliverer: any; records: any[]; stats: any } }>(`/admin/deliverers/${id}`),
+    get: (id: string, params?: { page?: number; limit?: number }) => {
+      const qs = params ? `?${new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString()}` : "";
+      return get<{ success: boolean; data: { deliverer: any; records: any[]; stats: any; pagination: { page: number; limit: number; total: number; pages: number } } }>(`/admin/deliverers/${id}${qs}`);
+    },
     invite: (body: { email: string; name?: string; commissionRate?: number; games?: string[]; assignments?: { game: string; commissionRate: number }[] }) =>
       post<{ success: boolean; data: { deliverer: any } }>("/admin/deliverers/invite", body),
     update: (id: string, body: { commissionRate?: number; name?: string; status?: string; games?: string[]; assignments?: { game: string; commissionRate: number }[]; amount?: number }) =>
