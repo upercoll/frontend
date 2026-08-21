@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, DollarSign, Package, Clock, Truck, ChevronRight } from "lucide-react";
+import { TrendingUp, DollarSign, Package, Clock, Truck, ChevronRight, Receipt } from "lucide-react";
 import { Link } from "wouter";
 import { delivererGet } from "@/pages/DelivererLayout";
 
@@ -16,16 +16,21 @@ function timeAgo(iso: string) {
 export default function DelivererDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [payoutsData, setPayoutsData] = useState<any>(null);
 
   useEffect(() => {
     delivererGet("/stats")
       .then(res => setData(res.data))
       .catch(console.error)
       .finally(() => setLoading(false));
+    delivererGet("/payouts")
+      .then(res => setPayoutsData(res.data))
+      .catch(console.error);
   }, []);
 
   const d = data?.deliverer;
   const records: any[] = data?.recentDeliveries || [];
+  const payouts: any[] = payoutsData?.payouts || [];
 
   const stats = [
     { label: "Unpaid Revenue",   value: fmt(d?.totalRevenue ?? 0),    icon: DollarSign, color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.15)" },
@@ -99,6 +104,36 @@ export default function DelivererDashboard() {
                   <p className="text-emerald-400 text-sm font-semibold">{fmt(r.commission)}</p>
                   <p className="text-white/25 text-xs">{timeAgo(r.deliveredAt)}</p>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+            <Receipt className="w-4 h-4 text-white/30" /> Payout History
+          </h3>
+          {payouts.length > 0 && (
+            <span className="text-white/30 text-xs">Total paid: {fmt(payouts.reduce((sum, p) => sum + (p.amount || 0), 0))}</span>
+          )}
+        </div>
+        {payouts.length === 0 ? (
+          <div className="py-10 text-center text-white/30 text-sm">No payouts yet</div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {payouts.slice(0, 6).map((p, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(74,222,128,0.12)" }}>
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium">{fmt(p.amount)}</p>
+                  <p className="text-white/30 text-xs">{p.deliveryCount} deliver{p.deliveryCount === 1 ? "y" : "ies"} covered</p>
+                </div>
+                <p className="text-white/25 text-xs flex-shrink-0">{new Date(p.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
