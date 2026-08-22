@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
 
 const links = ["Terms of Service", "Privacy Policy", "Contact", "Help Center"];
 const payments = ["Visa", "Mastercard", "Amex", "ApplePay", "Discover", "PayPal"];
@@ -110,76 +109,107 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer style={{ background: "#0F0C2E", borderTop: "1px solid rgba(165,180,252,0.08)" }}>
-      <div className="max-w-2xl mx-auto px-4 py-14">
+    <footer className="relative overflow-hidden" style={{ background: "#131313", borderTop: "3px solid #131313" }}>
+      <div className="absolute inset-0 pattern-dots-light pointer-events-none opacity-50" />
 
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#312E80" }}>
-              <Star size={17} fill="white" color="white" />
+      <div className="relative max-w-6xl mx-auto px-4 pt-14 pb-8">
+
+        {/* Top row */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-10">
+          <div className="max-w-sm">
+            <div className="flex items-center gap-2.5 mb-4">
+              <svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <rect x="14" y="14" width="36" height="36" rx="7" transform="rotate(12 32 32)" fill="#E2231A" />
+                <rect x="26.5" y="26.5" width="11" height="11" rx="2.5" transform="rotate(12 32 32)" fill="#131313" />
+              </svg>
+              <span className="font-display text-3xl leading-none tracking-wide text-[#F2EEE5]">
+                RB<span className="text-[#E2231A]">STARS</span>
+              </span>
             </div>
-            <span className="text-2xl font-bold text-white">RB<span style={{ color: "#A5B4FC" }}>stars</span></span>
+            <p className="font-mono text-xs uppercase tracking-[0.14em] leading-relaxed" style={{ color: "rgba(242,238,229,.55)" }}>
+              Your trusted marketplace for Roblox game items — fast delivery, secure payments, and 24/7 support.
+            </p>
           </div>
-          <p className="text-xs leading-relaxed max-w-sm" style={{ color: "#4B5563" }}>
-            Your trusted marketplace for Roblox game items — fast delivery, secure payments, and 24/7 support.
-          </p>
+
+          {/* Links */}
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 items-center content-start">
+            {links.map((l, i) => (
+              <span key={l} className="flex items-center gap-6">
+                {i > 0 && <span className="tilt-sq opacity-60 hidden sm:inline-block" />}
+                <a
+                  href="#"
+                  data-testid={`link-footer-${l.toLowerCase().replace(/\s+/g, "-")}`}
+                  className="font-mono text-xs font-medium uppercase tracking-[0.16em] transition-colors duration-200 hover:text-[#E2231A]"
+                  style={{ color: "rgba(242,238,229,.75)" }}
+                >
+                  {l}
+                </a>
+              </span>
+            ))}
+          </nav>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-7">
-          {links.map(l => (
-            <a
-              key={l}
-              href="#"
-              data-testid={`link-footer-${l.toLowerCase().replace(/\s+/g, "-")}`}
-              className="text-sm transition-colors duration-200"
-              style={{ color: "#6B7280" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#A5B4FC")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#6B7280")}
-            >
-              {l}
-            </a>
-          ))}
-        </div>
+        {/* Socials + language */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-8" style={{ borderBottom: "2px solid rgba(242,238,229,.14)" }}>
+          <div className="flex items-center gap-3">
+            {socials.map(({ Component, label }) => (
+              <motion.a
+                key={label}
+                href="#"
+                aria-label={label}
+                data-testid={`link-social-${label.toLowerCase().replace(/\s/g, "-")}`}
+                whileHover={{ scale: 1.1, rotate: -8, backgroundColor: "#E2231A", borderColor: "#E2231A" }}
+                whileTap={{ scale: 0.93 }}
+                className="w-11 h-11 rounded-full flex items-center justify-center border-2 transition-colors duration-200"
+                style={{ background: "transparent", borderColor: "rgba(242,238,229,.35)", color: "#F2EEE5" }}
+              >
+                <Component />
+              </motion.a>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-3 mb-8">
-          {socials.map(({ Component, label }) => (
-            <motion.a
-              key={label}
-              href="#"
-              aria-label={label}
-              data-testid={`link-social-${label.toLowerCase().replace(/\s/g, "-")}`}
-              whileHover={{ scale: 1.1, backgroundColor: "rgba(49,46,128,0.4)" }}
-              whileTap={{ scale: 0.93 }}
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.1)", color: "#A5B4FC" }}
-            >
-              <Component />
-            </motion.a>
-          ))}
-        </div>
-
-        <div className="mb-7">
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm cursor-pointer" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.1)", color: "#A5B4FC" }}>
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full font-mono text-xs uppercase tracking-[0.14em] border-2 cursor-pointer transition-colors hover:border-[#E2231A]"
+            style={{ background: "transparent", borderColor: "rgba(242,238,229,.3)", color: "#F2EEE5" }}>
             <span>🇺🇸</span>
-            <span className="font-medium">English</span>
+            <span>English</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
-          </div>
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-8 items-center">
+        {/* Payments */}
+        <div className="flex flex-wrap gap-2 mb-10 items-center">
           {payments.map(p => {
             const Icon = PaymentIcons[p];
             return (
-              <div key={p} className="rounded-lg overflow-hidden shadow-sm" style={{ border: "1px solid rgba(165,180,252,0.08)" }}>
+              <div key={p} className="rounded-lg overflow-hidden" style={{ boxShadow: "3px 3px 0 rgba(242,238,229,.14)" }}>
                 <Icon />
               </div>
             );
           })}
         </div>
 
-        <p className="text-xs" style={{ color: "#374151" }}>
+        {/* Fine print */}
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] mb-8" style={{ color: "rgba(242,238,229,.45)" }}>
           © 2026 RBstars. All rights reserved.
         </p>
+
+        {/* Giant outlined wordmark */}
+        <motion.div
+          initial={{ y: 60, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          aria-hidden="true"
+          className="font-display select-none pointer-events-none leading-[0.82] text-center"
+          style={{
+            fontSize: "clamp(64px, 14vw, 190px)",
+            color: "transparent",
+            WebkitTextStroke: "2px rgba(242,238,229,.28)",
+            marginBottom: "-0.12em",
+          }}
+        >
+          RBSTARS
+        </motion.div>
       </div>
     </footer>
   );

@@ -52,32 +52,28 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
 
   return (
     <header
-      className="h-16 flex items-center gap-4 px-6 flex-shrink-0 z-10"
+      className="h-16 flex items-center gap-4 px-6 flex-shrink-0 z-10 bg-white"
       style={{
-        background: "rgba(6, 9, 28, 0.65)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid rgba(139,92,246,0.1)",
-        boxShadow: "0 1px 0 rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.2)",
+        borderBottom: "2.5px solid #131313",
       }}
     >
       {onMenuClick && (
-        <button onClick={onMenuClick} className="lg:hidden transition-colors" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <button onClick={onMenuClick} className="lg:hidden transition-colors" style={{ color: "#131313" }}>
           <Menu className="w-5 h-5" />
         </button>
       )}
 
       <div className="flex-1 min-w-0 flex items-center gap-3">
-        <div className="w-px h-5 hidden sm:block" style={{ background: "rgba(139,92,246,0.4)" }} />
-        <h1 className="font-bold text-base truncate text-white">{title}</h1>
+        <span className="tilt-sq hidden sm:block !w-2 !h-2" />
+        <h1 className="font-display text-lg uppercase tracking-wide truncate">{title}</h1>
       </div>
 
       <div className="flex items-center gap-3">
         {viewAsRole && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg"
-            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", color: "#fbbf24" }}
+            className="flex items-center gap-1.5 font-mono text-[11px] px-2.5 py-1.5 rounded-lg -rotate-1"
+            style={{ background: "#FFF6DC", border: "1.5px solid #FFC800", color: "#92670a" }}
           >
             <Eye className="w-3 h-3" />
             <span className="font-semibold">Viewing as: {viewAsRole.name}</span>
@@ -91,25 +87,11 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
           <div ref={dropdownRef} className="relative">
             <button
               onClick={openViewDropdown}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.55)",
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(99,102,241,0.12)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(99,102,241,0.25)";
-                (e.currentTarget as HTMLButtonElement).style.color = "#a5b4fc";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.55)";
-              }}
+              className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider px-3 py-1.5 rounded-full bg-white border-2 hover:bg-[#131313] hover:text-white transition-all"
+              style={{ borderColor: "#131313", color: "#131313" }}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline font-medium">View As</span>
+              <span className="hidden sm:inline">View As</span>
               <ChevronDown className={`w-3 h-3 transition-transform ${viewDropdownOpen ? "rotate-180" : ""}`} />
             </button>
 
@@ -120,52 +102,46 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.96 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50"
+                  className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden z-50 bg-white"
                   style={{
-                    background: "rgba(10, 14, 40, 0.95)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(139,92,246,0.15)",
-                    boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                    border: "2px solid #131313",
+                    boxShadow: "6px 6px 0 #131313",
                   }}
                 >
-                  <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <div className="px-4 py-3" style={{ borderBottom: "2px solid #131313" }}>
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#8a8375" }}>
                       Switch Role View
                     </p>
                   </div>
                   <button
                     onClick={() => { setViewAsRole(null); setViewDropdownOpen(false); navigate("/admin/dashboard"); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all"
-                    style={{ color: !viewAsRole ? "#a5b4fc" : "rgba(255,255,255,0.6)", background: !viewAsRole ? "rgba(99,102,241,0.12)" : "transparent" }}
-                    onMouseEnter={e => { if (viewAsRole) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
-                    onMouseLeave={e => { if (viewAsRole) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-colors hover:bg-[#F2EEE5]"
+                    style={{ color: "#131313", fontWeight: !viewAsRole ? 700 : 500, background: !viewAsRole ? "#F2EEE5" : "transparent" }}
                   >
-                    <span className="w-2 h-2 rounded-full bg-indigo-400 flex-shrink-0" />
+                    <span className="tilt-sq !w-2 !h-2" />
                     Owner (full access)
-                    {!viewAsRole && <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>Active</span>}
+                    {!viewAsRole && <span className="ml-auto font-mono text-[9px] px-1.5 py-0.5 rounded-md font-bold text-white rotate-3" style={{ background: "#E2231A" }}>Active</span>}
                   </button>
 
                   {rolesLoading ? (
-                    <div className="px-4 py-4 text-center text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Loading…</div>
+                    <div className="px-4 py-4 text-center font-mono text-xs" style={{ color: "#8a8375" }}>Loading…</div>
                   ) : roles.length === 0 ? (
-                    <div className="px-4 py-3 text-xs text-center" style={{ color: "rgba(255,255,255,0.25)" }}>No roles found</div>
+                    <div className="px-4 py-3 font-mono text-xs text-center" style={{ color: "#8a8375" }}>No roles found</div>
                   ) : roles.map(role => (
                     <button
                       key={role._id}
                       onClick={() => {
                         const perms = role.permissions || [];
-                        setViewAsRole({ id: role._id, name: role.name, color: role.color || "#6366f1", permissions: perms });
+                        setViewAsRole({ id: role._id, name: role.name, color: role.color || "#E2231A", permissions: perms });
                         setViewDropdownOpen(false);
                         navigate(getNavTargetForRole(perms));
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-all"
-                      style={{ color: viewAsRole?.id === role._id ? "#a5b4fc" : "rgba(255,255,255,0.6)", background: viewAsRole?.id === role._id ? "rgba(99,102,241,0.12)" : "transparent" }}
-                      onMouseEnter={e => { if (viewAsRole?.id !== role._id) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; }}
-                      onMouseLeave={e => { if (viewAsRole?.id !== role._id) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-colors hover:bg-[#F2EEE5]"
+                      style={{ color: "#131313", background: viewAsRole?.id === role._id ? "#F2EEE5" : "transparent" }}
                     >
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: role.color || "#6366f1" }} />
-                      <span className="flex-1 truncate">{role.name}</span>
-                      {viewAsRole?.id === role._id && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>Active</span>}
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: role.color || "#E2231A", border: "1px solid #131313" }} />
+                      <span className="flex-1 truncate font-medium">{role.name}</span>
+                      {viewAsRole?.id === role._id && <span className="font-mono text-[9px] px-1.5 py-0.5 rounded-md font-bold text-white rotate-3" style={{ background: "#E2231A" }}>Active</span>}
                     </button>
                   ))}
                 </motion.div>
@@ -174,37 +150,37 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
           </div>
         )}
 
-        <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg ${connected ? "" : ""}`}
+        <div className="flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-lg"
           style={{
-            background: connected ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
-            border: `1px solid ${connected ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
-            color: connected ? "#34d399" : "#f87171",
+            background: connected ? "#E9F8EF" : "#FDEEEC",
+            border: `1.5px solid ${connected ? "#00B06F" : "#E2231A"}`,
+            color: connected ? "#00875A" : "#C53011",
           }}>
           {connected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-          <span className="font-medium">{connected ? "Live" : "Offline"}</span>
+          <span>{connected ? "Live" : "Offline"}</span>
         </div>
 
-        <div className="text-xs hidden sm:block font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>
+        <div className="hidden sm:block font-mono text-[11px] uppercase tracking-wider" style={{ color: "#8a8375" }}>
           {new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
         </div>
 
         <Link href={user?.isOwner ? "/admin/profile" : "/panel/profile"}>
           <div className="flex items-center gap-2.5 cursor-pointer pl-3 transition-opacity hover:opacity-80"
-            style={{ borderLeft: "1px solid rgba(255,255,255,0.08)" }}>
+            style={{ borderLeft: "2px solid rgba(19,19,19,.12)" }}>
             {profile?.profilePicture ? (
               <img src={profile.profilePicture} className="w-8 h-8 rounded-full object-cover"
-                style={{ boxShadow: "0 0 0 2px rgba(99,102,241,0.4)" }} alt="" />
+                style={{ boxShadow: "0 0 0 2px #131313" }} alt="" />
             ) : (
-              <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 12px rgba(99,102,241,0.35)" }}>
+              <div className="w-8 h-8 rounded-full flex items-center justify-center border-2"
+                style={{ background: "#E2231A", borderColor: "#131313" }}>
                 <span className="text-white text-xs font-bold">
                   {(profile?.displayName || user?.email || "?")[0].toUpperCase()}
                 </span>
               </div>
             )}
             <div className="hidden sm:block">
-              <p className="text-xs font-semibold text-white">{profile?.displayName || user?.email?.split("@")[0]}</p>
-              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>{user?.isOwner ? "Owner" : user?.role?.name}</p>
+              <p className="text-xs font-bold">{profile?.displayName || user?.email?.split("@")[0]}</p>
+              <p className="font-mono text-[9px] uppercase tracking-wider" style={{ color: "#8a8375" }}>{user?.isOwner ? "Owner" : user?.role?.name}</p>
             </div>
           </div>
         </Link>

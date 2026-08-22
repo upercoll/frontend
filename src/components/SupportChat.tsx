@@ -178,11 +178,11 @@ function Field({
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
         style={{
           background: "#f9fafb",
-          border: `1.5px solid ${error ? "#fca5a5" : focused ? "#4F46E5" : "#e5e7eb"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.08)" : "none",
+          border: `1.5px solid ${error ? "#fca5a5" : focused ? "#E2231A" : "#e5e7eb"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(226,35,26,0.08)" : "none",
         }}
       >
-        {icon && <span style={{ color: "#4F46E5", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: "#E2231A", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
@@ -221,7 +221,7 @@ function Bubble({ msg }: { msg: Message }) {
     >
       {!isCustomer && (
         <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+          style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
           <Star size={10} fill="white" color="white" />
         </div>
       )}
@@ -232,7 +232,7 @@ function Bubble({ msg }: { msg: Message }) {
         <div
           className="px-3 py-2 text-sm leading-relaxed"
           style={{
-            background: isCustomer ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#f3f4f6",
+            background: isCustomer ? "linear-gradient(135deg,#E2231A,#3730A3)" : "#f3f4f6",
             color: isCustomer ? "white" : "#374151",
             borderRadius: isCustomer ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
           }}
@@ -754,7 +754,7 @@ export default function SupportChat() {
       <div className="flex flex-col h-full">
         <div className="p-4 pb-2 text-center">
           <div className="w-11 h-11 rounded-full mx-auto mb-2.5 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 0 18px rgba(79,70,229,0.25)" }}>
+            style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)", boxShadow: "0 0 18px rgba(226,35,26,0.25)" }}>
             <MessageSquare size={20} color="white" />
           </div>
           <h3 className="text-sm font-extrabold mb-0.5" style={{ color: "#1e1b4b" }}>How can we help?</h3>
@@ -892,7 +892,7 @@ export default function SupportChat() {
           {botTyping && (
             <div className="flex items-end gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
               <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
@@ -943,7 +943,7 @@ export default function SupportChat() {
               onClick={handleFaqInput}
               disabled={!faqInput.trim()}
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
+              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#E2231A,#3730A3)" : "#e0e7ff" }}
             >
               <Send size={14} color="white" />
             </motion.button>
@@ -1004,7 +1004,7 @@ export default function SupportChat() {
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => handleRejoinSession()}
             className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+            style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}
           >
             <MessageSquare size={15} />Continue Chat
           </motion.button>
@@ -1016,7 +1016,7 @@ export default function SupportChat() {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
           <div className="rounded-2xl p-4 text-center" style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}>
-            <Package size={28} color="#4F46E5" className="mx-auto mb-2" />
+            <Package size={28} color="#E2231A" className="mx-auto mb-2" />
             <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>No Recent Order Found</p>
             <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
               Place an order first, then return here to claim your items. If you already ordered, your items will appear here.
@@ -1061,7 +1061,7 @@ export default function SupportChat() {
             >
               <div
                 className="w-9 h-9 rounded-xl flex-shrink-0"
-                style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` : "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+                style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` : "linear-gradient(135deg,#E2231A,#3730A3)" }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-extrabold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
@@ -1107,7 +1107,7 @@ export default function SupportChat() {
               style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
                 <Package size={14} color="white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -1221,7 +1221,7 @@ export default function SupportChat() {
                       onClick={handleSaveUserInfo}
                       disabled={editSaving || !editValue.trim()}
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: editValue.trim() ? "#4F46E5" : "#e0e7ff" }}
+                      style={{ background: editValue.trim() ? "#E2231A" : "#e0e7ff" }}
                     >
                       {editSaving ? <Loader2 size={12} className="animate-spin text-white" /> : <Check size={13} color="white" />}
                     </button>
@@ -1266,7 +1266,7 @@ export default function SupportChat() {
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
               className="w-4 h-4 rounded-full border-2"
-              style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }}
+              style={{ borderColor: "#E2231A", borderTopColor: "transparent" }}
             />
             <span className="text-xs font-semibold" style={{ color: "#4f46e5" }}>Waiting for claim team…</span>
           </div>
@@ -1293,7 +1293,7 @@ export default function SupportChat() {
           <div className="px-4 py-2 flex items-center gap-2 border-b flex-shrink-0"
             style={{ borderColor: "#e5e7eb", background: "#f5f3ff" }}>
             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "#4F46E5" }}>
+              style={{ background: "#E2231A" }}>
               <Star size={9} fill="white" color="white" />
             </div>
             <span className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{agentName}</span>
@@ -1316,7 +1316,7 @@ export default function SupportChat() {
           {agentTyping && (
             <div className="flex items-end gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
               <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
@@ -1371,7 +1371,7 @@ export default function SupportChat() {
                 onClick={handleSend}
                 disabled={!input.trim()}
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: input.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
+                style={{ background: input.trim() ? "linear-gradient(135deg,#E2231A,#3730A3)" : "#e0e7ff" }}
               >
                 <Send size={14} color="white" />
               </motion.button>
@@ -1478,7 +1478,7 @@ export default function SupportChat() {
             onClick={handleReviewSubmit}
             disabled={reviewStars === 0 || reviewSubmitting}
             className="flex-1 py-2.5 rounded-xl text-sm font-extrabold text-white flex items-center justify-center gap-1.5"
-            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff", opacity: reviewSubmitting ? 0.7 : 1 }}>
+            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#E2231A,#3730A3)" : "#e0e7ff", opacity: reviewSubmitting ? 0.7 : 1 }}>
             {reviewSubmitting
               ? <Loader2 size={13} className="animate-spin" />
               : <Star size={13} fill={reviewStars > 0 ? "white" : "none"} color="white" strokeWidth={2} />}
@@ -1528,7 +1528,7 @@ export default function SupportChat() {
             </button>
           ) : (
             <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+              style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
               <Star size={13} fill="white" color="white" />
             </div>
           )}
@@ -1582,7 +1582,7 @@ export default function SupportChat() {
               height: "min(520px, calc(100vh - 128px))",
               background: "#ffffff",
               border: "1.5px solid #e5e7eb",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(99,102,241,0.08)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(226,35,26,0.08)",
             }}
           >
             {renderHeader()}
@@ -1609,21 +1609,21 @@ export default function SupportChat() {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.2, type: "spring", stiffness: 280, damping: 20 }}
-        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(79,70,229,0.7)" }}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(226,35,26,0.7)" }}
         whileTap={{ scale: 0.92 }}
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-6 right-4 z-[300] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl"
-        style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 4px 24px rgba(79,70,229,0.55)" }}
+        style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)", boxShadow: "0 4px 24px rgba(226,35,26,0.55)" }}
       >
         {hasActivity && (
           <motion.span
             animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute inset-0 rounded-full"
-            style={{ background: "#4F46E5" }}
+            style={{ background: "#E2231A" }}
           />
         )}
-        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#4F46E5]" />
+        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#E2231A]" />
         <AnimatePresence mode="wait">
           {open
             ? <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}><X size={22} color="white" /></motion.div>

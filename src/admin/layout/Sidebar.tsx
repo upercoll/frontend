@@ -92,30 +92,28 @@ function NavLink({ item, location, collapsed, podBadge = 0 }: { item: NavItem; l
         whileHover={{ x: collapsed ? 0 : 3 }}
         className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
         style={isActive ? {
-          background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-          color: "#a5b4fc",
-          border: "1px solid rgba(99,102,241,0.25)",
-          boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+          background: "#E2231A",
+          color: "#FFFFFF",
         } : {
-          color: "rgba(255,255,255,0.4)",
+          color: "rgba(242,238,229,.42)",
           border: "1px solid transparent",
         }}
         onMouseEnter={e => {
           if (!isActive) {
-            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
-            (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
+            (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.92)";
+            (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.07)";
           }
         }}
         onMouseLeave={e => {
           if (!isActive) {
-            (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
+            (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.42)";
             (e.currentTarget as HTMLDivElement).style.background = "transparent";
           }
         }}
       >
         {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-            style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full"
+            style={{ background: "#FFFFFF" }} />
         )}
         <item.icon className="w-4 h-4 flex-shrink-0" />
         {!collapsed && (
@@ -124,7 +122,7 @@ function NavLink({ item, location, collapsed, podBadge = 0 }: { item: NavItem; l
           </motion.span>
         )}
         {!collapsed && badge > 0 && (
-          <span className="bg-violet-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+          <span className="bg-[#FFC800] text-[#131313] font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md rotate-3">
             {badge}
           </span>
         )}
@@ -203,15 +201,13 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
       transition={{ duration: 0.22, ease: "easeInOut" }}
       className="relative flex flex-col h-full overflow-hidden flex-shrink-0"
       style={{
-        background: "rgba(6, 9, 28, 0.82)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        borderRight: "1px solid rgba(139,92,246,0.12)",
-        boxShadow: "inset -1px 0 0 rgba(255,255,255,0.03), 4px 0 32px rgba(0,0,0,0.3)",
+        background: "#131313",
+        boxShadow: "4px 0 0 rgba(19,19,19,.08)",
       }}
     >
+      {/* Header */}
       <div className="flex items-center px-4 h-16 flex-shrink-0"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        style={{ borderBottom: "2px solid rgba(242,238,229,.08)" }}>
         <AnimatePresence>
           {!collapsed && (
             <motion.div
@@ -219,13 +215,13 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
               exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}
               className="flex items-center gap-2.5 flex-1"
             >
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 16px rgba(99,102,241,0.4)" }}>
-                <span className="text-white font-bold text-sm">R</span>
-              </div>
+              <svg width="30" height="30" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <rect x="14" y="14" width="36" height="36" rx="7" transform="rotate(12 32 32)" fill="#E2231A" />
+                <rect x="26.5" y="26.5" width="11" height="11" rx="2.5" transform="rotate(12 32 32)" fill="#131313" />
+              </svg>
               <div>
-                <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
-                <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(139,92,246,0.7)" }}>
+                <span className="text-[#F2EEE5] font-display text-base tracking-wide leading-none">RBSTARS</span>
+                <p className="font-mono text-[9px] tracking-[0.2em] uppercase mt-0.5" style={{ color: "rgba(226,35,26,.95)" }}>
                   {isStocker ? "Stocker Panel" : isOwner ? (viewAsRole ? `Viewing as ${viewAsRole.name}` : "Owner Panel") : "Team Panel"}
                 </p>
               </div>
@@ -233,23 +229,25 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
           )}
         </AnimatePresence>
         {collapsed && (
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto"
-            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 16px rgba(99,102,241,0.35)" }}>
-            <span className="text-white font-bold text-sm">R</span>
+          <div className="mx-auto flex-shrink-0">
+            <svg width="30" height="30" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <rect x="14" y="14" width="36" height="36" rx="7" transform="rotate(12 32 32)" fill="#E2231A" />
+              <rect x="26.5" y="26.5" width="11" height="11" rx="2.5" transform="rotate(12 32 32)" fill="#131313" />
+            </svg>
           </div>
         )}
         <button
           onClick={onToggle}
-          className="ml-auto w-6 h-6 rounded-md flex items-center justify-center transition-all flex-shrink-0 hover:bg-white/5"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          className="ml-auto w-6 h-6 rounded-md flex items-center justify-center transition-all flex-shrink-0 hover:bg-white/10"
+          style={{ color: "rgba(242,238,229,.35)" }}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
       {viewAsRole && !collapsed && (
-        <div className="mx-3 my-2 px-3 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold"
-          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b" }}>
+        <div className="mx-3 my-2 px-3 py-2 rounded-xl flex items-center gap-2 font-mono text-[11px] font-semibold"
+          style={{ background: "rgba(255,200,0,.08)", border: "1.5px solid rgba(255,200,0,.35)", color: "#FFC800" }}>
           <Eye className="w-3 h-3 flex-shrink-0" />
           <span className="flex-1 truncate">Viewing as: {viewAsRole.name}</span>
           <button onClick={() => setViewAsRole(null)} className="hover:opacity-70 transition-opacity flex-shrink-0">
@@ -268,11 +266,11 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
               return (
                 <div key={group} className="mb-2">
                   <div className="flex items-center gap-2 px-3 py-2 mb-0.5">
-                    {GIcon && <GIcon className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(139,92,246,0.5)" }} />}
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    {GIcon && <GIcon className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(226,35,26,.75)" }} />}
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: "rgba(242,238,229,.28)" }}>
                       {group}
                     </p>
-                    <div className="flex-1 h-px ml-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                    <div className="flex-1 h-px ml-1" style={{ background: "rgba(242,238,229,.07)" }} />
                   </div>
                   {groupItems.map(item => (
                     <NavLink key={item.href} item={item} location={location} collapsed={collapsed} podBadge={podBadge} />
@@ -284,11 +282,11 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
             {hasClaimAgent && !collapsed && (
               <div className="mb-2">
                 <div className="flex items-center gap-2 px-3 py-2 mb-0.5">
-                  <Inbox className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(139,92,246,0.5)" }} />
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
+                  <Inbox className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(226,35,26,.75)" }} />
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: "rgba(242,238,229,.28)" }}>
                     Operations
                   </p>
-                  <div className="flex-1 h-px ml-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                  <div className="flex-1 h-px ml-1" style={{ background: "rgba(242,238,229,.07)" }} />
                 </div>
 
                 <motion.div
@@ -296,37 +294,31 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   onClick={() => setClaimQueueOpen(o => !o)}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                    boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    background: "#E2231A",
+                    color: "#FFFFFF",
                   } : {
-                    color: "rgba(255,255,255,0.4)",
+                    color: "rgba(242,238,229,.42)",
                     border: "1px solid transparent",
                   }}
                   onMouseEnter={e => {
                     if (!isQueueActive) {
-                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
-                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.92)";
+                      (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.07)";
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isQueueActive) {
-                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.42)";
                       (e.currentTarget as HTMLDivElement).style.background = "transparent";
                     }
                   }}
                 >
-                  {isQueueActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-                      style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
-                  )}
                   <Inbox className="w-4 h-4 flex-shrink-0" />
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
                     Claim Queue
                   </motion.span>
                   {pendingClaims.length > 0 && (
-                    <span className="bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+                    <span className="bg-[#FFC800] text-[#131313] font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md rotate-3">
                       {pendingClaims.length}
                     </span>
                   )}
@@ -349,20 +341,20 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                           <Link key={sub.section} href="/panel/queue">
                             <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                               style={isActive ? {
-                                background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
-                                color: "#a5b4fc",
-                                border: "1px solid rgba(99,102,241,0.2)",
+                                background: "rgba(226,35,26,.16)",
+                                color: "#F2EEE5",
+                                border: "1px solid rgba(226,35,26,.4)",
                               } : {
-                                color: "rgba(255,255,255,0.35)",
+                                color: "rgba(242,238,229,.35)",
                                 border: "1px solid transparent",
                               }}
-                              onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; } }}
-                              onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
+                              onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.8)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.05)"; } }}
+                              onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
                             >
                               <SubIcon className="w-3.5 h-3.5 flex-shrink-0" />
                               <span className="font-medium flex-1 truncate">{sub.label}</span>
                               {count > 0 && (
-                                <span className="bg-indigo-500/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                <span className="bg-[#FFC800] text-[#131313] font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md">
                                   {count}
                                 </span>
                               )}
@@ -379,11 +371,11 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
             {showCollab && (
               <div className="mb-2">
                 <div className="flex items-center gap-2 px-3 py-2 mb-0.5">
-                  <CollabIcon className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(139,92,246,0.5)" }} />
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.22)" }}>
+                  <CollabIcon className="w-3 h-3 flex-shrink-0" style={{ color: "rgba(226,35,26,.75)" }} />
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.25em]" style={{ color: "rgba(242,238,229,.28)" }}>
                     Collaboration
                   </p>
-                  <div className="flex-1 h-px ml-1" style={{ background: "rgba(255,255,255,0.05)" }} />
+                  <div className="flex-1 h-px ml-1" style={{ background: "rgba(242,238,229,.07)" }} />
                 </div>
 
                 <motion.div
@@ -391,31 +383,25 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   onClick={() => setCollabOpen(o => !o)}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isCollabActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
-                    boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+                    background: "#E2231A",
+                    color: "#FFFFFF",
                   } : {
-                    color: "rgba(255,255,255,0.4)",
+                    color: "rgba(242,238,229,.42)",
                     border: "1px solid transparent",
                   }}
                   onMouseEnter={e => {
                     if (!isCollabActive) {
-                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)";
-                      (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.92)";
+                      (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.07)";
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isCollabActive) {
-                      (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.4)";
+                      (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.42)";
                       (e.currentTarget as HTMLDivElement).style.background = "transparent";
                     }
                   }}
                 >
-                  {isCollabActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-                      style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
-                  )}
                   <CollabIcon className="w-4 h-4 flex-shrink-0" />
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
                     Collaboration
@@ -438,15 +424,15 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                           <Link key={sub.href} href={sub.href}>
                             <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                               style={isActive ? {
-                                background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
-                                color: "#a5b4fc",
-                                border: "1px solid rgba(99,102,241,0.2)",
+                                background: "rgba(226,35,26,.16)",
+                                color: "#F2EEE5",
+                                border: "1px solid rgba(226,35,26,.4)",
                               } : {
-                                color: "rgba(255,255,255,0.35)",
+                                color: "rgba(242,238,229,.35)",
                                 border: "1px solid transparent",
                               }}
-                              onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; } }}
-                              onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
+                              onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.8)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.05)"; } }}
+                              onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
                             >
                               <SubIcon className="w-3.5 h-3.5 flex-shrink-0" />
                               <span className="font-medium">{sub.label}</span>
@@ -457,15 +443,15 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                       <Link href="/admin/collaboration/payouts-all">
                         <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                           style={location.startsWith("/admin/collaboration/payouts-all") ? {
-                            background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
-                            color: "#a5b4fc",
-                            border: "1px solid rgba(99,102,241,0.2)",
+                            background: "rgba(226,35,26,.16)",
+                            color: "#F2EEE5",
+                            border: "1px solid rgba(226,35,26,.4)",
                           } : {
-                            color: "rgba(255,255,255,0.35)",
+                            color: "rgba(242,238,229,.35)",
                             border: "1px solid transparent",
                           }}
-                          onMouseEnter={e => { if (!location.startsWith("/admin/collaboration/payouts-all")) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.7)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; } }}
-                          onMouseLeave={e => { if (!location.startsWith("/admin/collaboration/payouts-all")) { (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
+                          onMouseEnter={e => { if (!location.startsWith("/admin/collaboration/payouts-all")) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.8)"; (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.05)"; } }}
+                          onMouseLeave={e => { if (!location.startsWith("/admin/collaboration/payouts-all")) { (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.35)"; (e.currentTarget as HTMLDivElement).style.background = "transparent"; } }}
                         >
                           <DollarSign className="w-3.5 h-3.5 flex-shrink-0" />
                           <span className="font-medium">Payouts</span>
@@ -488,18 +474,17 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   whileHover={{ x: 3 }}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
+                    background: "#E2231A",
+                    color: "#FFFFFF",
                   } : {
-                    color: "rgba(255,255,255,0.4)",
+                    color: "rgba(242,238,229,.42)",
                     border: "1px solid transparent",
                   }}
                 >
                   <Inbox className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm font-medium">Claim Queue</span>
                   {pendingClaims.length > 0 && (
-                    <span className="ml-auto bg-indigo-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    <span className="ml-auto bg-[#FFC800] text-[#131313] font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-md">
                       {pendingClaims.length}
                     </span>
                   )}
@@ -511,11 +496,10 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 <motion.div
                   className="relative flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
-                    color: "#a5b4fc",
-                    border: "1px solid rgba(99,102,241,0.25)",
+                    background: "#E2231A",
+                    color: "#FFFFFF",
                   } : {
-                    color: "rgba(255,255,255,0.4)",
+                    color: "rgba(242,238,229,.42)",
                     border: "1px solid transparent",
                   }}
                 >
@@ -527,19 +511,20 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         )}
       </nav>
 
-      <div className="flex-shrink-0 px-2 pb-4 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex-shrink-0 px-2 pb-4 pt-2" style={{ borderTop: "2px solid rgba(242,238,229,.08)" }}>
         <Link href={profileHref}>
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.85)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; (e.currentTarget as HTMLDivElement).style.color = "rgba(255,255,255,0.5)"; }}
+            style={{ color: "rgba(242,238,229,.55)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(242,238,229,.07)"; (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.92)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; (e.currentTarget as HTMLDivElement).style.color = "rgba(242,238,229,.55)"; }}
           >
             {profile?.profilePicture ? (
-              <img src={profile.profilePicture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+              <img src={profile.profilePicture} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 border-2"
+                style={{ borderColor: "rgba(242,238,229,.25)" }}
                 onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
             ) : (
-              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 border-2"
+                style={{ background: "#E2231A", borderColor: "rgba(242,238,229,.25)" }}>
                 <span className="text-white text-xs font-bold">
                   {(profile?.displayName || user?.email || "?")[0].toUpperCase()}
                 </span>
@@ -547,8 +532,8 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
             )}
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate text-white/80">{profile?.displayName || user?.email?.split("@")[0]}</p>
-                <p className="text-[10px] truncate" style={{ color: "rgba(139,92,246,0.6)" }}>
+                <p className="text-xs font-semibold truncate" style={{ color: "rgba(242,238,229,.85)" }}>{profile?.displayName || user?.email?.split("@")[0]}</p>
+                <p className="font-mono text-[9px] truncate" style={{ color: "rgba(226,35,26,.9)" }}>
                   {isStocker ? "Stocker" : isOwner ? "Owner" : user?.role?.name || "Team Member"}
                 </p>
               </div>
@@ -559,9 +544,9 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         <button
           onClick={logout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mt-1"
-          style={{ color: "rgba(255,255,255,0.35)" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(239,68,68,0.7)"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
+          style={{ color: "rgba(242,238,229,.38)" }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(226,35,26,.14)"; (e.currentTarget as HTMLButtonElement).style.color = "#FF8A82"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(242,238,229,.38)"; }}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Sign Out</span>}
