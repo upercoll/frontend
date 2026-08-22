@@ -269,7 +269,7 @@ export default function DeliveryMemberDetail() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Unpaid Revenue",    value: fmt(stats?.totalRevenue ?? 0),    color: "#4ade80" },
-          { label: "Unpaid Commission", value: fmt(stats?.totalCommission ?? 0),  color: "#FF7A72" },
+          { label: "Unpaid Commission", value: fmt(stats?.totalCommission ?? 0),  color: "#a78bfa" },
           { label: "Lifetime Revenue",  value: fmt(stats?.lifetimeRevenue ?? 0),  color: "#7dd3fc" },
           { label: "Total Deliveries",  value: stats?.totalDeliveries ?? 0,       color: "#fbbf24" },
         ].map((s, i) => (

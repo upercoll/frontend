@@ -194,7 +194,7 @@ export default function Games() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />)}
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}
         </div>
       ) : games.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
@@ -213,7 +213,7 @@ export default function Games() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden"
+                className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden"
               >
                 <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4">
                   {game.imageUrl ? (
@@ -305,7 +305,7 @@ export default function Games() {
                                           }
                                         }}
                                         placeholder="Subcategory name, then Enter"
-                                        className="flex-1 bg-[#161616] border border-blue-500/40 text-white placeholder-slate-600 rounded-lg px-3 py-1.5 text-xs focus:outline-none"
+                                        className="flex-1 bg-[#0a1628] border border-blue-500/40 text-white placeholder-slate-600 rounded-lg px-3 py-1.5 text-xs focus:outline-none"
                                       />
                                       <button
                                         onClick={() => { if (newSubcatName.trim()) addSubcatMut.mutate({ id: cat._id, name: newSubcatName.trim() }); }}
@@ -364,7 +364,7 @@ export default function Games() {
             onClick={() => { setDeleteConfirm(null); setDeleteError(""); }}>
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
               <div className="p-6 text-center">
                 <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4">
@@ -416,7 +416,7 @@ export default function Games() {
             className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
             onClick={() => setShowGameModal(null)}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">{showGameModal === "create" ? "Add Game" : "Edit Game"}</h3>
@@ -428,12 +428,12 @@ export default function Games() {
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Game Name *</label>
                   <input value={gameName} onChange={(e) => setGameName(e.target.value)} required placeholder="e.g. Murder Mystery 2"
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                 </div>
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Description</label>
                   <input value={gameDesc} onChange={(e) => setGameDesc(e.target.value)} placeholder="Short description"
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -441,7 +441,7 @@ export default function Games() {
                     <div className="flex gap-2">
                       <input type="color" value={gameGradFrom} onChange={(e) => setGameGradFrom(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent" />
                       <input value={gameGradFrom} onChange={(e) => setGameGradFrom(e.target.value)}
-                        className="flex-1 bg-[#161616] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
                     </div>
                   </div>
                   <div>
@@ -449,14 +449,14 @@ export default function Games() {
                     <div className="flex gap-2">
                       <input type="color" value={gameGradTo} onChange={(e) => setGameGradTo(e.target.value)} className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer bg-transparent" />
                       <input value={gameGradTo} onChange={(e) => setGameGradTo(e.target.value)}
-                        className="flex-1 bg-[#161616] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/50 min-w-0" />
                     </div>
                   </div>
                 </div>
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Game Icon <span className="text-slate-500 font-normal text-xs">(shown in game list)</span></label>
                   <input type="file" accept="image/*" onChange={(e) => setGameImage(e.target.files?.[0] || null)}
-                    className="w-full bg-[#161616] border border-white/10 text-slate-400 rounded-xl px-4 py-2 text-sm focus:outline-none" />
+                    className="w-full bg-[#0a1628] border border-white/10 text-slate-400 rounded-xl px-4 py-2 text-sm focus:outline-none" />
                 </div>
                 <div>
                   <ImageUpload
@@ -482,7 +482,7 @@ export default function Games() {
                     max="120"
                     value={gameClaimTime}
                     onChange={(e) => setGameClaimTime(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full bg-[#161616] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                   <p className="text-slate-600 text-xs mt-1">Customers see a countdown + automated message when they open a claim chat.</p>
                 </div>
@@ -503,7 +503,7 @@ export default function Games() {
                   {gameClaimSchedule.length > 0 && (
                     <div className="space-y-2">
                       {gameClaimSchedule.map((slot, idx) => (
-                        <div key={idx} className="bg-[#161616] border border-white/8 rounded-xl p-3 space-y-2">
+                        <div key={idx} className="bg-[#0a1628] border border-white/8 rounded-xl p-3 space-y-2">
                           <div className="flex items-center gap-2">
                             <input
                               value={slot.label}
@@ -567,7 +567,7 @@ export default function Games() {
             className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={() => setShowCatModal(null)}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden"
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Add Category to {games.find((g: Game) => g.slug === showCatModal)?.name}</h3>
@@ -588,7 +588,7 @@ export default function Games() {
                       }
                     }}
                     placeholder="e.g. Knives, Pets, Guns"
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                   <p className="text-slate-600 text-xs mt-1">After creating the category, expand the game to add subcategories to it.</p>
                 </div>

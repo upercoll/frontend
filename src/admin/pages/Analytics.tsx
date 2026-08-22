@@ -12,7 +12,7 @@ const PERIODS = [
   { label: "All Time", value: "all" },
 ];
 
-function StatCard({ icon: Icon, label, value, growth, prefix = "", color = "#E2231A" }: {
+function StatCard({ icon: Icon, label, value, growth, prefix = "", color = "#4f46e5" }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number | string;
@@ -34,7 +34,7 @@ function StatCard({ icon: Icon, label, value, growth, prefix = "", color = "#E22
           </div>
         )}
       </div>
-      <p className="text-2xl font-bold" style={{ color: "#1B1B1B" }}>{prefix}{typeof value === "number" ? value.toLocaleString("en-US", { maximumFractionDigits: 2 }) : value}</p>
+      <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>{prefix}{typeof value === "number" ? value.toLocaleString("en-US", { maximumFractionDigits: 2 }) : value}</p>
       <p className="text-sm text-slate-400 mt-1">{label}</p>
     </div>
   );
@@ -90,7 +90,7 @@ export default function Analytics() {
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Analytics</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Analytics</h2>
           <p className="text-sm text-slate-500 mt-0.5">Sales performance and business insights</p>
         </div>
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
@@ -100,7 +100,7 @@ export default function Analytics() {
               onClick={() => setPeriod(p.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={period === p.value
-                ? { background: "#1B1B1B", color: "#fff" }
+                ? { background: "#1e1b4b", color: "#fff" }
                 : { color: "#6b7280" }}
             >
               {p.label}
@@ -112,7 +112,7 @@ export default function Analytics() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={DollarSign} label="Revenue" value={summary?.revenue || 0}
-          growth={summary?.revenueGrowth} prefix="$" color="#E2231A"
+          growth={summary?.revenueGrowth} prefix="$" color="#4f46e5"
         />
         <StatCard
           icon={ShoppingBag} label="Orders" value={summary?.orders || 0}
@@ -120,11 +120,11 @@ export default function Analytics() {
         />
         <StatCard
           icon={BarChart3} label="Avg. Order Value" value={summary?.avgOrderValue || 0}
-          prefix="$" color="#DB2777"
+          prefix="$" color="#8b5cf6"
         />
         <StatCard
           icon={Target} label="Conversion Rate" value={`${conversion?.conversionRate || 0}%`}
-          color="#00B06F"
+          color="#10b981"
         />
       </div>
 
@@ -132,7 +132,7 @@ export default function Analytics() {
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Total Checkouts</p>
-            <p className="text-2xl font-bold" style={{ color: "#1B1B1B" }}>{conversion.totalOrders.toLocaleString()}</p>
+            <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>{conversion.totalOrders.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Successful Payments</p>
@@ -147,11 +147,11 @@ export default function Analytics() {
 
       {summary?.statusBreakdown && (
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1B1B1B" }}>Order Status Breakdown</h3>
+          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Order Status Breakdown</h3>
           <div className="flex flex-wrap gap-3">
             {Object.entries(summary.statusBreakdown).map(([status, count]) => (
               <div key={status} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-                <span className="text-sm font-semibold capitalize" style={{ color: "#1B1B1B" }}>{status === "pending" ? "Unpaid" : status}</span>
+                <span className="text-sm font-semibold capitalize" style={{ color: "#1e1b4b" }}>{status === "pending" ? "Unpaid" : status}</span>
                 <span className="text-xs px-1.5 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700">{String(count)}</span>
               </div>
             ))}
@@ -161,14 +161,14 @@ export default function Analytics() {
 
       <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-bold" style={{ color: "#1B1B1B" }}>Revenue Chart</h3>
+          <h3 className="text-sm font-bold" style={{ color: "#1e1b4b" }}>Revenue Chart</h3>
           <div className="flex gap-1 p-1 rounded-lg" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
             {(["monthly", "daily"] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setChartPeriod(p)}
                 className="px-3 py-1 rounded-md text-xs font-semibold transition-all capitalize"
-                style={chartPeriod === p ? { background: "#1B1B1B", color: "#fff" } : { color: "#6b7280" }}
+                style={chartPeriod === p ? { background: "#1e1b4b", color: "#fff" } : { color: "#6b7280" }}
               >
                 {p === "monthly" ? "Monthly" : "Daily (30d)"}
               </button>
@@ -188,10 +188,10 @@ export default function Analytics() {
                   animate={{ height: `${height}%` }}
                   transition={{ delay: i * 0.02, duration: 0.4 }}
                   className="flex-1 rounded-t-sm relative group cursor-pointer"
-                  style={{ background: "linear-gradient(to top, #E2231A, #FF7A72)", minHeight: point.revenue > 0 ? 2 : 0 }}
+                  style={{ background: "linear-gradient(to top, #4f46e5, #818cf8)", minHeight: point.revenue > 0 ? 2 : 0 }}
                 >
                   {point.revenue > 0 && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1B1B1B] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
                       ${point.revenue.toFixed(0)}
                     </div>
                   )}
@@ -218,7 +218,7 @@ export default function Analytics() {
                 <Activity className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
-                <h3 className="text-sm font-bold" style={{ color: "#1B1B1B" }}>Site Traffic (Last 30 Days)</h3>
+                <h3 className="text-sm font-bold" style={{ color: "#1e1b4b" }}>Site Traffic (Last 30 Days)</h3>
                 <p className="text-xs text-slate-400">New customer signups &amp; order activity</p>
               </div>
             </div>
@@ -228,11 +228,11 @@ export default function Analytics() {
                 <p className="text-[10px] text-slate-400">New Customers</p>
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: "#E2231A" }}>{trafficSummary.orderAttempts30d.toLocaleString()}</p>
+                <p className="text-lg font-bold" style={{ color: "#4f46e5" }}>{trafficSummary.orderAttempts30d.toLocaleString()}</p>
                 <p className="text-[10px] text-slate-400">Order Attempts</p>
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: "#1B1B1B" }}>{trafficSummary.totalCustomers.toLocaleString()}</p>
+                <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>{trafficSummary.totalCustomers.toLocaleString()}</p>
                 <p className="text-[10px] text-slate-400">Total Customers</p>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function Analytics() {
                         style={{ background: "#34d399", minHeight: point.newCustomers > 0 ? 1 : 0 }}
                       />
                       {(point.newCustomers > 0 || point.orderAttempts > 0) && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-[#1B1B1B] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg pointer-events-none">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg pointer-events-none">
                           <div>{point.label}</div>
                           <div className="text-emerald-300">+{point.newCustomers} customers</div>
                           <div className="text-indigo-300">{point.orderAttempts} orders</div>
@@ -292,20 +292,20 @@ export default function Analytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1B1B1B" }}>Revenue by Game</h3>
+          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Revenue by Game</h3>
           {byGame.length === 0 ? (
             <p className="text-slate-300 text-sm">No data</p>
           ) : (
             <div className="space-y-3">
               {byGame.map((g: any, i: number) => {
                 const pct = totalGameRevenue > 0 ? (g.revenue / totalGameRevenue) * 100 : 0;
-                const colors = ["#E2231A", "#0ea5e9", "#DB2777", "#00B06F", "#f59e0b", "#ef4444"];
+                const colors = ["#4f46e5", "#0ea5e9", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
                 const col = colors[i % colors.length];
                 return (
                   <div key={g._id || i}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-medium" style={{ color: "#374151" }}>{g._id || "Unknown"}</span>
-                      <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>${g.revenue.toFixed(2)}</span>
+                      <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${g.revenue.toFixed(2)}</span>
                     </div>
                     <div className="h-2 bg-[#F7F8FC] rounded-full overflow-hidden">
                       <motion.div
@@ -325,7 +325,7 @@ export default function Analytics() {
         </div>
 
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1B1B1B" }}>Top Products</h3>
+          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Top Products</h3>
           {topProducts.length === 0 ? (
             <p className="text-slate-300 text-sm">No data</p>
           ) : (
@@ -345,7 +345,7 @@ export default function Analytics() {
                         </div>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#1B1B1B" }}>{p.name}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "#1e1b4b" }}>{p.name}</p>
                     <p className="text-xs text-slate-400">{p.game} · {p.totalSold} sold</p>
                   </div>
                   <span className="text-sm font-semibold text-emerald-600">${p.revenue.toFixed(2)}</span>

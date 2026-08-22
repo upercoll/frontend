@@ -18,7 +18,7 @@ export default function StatCard({ title, value, subtitle, change, icon: Icon, i
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      className="bg-[#1B1B1B] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors"
+      className="bg-[#0d1f3c] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors"
     >
       <div className="flex items-start justify-between mb-4">
         <div className={cn("w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center", iconColor.replace("text-", "text-"))}>

@@ -39,11 +39,11 @@ function SectionHeading({ icon: Icon, title, action }: { icon: React.ComponentTy
   return (
     <div className="flex items-center gap-3 mb-5">
       <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(226,35,26,0.15)", border: "1px solid rgba(226,35,26,0.2)" }}>
-        <Icon className="w-3.5 h-3.5" style={{ color: "#D8D2C4" }} />
+        style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.2)" }}>
+        <Icon className="w-3.5 h-3.5" style={{ color: "#a5b4fc" }} />
       </div>
       <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{title}</h2>
-      <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(226,35,26,0.2), transparent)" }} />
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(99,102,241,0.2), transparent)" }} />
       {action}
     </div>
   );
@@ -51,7 +51,7 @@ function SectionHeading({ icon: Icon, title, action }: { icon: React.ComponentTy
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   pending: { bg: "rgba(245,158,11,0.12)", text: "#fbbf24" },
-  active:  { bg: "rgba(226,35,26,0.12)",  text: "#D8D2C4" },
+  active:  { bg: "rgba(99,102,241,0.12)",  text: "#a5b4fc" },
   claimed: { bg: "rgba(16,185,129,0.12)",  text: "#6ee7b7" },
   ended:   { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.4)" },
 };
@@ -93,16 +93,16 @@ export default function AgentDashboard() {
   const recentOrders = ordersData?.data.orders || [];
 
   const AGENT_STAT_CONFIGS = [
-    { label: "Claims Done", value: agentStats?.completedClaims || 0, color: "#00B06F", format: String },
-    { label: "Completion Rate", value: `${completionRate}%`, color: "#E2231A" },
+    { label: "Claims Done", value: agentStats?.completedClaims || 0, color: "#10b981", format: String },
+    { label: "Completion Rate", value: `${completionRate}%`, color: "#6366f1" },
     { label: "Avg Response", value: msToTime(agentStats?.avgResponseTimeMs || 0), color: "#f59e0b" },
-    { label: "Rating", value: agentStats?.rating?.count ? `${agentStats.rating.average.toFixed(1)}★` : "—", color: "#FF7A72" },
+    { label: "Rating", value: agentStats?.rating?.count ? `${agentStats.rating.average.toFixed(1)}★` : "—", color: "#a78bfa" },
   ];
 
   const ADMIN_STAT_CONFIGS = [
-    { key: "totalRevenue",   label: "Total Revenue",  color: "#00B06F", format: (v: number) => `$${v.toFixed(2)}`, icon: DollarSign },
-    { key: "ordersToday",    label: "Orders Today",   color: "#E2231A", format: String,                             icon: ShoppingBag },
-    { key: "totalOrders",    label: "Total Orders",   color: "#DB2777", format: String,                             icon: Zap },
+    { key: "totalRevenue",   label: "Total Revenue",  color: "#10b981", format: (v: number) => `$${v.toFixed(2)}`, icon: DollarSign },
+    { key: "ordersToday",    label: "Orders Today",   color: "#6366f1", format: String,                             icon: ShoppingBag },
+    { key: "totalOrders",    label: "Total Orders",   color: "#8b5cf6", format: String,                             icon: Zap },
     { key: "onlineAgents",   label: "Online Agents",  color: "#22d3ee", format: String,                             icon: Activity },
   ];
 
@@ -111,7 +111,7 @@ export default function AgentDashboard() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(226,35,26,0.7)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(99,102,241,0.7)" }}>
             Team Panel
           </p>
           <h1 className="text-2xl font-extrabold text-white tracking-tight">
@@ -169,7 +169,7 @@ export default function AgentDashboard() {
         <div>
           <SectionHeading icon={BarChart3} title="Overview" action={
             <Link href="/admin/analytics">
-              <span className="flex items-center gap-1 text-xs font-semibold cursor-pointer hover:opacity-80" style={{ color: "#D8D2C4" }}>
+              <span className="flex items-center gap-1 text-xs font-semibold cursor-pointer hover:opacity-80" style={{ color: "#a5b4fc" }}>
                 Full Analytics <ArrowRight className="w-3.5 h-3.5" />
               </span>
             </Link>
@@ -217,8 +217,8 @@ export default function AgentDashboard() {
             <Link href="/panel/queue">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className="p-5 rounded-2xl cursor-pointer"
-                style={{ background: "linear-gradient(135deg,rgba(226,35,26,0.25) 0%,rgba(219,39,119,0.15) 100%)", border: "1px solid rgba(226,35,26,0.3)" }}>
-                <MessageSquare className="w-8 h-8 mb-3" style={{ color: "#D8D2C4" }} />
+                style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.25) 0%,rgba(139,92,246,0.15) 100%)", border: "1px solid rgba(99,102,241,0.3)" }}>
+                <MessageSquare className="w-8 h-8 mb-3" style={{ color: "#a5b4fc" }} />
                 <p className="text-white font-bold text-lg">Claim Queue</p>
                 <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>Answer incoming claim requests</p>
               </motion.div>
@@ -256,7 +256,7 @@ export default function AgentDashboard() {
           <div className="px-5 pt-5 pb-1">
             <SectionHeading icon={ShoppingBag} title="Recent Orders" action={
               <Link href="/admin/orders">
-                <span className="flex items-center gap-1 text-xs font-semibold cursor-pointer hover:opacity-80" style={{ color: "#D8D2C4" }}>
+                <span className="flex items-center gap-1 text-xs font-semibold cursor-pointer hover:opacity-80" style={{ color: "#a5b4fc" }}>
                   View all <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </Link>
@@ -287,8 +287,8 @@ export default function AgentDashboard() {
                   {recentOrders.map((order: any, i: number) => {
                     const statusColors: Record<string, { bg: string; text: string }> = {
                       pending: { bg: "rgba(245,158,11,0.12)", text: "#fbbf24" },
-                      paid: { bg: "rgba(226,35,26,0.12)", text: "#D8D2C4" },
-                      delivering: { bg: "rgba(219,39,119,0.12)", text: "#F2EEE5" },
+                      paid: { bg: "rgba(99,102,241,0.12)", text: "#a5b4fc" },
+                      delivering: { bg: "rgba(139,92,246,0.12)", text: "#c4b5fd" },
                       completed: { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7" },
                       cancelled: { bg: "rgba(239,68,68,0.12)", text: "#fca5a5" },
                       refunded: { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.4)" },
@@ -299,7 +299,7 @@ export default function AgentDashboard() {
                       <tr key={order._id} className="transition-colors" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                         <td className="px-4 py-3.5">
                           <Link href={`/admin/orders/${order._id}`}>
-                            <span className="text-sm font-mono font-semibold cursor-pointer hover:opacity-80" style={{ color: "#D8D2C4" }}>
+                            <span className="text-sm font-mono font-semibold cursor-pointer hover:opacity-80" style={{ color: "#a5b4fc" }}>
                               {order.orderNumber}
                             </span>
                           </Link>
@@ -307,7 +307,7 @@ export default function AgentDashboard() {
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-lg flex-shrink-0 overflow-hidden"
-                              style={{ background: order.items?.[0]?.productSnapshot?.gradient ? `linear-gradient(135deg,${order.items[0].productSnapshot.gradient.from},${order.items[0].productSnapshot.gradient.to})` : "rgba(226,35,26,0.15)" }}>
+                              style={{ background: order.items?.[0]?.productSnapshot?.gradient ? `linear-gradient(135deg,${order.items[0].productSnapshot.gradient.from},${order.items[0].productSnapshot.gradient.to})` : "rgba(99,102,241,0.15)" }}>
                               {order.items?.[0]?.productSnapshot?.imageUrl
                                 ? <img src={order.items[0].productSnapshot.imageUrl} className="w-full h-full object-cover" alt="" />
                                 : <div className="w-full h-full flex items-center justify-center">
@@ -355,8 +355,8 @@ export default function AgentDashboard() {
                 <motion.div key={session._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
                   className="flex items-center gap-4 px-5 py-3.5">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(226,35,26,0.1)" }}>
-                    <MessageSquare className="w-4 h-4" style={{ color: "#D8D2C4" }} />
+                    style={{ background: "rgba(99,102,241,0.1)" }}>
+                    <MessageSquare className="w-4 h-4" style={{ color: "#a5b4fc" }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{session.robloxUsername}</p>

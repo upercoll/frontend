@@ -49,8 +49,8 @@ export default function CollabDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#FF7A72" }} />
+        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function CollabDashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
+        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
         <p className="text-red-400">{error}</p>
       </div>
     );
@@ -71,17 +71,17 @@ export default function CollabDashboard() {
   const totalEarnings: number = data?.totalEarnings || 0;
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(226,35,26,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(219,39,119,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="relative z-10">
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(219,39,119,0.12)" }}>
+          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
               style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 0 16px rgba(124,58,237,0.35)" }}>
@@ -116,8 +116,8 @@ export default function CollabDashboard() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.05 }}
             className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { label: "Assigned Products", value: products.length, icon: Package, color: "#FF7A72" },
-              { label: "Paid Orders", value: sales.length, icon: ShoppingBag, color: "#6DB8FF", sub: "from paid customers only" },
+              { label: "Assigned Products", value: products.length, icon: Package, color: "#a78bfa" },
+              { label: "Paid Orders", value: sales.length, icon: ShoppingBag, color: "#60a5fa", sub: "from paid customers only" },
               { label: "Pending Commission", value: `$${unpaidEarnings.toFixed(2)}`, icon: DollarSign, color: "#4ade80", sub: "owed to you, not yet paid out" },
             ].map((stat, i) => (
               <div key={i} className="rounded-2xl p-5"
@@ -143,7 +143,7 @@ export default function CollabDashboard() {
             </div>
             {products.length === 0 ? (
               <div className="p-12 text-center">
-                <Package className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#FF7A72" }} />
+                <Package className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#a78bfa" }} />
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No products assigned yet.</p>
               </div>
             ) : (
@@ -164,7 +164,7 @@ export default function CollabDashboard() {
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
-                              style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#E2231A" }}>
+                              style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#6366f1" }}>
                               {cp.product?.imageUrl
                                 ? <img src={cp.product.imageUrl} className="w-full h-full object-cover" alt="" />
                                 : <div className="w-full h-full flex items-center justify-center"><Package className="w-3.5 h-3.5 text-white/60" /></div>}
@@ -173,7 +173,7 @@ export default function CollabDashboard() {
                           </div>
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(226,35,26,0.15)", color: "#D8D2C4" }}>{cp.product?.game || "-"}</span>
+                          <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc" }}>{cp.product?.game || "-"}</span>
                         </td>
                         <td className="px-5 py-3.5 text-sm text-white/70">${cp.product?.price?.toFixed(2)}</td>
                       </tr>
@@ -195,7 +195,7 @@ export default function CollabDashboard() {
             </div>
             {sales.length === 0 ? (
               <div className="p-12 text-center">
-                <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#6DB8FF" }} />
+                <ShoppingBag className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#60a5fa" }} />
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No sales yet.</p>
               </div>
             ) : (
@@ -217,7 +217,7 @@ export default function CollabDashboard() {
                         onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
                         onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                         <td className="px-5 py-3.5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{fmt(s.orderDate)}</td>
-                        <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#D8D2C4" }}>#{s.orderNumber?.replace("RB-", "")}</td>
+                        <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#a5b4fc" }}>#{s.orderNumber?.replace("RB-", "")}</td>
                         <td className="px-5 py-3.5 text-sm text-white/80">{s.productName}</td>
                         <td className="px-5 py-3.5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{s.quantity}</td>
                         <td className="px-5 py-3.5 text-sm font-semibold text-white">${(s.salePrice ?? s.unitPrice * s.quantity).toFixed(2)}</td>

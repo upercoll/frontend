@@ -37,7 +37,7 @@ export default function DelivererDashboard() {
 
   const stats = [
     { label: "Unpaid Revenue",   value: fmt(d?.totalRevenue ?? 0),    icon: DollarSign, color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.15)" },
-    { label: "Unpaid Commission",value: fmt(d?.totalCommission ?? 0),  icon: TrendingUp, color: "#FF7A72", bg: "rgba(167,139,250,0.08)",  border: "rgba(167,139,250,0.15)" },
+    { label: "Unpaid Commission",value: fmt(d?.totalCommission ?? 0),  icon: TrendingUp, color: "#a78bfa", bg: "rgba(167,139,250,0.08)",  border: "rgba(167,139,250,0.15)" },
     { label: "Total Delivered",  value: d?.totalDelivered ?? 0,        icon: Package,    color: "#7dd3fc", bg: "rgba(125,211,252,0.08)",  border: "rgba(125,211,252,0.15)" },
   ];
 

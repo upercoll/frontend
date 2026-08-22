@@ -45,7 +45,7 @@ export default function ClaimQueuePopup({ popup, onAnswer, onDecline, ownerMode 
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.85, y: 20 }}
       transition={{ type: "spring", damping: 20, stiffness: 300 }}
-      className="fixed bottom-6 right-6 z-50 w-80 bg-[#1B1B1B] border border-blue-500/30 rounded-2xl shadow-2xl overflow-hidden"
+      className="fixed bottom-6 right-6 z-50 w-80 bg-[#0d1f3c] border border-blue-500/30 rounded-2xl shadow-2xl overflow-hidden"
     >
       <div className="h-1 bg-white/5">
         <motion.div

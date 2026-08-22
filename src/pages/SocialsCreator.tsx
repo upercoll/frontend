@@ -49,7 +49,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6" style={{ border: "1px solid #E9EBF5" }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Invite Social Creator</h3>
+          <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Invite Social Creator</h3>
           <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600"
             style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
             <X className="w-3.5 h-3.5" />
@@ -99,7 +99,7 @@ function InviteModal({ onClose }: { onClose: () => void }) {
             </button>
             <button type="submit" disabled={loading}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-              style={{ background: "#E2231A" }}>
+              style={{ background: "#4f46e5" }}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
               Send Invite
             </button>
@@ -132,9 +132,9 @@ function MarkPaidModal({ creator, pendingPayout, onClose }: { creator: any; pend
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6" style={{ border: "1px solid #E9EBF5" }}
         onClick={e => e.stopPropagation()}>
-        <h3 className="font-bold text-base mb-2" style={{ color: "#1B1B1B" }}>Confirm Payout</h3>
+        <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
         <p className="text-sm text-slate-500 mb-5">
-          Mark <strong className="text-emerald-700">${pendingPayout.toFixed(2)}</strong> as paid to <strong style={{ color: "#1B1B1B" }}>{creator.name}</strong>?
+          Mark <strong className="text-emerald-700">${pendingPayout.toFixed(2)}</strong> as paid to <strong style={{ color: "#1e1b4b" }}>{creator.name}</strong>?
           This marks all their accepted videos as paid and cannot be undone.
         </p>
         {err && (
@@ -187,12 +187,12 @@ function DeleteModal({ creator, onClose }: { creator: any; onClose: () => void }
             <Trash2 className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>Remove Creator</h3>
+            <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Remove Creator</h3>
             <p className="text-xs text-slate-400">{creator.name}</p>
           </div>
         </div>
         <p className="text-sm text-slate-500 mb-5">
-          This permanently removes <strong style={{ color: "#1B1B1B" }}>{creator.name}</strong> from the social creator portal.
+          This permanently removes <strong style={{ color: "#1e1b4b" }}>{creator.name}</strong> from the social creator portal.
           Creators with pending or unpaid submissions cannot be removed.
         </p>
         {err && (
@@ -227,7 +227,7 @@ function FeaturedYouTubersPanel() {
   const creators: any[] = (data as any)?.data?.creators || [];
   const add = async (e: React.FormEvent) => { e.preventDefault(); if (!username.trim()) return; setSaving(true); setError(""); try { await adminApi.socials.addFeaturedYouTuber(username.trim()); setUsername(""); qc.invalidateQueries({ queryKey: ["featured-youtubers"] }); } catch (e: any) { setError(e.message || "Could not add YouTuber"); } finally { setSaving(false); } };
   return <section className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-    <div className="flex items-center gap-2"><Video className="w-4 h-4 text-red-500" /><div><h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>YouTubers That Trust Us</h3><p className="text-xs text-slate-500 mt-0.5">Adding a channel here automatically publishes it to the homepage carousel.</p></div></div>
+    <div className="flex items-center gap-2"><Video className="w-4 h-4 text-red-500" /><div><h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>YouTubers That Trust Us</h3><p className="text-xs text-slate-500 mt-0.5">Adding a channel here automatically publishes it to the homepage carousel.</p></div></div>
     <form onSubmit={add} className="flex gap-2 mt-4"><input value={username} onChange={e => setUsername(e.target.value)} placeholder="YouTube username, e.g. MrBeast" className="flex-1 rounded-lg px-3 py-2 text-sm" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }} /><button disabled={saving} className="px-3 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-60" style={{ background: "#dc2626" }}>{saving ? "Fetching…" : "Add YouTuber"}</button></form>
     {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
     {!isLoading && creators.length > 0 && <div className="grid sm:grid-cols-2 gap-2 mt-4">{creators.map(c => <div key={c._id} className="flex items-center gap-2 rounded-lg p-2" style={{ background: "#F9FAFB" }}>{c.avatarUrl ? <img src={c.avatarUrl} className="w-8 h-8 rounded-full object-cover" /> : <Video className="w-8 h-8 p-2 rounded-full text-white bg-red-500" />}<span className="text-xs font-semibold flex-1 truncate">{c.name || c.username}</span><button onClick={() => adminApi.socials.deleteFeaturedYouTuber(c._id).then(() => qc.invalidateQueries({ queryKey: ["featured-youtubers"] }))} className="text-xs text-red-600">Remove</button></div>)}</div>}
@@ -260,12 +260,12 @@ export default function SocialsCreators() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Social Creators</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Social Creators</h2>
           <p className="text-sm text-slate-500 mt-0.5">{creators.length} creator{creators.length !== 1 ? "s" : ""}</p>
         </div>
         <button onClick={() => setInviteOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: "#E2231A" }}>
+          style={{ background: "#4f46e5" }}>
           <UserPlus className="w-4 h-4" /> Invite Creator
         </button>
       </div>
@@ -310,7 +310,7 @@ export default function SocialsCreators() {
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                     <td className="px-5 py-4">
-                      <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{c.name}</p>
+                      <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{c.name}</p>
                       <p className="text-xs text-slate-400">{c.email}</p>
                       {c.payoutRequestedAt && <p className="text-[10px] font-bold text-amber-600 mt-1">● Payout requested</p>}
                     </td>
@@ -323,7 +323,7 @@ export default function SocialsCreators() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5">
                         <Video className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{s.total ?? 0}</span>
+                        <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{s.total ?? 0}</span>
                         {s.paid > 0 && <span className="text-xs text-slate-400">({s.paid} paid)</span>}
                       </div>
                     </td>
@@ -373,7 +373,7 @@ export default function SocialsCreators() {
                         </button>
                         <Link href={`/admin/socials/creators/${c._id}`}>
                           <button className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                            style={{ background: "#EEF2FF", color: "#E2231A" }}
+                            style={{ background: "#EEF2FF", color: "#4f46e5" }}
                             onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "#E0E7FF"}
                             onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "#EEF2FF"}>
                             <ChevronRight className="w-4 h-4" />

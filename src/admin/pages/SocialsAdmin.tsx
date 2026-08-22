@@ -110,7 +110,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
         onClick={e => e.stopPropagation()}>
 
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Set Rate</h3>
+          <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Set Rate</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
             <X className="w-4 h-4" />
           </button>
@@ -125,7 +125,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
                 </div>}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-sm truncate" style={{ color: "#1B1B1B" }}>{sub.title || "Untitled"}</p>
+            <p className="font-semibold text-sm truncate" style={{ color: "#1e1b4b" }}>{sub.title || "Untitled"}</p>
             <p className="text-xs text-slate-400">{sub.channelName}</p>
             <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
               <span>👁 {fmtNum(sub.views)}</span>
@@ -142,7 +142,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
                 <button key={rt} onClick={() => setForm(f => ({ ...f, rateType: rt }))}
                   className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={form.rateType === rt
-                    ? { background: "#1B1B1B", color: "#fff" }
+                    ? { background: "#1e1b4b", color: "#fff" }
                     : { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
                   {rt === "per_1k" ? "Rate Per 1K Views" : "Fixed Per Video"}
                 </button>
@@ -160,7 +160,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
                   onChange={e => setForm(f => ({ ...f, ratePerView: e.target.value }))}
                   placeholder="e.g. 0.001"
                   className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
+                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                 />
               </div>
               {computedAmount && (
@@ -180,7 +180,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
                   onChange={e => setForm(f => ({ ...f, offeredAmount: e.target.value }))}
                   placeholder="e.g. 50.00"
                   className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
+                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                 />
               </div>
               {computedRPV && views > 0 && (
@@ -199,7 +199,7 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
               onChange={e => setForm(f => ({ ...f, adminNote: e.target.value }))}
               placeholder="e.g. Great video, thanks!"
               className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
+              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
             />
           </div>
 
@@ -369,7 +369,7 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
             {sub.status !== "paid" && (
               <button onClick={() => { onClose(); onSetRate(); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white ml-auto"
-                style={{ background: sub.offeredAmount ? "#E2231A" : "#1B1B1B" }}>
+                style={{ background: sub.offeredAmount ? "#4f46e5" : "#1e1b4b" }}>
                 <BarChart2 className="w-3.5 h-3.5" />
                 {sub.offeredAmount ? "Edit Rate" : "Set Rate"}
               </button>
@@ -412,7 +412,7 @@ export default function SocialsAdmin() {
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Video Submissions</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
           <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
         </div>
         <button
@@ -432,7 +432,7 @@ export default function SocialsAdmin() {
             <button key={t.value} onClick={() => setStatusFilter(t.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
               style={statusFilter === t.value
-                ? { background: "#1B1B1B", color: "#fff" }
+                ? { background: "#1e1b4b", color: "#fff" }
                 : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
               {t.label}
             </button>
@@ -447,7 +447,7 @@ export default function SocialsAdmin() {
             <button key={p.value} onClick={() => setPlatformFilter(p.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
               style={platformFilter === p.value
-                ? { background: "#1B1B1B", color: "#fff" }
+                ? { background: "#1e1b4b", color: "#fff" }
                 : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
               {p.value === "youtube" && <YouTubeIcon className="w-3 h-3" />}
               {p.value === "tiktok" && <TikTokIcon className="w-3 h-3" />}
@@ -501,7 +501,7 @@ export default function SocialsAdmin() {
                               </div>}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate max-w-[200px]" style={{ color: "#1B1B1B" }}>{s.title || "Untitled"}</p>
+                          <p className="text-sm font-semibold truncate max-w-[200px]" style={{ color: "#1e1b4b" }}>{s.title || "Untitled"}</p>
                           <p className="text-xs text-slate-400 truncate">{s.channelName}</p>
                           <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400 mt-0.5">
                             <Eye className="w-2.5 h-2.5" /> Click to view analytics
@@ -510,7 +510,7 @@ export default function SocialsAdmin() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell">
-                      <p className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{s.collaborator?.name || "—"}</p>
+                      <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{s.collaborator?.name || "—"}</p>
                       <p className="text-xs text-slate-400">{s.collaborator?.email}</p>
                     </td>
                     <td className="px-5 py-3.5 hidden md:table-cell">
@@ -521,7 +521,7 @@ export default function SocialsAdmin() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 hidden md:table-cell">
-                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: "#1B1B1B" }}>
+                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: "#1e1b4b" }}>
                         <Eye className="w-3.5 h-3.5 text-slate-400" />
                         {fmtNum(s.views)}
                       </div>
@@ -543,7 +543,7 @@ export default function SocialsAdmin() {
                       {s.status !== "paid" && (
                         <button onClick={() => setRatingModal(s)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1B1B1B", color: s.offeredAmount ? "#E2231A" : "#fff" }}>
+                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
                           {s.offeredAmount ? "Edit Rate" : "Set Rate"}
                         </button>
                       )}

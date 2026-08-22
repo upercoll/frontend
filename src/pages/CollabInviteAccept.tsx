@@ -79,7 +79,7 @@ export default function CollabInviteAccept() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
+      style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
@@ -93,7 +93,7 @@ export default function CollabInviteAccept() {
         <div className="rounded-2xl p-8" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", backdropFilter: "blur(20px)" }}>
           {step === "loading" && (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#FF7A72" }} />
+              <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
             </div>
           )}
 
@@ -139,7 +139,7 @@ export default function CollabInviteAccept() {
                   />
                   <button type="button" onClick={sendCode} disabled={loading || codeSent}
                     className="px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all"
-                    style={{ background: codeSent ? "rgba(74,222,128,0.15)" : "rgba(124,58,237,0.3)", border: "1px solid rgba(124,58,237,0.4)", color: codeSent ? "#4ade80" : "#F2EEE5" }}>
+                    style={{ background: codeSent ? "rgba(74,222,128,0.15)" : "rgba(124,58,237,0.3)", border: "1px solid rgba(124,58,237,0.4)", color: codeSent ? "#4ade80" : "#c4b5fd" }}>
                     {codeSent ? "Sent ✓" : loading ? "..." : "Send"}
                   </button>
                 </div>

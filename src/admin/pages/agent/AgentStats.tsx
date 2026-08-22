@@ -43,7 +43,7 @@ export default function AgentStats() {
 
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-24 bg-[#1B1B1B] rounded-xl animate-pulse" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-24 bg-[#0d1f3c] rounded-xl animate-pulse" />)}
         </div>
       ) : (
         <>
@@ -59,23 +59,23 @@ export default function AgentStats() {
           </div>
 
           {monthlyData.length > 0 && (
-            <div className="bg-[#1B1B1B] border border-white/5 rounded-xl p-5">
+            <div className="bg-[#0d1f3c] border border-white/5 rounded-xl p-5">
               <h3 className="text-white font-semibold mb-4">Monthly Performance</h3>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
                   <XAxis dataKey="month" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "#161616", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#e2e8f0" }} />
-                  <Bar dataKey="claims" name="Total" fill="#0A84FF" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="completed" name="Completed" fill="#00B06F" radius={[4, 4, 0, 0]} />
+                  <Tooltip contentStyle={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#e2e8f0" }} />
+                  <Bar dataKey="claims" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
 
           {recentSessions.length > 0 && (
-            <div className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
+            <div className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
               <div className="px-5 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Recent Sessions</h3>
               </div>

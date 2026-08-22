@@ -56,12 +56,12 @@ export default function Monitor() {
         </div>
         <div className="flex gap-3">
           <select value={gameFilter} onChange={(e) => setGameFilter(e.target.value)}
-            className="bg-[#1B1B1B] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+            className="bg-[#0d1f3c] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
             <option value="">All Games</option>
             {games.map((g: Game) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
           </select>
           <select value={onlineFilter} onChange={(e) => setOnlineFilter(e.target.value)}
-            className="bg-[#1B1B1B] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+            className="bg-[#0d1f3c] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
             <option value="">All Agents</option>
             <option value="true">Online Only</option>
             <option value="false">Offline Only</option>
@@ -70,7 +70,7 @@ export default function Monitor() {
       </div>
 
       {activeClaims.length > 0 && (
-        <div className="bg-[#1B1B1B] border border-blue-500/20 rounded-xl overflow-hidden">
+        <div className="bg-[#0d1f3c] border border-blue-500/20 rounded-xl overflow-hidden">
           <div className="px-5 py-3 border-b border-white/5 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
             <p className="text-white text-sm font-semibold">Active Claim Chats</p>
@@ -129,7 +129,7 @@ export default function Monitor() {
           { label: "Completed", value: agents.reduce((s, a) => s + (a.stats?.completedClaims || 0), 0), icon: CheckCircle, color: "text-emerald-400" },
         ].map((item, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="bg-[#1B1B1B] border border-white/5 rounded-xl p-4">
+            className="bg-[#0d1f3c] border border-white/5 rounded-xl p-4">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
                 <item.icon className={`w-4 h-4 ${item.color}`} />
@@ -144,14 +144,14 @@ export default function Monitor() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}</div>
       ) : agents.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
           <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p>No agents found</p>
         </div>
       ) : (
-        <div className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
+        <div className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -183,7 +183,7 @@ export default function Monitor() {
                             </div>
                           )}
                           {agent.stats?.isOnline && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#1B1B1B]" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#0d1f3c]" />
                           )}
                         </div>
                         <div>

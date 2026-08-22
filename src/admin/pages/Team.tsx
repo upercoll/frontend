@@ -83,7 +83,7 @@ export default function Team() {
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Team Members</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Team Members</h2>
           <p className="text-sm text-slate-500 mt-0.5">Manage your team and their access permissions</p>
         </div>
         <div className="flex items-center gap-3">
@@ -101,7 +101,7 @@ export default function Team() {
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => { setShowInvite(true); setError(""); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
-            style={{ background: "#1B1B1B" }}
+            style={{ background: "#1e1b4b" }}
           >
             <UserPlus className="w-4 h-4" />
             Invite Member
@@ -139,7 +139,7 @@ export default function Team() {
                       <img src={member.profile.profilePicture} className="w-10 h-10 rounded-full object-cover" alt="" />
                     ) : (
                       <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg,#E2231A,#E2231A)" }}>
+                        style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
                         <span className="text-white text-sm font-bold">
                           {(member.profile?.displayName || member.email)[0].toUpperCase()}
                         </span>
@@ -152,7 +152,7 @@ export default function Team() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm" style={{ color: "#1B1B1B" }}>
+                      <p className="font-semibold text-sm" style={{ color: "#1e1b4b" }}>
                         {member.profile?.displayName || member.email.split("@")[0]}
                       </p>
                       {member.profile?.username && (
@@ -251,7 +251,7 @@ export default function Team() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Invite Team Member</h3>
+                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Invite Team Member</h3>
                 <button
                   onClick={() => setShowInvite(false)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -270,7 +270,7 @@ export default function Team() {
                       type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required
                       placeholder="team@example.com"
                       className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                     />
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export default function Team() {
                   <select
                     value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} required
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
                   >
                     <option value="">Select a role</option>
                     {roles.map((r: AdminRole) => <option key={r._id} value={r._id}>{r.name}</option>)}
@@ -296,7 +296,7 @@ export default function Team() {
                           key={g.slug} type="button" onClick={() => toggleGame(g.slug)}
                           className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
                           style={inviteGames.includes(g.slug)
-                            ? { background: "#EEF2FF", borderColor: "#D8D2C4", color: "#B41811" }
+                            ? { background: "#EEF2FF", borderColor: "#A5B4FC", color: "#4338CA" }
                             : { background: "#F7F8FC", borderColor: "#E9EBF5", color: "#6b7280" }}
                         >
                           {g.name}
@@ -324,7 +324,7 @@ export default function Team() {
                     type="submit" disabled={inviteMut.isPending}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="flex-1 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1B1B1B" }}
+                    style={{ background: "#1e1b4b" }}
                   >
                     {inviteMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                     Send Invitation

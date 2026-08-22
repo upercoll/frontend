@@ -61,12 +61,12 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
         <div className="flex items-start justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
+              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
               <Archive className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Stock Request — {req.game}</h3>
+                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Stock Request — {req.game}</h3>
                 <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold"
                   style={{ background: st.bg, color: st.text, border: `1px solid ${st.border}` }}>
                   <StatusIcon className="w-3 h-3" />
@@ -87,7 +87,7 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
 
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl p-3 text-center" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-              <p className="text-lg font-bold" style={{ color: "#1B1B1B" }}>
+              <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>
                 {req.items.reduce((s, i) => s + i.quantity, 0)}
               </p>
               <p className="text-xs text-slate-400">Total Units</p>
@@ -103,7 +103,7 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
               </div>
             ) : (
               <div className="rounded-xl p-3 text-center" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-                <p className="text-lg font-bold" style={{ color: "#1B1B1B" }}>{req.items.length}</p>
+                <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>{req.items.length}</p>
                 <p className="text-xs text-slate-400">Product Types</p>
               </div>
             )}
@@ -163,16 +163,16 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
                               </div>
                             )}
                             <div>
-                              <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{item.productName}</p>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#E2231A" }}>
+                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{item.productName}</p>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
                                 {item.game || req.game}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: "#1B1B1B" }}>×{item.quantity}</td>
+                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: "#1e1b4b" }}>×{item.quantity}</td>
                         <td className="px-3 py-3 text-sm text-slate-400">${storePrice.toFixed(2)}</td>
-                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: hasCustom ? "#E2231A" : "#374151" }}>
+                        <td className="px-3 py-3 text-sm font-semibold" style={{ color: hasCustom ? "#6366f1" : "#374151" }}>
                           ${(hasCustom ? item.customPrice! : storePrice).toFixed(2)}
                         </td>
                         <td className="px-3 py-3">
@@ -209,21 +209,21 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
                   <div className="flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                     <span className="text-slate-500">Stocked by:</span>
-                    <span className="font-semibold" style={{ color: "#1B1B1B" }}>{(req as any).stockedBy}</span>
+                    <span className="font-semibold" style={{ color: "#1e1b4b" }}>{(req as any).stockedBy}</span>
                   </div>
                 )}
                 {(req as any).approvedAt && (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                     <span className="text-slate-500">Approved:</span>
-                    <span className="font-semibold" style={{ color: "#1B1B1B" }}>{fmtDate((req as any).approvedAt)}</span>
+                    <span className="font-semibold" style={{ color: "#1e1b4b" }}>{fmtDate((req as any).approvedAt)}</span>
                   </div>
                 )}
                 {(req as any).stockedAt && (
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                     <span className="text-slate-500">Stocked:</span>
-                    <span className="font-semibold" style={{ color: "#1B1B1B" }}>{fmtDate((req as any).stockedAt)}</span>
+                    <span className="font-semibold" style={{ color: "#1e1b4b" }}>{fmtDate((req as any).stockedAt)}</span>
                   </div>
                 )}
                 {(req as any).rejectedAt && (
@@ -278,7 +278,7 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
                             onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                             onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                             <td className="px-4 py-3">
-                              <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{d.robloxUsername}</p>
+                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{d.robloxUsername}</p>
                               {d.orderRef && (
                                 <p className="text-xs text-slate-400 mt-0.5">Order #{d.orderRef}</p>
                               )}
@@ -394,7 +394,7 @@ export default function StockerHistory() {
             <motion.button
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-              style={{ background: "rgba(226,35,26,0.9)", border: "1px solid rgba(226,35,26,0.4)" }}
+              style={{ background: "rgba(99,102,241,0.9)", border: "1px solid rgba(99,102,241,0.4)" }}
             >
               <ClipboardList className="w-4 h-4" />
               New Request
@@ -449,7 +449,7 @@ export default function StockerHistory() {
                 <Archive className="w-12 h-12 mx-auto mb-3" style={{ color: "rgba(255,255,255,0.15)" }} />
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>No requests found</p>
                 <Link href="/stocker/request">
-                  <span className="text-sm cursor-pointer" style={{ color: "#D8D2C4" }}>Submit your first request →</span>
+                  <span className="text-sm cursor-pointer" style={{ color: "#a5b4fc" }}>Submit your first request →</span>
                 </Link>
               </div>
             ) : (
@@ -468,7 +468,7 @@ export default function StockerHistory() {
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
+                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
                         <Archive className="w-5 h-5 text-white" />
                       </div>
 
@@ -495,7 +495,7 @@ export default function StockerHistory() {
                         {req.status === "approved" && (
                           <div className="flex items-center gap-2">
                             <div className="text-xs px-2 py-1 rounded-lg font-medium"
-                              style={{ background: "rgba(59,130,246,0.15)", color: "#6DB8FF", border: "1px solid rgba(59,130,246,0.2)" }}>
+                              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.2)" }}>
                               ${req.paymentAmount.toFixed(2)} payment
                             </div>
                             <button
@@ -557,7 +557,7 @@ export default function StockerHistory() {
           >
             {salesLoading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#FF7A72" }} />
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#a78bfa" }} />
               </div>
             ) : deliveries.length === 0 ? (
               <div className="text-center py-20 rounded-2xl"
@@ -587,13 +587,13 @@ export default function StockerHistory() {
                         <span className="font-semibold text-sm text-white">{delivery.robloxUsername}</span>
                         {delivery.game && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(226,35,26,0.15)", color: "#D8D2C4" }}>
+                            style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc" }}>
                             {delivery.game}
                           </span>
                         )}
                         {delivery.orderRef && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(59,130,246,0.15)", color: "#6DB8FF" }}>
+                            style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa" }}>
                             #{delivery.orderRef}
                           </span>
                         )}

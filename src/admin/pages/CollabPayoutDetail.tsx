@@ -45,7 +45,7 @@ export default function CollabPayoutDetail() {
         </Link>
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Payout Detail</h2>
+            <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Payout Detail</h2>
             <span className="text-xs px-2.5 py-1 rounded-full font-semibold border"
               style={{ background: "#D1FAE5", color: "#065F46", borderColor: "#6EE7B7" }}>
               Manually Paid
@@ -61,21 +61,21 @@ export default function CollabPayoutDetail() {
             <DollarSign className="w-4 h-4 text-slate-400" />
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Payout Total</p>
           </div>
-          <p className="text-2xl font-bold" style={{ color: "#1B1B1B" }}>${payoutTotal.toFixed(2)} USD</p>
+          <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>${payoutTotal.toFixed(2)} USD</p>
         </div>
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-4 h-4 text-slate-400" />
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Order Total</p>
           </div>
-          <p className="text-2xl font-bold" style={{ color: "#1B1B1B" }}>${orderTotal.toFixed(2)} USD</p>
+          <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>${orderTotal.toFixed(2)} USD</p>
         </div>
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-4 h-4 text-slate-400" />
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Expenses Total</p>
           </div>
-          <p className="text-2xl font-bold" style={{ color: "#1B1B1B" }}>$0.00 USD</p>
+          <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>$0.00 USD</p>
         </div>
       </div>
 
@@ -100,11 +100,11 @@ export default function CollabPayoutDetail() {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                   <td className="px-5 py-3.5 text-sm text-slate-500">{fmt(s.orderDate)}</td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-medium" style={{ color: "#E2231A" }}>#{s.orderNumber?.replace("RB-", "")}</span>
+                    <span className="text-sm font-medium" style={{ color: "#4f46e5" }}>#{s.orderNumber?.replace("RB-", "")}</span>
                   </td>
-                  <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#1B1B1B" }}>{s.productName}</td>
+                  <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#1e1b4b" }}>{s.productName}</td>
                   <td className="px-5 py-3.5 text-sm text-slate-400">{s.sku || "-"}</td>
-                  <td className="px-5 py-3.5 text-sm font-semibold" style={{ color: "#1B1B1B" }}>${s.earnings?.toFixed(2)} USD</td>
+                  <td className="px-5 py-3.5 text-sm font-semibold" style={{ color: "#1e1b4b" }}>${s.earnings?.toFixed(2)} USD</td>
                 </tr>
               ))}
             </tbody>

@@ -8,7 +8,7 @@ import type { AdminRole } from "../types";
 
 type ModalMode = "create" | "edit" | null;
 
-const COLORS = ["#E2231A", "#0A84FF", "#DB2777", "#DB2777", "#00B06F", "#f59e0b", "#ef4444", "#06b6d4"];
+const COLORS = ["#6366f1", "#3b82f6", "#8b5cf6", "#ec4899", "#10b981", "#f59e0b", "#ef4444", "#06b6d4"];
 
 export default function Roles() {
   const qc = useQueryClient();
@@ -101,7 +101,7 @@ export default function Roles() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-40 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />
+            <div key={i} className="h-40 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />
           ))}
         </div>
       ) : roles.length === 0 ? (
@@ -117,7 +117,7 @@ export default function Roles() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-[#1B1B1B] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors group"
+              className="bg-[#0d1f3c] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -179,7 +179,7 @@ export default function Roles() {
             onClick={closeModal}>
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-2xl my-8 overflow-hidden"
+              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-2xl my-8 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
@@ -194,12 +194,12 @@ export default function Roles() {
                   <div>
                     <label className="text-slate-300 text-sm font-medium block mb-1.5">Role Name *</label>
                     <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Claim Agent"
-                      className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                   </div>
                   <div>
                     <label className="text-slate-300 text-sm font-medium block mb-1.5">Description</label>
                     <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description"
-                      className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                   </div>
                 </div>
 
@@ -237,7 +237,7 @@ export default function Roles() {
                         onChange={(e) => setGameInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGame(); } }}
                         placeholder="e.g. Blox Fruits"
-                        className="flex-1 bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50"
+                        className="flex-1 bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50"
                       />
                       <button type="button" onClick={addGame}
                         className="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-sm transition-colors border border-blue-500/20">
@@ -285,7 +285,7 @@ export default function Roles() {
             className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
             onClick={() => setDeleteConfirm(null)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-2xl p-6 w-full max-w-sm"
+              className="bg-[#0d1f3c] border border-white/10 rounded-2xl p-6 w-full max-w-sm"
               onClick={(e) => e.stopPropagation()}>
               <Trash2 className="w-10 h-10 text-red-400 mx-auto mb-3" />
               <h3 className="text-white font-semibold text-center mb-1">Delete Role?</h3>

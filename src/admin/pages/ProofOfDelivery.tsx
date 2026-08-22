@@ -53,7 +53,7 @@ export default function ProofOfDeliveryPage() {
           </p>
         </div>
         <select value={viewedFilter} onChange={(e) => { setViewedFilter(e.target.value); setPage(1); }}
-          className="bg-[#1B1B1B] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
+          className="bg-[#0d1f3c] border border-white/10 text-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none">
           <option value="">All Submissions</option>
           <option value="false">Unviewed</option>
           <option value="true">Viewed</option>
@@ -62,7 +62,7 @@ export default function ProofOfDeliveryPage() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-48 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-48 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}
         </div>
       ) : proofs.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
@@ -75,7 +75,7 @@ export default function ProofOfDeliveryPage() {
             const imgs = getImageUrls(proof);
             return (
               <motion.div key={proof._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className={cn("bg-[#1B1B1B] border rounded-xl overflow-hidden cursor-pointer hover:border-white/15 transition-colors group",
+                className={cn("bg-[#0d1f3c] border rounded-xl overflow-hidden cursor-pointer hover:border-white/15 transition-colors group",
                   !proof.viewedByOwner ? "border-blue-500/30" : "border-white/5")}
                 onClick={() => openProof(proof)}>
                 <div className="aspect-video relative overflow-hidden bg-black/30">
@@ -134,11 +134,11 @@ export default function ProofOfDeliveryPage() {
           <p className="text-slate-500 text-sm">Page {page} of {pages}</p>
           <div className="flex gap-2">
             <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
-              className="w-8 h-8 rounded-lg bg-[#1B1B1B] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
+              className="w-8 h-8 rounded-lg bg-[#0d1f3c] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}
-              className="w-8 h-8 rounded-lg bg-[#1B1B1B] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
+              className="w-8 h-8 rounded-lg bg-[#0d1f3c] border border-white/5 disabled:opacity-30 flex items-center justify-center text-slate-400 hover:text-white">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -153,7 +153,7 @@ export default function ProofOfDeliveryPage() {
               className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
               onClick={() => setSelectedProof(null)}>
               <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-                className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
                 onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 flex-shrink-0">
                   <h3 className="text-white font-semibold">Proof of Delivery</h3>

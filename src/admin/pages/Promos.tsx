@@ -123,7 +123,7 @@ export default function Promos() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-20 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}
         </div>
       ) : promos.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
@@ -140,7 +140,7 @@ export default function Promos() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="bg-[#1B1B1B] border border-white/5 rounded-xl p-4 flex items-center gap-4"
+                className="bg-[#0d1f3c] border border-white/5 rounded-xl p-4 flex items-center gap-4"
               >
                 <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
                   {promo.discountType === "percent" ? (
@@ -215,7 +215,7 @@ export default function Promos() {
             className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto"
             onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden my-4"
+              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden my-4"
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Create Promo Code</h3>
@@ -231,7 +231,7 @@ export default function Promos() {
                     onChange={(e) => setCode(e.target.value.toUpperCase())}
                     placeholder="SUMMER20"
                     maxLength={30}
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
                 <div>
@@ -240,7 +240,7 @@ export default function Promos() {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Summer sale 20% off"
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -249,7 +249,7 @@ export default function Promos() {
                     <select
                       value={discountType}
                       onChange={(e) => setDiscountType(e.target.value as "percent" | "fixed")}
-                      className="w-full bg-[#161616] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     >
                       <option value="percent">Percent (%)</option>
                       <option value="fixed">Fixed ($)</option>
@@ -267,7 +267,7 @@ export default function Promos() {
                       min="0"
                       max={discountType === "percent" ? "100" : undefined}
                       step="0.01"
-                      className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
                 </div>
@@ -281,7 +281,7 @@ export default function Promos() {
                       placeholder="0"
                       min="0"
                       step="0.01"
-                      className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
                   <div>
@@ -292,7 +292,7 @@ export default function Promos() {
                       onChange={(e) => setMaxUses(e.target.value)}
                       placeholder="Unlimited"
                       min="1"
-                      className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
                 </div>
@@ -304,7 +304,7 @@ export default function Promos() {
                     onChange={(e) => setMaxUsesPerUser(e.target.value)}
                     placeholder="Unlimited"
                     min="1"
-                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -314,7 +314,7 @@ export default function Promos() {
                       type="datetime-local"
                       value={startsAt}
                       onChange={(e) => setStartsAt(e.target.value)}
-                      className="w-full bg-[#161616] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
                   <div>
@@ -323,7 +323,7 @@ export default function Promos() {
                       type="datetime-local"
                       value={expiresAt}
                       onChange={(e) => setExpiresAt(e.target.value)}
-                      className="w-full bg-[#161616] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
                 </div>

@@ -74,7 +74,7 @@ export default function AdminProfilePage() {
     <div className="p-6 max-w-[700px] mx-auto space-y-6">
       <h2 className="text-white font-semibold text-lg">My Profile</h2>
 
-      <div className="bg-[#1B1B1B] border border-white/5 rounded-2xl p-6">
+      <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6">
         <h3 className="text-white font-medium mb-5">Profile Information</h3>
 
         <div className="flex flex-col items-center gap-3 mb-6">
@@ -105,7 +105,7 @@ export default function AdminProfilePage() {
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full bg-[#161616] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
             </div>
           </div>
           <div>
@@ -113,7 +113,7 @@ export default function AdminProfilePage() {
             <div className="relative">
               <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-                className="w-full bg-[#161616] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
             </div>
           </div>
           <div>
@@ -121,7 +121,7 @@ export default function AdminProfilePage() {
             <div className="relative">
               <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
               <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={200} rows={3}
-                className="w-full bg-[#161616] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
+                className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
             </div>
           </div>
           {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
@@ -140,7 +140,7 @@ export default function AdminProfilePage() {
       </div>
 
       {!isOwner && (
-        <div className="bg-[#1B1B1B] border border-white/5 rounded-2xl p-6">
+        <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6">
           <h3 className="text-white font-medium mb-5">Change Password</h3>
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
@@ -148,7 +148,7 @@ export default function AdminProfilePage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input type={showCurrent ? "text" : "password"} value={currentPass} onChange={(e) => setCurrentPass(e.target.value)} required
-                  className="w-full bg-[#161616] border border-white/10 text-white rounded-xl pl-10 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                  className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl pl-10 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                 <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
                   {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -159,7 +159,7 @@ export default function AdminProfilePage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input type={showNew ? "text" : "password"} value={newPass} onChange={(e) => setNewPass(e.target.value)} required minLength={8}
-                  className="w-full bg-[#161616] border border-white/10 text-white rounded-xl pl-10 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                  className="w-full bg-[#0a1628] border border-white/10 text-white rounded-xl pl-10 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                 <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
                   {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -181,7 +181,7 @@ export default function AdminProfilePage() {
         </div>
       )}
 
-      <div className="bg-[#1B1B1B] border border-white/5 rounded-2xl p-6">
+      <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6">
         <h3 className="text-white font-medium mb-3">Account Info</h3>
         <div className="space-y-3">
           {[

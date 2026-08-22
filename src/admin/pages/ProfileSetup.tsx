@@ -48,7 +48,7 @@ export default function ProfileSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-[#131313] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#060d1a] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/5 rounded-full blur-3xl" />
@@ -67,7 +67,7 @@ export default function ProfileSetup() {
           <p className="text-slate-400 text-sm mt-1">Welcome! Let's get you set up before you dive in.</p>
         </div>
 
-        <div className="bg-[#1B1B1B] border border-white/5 rounded-2xl p-6 shadow-xl">
+        <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="flex flex-col items-center gap-3 mb-2">
               <div className="relative">
@@ -98,7 +98,7 @@ export default function ProfileSetup() {
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required placeholder="Your name"
-                  className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50" />
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50" />
               </div>
             </div>
 
@@ -107,7 +107,7 @@ export default function ProfileSetup() {
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} placeholder="username"
-                  className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50" />
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50" />
               </div>
               <p className="text-slate-600 text-xs mt-1">Lowercase letters, numbers, and underscores only</p>
             </div>
@@ -117,7 +117,7 @@ export default function ProfileSetup() {
               <div className="relative">
                 <FileText className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                 <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={200} placeholder="Tell the team a bit about yourself..." rows={3}
-                  className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 resize-none" />
               </div>
               <p className="text-slate-600 text-xs mt-1 text-right">{bio.length}/200</p>
             </div>

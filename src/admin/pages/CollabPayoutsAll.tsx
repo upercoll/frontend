@@ -19,7 +19,7 @@ export default function CollabPayoutsAll() {
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       <div>
-        <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>All Payouts</h2>
+        <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>All Payouts</h2>
         <p className="text-sm text-slate-500 mt-0.5">{payouts.length} total payouts</p>
       </div>
 
@@ -52,7 +52,7 @@ export default function CollabPayoutsAll() {
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                   <td className="px-5 py-4">
-                    <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{p.collaborator?.name}</p>
+                    <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{p.collaborator?.name}</p>
                     <p className="text-xs text-slate-400">{p.collaborator?.email}</p>
                   </td>
                   <td className="px-5 py-4">
@@ -65,11 +65,11 @@ export default function CollabPayoutsAll() {
                   <td className="px-5 py-4 text-sm text-slate-500">{fmt(p.paidAt)}</td>
                   <td className="px-5 py-4 text-sm text-slate-500">{p.sales?.length || 0}</td>
                   <td className="px-5 py-4">
-                    <span className="text-sm font-bold" style={{ color: "#1B1B1B" }}>${p.amount?.toFixed(2)} USD</span>
+                    <span className="text-sm font-bold" style={{ color: "#1e1b4b" }}>${p.amount?.toFixed(2)} USD</span>
                   </td>
                   <td className="px-5 py-4">
                     <Link href={`/admin/collaboration/payouts/${p.collaborator?._id}/detail/${p._id}`}>
-                      <button className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#EEF2FF", color: "#E2231A" }}>
+                      <button className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                     </Link>

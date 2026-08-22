@@ -95,8 +95,8 @@ function StockedDeliveries({ stockerId, reqItems }: { stockerId: string; reqItem
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                     <td className="px-3 py-2.5">
-                      <p className="font-semibold" style={{ color: "#1B1B1B" }}>{d.robloxUsername}</p>
-                      {d.game && <span className="text-[10px] px-1 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#E2231A" }}>{d.game}</span>}
+                      <p className="font-semibold" style={{ color: "#1e1b4b" }}>{d.robloxUsername}</p>
+                      {d.game && <span className="text-[10px] px-1 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#4f46e5" }}>{d.game}</span>}
                     </td>
                     <td className="px-3 py-2.5 text-slate-500">
                       {d.orderRef ? <span style={{ color: "#1D4ED8" }}>#{d.orderRef}</span> : "—"}
@@ -179,17 +179,17 @@ function RequestRow({ req }: { req: StockRequest }) {
       <div className="p-4">
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
+            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
             <Archive className="w-5 h-5 text-white" />
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-sm" style={{ color: "#1B1B1B" }}>
+              <span className="font-semibold text-sm" style={{ color: "#1e1b4b" }}>
                 {req.stockerName || req.stockerEmail}
               </span>
               <span className="text-xs text-slate-300">·</span>
-              <span className="text-xs font-medium" style={{ background: "#EEF2FF", color: "#E2231A", padding: "1px 8px", borderRadius: 6 }}>{req.game}</span>
+              <span className="text-xs font-medium" style={{ background: "#EEF2FF", color: "#4f46e5", padding: "1px 8px", borderRadius: 6 }}>{req.game}</span>
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
                 style={{ background: st.bg, color: st.text, border: `1px solid ${st.border}` }}>
                 {req.status}
@@ -210,7 +210,7 @@ function RequestRow({ req }: { req: StockRequest }) {
               <>
                 <button onClick={() => setApproveOpen(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                  style={{ background: "#00B06F" }}>
+                  style={{ background: "#10B981" }}>
                   <Check className="w-3 h-3" /> Approve
                 </button>
                 <button onClick={() => setRejectOpen(true)}
@@ -225,7 +225,7 @@ function RequestRow({ req }: { req: StockRequest }) {
                 onClick={() => { if (window.confirm("Mark as stocked? This will add stock to the products.")) stockedMut.mutate({}); }}
                 disabled={stockedMut.isPending}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                style={{ background: "#E2231A" }}>
+                style={{ background: "#6366f1" }}>
                 {stockedMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Package className="w-3 h-3" />}
                 Mark Stocked
               </button>
@@ -310,18 +310,18 @@ function RequestRow({ req }: { req: StockRequest }) {
                                     </div>
                                   )}
                                   <div>
-                                    <span className="font-semibold" style={{ color: "#1B1B1B" }}>{item.productName}</span>
+                                    <span className="font-semibold" style={{ color: "#1e1b4b" }}>{item.productName}</span>
                                     <div>
-                                      <span className="text-[10px] px-1 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#E2231A" }}>
+                                      <span className="text-[10px] px-1 py-0.5 rounded" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
                                         {(item as any).game || req.game}
                                       </span>
                                     </div>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-3 py-2.5 font-semibold" style={{ color: "#1B1B1B" }}>×{item.quantity}</td>
+                              <td className="px-3 py-2.5 font-semibold" style={{ color: "#1e1b4b" }}>×{item.quantity}</td>
                               <td className="px-3 py-2.5 text-slate-400">${storePrice.toFixed(2)}</td>
-                              <td className="px-3 py-2.5 font-semibold" style={{ color: hasCustom ? "#E2231A" : "#374151" }}>
+                              <td className="px-3 py-2.5 font-semibold" style={{ color: hasCustom ? "#6366f1" : "#374151" }}>
                                 ${(hasCustom ? item.customPrice! : storePrice).toFixed(2)}
                               </td>
                               <td className="px-3 py-2.5">
@@ -358,14 +358,14 @@ function RequestRow({ req }: { req: StockRequest }) {
                         <div className="flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5 text-slate-400" />
                           <span className="text-slate-500">Stocked by:</span>
-                          <span className="font-semibold" style={{ color: "#1B1B1B" }}>{(req as any).stockedBy}</span>
+                          <span className="font-semibold" style={{ color: "#1e1b4b" }}>{(req as any).stockedBy}</span>
                         </div>
                       )}
                       {(req as any).stockedAt && (
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-slate-400" />
                           <span className="text-slate-500">Stocked:</span>
-                          <span className="font-semibold" style={{ color: "#1B1B1B" }}>{fmtDate((req as any).stockedAt)}</span>
+                          <span className="font-semibold" style={{ color: "#1e1b4b" }}>{fmtDate((req as any).stockedAt)}</span>
                         </div>
                       )}
                     </div>
@@ -398,21 +398,21 @@ function RequestRow({ req }: { req: StockRequest }) {
                   <input type="number" min="0" step="0.01" placeholder="0.00"
                     value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
-                    style={{ background: "white", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
+                    style={{ background: "white", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
                 </div>
                 <div className="flex-1">
                   <label className="text-xs font-medium text-slate-500 block mb-1">Admin notes (optional)</label>
                   <input type="text" placeholder="Note…"
                     value={adminNotes} onChange={e => setAdminNotes(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
-                    style={{ background: "white", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
+                    style={{ background: "white", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
                 </div>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => approveMut.mutate({ paymentAmount: parseFloat(paymentAmount) || 0, adminNotes })}
                   disabled={approveMut.isPending}
                   className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-60"
-                  style={{ background: "#00B06F" }}>
+                  style={{ background: "#10B981" }}>
                   {approveMut.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
                   Confirm Approval
                 </button>
@@ -432,7 +432,7 @@ function RequestRow({ req }: { req: StockRequest }) {
               <input type="text" placeholder="Reason for rejection (optional)"
                 value={adminNotes} onChange={e => setAdminNotes(e.target.value)}
                 className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
-                style={{ background: "white", border: "1px solid #FECACA", color: "#1B1B1B" }} />
+                style={{ background: "white", border: "1px solid #FECACA", color: "#1e1b4b" }} />
               <div className="flex gap-2">
                 <button onClick={() => rejectMut.mutate({ adminNotes })}
                   disabled={rejectMut.isPending}
@@ -469,7 +469,7 @@ export default function StockRequests() {
     <div className="p-6 space-y-5 max-w-[960px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Stock Requests</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Stock Requests</h2>
           <p className="text-sm text-slate-500 mt-0.5">
             Review and manage stocker inventory requests — expand to see full item details and customer deliveries
           </p>

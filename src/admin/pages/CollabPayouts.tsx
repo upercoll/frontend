@@ -67,7 +67,7 @@ export default function CollabPayouts() {
           </button>
         </Link>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Payouts — {collab?.name}</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Payouts — {collab?.name}</h2>
           <p className="text-sm text-slate-500">{collab?.email}</p>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function CollabPayouts() {
 
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>Payout History</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Payout History</h3>
         </div>
 
         {payouts.length === 0 ? (
@@ -130,7 +130,7 @@ export default function CollabPayouts() {
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                   <td className="px-5 py-3.5 text-sm font-medium text-slate-500">#{payouts.length - idx}</td>
-                  <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#1B1B1B" }}>Payment to {collab?.name}</td>
+                  <td className="px-5 py-3.5 text-sm font-medium" style={{ color: "#1e1b4b" }}>Payment to {collab?.name}</td>
                   <td className="px-5 py-3.5">
                     <span className="text-xs px-2.5 py-1 rounded-full font-semibold border"
                       style={{ background: "#D1FAE5", color: "#065F46", borderColor: "#6EE7B7" }}>
@@ -140,11 +140,11 @@ export default function CollabPayouts() {
                   <td className="px-5 py-3.5 text-sm text-slate-500">{fmt(p.periodEnd)}</td>
                   <td className="px-5 py-3.5 text-sm text-slate-500">{fmt(p.paidAt)}</td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-bold" style={{ color: "#1B1B1B" }}>${p.amount.toFixed(2)} USD</span>
+                    <span className="text-sm font-bold" style={{ color: "#1e1b4b" }}>${p.amount.toFixed(2)} USD</span>
                   </td>
                   <td className="px-5 py-3.5">
                     <Link href={`/admin/collaboration/payouts/${id}/detail/${p._id}`}>
-                      <button className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#EEF2FF", color: "#E2231A" }}>
+                      <button className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#EEF2FF", color: "#4f46e5" }}>
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                     </Link>

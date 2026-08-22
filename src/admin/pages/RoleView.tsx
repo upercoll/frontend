@@ -86,13 +86,13 @@ export default function RoleView() {
       <div className="relative w-72">
         <button
           onClick={() => setDropdownOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#1B1B1B] border border-white/10 rounded-xl text-sm text-white hover:border-blue-500/40 transition-colors"
+          className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[#0d1f3c] border border-white/10 rounded-xl text-sm text-white hover:border-blue-500/40 transition-colors"
         >
           {selectedRole ? (
             <div className="flex items-center gap-2">
               <span
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                style={{ background: selectedRole.color || "#0A84FF" }}
+                style={{ background: selectedRole.color || "#3b82f6" }}
               />
               <span>{selectedRole.name}</span>
             </div>
@@ -108,7 +108,7 @@ export default function RoleView() {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              className="absolute top-full mt-1 w-full bg-[#1B1B1B] border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl"
+              className="absolute top-full mt-1 w-full bg-[#0d1f3c] border border-white/10 rounded-xl overflow-hidden z-20 shadow-xl"
             >
               {roles.map((role) => (
                 <button
@@ -119,7 +119,7 @@ export default function RoleView() {
                     selectedRoleId === role._id ? "text-blue-400" : "text-slate-300"
                   )}
                 >
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: role.color || "#0A84FF" }} />
+                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: role.color || "#3b82f6" }} />
                   <span className="flex-1">{role.name}</span>
                   {role.description && <span className="text-slate-500 text-xs truncate max-w-[120px]">{role.description}</span>}
                 </button>
@@ -140,11 +140,11 @@ export default function RoleView() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
-            <div className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
+            <div className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-white/5 flex items-center gap-2">
                 <div
                   className="w-5 h-5 rounded-full flex-shrink-0"
-                  style={{ background: selectedRole.color || "#0A84FF" }}
+                  style={{ background: selectedRole.color || "#3b82f6" }}
                 />
                 <p className="text-white text-sm font-semibold">{selectedRole.name}</p>
                 <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">
@@ -202,7 +202,7 @@ export default function RoleView() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
+            <div className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
               <div className="px-5 py-3.5 border-b border-white/5">
                 <p className="text-white text-sm font-semibold">Permission Breakdown</p>
                 <p className="text-slate-500 text-xs mt-0.5">

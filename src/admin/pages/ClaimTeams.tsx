@@ -95,7 +95,7 @@ export default function ClaimTeams() {
 
             return (
               <motion.div key={game._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
+                className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
 
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5">
                   {game.imageUrl ? (
