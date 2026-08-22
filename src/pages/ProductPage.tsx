@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, ShoppingCart, Zap, Star,
-  ChevronLeft, ChevronRight, Package, Loader2, ArrowRight,
-  Flame, Check, Minus, Plus, Tag,
+  ArrowLeft, ShoppingCart, Zap, KeyRound, ShieldCheck, MessageCircle,
+  Star, Tag, Check, ChevronLeft, ChevronRight, Package, Loader2,
+  Flame, ArrowRight, ChevronDown, Minus, Plus,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import Footer from "@/components/Footer";
@@ -34,9 +34,9 @@ interface ApiProduct {
   tags?: string[];
 }
 
-interface FAQItemT { q: string; a: string; }
+interface FAQItem { q: string; a: string; }
 
-const sharedFAQ: FAQItemT[] = [
+const sharedFAQ: FAQItem[] = [
   { q: "Is RBstars legit?", a: "Yes — RBstars is a trusted, independent marketplace for Roblox game items. We have thousands of satisfied customers and use secure payment systems to protect every transaction." },
   { q: "What is your refund policy?", a: "We offer refunds within 24 hours if your item was not delivered. Contact our live chat support and we'll resolve it immediately." },
   { q: "Can I get free items?", a: "Occasionally we run promotions and giveaways on our Discord and social media. Follow us to stay updated. You can also use discount codes for 10% off your purchase." },
@@ -44,39 +44,63 @@ const sharedFAQ: FAQItemT[] = [
   { q: "What if I don't receive my item?", a: "If delivery takes longer than 15 minutes, open our live chat. We have 24/7 support and will either resend your items or issue a full refund immediately — no questions asked." },
 ];
 
-function FAQSection({ items }: { items: FAQItemT[] }) {
+function ParticleField({ count = 16 }: { count?: number }) {
+  const particles = useMemo(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      left: 5 + (i * 4.3 + (i % 3) * 7.1) % 90,
+      top: 3 + (i * 7.7 + (i % 5) * 11.3) % 94,
+      size: 2 + (i % 4) * 0.9,
+      dur: 6 + (i % 7) * 1.4,
+      delay: -(i * 0.65),
+      op: 0.1 + (i % 4) * 0.05,
+    })), [count]
+  );
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div key={p.id} className="rb-particle" style={{
+          left: `${p.left}%`, top: `${p.top}%`, width: `${p.size}px`, height: `${p.size}px`,
+          background: `rgba(165,180,252,${p.op})`, animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
+          ["--p-op" as string]: p.op,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function FAQSection({ items }: { items: FAQItem[] }) {
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <div className="relative rounded-2xl overflow-hidden bg-white mt-8"
-      style={{ border: "2px solid #131313", boxShadow: "5px 5px 0 #131313" }}>
-      <div className="p-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full font-mono text-[10px] font-semibold uppercase tracking-[0.18em] mb-3"
-          style={{ border: "2px solid #131313", color: "#131313" }}>
-          <span className="tilt-sq !w-2 !h-2" /> FAQ
+    <div className="relative rounded-2xl overflow-hidden"
+      style={{ background: "rgba(255,255,255,0.03)", border: "1.5px solid rgba(165,180,252,0.12)" }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 50% 40% at 80% 100%, rgba(79,70,229,0.08) 0%, transparent 65%)" }} />
+      <div className="relative z-10 p-4">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-semibold mb-3"
+          style={{ background: "rgba(79,70,229,0.15)", color: "#A5B4FC", border: "1px solid rgba(165,180,252,0.2)" }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#818CF8]" /> FAQ
         </div>
-        <h3 className="font-display text-lg uppercase mb-3">
-          Common <span className="text-outline">Questions</span>
+        <h3 className="font-display text-base font-extrabold mb-3 text-white">
+          Common <span style={{ color: "#A5B4FC" }}>Questions</span>
         </h3>
         <div className="flex flex-col gap-2">
           {items.map((item, i) => (
             <div key={i} className="rounded-xl overflow-hidden"
-              style={{ border: "2px solid #131313", background: open === i ? "#F7F4EC" : "#fff" }}>
+              style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.1)" }}>
               <button onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between px-3.5 py-3 text-left gap-3">
-                <span className="text-xs font-bold leading-snug">{item.q}</span>
-                <motion.div animate={{ rotate: open === i ? 45 : 0 }} transition={{ duration: 0.22 }}
-                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: open === i ? "#E2231A" : "#F2EEE5", border: "1.5px solid #131313" }}>
-                  <span className="relative block w-2.5 h-[2px]" style={{ background: open === i ? "#fff" : "#131313" }}>
-                    <span className="absolute inset-0 rotate-90" style={{ background: "#131313", opacity: open === i ? 0 : 1 }} />
-                  </span>
+                className="w-full flex items-center justify-between px-3.5 py-3 text-left gap-3"
+                style={{ background: open === i ? "rgba(79,70,229,0.1)" : "transparent" }}>
+                <span className="text-xs font-semibold leading-snug text-white">{item.q}</span>
+                <motion.div animate={{ rotate: open === i ? 180 : 0 }} transition={{ duration: 0.22 }} className="flex-shrink-0">
+                  <ChevronDown size={14} color="#818CF8" />
                 </motion.div>
               </button>
               <AnimatePresence>
                 {open === i && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
-                    <p className="px-3.5 pb-3 text-xs leading-relaxed" style={{ color: "#6B655C" }}>{item.a}</p>
+                    <p className="px-3.5 pb-3 text-xs leading-relaxed" style={{ color: "#94A3B8" }}>{item.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -88,15 +112,12 @@ function FAQSection({ items }: { items: FAQItemT[] }) {
   );
 }
 
-/* Shared related-card renderer */
-function RelatedCardBase({ product, onNavigate, gameBgImageUrl, wide }: {
-  product: ApiProduct; onNavigate: (id: string) => void; gameBgImageUrl?: string; wide?: boolean;
-}) {
+/* Large product card matching GamePage grid style */
+function LargeRelatedCard({ product, index, onNavigate, gameBgImageUrl }: { product: ApiProduct; index: number; onNavigate: (id: string) => void; gameBgImageUrl?: string }) {
   const { addItem } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const savings = product.originalPrice && !product.outOfStock
     ? (product.originalPrice - product.price).toFixed(2) : null;
-  const c1 = product.gradient?.from || "#E2231A";
 
   function handleAdd(e: React.MouseEvent) {
     e.stopPropagation();
@@ -114,63 +135,141 @@ function RelatedCardBase({ product, onNavigate, gameBgImageUrl, wide }: {
       onClick={() => onNavigate(product._id)}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5, boxShadow: "5px 6px 0 #131313" }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={`flex flex-col rounded-2xl overflow-hidden cursor-pointer relative h-full bg-white ${wide ? "" : "flex-shrink-0 w-[150px]"}`}
-      style={{ border: "2px solid #131313", transition: "box-shadow .2s ease" }}
+      transition={{ delay: index * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.025 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex flex-col rounded-xl overflow-hidden cursor-pointer relative h-full"
+      style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.14)" }}
     >
       <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
         {gameBgImageUrl ? (
           <div className="absolute inset-0">
-            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0" style={{ background: "rgba(19,19,19,.22)" }} />
+            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
           </div>
         ) : (
-          <>
-            <div className="absolute inset-0" style={{ background: c1 }} />
-            <div className="absolute inset-0 pattern-dots-light opacity-60" />
-          </>
+          <div className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+            <div className="absolute inset-0 opacity-10"
+              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+          </div>
         )}
         {product.imageUrl && (
           gameBgImageUrl ? (
-            <img src={product.imageUrl} alt={product.name}
-              className="absolute object-contain pointer-events-none"
-              style={{ inset: "8% 10%", width: "80%", height: "84%", filter: "drop-shadow(0 5px 12px rgba(0,0,0,.55))" }} />
+            <img src={product.imageUrl} alt={product.name} className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }} />
           ) : (
-            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
           )
         )}
         {product.outOfStock ? (
-          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-white"
-            style={{ border: "1.5px solid #131313", color: "#131313" }}>
-            Out of Stock
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
+            style={{ background: "rgba(15,12,46,0.85)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.2)" }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#6b5c8a]" /> Out of Stock
           </div>
         ) : savings ? (
-          <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[9px] font-bold text-white -rotate-3"
-            style={{ background: "#E2231A", border: "1.5px solid #131313" }}>
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+            style={{ background: "#dc2626", color: "white" }}>
             <Tag size={8} /> Save ${savings}
           </div>
         ) : null}
         {!product.outOfStock && (
-          <motion.button whileTap={{ scale: 0.85 }} onClick={handleAdd} aria-label="Add to cart"
-            className="absolute bottom-2 right-2 z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 transition-colors"
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleAdd}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold whitespace-nowrap"
             style={{
-              background: justAdded ? "#00B06F" : "#E2231A",
-              borderColor: "#131313",
-              color: "#fff",
-              boxShadow: "2px 2px 0 rgba(19,19,19,.9)",
+              background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
+              border: "1.5px solid rgba(255,255,255,0.25)",
+              transition: "background 0.25s ease",
             }}>
-            {justAdded ? <Check size={14} strokeWidth={3} /> : <ShoppingCart size={14} />}
+            {justAdded ? (<><Check size={11} color="white" strokeWidth={3} /> Added!</>) : (<><ShoppingCart size={11} color="white" /> Add to Cart</>)}
           </motion.button>
         )}
       </div>
       <div className="p-3">
         <div className="flex items-baseline gap-1.5 mb-0.5">
-          <span className="font-display text-lg leading-none">${product.price.toFixed(2)}</span>
-          {product.originalPrice && <span className="text-[11px] line-through" style={{ color: "#8a8375" }}>${product.originalPrice.toFixed(2)}</span>}
+          <span className="text-sm font-extrabold font-display" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
+          {product.originalPrice && <span className="text-[11px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>}
         </div>
-        <p className="text-[11px] font-medium leading-tight line-clamp-2" style={{ color: "#55503F" }}>{product.name}</p>
+        <p className="text-[11px] font-medium leading-tight line-clamp-2" style={{ color: "rgba(255,255,255,0.88)" }}>{product.name}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+/* Small horizontal scroll card (original compact style) */
+function RelatedCard({ product, index, onNavigate, gameBgImageUrl }: { product: ApiProduct; index: number; onNavigate: (id: string) => void; gameBgImageUrl?: string }) {
+  const { addItem } = useCart();
+  const [justAdded, setJustAdded] = useState(false);
+  const savings = product.originalPrice && !product.outOfStock
+    ? (product.originalPrice - product.price).toFixed(2) : null;
+
+  function handleAdd(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (product.outOfStock) return;
+    addItem({
+      id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
+      gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
+    });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1300);
+  }
+
+  return (
+    <motion.div
+      onClick={() => onNavigate(product._id)}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-30px" }}
+      transition={{ delay: index * 0.04, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ scale: 1.025 }}
+      whileTap={{ scale: 0.98 }}
+      className="flex-shrink-0 flex flex-col rounded-xl overflow-hidden cursor-pointer relative"
+      style={{ width: 148, background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.14)" }}
+    >
+      <div className="relative overflow-hidden" style={{ paddingTop: "80%" }}>
+        {gameBgImageUrl ? (
+          <div className="absolute inset-0">
+            <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+          </div>
+        ) : (
+          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+          </div>
+        )}
+        {product.imageUrl && (
+          gameBgImageUrl ? (
+            <img src={product.imageUrl} alt={product.name} className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }} />
+          ) : (
+            <img src={product.imageUrl} alt={product.name} className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+          )
+        )}
+        {product.outOfStock ? (
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
+            style={{ background: "rgba(15,12,46,0.85)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.2)" }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-[#6b5c8a]" /> Out of Stock
+          </div>
+        ) : savings ? (
+          <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+            style={{ background: "#dc2626", color: "white" }}>
+            <Tag size={8} /> Save ${savings}
+          </div>
+        ) : null}
+        {!product.outOfStock && (
+          <motion.button whileTap={{ scale: 0.95 }} onClick={handleAdd}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 h-7 px-2.5 rounded-full flex items-center gap-1.5 shadow-lg text-white text-[11px] font-semibold whitespace-nowrap"
+            style={{ background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)", border: "1.5px solid rgba(255,255,255,0.25)", transition: "background 0.25s ease" }}>
+            {justAdded ? (<><Check size={11} color="white" strokeWidth={3} /> Added!</>) : (<><ShoppingCart size={11} color="white" /> Add to Cart</>)}
+          </motion.button>
+        )}
+      </div>
+      <div className="p-3">
+        <div className="flex items-baseline gap-1.5 mb-0.5">
+          <span className="text-sm font-extrabold font-display" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
+          {product.originalPrice && <span className="text-[11px] line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>}
+        </div>
+        <p className="text-[11px] font-medium leading-tight line-clamp-2" style={{ color: "rgba(255,255,255,0.88)" }}>{product.name}</p>
       </div>
     </motion.div>
   );
@@ -191,6 +290,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [showAllRelated, setShowAllRelated] = useState(false);
   const [gameBgImageUrl, setGameBgImageUrl] = useState<string | undefined>(undefined);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!params.id) return;
@@ -226,9 +326,8 @@ export default function ProductPage() {
   const savings = product?.originalPrice && !product.outOfStock
     ? (product.originalPrice - product.price).toFixed(2) : null;
 
+  const categoryId = product && typeof product.category === "object" ? product.category._id : (product?.category as string | undefined);
   const categoryName = product && typeof product.category === "object" ? product.category.name : undefined;
-  const maxQty = product?.onHand ?? product?.stock ?? 1;
-  const artColor = product?.gradient?.from || "#E2231A";
 
   function handleAddToCart() {
     if (!product || product.outOfStock) return;
@@ -236,6 +335,7 @@ export default function ProductPage() {
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
       gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
     });
+    // Set qty in cart to match selected quantity
     const existingQty = items.find(i => i.id === product._id)?.quantity ?? 0;
     if (quantity > 1) {
       updateQty(product._id, existingQty + quantity);
@@ -266,11 +366,11 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center dot-grid" style={{ background: "#F2EEE5" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0F0C2E" }}>
         <div className="flex flex-col items-center gap-4">
           <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="w-10 h-10 rounded-full border-[3px]" style={{ borderColor: "#131313", borderTopColor: "transparent" }} />
-          <p className="font-mono text-xs font-medium uppercase tracking-[0.25em]" style={{ color: "#6B655C" }}>Loading product…</p>
+            className="w-10 h-10 rounded-full border-2 border-t-transparent" style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }} />
+          <p className="text-sm font-medium font-display" style={{ color: "#818CF8" }}>Loading product...</p>
         </div>
       </div>
     );
@@ -278,13 +378,13 @@ export default function ProductPage() {
 
   if (notFound || !product) {
     return (
-      <div className="min-h-screen dot-grid flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "#F2EEE5" }}>
-        <Package size={44} className="opacity-25" />
-        <h1 className="font-display text-2xl uppercase">Product not found</h1>
-        <p className="text-sm" style={{ color: "#6B655C" }}>This item may have been removed or is no longer available.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "#0F0C2E" }}>
+        <Package size={44} color="rgba(165,180,252,0.25)" />
+        <h1 className="text-lg font-bold font-display text-white">Product not found</h1>
+        <p className="text-sm" style={{ color: "#64748B" }}>This item may have been removed or is no longer available.</p>
         <motion.button whileTap={{ scale: 0.96 }} onClick={() => navigate("/")}
-          className="mt-2 px-6 py-3 rounded-full font-mono text-xs font-semibold uppercase tracking-wider text-white border-2"
-          style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "4px 4px 0 #131313" }}>
+          className="mt-2 px-5 py-2.5 rounded-full text-sm font-bold text-white font-display"
+          style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
           Back to Shop
         </motion.button>
       </div>
@@ -292,49 +392,55 @@ export default function ProductPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col dot-grid" style={{ background: "#F2EEE5" }}>
+    <div className="min-h-screen flex flex-col" style={{ background: "#0F0C2E" }}>
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 line-grid-dark" />
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${product.gradient.from}22 0%, transparent 70%)`, transform: "translate(30%, -30%)" }} />
+        <div className="absolute bottom-1/3 left-0 w-72 h-72 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${product.gradient.to}1a 0%, transparent 70%)`, transform: "translateX(-40%)" }} />
+      </div>
+      <div className="fixed inset-0 pointer-events-none z-0"><ParticleField count={18} /></div>
 
-      <div className="h-[104px] flex-shrink-0" />
+      <div className="h-20 flex-shrink-0" />
 
       {/* Back + breadcrumb */}
-      <div className="relative px-4 pb-2 flex-shrink-0 z-10">
-        <div className="max-w-6xl mx-auto flex items-center gap-3">
-          <motion.button whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.92 }} onClick={goBack}
-            aria-label="Go back"
-            className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 border-2 bg-white hover:bg-[#131313] hover:text-white transition-colors"
-            style={{ borderColor: "#131313" }}>
-            <ArrowLeft size={16} />
+      <div className="relative px-4 pt-1 pb-2 flex-shrink-0 z-10">
+        <div className="flex items-center gap-2">
+          <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} onClick={goBack}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(165,180,252,0.18)" }}>
+            <ArrowLeft size={15} color="#A5B4FC" />
           </motion.button>
-          <div className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider overflow-hidden" style={{ color: "#6B655C" }}>
-            <button onClick={() => navigate(`/game/${product.game}`)} className="truncate hover:text-[#E2231A] transition-colors capitalize">
+          <div className="flex items-center gap-1.5 text-xs font-medium overflow-hidden" style={{ color: "#64748B" }}>
+            <button onClick={() => navigate(`/game/${product.game}`)} className="truncate hover:text-[#A5B4FC] transition-colors capitalize">
               {product.game.split("-").join(" ")}
             </button>
-            {categoryName && <><span className="tilt-sq !w-1.5 !h-1.5 mx-1" /><span className="truncate">{categoryName}</span></>}
+            {categoryName && <><span>/</span><span className="truncate" style={{ color: "#A5B4FC" }}>{categoryName}</span></>}
           </div>
         </div>
       </div>
 
       <div className="flex-1 relative z-10 px-4 pb-40 md:pb-10">
-        <div className="md:grid md:grid-cols-2 md:gap-10 md:max-w-6xl md:mx-auto">
+        <div className="md:grid md:grid-cols-2 md:gap-8 md:max-w-5xl md:mx-auto">
 
           {/* Gallery */}
           <div>
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="relative overflow-hidden rounded-3xl mb-3"
-              style={{ paddingTop: "90%", border: "3px solid #131313", boxShadow: "7px 8px 0 #131313" }}
+              className="relative overflow-hidden rounded-2xl mb-2.5"
+              style={{ paddingTop: "90%", border: "1.5px solid rgba(165,180,252,0.16)" }}
             >
               {gameBgImageUrl ? (
                 <div className="absolute inset-0">
-                  <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0" style={{ background: "rgba(19,19,19,.22)" }} />
+                  <img src={gameBgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+                  <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
                 </div>
               ) : (
-                <>
-                  <div className="absolute inset-0" style={{ background: artColor }} />
-                  <div className="absolute inset-0 pattern-dots-light opacity-60" />
-                </>
+                <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from} 0%,${product.gradient.to} 100%)` }}>
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "22px 22px" }} />
+                </div>
               )}
               <AnimatePresence mode="wait">
                 {gallery[activeImage] && (
@@ -344,7 +450,7 @@ export default function ProductPage() {
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                       src={gallery[activeImage]} alt={product.name}
                       className="absolute object-contain"
-                      style={{ inset: "8% 10%", width: "80%", height: "84%", filter: "drop-shadow(0 5px 12px rgba(0,0,0,.55))" }}
+                      style={{ inset: "6% 8%", width: "84%", height: "88%", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }}
                     />
                   ) : (
                     <motion.img
@@ -358,49 +464,46 @@ export default function ProductPage() {
               </AnimatePresence>
 
               {product.outOfStock ? (
-                <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider bg-white"
-                  style={{ border: "2px solid #131313" }}>
-                  Out of Stock
+                <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: "rgba(15,12,46,0.88)", color: "#818CF8", border: "1px solid rgba(165,180,252,0.25)" }}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#6b5c8a]" /> Out of Stock
                 </div>
               ) : savings ? (
-                <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[11px] font-bold text-white -rotate-3"
-                  style={{ background: "#E2231A", border: "2px solid #131313" }}>
+                <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: "#dc2626", color: "white" }}>
                   <Tag size={11} /> Save ${savings}
                 </div>
               ) : null}
 
               {(product.featured || product.bestSeller) && (
-                <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-md font-mono text-[10px] font-bold uppercase tracking-wider rotate-3"
-                  style={{ background: "#FFC800", border: "2px solid #131313", color: "#131313" }}>
+                <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                  style={{ background: "rgba(245,158,11,0.92)", color: "#1E1B4B" }}>
                   <Flame size={11} /> Best Seller
                 </div>
               )}
 
               {gallery.length > 1 && (
                 <>
-                  <button onClick={() => setActiveImage(i => (i - 1 + gallery.length) % gallery.length)} aria-label="Previous image"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-white hover:bg-[#131313] hover:text-white transition-colors"
-                    style={{ border: "2px solid #131313" }}>
-                    <ChevronLeft size={16} />
+                  <button onClick={() => setActiveImage(i => (i - 1 + gallery.length) % gallery.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(15,12,46,0.65)", border: "1px solid rgba(165,180,252,0.25)" }}>
+                    <ChevronLeft size={16} color="#A5B4FC" />
                   </button>
-                  <button onClick={() => setActiveImage(i => (i + 1) % gallery.length)} aria-label="Next image"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-white hover:bg-[#131313] hover:text-white transition-colors"
-                    style={{ border: "2px solid #131313" }}>
-                    <ChevronRight size={16} />
+                  <button onClick={() => setActiveImage(i => (i + 1) % gallery.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(15,12,46,0.65)", border: "1px solid rgba(165,180,252,0.25)" }}>
+                    <ChevronRight size={16} color="#A5B4FC" />
                   </button>
                 </>
               )}
             </motion.div>
 
             {gallery.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+              <div ref={galleryRef} className="flex gap-2 overflow-x-auto pb-1 mb-4" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
                 {gallery.map((img, i) => (
-                  <button key={img + i} onClick={() => setActiveImage(i)} aria-label={`Image ${i + 1}`}
-                    className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden relative transition-transform hover:-translate-y-0.5"
-                    style={{
-                      border: activeImage === i ? "3px solid #E2231A" : "2px solid #131313",
-                      boxShadow: activeImage === i ? "3px 3px 0 #E2231A" : "none",
-                    }}>
+                  <button key={img + i} onClick={() => setActiveImage(i)}
+                    className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden relative"
+                    style={{ border: activeImage === i ? "2px solid #818CF8" : "1.5px solid rgba(165,180,252,0.18)" }}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -411,57 +514,54 @@ export default function ProductPage() {
           {/* Info */}
           <div>
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[10px] font-bold uppercase tracking-[0.16em] ${product.outOfStock ? "-rotate-2" : "rotate-2"}`}
-                  style={{
-                    background: product.outOfStock ? "#fff" : "#00B06F",
-                    color: product.outOfStock ? "#E2231A" : "#fff",
-                    border: "2px solid #131313",
-                  }}>
-                  <span className="tilt-sq !w-1.5 !h-1.5" style={{ background: product.outOfStock ? "#E2231A" : "#fff" }} />
+              <div className="flex items-center gap-2 mb-2">
+                <motion.div
+                  animate={{ scale: [1, 1.12, 1], opacity: [0.75, 1, 0.75] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: product.outOfStock ? "#f87171" : "#22c55e", boxShadow: `0 0 8px ${product.outOfStock ? "#f87171" : "#22c55e"}` }}
+                />
+                <span className="text-[11px] font-bold tracking-wide uppercase" style={{ color: product.outOfStock ? "#f87171" : "#4ade80" }}>
                   {product.outOfStock ? "Out of Stock" : "In Stock — Ready to Deliver"}
                 </span>
               </div>
 
-              <h1 className="font-display text-3xl sm:text-4xl uppercase leading-[0.95] mb-4">{product.name}</h1>
+              <h1 className="font-display text-2xl font-bold text-white leading-tight mb-3">{product.name}</h1>
 
-              <div className="flex items-baseline gap-2.5 mb-5 pb-5 border-b-[2.5px] border-[#131313]">
-                <span className="font-display text-4xl">${product.price.toFixed(2)}</span>
+              <div className="flex items-baseline gap-2.5 mb-4">
+                <span className="font-display text-3xl font-bold" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
                 {product.originalPrice && (
-                  <span className="text-base line-through" style={{ color: "#8a8375" }}>${product.originalPrice.toFixed(2)}</span>
+                  <span className="text-base line-through" style={{ color: "#64748B" }}>${product.originalPrice.toFixed(2)}</span>
                 )}
                 {savings && (
-                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md -rotate-2 text-white"
-                    style={{ background: "#E2231A", border: "1.5px solid #131313" }}>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(220,38,38,0.18)", color: "#f87171" }}>
                     Save ${savings}
                   </span>
                 )}
               </div>
 
               {product.description && (
-                <p className="text-sm leading-relaxed mb-5" style={{ color: "#55503F" }}>{product.description}</p>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: "#a8a4c8" }}>{product.description}</p>
               )}
 
               {product.features && product.features.length > 0 && (
-                <div className="mb-5 space-y-2.5">
+                <div className="mb-4 space-y-2">
                   {product.features.map((f, i) => (
-                    <div key={i} className="flex items-start gap-2.5">
-                      <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 border-2"
-                        style={{ background: "#00B06F", borderColor: "#131313" }}>
-                        <Check size={11} color="#fff" strokeWidth={3.5} />
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "rgba(79,70,229,0.25)" }}>
+                        <Check size={10} color="#A5B4FC" strokeWidth={3} />
                       </div>
-                      <span className="text-sm font-medium">{f}</span>
+                      <span className="text-sm" style={{ color: "#c7c4e0" }}>{f}</span>
                     </div>
                   ))}
                 </div>
               )}
 
               {product.tags && product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-5">
+                <div className="flex flex-wrap gap-1.5 mb-4">
                   {product.tags.map(t => (
-                    <span key={t} className="font-mono text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full"
-                      style={{ background: "#fff", border: "1.5px solid #131313", color: "#55503F" }}>
+                    <span key={t} className="text-[11px] font-semibold px-2.5 py-1 rounded-full capitalize"
+                      style={{ background: "rgba(255,255,255,0.05)", color: "#94A3B8", border: "1px solid rgba(165,180,252,0.14)" }}>
                       {t}
                     </span>
                   ))}
@@ -470,61 +570,68 @@ export default function ProductPage() {
 
               {/* Quantity selector */}
               {!product.outOfStock && (
-                <div className="mb-6">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: "#6B655C" }}>Quantity</p>
+                <div className="mb-5">
+                  <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#64748B" }}>Quantity</p>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center rounded-full overflow-hidden bg-white" style={{ border: "2.5px solid #131313" }}>
+                    <div className="flex items-center rounded-xl overflow-hidden"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.2)" }}>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
                         onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                        aria-label="Decrease quantity"
-                        className="w-11 h-11 flex items-center justify-center flex-shrink-0 disabled:opacity-30"
+                        className="w-10 h-10 flex items-center justify-center flex-shrink-0 transition-colors"
+                        style={{ color: quantity <= 1 ? "#3d3a5c" : "#A5B4FC" }}
                         disabled={quantity <= 1}
                       >
                         <Minus size={15} strokeWidth={2.5} />
                       </motion.button>
-                      <div className="w-12 text-center">
-                        <span className="font-display text-xl">{quantity}</span>
+                      <div className="w-12 h-10 flex items-center justify-center">
+                        <span className="font-display text-base font-bold text-white">{quantity}</span>
                       </div>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
-                        aria-label="Increase quantity"
-                        className="w-11 h-11 flex items-center justify-center flex-shrink-0 disabled:opacity-30"
-                        disabled={quantity >= maxQty}
+                        onClick={() => setQuantity(q => Math.min(product.onHand ?? product.stock, q + 1))}
+                        className="w-10 h-10 flex items-center justify-center flex-shrink-0"
+                        disabled={quantity >= (product.onHand ?? product.stock)}
+                        style={{ color: quantity >= (product.onHand ?? product.stock) ? "#3d3a5c" : "#A5B4FC" }}
                       >
                         <Plus size={15} strokeWidth={2.5} />
                       </motion.button>
                     </div>
-                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5" style={{ color: "#00875A" }}>
-                      <span className="tilt-sq !w-1.5 !h-1.5" style={{ background: "#00B06F" }} /> In stock
-                    </span>
+                    <span className="text-xs font-medium" style={{ color: "#4ade80" }}>● In stock — ready to deliver</span>
                   </div>
                 </div>
               )}
 
               {/* Desktop CTAs */}
-              <div className="hidden md:flex gap-3 mb-4">
-                <motion.button
-                  whileHover={!product.outOfStock ? { translateX: -1, translateY: -1 } : {}}
-                  whileTap={!product.outOfStock ? { translateX: 1, translateY: 1 } : {}}
+              <div className="hidden md:flex gap-3 mb-6">
+                <motion.button whileHover={!product.outOfStock ? { scale: 1.02 } : {}} whileTap={!product.outOfStock ? { scale: 0.97 } : {}}
                   onClick={handleAddToCart} disabled={product.outOfStock}
-                  className="flex-1 py-4 rounded-full font-mono text-sm font-semibold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-40 bg-white border-[3px]"
-                  style={{ borderColor: "#131313", boxShadow: "4px 4px 0 #131313" }}>
-                  {justAdded ? <Check size={16} strokeWidth={3} /> : <ShoppingCart size={16} />}
-                  {justAdded ? "Added to Cart" : "Add to Cart"}
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40 font-display"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.3)", color: "#A5B4FC" }}>
+                  <AnimatePresence mode="wait">
+                    {justAdded ? (
+                      <motion.span key="added" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex items-center gap-2">
+                        <Check size={16} strokeWidth={3} /> Added to Cart
+                      </motion.span>
+                    ) : (
+                      <motion.span key="add" initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex items-center gap-2">
+                        <ShoppingCart size={16} /> Add to Cart
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </motion.button>
-                <motion.button
-                  whileHover={!product.outOfStock ? { translateX: -2, translateY: -2, boxShadow: "7px 7px 0 #131313" } : {}}
-                  whileTap={!product.outOfStock ? { translateX: 2, translateY: 2, boxShadow: "1px 1px 0 #131313" } : {}}
+                <motion.button whileHover={!product.outOfStock ? { scale: 1.02, boxShadow: "0 0 30px rgba(79,70,229,0.5)" } : {}}
+                  whileTap={!product.outOfStock ? { scale: 0.97 } : {}}
                   onClick={handleBuyNow} disabled={product.outOfStock || buying}
-                  className="relative flex-1 py-4 rounded-full font-mono text-sm font-semibold uppercase tracking-wider text-white flex items-center justify-center gap-2 disabled:opacity-40 border-[3px]"
-                  style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "5px 5px 0 #131313" }}>
-                  {buying ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} fill="#fff" />}
-                  {product.outOfStock ? "Out of Stock" : "Buy Now"}
+                  className="relative overflow-hidden flex-1 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40 font-display"
+                  style={{ background: "linear-gradient(135deg,#4F46E5 0%,#3730A3 100%)" }}>
+                  <div className="rb-glare rb-glare-d1" style={{ opacity: 0.5 }} />
+                  {buying ? <Loader2 size={16} className="animate-spin relative z-10" /> : <Zap size={16} className="relative z-10" fill="white" />}
+                  <span className="relative z-10">{product.outOfStock ? "Out of Stock" : "Buy Now"}</span>
                 </motion.button>
               </div>
 
+              {/* FAQ Section (replaces trust badges) */}
               <FAQSection items={sharedFAQ} />
             </motion.div>
           </div>
@@ -535,22 +642,25 @@ export default function ProductPage() {
           <motion.div
             initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-14 md:max-w-6xl md:mx-auto"
+            className="mt-10 md:max-w-5xl md:mx-auto"
           >
-            <div className="flex items-center justify-between mb-4 pb-3 border-b-[2.5px] border-[#131313]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 -rotate-3 rounded-xl flex items-center justify-center flex-shrink-0 bg-white border-2"
-                  style={{ borderColor: "#131313", boxShadow: "3px 3px 0 #131313" }}>
-                  <Star size={15} fill="#FFC800" stroke="#131313" strokeWidth={1.5} />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(79,70,229,0.2)", border: "1px solid rgba(165,180,252,0.2)" }}>
+                  <Star size={15} color="#A5B4FC" />
                 </div>
-                <h2 className="font-display text-xl sm:text-2xl uppercase">You Might Also <span className="text-outline">Like</span></h2>
+                <h2 className="font-display text-base font-bold text-white">You Might Also <em style={{ color: "#A5B4FC", fontStyle: "italic" }}>like</em></h2>
               </div>
               <motion.button
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.06, boxShadow: "0 0 18px rgba(79,70,229,0.4)" }} whileTap={{ scale: 0.94 }}
                 onClick={() => setShowAllRelated(v => !v)}
-                className="flex items-center gap-1 px-3.5 py-1.5 rounded-full font-mono text-[10px] font-semibold uppercase tracking-wider text-white flex-shrink-0 border-2"
-                style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "2px 2px 0 #131313" }}>
-                {showAllRelated ? "Show Less" : <>View All <ArrowRight size={11} /></>}
+                className="relative overflow-hidden flex items-center gap-1 px-3.5 py-1.5 rounded-full text-xs font-bold flex-shrink-0 font-display"
+                style={{ background: "linear-gradient(135deg, rgba(79,70,229,0.22) 0%, rgba(55,48,163,0.22) 100%)", border: "1.5px solid rgba(165,180,252,0.25)", color: "#A5B4FC" }}>
+                <div className="rb-glare rb-glare-d2" style={{ opacity: 0.6 }} />
+                <span className="relative z-10 flex items-center gap-1">
+                  {showAllRelated ? "Show Less" : <>View All <ArrowRight size={11} /></>}
+                </span>
               </motion.button>
             </div>
 
@@ -562,10 +672,10 @@ export default function ProductPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                  className="grid grid-cols-2 gap-4"
                 >
-                  {related.map(p => (
-                    <RelatedCardBase key={p._id} product={p} wide onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
+                  {related.map((p, i) => (
+                    <LargeRelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
                   ))}
                 </motion.div>
               ) : (
@@ -578,8 +688,8 @@ export default function ProductPage() {
                   className="flex gap-3 overflow-x-auto pb-2"
                   style={{ scrollbarWidth: "none" } as React.CSSProperties}
                 >
-                  {related.map(p => (
-                    <RelatedCardBase key={p._id} product={p} onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
+                  {related.map((p, i) => (
+                    <RelatedCard key={p._id} product={p} index={i} onNavigate={(id) => navigate(`/product/${id}`)} gameBgImageUrl={gameBgImageUrl} />
                   ))}
                 </motion.div>
               )}
@@ -588,25 +698,28 @@ export default function ProductPage() {
         )}
       </div>
 
+      {/* Footer */}
       <Footer />
 
       {/* Mobile sticky CTA bar */}
-      <div className="fixed bottom-[64px] left-0 right-0 z-40 px-3 py-2.5 md:hidden"
-        style={{ background: "#F2EEE5", borderTop: "3px solid #131313" }}>
+      <div className="fixed bottom-[60px] left-0 right-0 z-40 px-3 py-2.5 md:hidden"
+        style={{ background: "rgba(10,8,40,0.94)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(165,180,252,0.14)" }}>
         <div className="flex gap-2">
-          <motion.button whileTap={!product.outOfStock ? { scale: 0.95 } : {}} onClick={handleAddToCart} disabled={product.outOfStock}
-            aria-label="Add to cart"
-            className="w-14 rounded-full flex items-center justify-center disabled:opacity-40 flex-shrink-0 bg-white"
-            style={{ border: "2.5px solid #131313" }}>
-            {justAdded
-              ? <Check size={18} style={{ color: "#00B06F" }} strokeWidth={3} />
-              : <ShoppingCart size={18} />}
+          <motion.button whileTap={!product.outOfStock ? { scale: 0.96 } : {}} onClick={handleAddToCart} disabled={product.outOfStock}
+            className="w-14 rounded-xl flex items-center justify-center disabled:opacity-40 flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(165,180,252,0.25)" }}>
+            <AnimatePresence mode="wait">
+              {justAdded
+                ? <motion.span key="c" initial={{ scale: 0.6 }} animate={{ scale: 1 }}><Check size={18} color="#4ade80" strokeWidth={3} /></motion.span>
+                : <motion.span key="a" initial={{ scale: 0.6 }} animate={{ scale: 1 }}><ShoppingCart size={18} color="#A5B4FC" /></motion.span>}
+            </AnimatePresence>
           </motion.button>
-          <motion.button whileTap={!product.outOfStock ? { scale: 0.96 } : {}} onClick={handleBuyNow} disabled={product.outOfStock || buying}
-            className="flex-1 py-3.5 rounded-full font-mono text-sm font-semibold uppercase tracking-wider text-white flex items-center justify-center gap-2 disabled:opacity-40 border-[3px]"
-            style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "4px 4px 0 #131313" }}>
-            {buying ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} fill="#fff" />}
-            {product.outOfStock ? "Out of Stock" : `Buy Now${quantity > 1 ? ` (×${quantity})` : ""}`}
+          <motion.button whileTap={!product.outOfStock ? { scale: 0.97 } : {}} onClick={handleBuyNow} disabled={product.outOfStock || buying}
+            className="relative overflow-hidden flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40 font-display"
+            style={{ background: "linear-gradient(135deg,#4F46E5 0%,#3730A3 100%)" }}>
+            <div className="rb-glare rb-glare-d1" style={{ opacity: 0.5 }} />
+            {buying ? <Loader2 size={16} className="animate-spin relative z-10" /> : <Zap size={16} className="relative z-10" fill="white" />}
+            <span className="relative z-10">{product.outOfStock ? "Out of Stock" : `Buy Now${quantity > 1 ? ` (×${quantity})` : ""}`}</span>
           </motion.button>
         </div>
       </div>

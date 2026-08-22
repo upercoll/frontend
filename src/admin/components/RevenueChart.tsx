@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer,
+  ResponsiveContainer, BarChart, Bar,
 } from "recharts";
 import { adminApi } from "../api";
 
@@ -15,10 +15,10 @@ interface TooltipProps {
 function CustomTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border-2 rounded-xl p-3" style={{ borderColor: "#131313", boxShadow: "4px 4px 0 #131313" }}>
-      <p className="font-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: "#8a8375" }}>{label}</p>
+    <div className="bg-[#0a1628] border border-white/10 rounded-lg p-3 shadow-xl">
+      <p className="text-slate-400 text-xs mb-2">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-sm font-bold font-mono">
+        <p key={i} className="text-white text-sm font-medium">
           {p.name === "revenue" ? `$${p.value.toFixed(2)}` : `${p.value} orders`}
         </p>
       ))}
@@ -38,11 +38,11 @@ export default function RevenueChart() {
   const chart = data?.data.chart || [];
 
   return (
-    <div className="rounded-xl p-5 sm:p-6" style={{ background: "#F7F4EC", border: "2px solid #131313" }}>
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
+    <div className="bg-[#0d1f3c] border border-white/5 rounded-xl p-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="font-display text-lg uppercase tracking-wide">Revenue Overview</h3>
-          <p className="font-mono text-[10px] uppercase tracking-wider mt-0.5" style={{ color: "#8a8375" }}>
+          <h3 className="text-white font-semibold">Revenue Overview</h3>
+          <p className="text-slate-400 text-xs mt-0.5">
             {period === "monthly" ? `Jan – Dec ${year}` : "Last 30 days"}
           </p>
         </div>
@@ -51,14 +51,9 @@ export default function RevenueChart() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-3.5 py-1.5 rounded-full font-mono text-[11px] font-semibold uppercase tracking-wider border-2 transition-all ${
-                period === p ? "text-white" : "hover:bg-[#131313] hover:text-white"
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                period === p ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
-              style={
-                period === p
-                  ? { background: "#131313", color: "#F2EEE5", borderColor: "#131313" }
-                  : { background: "#fff", color: "#6B655C", borderColor: "#131313" }
-              }
             >
               {p === "monthly" ? "Monthly" : "30 Days"}
             </button>
@@ -68,20 +63,26 @@ export default function RevenueChart() {
 
       {isLoading ? (
         <div className="h-64 flex items-center justify-center">
-          <div className="w-6 h-6 border-[3px] rounded-full animate-spin" style={{ borderColor: "rgba(19,19,19,.15)", borderTopColor: "#E2231A" }} />
+          <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <AreaChart data={chart} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#13131314" />
+            <defs>
+              <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
             <XAxis
               dataKey={period === "monthly" ? "month" : "label"}
-              tick={{ fill: "#8a8375", fontSize: 11 }}
+              tick={{ fill: "#64748b", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#8a8375", fontSize: 11 }}
+              tick={{ fill: "#64748b", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
@@ -90,12 +91,11 @@ export default function RevenueChart() {
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="#E2231A"
-              strokeWidth={2.5}
-              fill="#E2231A"
-              fillOpacity={0.08}
+              stroke="#3b82f6"
+              strokeWidth={2}
+              fill="url(#revGradient)"
               dot={false}
-              activeDot={{ r: 5, fill: "#E2231A", stroke: "#131313", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "#3b82f6" }}
             />
           </AreaChart>
         </ResponsiveContainer>

@@ -28,18 +28,18 @@ function AuthInput({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
-      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#FF7A72" }}>
+      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>
         {label}
       </label>
       <div
         className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
         style={{
           background: "rgba(255,255,255,0.05)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.5)" : focused ? "#E2231A" : "rgba(242,238,229,0.18)"}`,
-          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(226,35,26,0.1)"}` : "none",
+          border: `1.5px solid ${error ? "rgba(248,113,113,0.5)" : focused ? "#4F46E5" : "rgba(165,180,252,0.18)"}`,
+          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(79,70,229,0.1)"}` : "none",
         }}
       >
-        {icon && <span style={{ color: focused ? "#D8D2C4" : "#E2231A", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: focused ? "#A5B4FC" : "#4F46E5", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type}
           placeholder={placeholder}
@@ -106,9 +106,9 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
           whileFocus={{ scale: 1.08 }}
           className="w-11 h-14 rounded-xl text-center text-xl font-extrabold text-white outline-none transition-all duration-200"
           style={{
-            background: value[i] ? "rgba(226,35,26,0.25)" : "rgba(255,255,255,0.05)",
-            border: `2px solid ${value[i] ? "#E2231A" : "rgba(242,238,229,0.18)"}`,
-            boxShadow: value[i] ? "0 0 12px rgba(226,35,26,0.3)" : "none",
+            background: value[i] ? "rgba(79,70,229,0.25)" : "rgba(255,255,255,0.05)",
+            border: `2px solid ${value[i] ? "#4F46E5" : "rgba(165,180,252,0.18)"}`,
+            boxShadow: value[i] ? "0 0 12px rgba(79,70,229,0.3)" : "none",
           }}
         />
       ))}
@@ -335,14 +335,14 @@ export default function AuthModal() {
           transition={{ type: "spring", stiffness: 300, damping: 26 }}
           className="w-full max-w-md relative overflow-hidden rounded-3xl"
           style={{
-            background: "linear-gradient(180deg,#141414 0%,#121212 100%)",
-            border: "1.5px solid rgba(226,35,26,0.25)",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(242,238,229,0.05)",
+            background: "linear-gradient(180deg,#0F0C2E 0%,#0C0B2E 100%)",
+            border: "1.5px solid rgba(79,70,229,0.25)",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(165,180,252,0.05)",
           }}
         >
           {}
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle,rgba(226,35,26,0.18),transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle,rgba(79,70,229,0.18),transparent 70%)" }} />
           <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full pointer-events-none"
             style={{ background: "radial-gradient(circle,rgba(55,48,163,0.12),transparent 70%)" }} />
 
@@ -353,12 +353,12 @@ export default function AuthModal() {
                 {displayStep === "verify" && (
                   <button onClick={() => { setStep("register"); setVerifyCode(""); clearErrors(); }}
                     className="mr-1 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                    style={{ background: "rgba(255,255,255,0.05)", color: "#FF7A72" }}>
+                    style={{ background: "rgba(255,255,255,0.05)", color: "#818CF8" }}>
                     <ArrowLeft size={15} />
                   </button>
                 )}
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)" }}>
+                  style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                   <Star size={17} fill="white" color="white" />
                 </div>
                 <div>
@@ -415,12 +415,12 @@ export default function AuthModal() {
                   </AnimatePresence>
 
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(226,35,26,0.45)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(79,70,229,0.45)" }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleLogin}
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)", opacity: loading ? 0.7 : 1 }}>
+                    style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", opacity: loading ? 0.7 : 1 }}>
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"}
                   </motion.button>
 
@@ -428,7 +428,7 @@ export default function AuthModal() {
                     Don't have an account?{" "}
                     <button onClick={() => { openAuthModal("register"); clearErrors(); }}
                       className="font-bold transition-colors hover:text-white"
-                      style={{ color: "#D8D2C4" }}>
+                      style={{ color: "#A5B4FC" }}>
                       Create one
                     </button>
                   </p>
@@ -452,16 +452,16 @@ export default function AuthModal() {
 
                   {/* Roblox username with live avatar preview */}
                   <div className="space-y-1.5">
-                    <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#FF7A72" }}>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>
                       Roblox Username
                     </label>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
                         style={{
                           background: "rgba(255,255,255,0.05)",
-                          border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(226,35,26,0.6)" : "rgba(242,238,229,0.18)"}`,
+                          border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(79,70,229,0.6)" : "rgba(165,180,252,0.18)"}`,
                         }}>
-                        <Gamepad2 size={15} color="#E2231A" className="flex-shrink-0" />
+                        <Gamepad2 size={15} color="#4F46E5" className="flex-shrink-0" />
                         <input
                           type="text"
                           placeholder="YourRobloxName"
@@ -469,7 +469,7 @@ export default function AuthModal() {
                           onChange={e => setRobloxUsername(e.target.value)}
                           className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
                         />
-                        {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#E2231A" }} />}
+                        {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#4F46E5" }} />}
                         {robloxAvatar && !avatarLoading && <CheckCircle size={13} color="#4ade80" className="flex-shrink-0" />}
                       </div>
                       {/* Avatar preview */}
@@ -478,9 +478,9 @@ export default function AuthModal() {
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
                             className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                            style={{ background: "rgba(226,35,26,0.15)", border: "2px solid rgba(226,35,26,0.4)" }}>
+                            style={{ background: "rgba(79,70,229,0.15)", border: "2px solid rgba(79,70,229,0.4)" }}>
                             {avatarLoading
-                              ? <Loader2 size={16} className="animate-spin" style={{ color: "#E2231A" }} />
+                              ? <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
                               : robloxAvatar && <img src={robloxAvatar} alt="Roblox avatar" className="w-full h-full object-cover" />
                             }
                           </motion.div>
@@ -523,12 +523,12 @@ export default function AuthModal() {
                   </AnimatePresence>
 
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(226,35,26,0.45)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(79,70,229,0.45)" }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleRegister}
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)", opacity: loading ? 0.7 : 1 }}>
+                    style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", opacity: loading ? 0.7 : 1 }}>
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Account"}
                   </motion.button>
 
@@ -536,7 +536,7 @@ export default function AuthModal() {
                     Already have an account?{" "}
                     <button onClick={() => { openAuthModal("login"); clearErrors(); }}
                       className="font-bold transition-colors hover:text-white"
-                      style={{ color: "#D8D2C4" }}>
+                      style={{ color: "#A5B4FC" }}>
                       Sign in
                     </button>
                   </p>
@@ -555,16 +555,16 @@ export default function AuthModal() {
                     icon={<User size={15} />} error={fieldErrors.displayName} autoFocus />
 
                   <div className="space-y-1.5">
-                    <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#FF7A72" }}>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>
                       Roblox Username
                     </label>
                     <div className="flex items-center gap-3">
                       <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
                         style={{
                           background: "rgba(255,255,255,0.05)",
-                          border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(226,35,26,0.6)" : "rgba(242,238,229,0.18)"}`,
+                          border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(79,70,229,0.6)" : "rgba(165,180,252,0.18)"}`,
                         }}>
-                        <Gamepad2 size={15} color="#E2231A" className="flex-shrink-0" />
+                        <Gamepad2 size={15} color="#4F46E5" className="flex-shrink-0" />
                         <input
                           type="text"
                           placeholder="YourRobloxName"
@@ -572,7 +572,7 @@ export default function AuthModal() {
                           onChange={e => setRobloxUsername(e.target.value)}
                           className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
                         />
-                        {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#E2231A" }} />}
+                        {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#4F46E5" }} />}
                         {robloxAvatar && !avatarLoading && <CheckCircle size={13} color="#4ade80" className="flex-shrink-0" />}
                       </div>
                       <AnimatePresence>
@@ -580,9 +580,9 @@ export default function AuthModal() {
                           <motion.div
                             initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
                             className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                            style={{ background: "rgba(226,35,26,0.15)", border: "2px solid rgba(226,35,26,0.4)" }}>
+                            style={{ background: "rgba(79,70,229,0.15)", border: "2px solid rgba(79,70,229,0.4)" }}>
                             {avatarLoading
-                              ? <Loader2 size={16} className="animate-spin" style={{ color: "#E2231A" }} />
+                              ? <Loader2 size={16} className="animate-spin" style={{ color: "#4F46E5" }} />
                               : robloxAvatar && <img src={robloxAvatar} alt="Roblox avatar" className="w-full h-full object-cover" />
                             }
                           </motion.div>
@@ -612,12 +612,12 @@ export default function AuthModal() {
                   </AnimatePresence>
 
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(226,35,26,0.45)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(79,70,229,0.45)" }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleEditProfile}
                     disabled={loading}
                     className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                    style={{ background: "linear-gradient(135deg,#E2231A,#3730A3)", opacity: loading ? 0.7 : 1 }}>
+                    style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", opacity: loading ? 0.7 : 1 }}>
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Save Changes"}
                   </motion.button>
                 </motion.div>
@@ -632,13 +632,13 @@ export default function AuthModal() {
                 >
                   <div className="text-center py-2">
                     <motion.div
-                      animate={{ scale: [1, 1.06, 1], boxShadow: ["0 0 0px rgba(226,35,26,0)", "0 0 24px rgba(226,35,26,0.5)", "0 0 0px rgba(226,35,26,0)"] }}
+                      animate={{ scale: [1, 1.06, 1], boxShadow: ["0 0 0px rgba(79,70,229,0)", "0 0 24px rgba(79,70,229,0.5)", "0 0 0px rgba(79,70,229,0)"] }}
                       transition={{ repeat: Infinity, duration: 2.4 }}
                       className="w-16 h-16 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                      style={{ background: "linear-gradient(135deg,rgba(226,35,26,0.25),rgba(55,48,163,0.15))", border: "1.5px solid rgba(226,35,26,0.4)" }}>
-                      <ShieldCheck size={28} color="#D8D2C4" />
+                      style={{ background: "linear-gradient(135deg,rgba(79,70,229,0.25),rgba(55,48,163,0.15))", border: "1.5px solid rgba(79,70,229,0.4)" }}>
+                      <ShieldCheck size={28} color="#A5B4FC" />
                     </motion.div>
-                    <p className="text-sm" style={{ color: "#FF7A72" }}>
+                    <p className="text-sm" style={{ color: "#818CF8" }}>
                       We sent a 6-digit code to
                     </p>
                     <p className="text-sm font-bold text-white">{email}</p>
@@ -660,13 +660,13 @@ export default function AuthModal() {
                   </AnimatePresence>
 
                   <motion.button
-                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(226,35,26,0.45)" }}
+                    whileHover={{ scale: 1.02, boxShadow: "0 0 28px rgba(79,70,229,0.45)" }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleVerify}
                     disabled={loading || verifyCode.replace(/\s/g, "").length < 6}
                     className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
                     style={{
-                      background: "linear-gradient(135deg,#E2231A,#3730A3)",
+                      background: "linear-gradient(135deg,#4F46E5,#3730A3)",
                       opacity: (loading || verifyCode.replace(/\s/g, "").length < 6) ? 0.5 : 1,
                     }}>
                     {loading ? <Loader2 size={16} className="animate-spin" /> : "Verify Email"}
@@ -677,7 +677,7 @@ export default function AuthModal() {
                       onClick={handleResend}
                       disabled={resendCooldown > 0}
                       className="text-[12px] flex items-center gap-1.5 mx-auto transition-colors"
-                      style={{ color: resendCooldown > 0 ? "#475569" : "#D8D2C4" }}>
+                      style={{ color: resendCooldown > 0 ? "#475569" : "#A5B4FC" }}>
                       <RefreshCw size={11} />
                       {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
                     </button>

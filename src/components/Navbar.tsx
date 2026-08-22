@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck, User } from "lucide-react";
+import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck, Gamepad2, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -19,42 +19,28 @@ interface NavbarProps {
   dark?: boolean;
 }
 
-/* ── Brand mark: tilted Roblox-style block ── */
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true">
-      <rect x="14" y="14" width="36" height="36" rx="7" transform="rotate(12 32 32)" fill="#E2231A" />
-      <rect x="26.5" y="26.5" width="11" height="11" rx="2.5" transform="rotate(12 32 32)" fill="#F2EEE5" />
-    </svg>
-  );
-}
-
-function Wordmark({ tone }: { tone: "ink" | "paper" }) {
-  const base = tone === "ink" ? "#131313" : "#F2EEE5";
-  return (
-    <span className="font-display text-xl leading-none tracking-wide select-none" style={{ color: base }}>
-      RB<span style={{ color: "#E2231A" }}>STARS</span>
-    </span>
-  );
-}
-
 /* ── Desktop nav link ───────────────────────────────────── */
 function DesktopNavLink({
   label, onClick, lightMode,
 }: { label: string; onClick: () => void; lightMode: boolean }) {
   return (
     <motion.button
-      whileHover={{ y: -1 }}
-      whileTap={{ scale: 0.96 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="group relative px-3 py-1.5 font-mono text-[12px] font-medium uppercase tracking-[0.16em] transition-colors duration-200"
-      style={{ color: lightMode ? "#131313" : "#F2EEE5" }}
+      className="px-3 py-1.5 rounded-full text-sm font-semibold transition-colors duration-200"
+      style={{
+        color: lightMode ? "#312E80" : "rgba(255,255,255,0.85)",
+        background: "transparent",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = lightMode
+          ? "rgba(49,46,128,0.08)"
+          : "rgba(255,255,255,0.1)";
+      }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
     >
       {label}
-      <span
-        className="absolute inset-x-3 bottom-0.5 h-[2.5px] origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100"
-        style={{ background: "#E2231A" }}
-      />
     </motion.button>
   );
 }
@@ -143,14 +129,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
     }
   }
 
-  /* Storefront pages are all light now — paper chrome once scrolled */
-  void dark;
-  const lightMode = scrolled;
-
-  const circleBtn = (active: boolean) =>
-    active
-      ? { borderColor: "rgba(19,19,19,.75)", color: "#131313", background: "transparent" }
-      : { borderColor: "rgba(19,19,19,.55)", color: "#131313", background: "rgba(255,255,255,.35)" };
+  const lightMode = !dark && scrolled;
 
   return (
     <>
@@ -160,23 +139,28 @@ export default function Navbar({ dark = false }: NavbarProps) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           lightMode
-            ? "bg-[#F2EEE5]/95 backdrop-blur-md"
+            ? "bg-white/96 backdrop-blur-md shadow-sm"
             : "bg-transparent"
         }`}
-        style={lightMode ? { borderBottom: "2.5px solid #131313" } : {}}
+        style={lightMode ? { borderBottom: "1px solid rgba(49,46,128,0.1)" } : {}}
       >
         {/* Promo banner */}
         <div
           className="relative overflow-hidden text-center py-2 px-4"
-          style={{ background: "#E2231A", borderBottom: lightMode ? "none" : "2.5px solid #131313" }}
+          style={{ background: "linear-gradient(90deg,#1e1b4b,#4f46e5,#7c3aed,#4f46e5,#1e1b4b)", backgroundSize: "200% 100%" }}
         >
-          <p className="relative font-mono text-[11px] sm:text-xs font-medium uppercase tracking-[0.18em] text-white">
-            <span className="tilt-sq mr-2 !bg-[#FFC800]" />
-            Use code{" "}
-            <span className="inline-block bg-[#FFC800] px-1.5 py-0.5 mx-0.5 rounded border-2 border-[#131313] font-bold normal-case tracking-normal" style={{ color: "#131313" }}>
+          <motion.div
+            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent)", backgroundSize: "200% 100%" }}
+          />
+          <p className="relative text-[11px] sm:text-xs font-bold text-white tracking-wide">
+            🎉 USE CODE{" "}
+            <span className="font-black text-yellow-300 bg-yellow-300/10 px-1.5 py-0.5 rounded-md mx-0.5">
               RBSTARS10
             </span>{" "}
-            for 10% off your order
+            FOR 10% OFF ON YOUR PURCHASES!
           </p>
         </div>
 
@@ -192,21 +176,28 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setMenuOpen(true)}
                 className="md:hidden flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-200"
-                style={circleBtn(lightMode)}
+                style={lightMode
+                  ? { borderColor: "rgba(49,46,128,0.25)", color: "#312E80", background: "rgba(49,46,128,0.04)" }
+                  : { borderColor: "rgba(255,255,255,0.3)", color: "white" }
+                }
               >
                 <Menu size={20} />
               </motion.button>
 
               {/* Logo */}
               <Link href="/" data-testid="link-logo">
-                <motion.div whileHover={{ scale: 1.04, rotate: -1 }} className="flex items-center gap-2.5 cursor-pointer select-none">
-                  <LogoMark size={30} />
-                  <Wordmark tone="ink" />
+                <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2 cursor-pointer select-none">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#312E80" }}>
+                    <Star size={16} fill="white" color="white" />
+                  </div>
+                  <span className="text-xl font-bold tracking-tight transition-colors duration-300" style={{ color: lightMode ? "#1E1B4B" : "white" }}>
+                    RB<span style={{ color: lightMode ? "#312E80" : "#A5B4FC" }}>stars</span>
+                  </span>
                 </motion.div>
               </Link>
 
               {/* Desktop nav links */}
-              <nav className="hidden md:flex items-center gap-2 ml-5">
+              <nav className="hidden md:flex items-center gap-0.5 ml-4">
                 <DesktopNavLink label="Shop" onClick={scrollToShop} lightMode={lightMode} />
                 <DesktopNavLink label="How It Works" onClick={scrollToHowItWorks} lightMode={lightMode} />
               </nav>
@@ -220,21 +211,24 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 data-testid="button-cart"
                 animate={cartBounce ? { scale: [1, 1.35, 0.88, 1.12, 1] } : {}}
                 transition={{ duration: 0.55, ease: "easeInOut" }}
-                whileHover={{ scale: 1.06, rotate: -3 }}
+                whileHover={{ scale: 1.06 }}
                 whileTap={{ scale: 0.92 }}
                 onClick={openCart}
-                className="relative w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all duration-200"
-                style={lightMode ? circleBtn(true) : { ...circleBtn(false), borderColor: "#131313" }}
+                className="relative w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-200"
+                style={lightMode
+                  ? { background: "rgba(49,46,128,0.07)", border: "1.5px solid rgba(49,46,128,0.18)" }
+                  : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)" }
+                }
               >
-                <ShoppingCart size={18} />
+                <ShoppingCart size={18} color={lightMode ? "#312E80" : "white"} />
                 <AnimatePresence>
                   {totalItems > 0 && (
                     <motion.span
                       key={totalItems}
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-[#131313]"
-                      style={{ background: "#E2231A" }}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white"
+                      style={{ background: "#dc2626", boxShadow: "0 0 8px rgba(220,38,38,0.6)" }}
                     >
                       {totalItems > 9 ? "9+" : totalItems}
                     </motion.span>
@@ -247,55 +241,52 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 <div ref={dropdownRef} className="relative">
                   <motion.button
                     data-testid="button-profile"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.96 }}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setProfileOpen(o => !o)}
-                    className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border-2 transition-all duration-200"
-                    style={{
-                      borderColor: "#131313",
-                      background: "#FFFFFF",
-                      boxShadow: profileOpen ? "3px 3px 0 #131313" : "none",
-                    }}
+                    className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full transition-all duration-200"
+                    style={lightMode
+                      ? { background: "rgba(49,46,128,0.08)", border: "1.5px solid rgba(49,46,128,0.22)" }
+                      : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.18)" }
+                    }
                   >
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border border-[#131313]" style={{ background: "#E7E1D2" }}>
+                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={13} color="#131313" />
+                        : <User size={13} color="white" />
                       }
                     </div>
-                    <span className="text-[13px] font-bold max-w-[90px] truncate" style={{ color: "#131313" }}>
+                    <span className="text-[13px] font-bold max-w-[90px] truncate" style={{ color: lightMode ? "#1E1B4B" : "white" }}>
                       {user.displayName}
                     </span>
                     <motion.div animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown size={13} color="#131313" />
+                      <ChevronDown size={13} color={lightMode ? "#312E80" : "rgba(255,255,255,0.6)"} />
                     </motion.div>
                   </motion.button>
 
                   <AnimatePresence>
                     {profileOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                        className="absolute right-0 top-full mt-3 w-56 rounded-2xl p-2 z-50 bg-white"
-                        style={{ border: "2px solid #131313", boxShadow: "6px 6px 0 #131313" }}
+                        className="absolute right-0 top-full mt-2 w-52 rounded-2xl p-2 z-50"
+                        style={{ background: "#1a1730", border: "1.5px solid rgba(165,180,252,0.15)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}
                       >
-                        <div className="px-3 py-2.5 mb-1 flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold truncate" style={{ color: "#131313" }}>{user.displayName}</p>
-                            <p className="text-[11px] font-mono" style={{ color: "#6B655C" }}>@{user.robloxUsername}</p>
-                          </div>
-                          <span className="tilt-sq" />
+                        <div className="px-3 py-2.5 mb-1">
+                          <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
+                          <p className="text-[11px]" style={{ color: "#A5B4FC" }}>@{user.robloxUsername}</p>
                         </div>
-                        <div className="h-[2px] mb-1" style={{ background: "#131313" }} />
+                        <div className="h-px mb-1" style={{ background: "rgba(165,180,252,0.1)" }} />
                         <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile"
                           onClick={() => { setProfileOpen(false); navigate("/profile"); }} />
                         {user.isAdmin && (
                           <ProfileDropdownItem icon={<ShieldCheck size={14} />} label="Admin Panel"
                             onClick={() => { setProfileOpen(false); navigate("/admin"); }} />
                         )}
-                        <div className="h-[2px] my-1" style={{ background: "#131313" }} />
+                        <div className="h-px my-1" style={{ background: "rgba(165,180,252,0.1)" }} />
                         <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out"
                           onClick={() => { logout(); setProfileOpen(false); }} danger />
                       </motion.div>
@@ -308,8 +299,11 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => openAuthModal("login")}
-                  className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold border-2 transition-all"
-                  style={{ borderColor: "#131313", color: "#131313", background: "#FFFFFF" }}
+                  className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all"
+                  style={lightMode
+                    ? { background: "rgba(49,46,128,0.08)", border: "1.5px solid rgba(49,46,128,0.22)", color: "#312E80" }
+                    : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", color: "white" }
+                  }
                 >
                   <User size={14} /> Log In
                 </motion.button>
@@ -317,11 +311,11 @@ export default function Navbar({ dark = false }: NavbarProps) {
 
               {/* Desktop Shop Now CTA */}
               <motion.button
-                whileHover={{ scale: 1.05, translateX: -1, translateY: -1, boxShadow: "5px 5px 0 #131313" }}
-                whileTap={{ scale: 0.96, translateX: 2, translateY: 2, boxShadow: "1px 1px 0 #131313" }}
+                whileHover={{ scale: 1.05, boxShadow: "0 8px 28px rgba(79,70,229,0.5)" }}
+                whileTap={{ scale: 0.96 }}
                 onClick={scrollToShop}
-                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white border-2"
-                style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "3px 3px 0 #131313" }}
+                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white"
+                style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}
               >
                 <ShoppingCart size={14} /> Shop Now
               </motion.button>
@@ -338,30 +332,32 @@ export default function Navbar({ dark = false }: NavbarProps) {
             initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
-            style={{ background: "#131313" }}
+            style={{ background: "#0F0C2E" }}
           >
-            <div className="absolute inset-0 pattern-dots-light pointer-events-none opacity-60" />
-
             {/* Drawer header */}
-            <div className="flex items-center justify-between px-5 pt-12 pb-6 flex-shrink-0 relative">
+            <div className="flex items-center justify-between px-5 pt-12 pb-6 flex-shrink-0">
               <Link href="/" onClick={() => setMenuOpen(false)}>
-                <div className="flex items-center gap-2.5 cursor-pointer">
-                  <LogoMark size={30} />
-                  <Wordmark tone="paper" />
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#312E80" }}>
+                    <Star size={16} fill="white" color="white" />
+                  </div>
+                  <span className="text-xl font-bold text-white">
+                    RB<span style={{ color: "#A5B4FC" }}>stars</span>
+                  </span>
                 </div>
               </Link>
               <motion.button
-                whileHover={{ scale: 1.08, rotate: 90 }} whileTap={{ scale: 0.92 }}
+                whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                 onClick={() => setMenuOpen(false)}
-                className="w-10 h-10 rounded-full flex items-center justify-center border-2"
-                style={{ borderColor: "rgba(242,238,229,.4)", color: "#F2EEE5" }}
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
               >
-                <X size={18} />
+                <X size={18} color="white" />
               </motion.button>
             </div>
 
             {/* Quick action buttons */}
-            <div className="px-5 mb-6 flex flex-col gap-3 flex-shrink-0 relative">
+            <div className="px-5 mb-6 flex flex-col gap-3 flex-shrink-0">
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => {
@@ -371,32 +367,33 @@ export default function Navbar({ dark = false }: NavbarProps) {
                     el?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }, 350);
                 }}
-                className="w-full py-3.5 rounded-full font-mono font-semibold uppercase tracking-[0.14em] text-sm text-white flex items-center justify-center gap-2 border-2"
-                style={{ background: "#E2231A", borderColor: "#F2EEE5", boxShadow: "4px 4px 0 rgba(242,238,229,.9)" }}
+                className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
+                style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}
               >
                 <ShoppingCart size={16} /> Browse Shop
               </motion.button>
             </div>
 
             {/* Section label */}
-            <div className="px-5 mb-3 flex-shrink-0 relative">
-              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.25em]" style={{ color: "rgba(242,238,229,.45)" }}>
+            <div className="px-5 mb-3 flex-shrink-0">
+              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: "rgba(165,180,252,0.5)" }}>
                 Games
               </p>
             </div>
 
             {/* Games list */}
-            <div className="flex-1 overflow-y-auto px-5 pb-6 relative">
+            <div className="flex-1 overflow-y-auto px-5 pb-6">
               {gamesLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                     className="w-6 h-6 rounded-full border-2 border-t-transparent"
-                    style={{ borderColor: "rgba(242,238,229,.3)", borderTopColor: "#F2EEE5" }} />
+                    style={{ borderColor: "rgba(165,180,252,0.3)", borderTopColor: "#A5B4FC" }} />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {games.map((game, i) => {
-                    const c1 = game.gradient?.from || "#E2231A";
+                    const c1 = game.gradient?.from || "#6d28d9";
+                    const c2 = game.gradient?.to   || "#4c1d95";
                     const tapped = tappedGame === game.slug;
                     return (
                       <motion.button
@@ -406,27 +403,27 @@ export default function Navbar({ dark = false }: NavbarProps) {
                         transition={{ delay: i * 0.04, duration: 0.3 }}
                         whileTap={{ scale: 0.94 }}
                         onClick={() => goToGame(game.slug)}
-                        className="relative flex flex-col rounded-xl overflow-hidden"
+                        className="relative flex flex-col rounded-2xl overflow-hidden"
                         style={{
-                          border: tapped ? "3px solid #E2231A" : "2px solid rgba(242,238,229,.18)",
+                          border: tapped ? `2px solid ${c1}` : "1.5px solid rgba(165,180,252,0.12)",
                           aspectRatio: "1 / 1",
-                          background: c1,
                           transition: "border-color 0.2s ease",
                         }}
                       >
-                        <div className="absolute inset-0 pattern-dots-light opacity-70" />
-                        {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover mix-blend-luminosity opacity-70" />}
-                        <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: "linear-gradient(to top,rgba(19,19,19,.85),transparent)" }} />
-                        <span className="absolute bottom-2 left-2 right-2 text-[#F2EEE5] font-bold text-xs leading-tight text-left" style={{ textShadow: "0 1px 3px rgba(0,0,0,.9)" }}>
+                        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${c1} 0%,${c2} 100%)` }} />
+                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+                        {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-75" />}
+                        <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.8),transparent)" }} />
+                        <span className="absolute bottom-2 left-2 right-2 text-white font-bold text-xs leading-tight text-left" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
                           {game.name}
                         </span>
                         {tapped && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="absolute inset-0 flex items-center justify-center rounded-xl"
-                            style={{ background: "rgba(19,19,19,.5)", backdropFilter: "blur(2px)" }}>
+                            className="absolute inset-0 flex items-center justify-center rounded-2xl"
+                            style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)" }}>
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
                               className="w-6 h-6 rounded-full border-2 border-t-transparent"
-                              style={{ borderColor: "rgba(242,238,229,.4)", borderTopColor: "#F2EEE5" }} />
+                              style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} />
                           </motion.div>
                         )}
                       </motion.button>
@@ -437,26 +434,27 @@ export default function Navbar({ dark = false }: NavbarProps) {
             </div>
 
             {/* Auth section */}
-            <div className="px-5 pb-8 flex-shrink-0 relative" style={{ borderTop: "2px solid rgba(242,238,229,.12)", paddingTop: 16 }}>
+            <div className="px-5 pb-8 flex-shrink-0 border-t" style={{ borderColor: "rgba(165,180,252,0.1)", paddingTop: 16 }}>
               {user ? (
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 px-3 py-3 rounded-xl border-2" style={{ borderColor: "rgba(242,238,229,.15)" }}>
-                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: "#E2231A" }}>
+                  <div className="flex items-center gap-3 px-3 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }}>
+                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
+                      style={{ background: "linear-gradient(135deg,#312E80,#1E1B4B)" }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={16} color="#fff" />
+                        : <User size={16} color="white" />
                       }
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold truncate" style={{ color: "#F2EEE5" }}>{user.displayName}</p>
-                      <p className="text-[11px] font-mono" style={{ color: "rgba(242,238,229,.55)" }}>@{user.robloxUsername}</p>
+                      <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
+                      <p className="text-[11px]" style={{ color: "#A5B4FC" }}>@{user.robloxUsername}</p>
                     </div>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     onClick={() => { logout(); setMenuOpen(false); }}
-                    className="w-full py-3 rounded-full font-mono font-semibold uppercase tracking-[0.14em] text-sm flex items-center justify-center gap-2 border-2"
-                    style={{ background: "rgba(226,35,26,.12)", borderColor: "#E2231A", color: "#ff8a82" }}
+                    className="w-full py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2"
+                    style={{ background: "rgba(248,113,113,0.1)", border: "1.5px solid rgba(248,113,113,0.2)", color: "#fca5a5" }}
                   >
                     <LogOut size={14} /> Sign Out
                   </motion.button>
@@ -466,8 +464,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   data-testid="button-menu-login"
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={() => { setMenuOpen(false); openAuthModal("login"); }}
-                  className="w-full py-3.5 rounded-full font-mono font-semibold uppercase tracking-[0.14em] text-sm text-white flex items-center justify-center gap-2 border-2"
-                  style={{ background: "transparent", borderColor: "#F2EEE5" }}
+                  className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg,#312E80 0%,#1E1B4B 100%)" }}
                 >
                   <User size={16} /> Log In
                 </motion.button>
@@ -485,15 +483,10 @@ function ProfileDropdownItem({
 }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
   return (
     <motion.button
-      whileHover={{ x: 3 }}
+      whileHover={{ backgroundColor: danger ? "rgba(248,113,113,0.08)" : "rgba(49,46,128,0.15)" }}
       onClick={onClick}
       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left"
-      style={{
-        color: danger ? "#E2231A" : "#131313",
-        background: "transparent",
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = "#F2EEE5")}
-      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+      style={{ color: danger ? "#fca5a5" : "#A5B4FC" }}
     >
       {icon}{label}
     </motion.button>

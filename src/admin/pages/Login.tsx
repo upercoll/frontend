@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, Shield } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminApi } from "../api";
 import { useLocation } from "wouter";
@@ -38,7 +38,12 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen dot-grid flex items-center justify-center p-4" style={{ background: "#F2EEE5" }}>
+    <div className="min-h-screen bg-[#060d1a] flex items-center justify-center p-4">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/5 rounded-full blur-3xl" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -47,43 +52,37 @@ export default function AdminLogin() {
       >
         <div className="text-center mb-8">
           <motion.div
-            initial={{ scale: 0, rotate: -12 }} animate={{ scale: 1, rotate: -6 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border-[3px]"
-            style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "6px 6px 0 #131313" }}
+            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20"
           >
-            <ShieldCheck className="w-8 h-8 text-white" />
+            <Shield className="w-8 h-8 text-white" />
           </motion.div>
-          <h1 className="font-display text-3xl uppercase tracking-wide">
-            RB<span style={{ color: "#E2231A" }}>STARS</span> Panel
-          </h1>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] mt-2" style={{ color: "#8a8375" }}>
-            Sign in to your admin panel
-          </p>
+          <h1 className="text-2xl font-bold text-white">RBstars Panel</h1>
+          <p className="text-slate-400 text-sm mt-1">Sign in to your admin panel</p>
         </div>
 
-        {/* Mode toggle */}
-        <div className="flex rounded-full p-1 mb-6 bg-white" style={{ border: "2px solid #131313", boxShadow: "3px 3px 0 #131313" }}>
+        <div className="flex bg-[#0d1f3c] border border-white/5 rounded-xl p-1 mb-6">
           {(["owner", "member"] as const).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); setError(""); }}
-              className={`flex-1 py-2.5 rounded-full font-mono text-xs font-bold uppercase tracking-wider transition-all ${
-                mode === m ? "text-white" : "hover:bg-[#F2EEE5]"
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                mode === m ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
               }`}
-              style={mode === m ? { background: "#131313", color: "#F2EEE5" } : { color: "#6B655C" }}
             >
               {m === "owner" ? "Owner" : "Team Member"}
             </button>
           ))}
         </div>
 
-        <div className="rounded-3xl p-7 bg-white" style={{ border: "3px solid #131313", boxShadow: "7px 8px 0 #131313" }}>
+        <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: "#6B655C" }}>Email address</label>
+              <label className="text-slate-300 text-sm font-medium block mb-1.5">Email address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#8a8375" }} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="email"
                   value={email}
@@ -91,16 +90,15 @@ export default function AdminLogin() {
                   required
                   autoComplete="email"
                   placeholder="your@email.com"
-                  className="w-full bg-white border-2 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-shadow"
-                  style={{ borderColor: "#131313", color: "#131313" }}
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: "#6B655C" }}>Password</label>
+              <label className="text-slate-300 text-sm font-medium block mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#8a8375" }} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type={showPass ? "text" : "password"}
                   value={password}
@@ -108,14 +106,12 @@ export default function AdminLogin() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full bg-white border-2 rounded-xl pl-10 pr-11 py-3 text-sm focus:outline-none"
-                  style={{ borderColor: "#131313", color: "#131313" }}
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-11 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-[#E2231A] transition-colors"
-                  style={{ color: "#8a8375" }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                 >
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -126,8 +122,7 @@ export default function AdminLogin() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-sm px-4 py-3 rounded-xl font-medium"
-                style={{ background: "#FDEEEC", border: "2px solid #E2231A", color: "#C53011" }}
+                className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl"
               >
                 {error}
               </motion.div>
@@ -136,10 +131,9 @@ export default function AdminLogin() {
             <motion.button
               type="submit"
               disabled={loading}
-              whileHover={!loading ? { translateX: -2, translateY: -2, boxShadow: "7px 7px 0 #131313" } : {}}
-              whileTap={!loading ? { translateX: 2, translateY: 2, boxShadow: "1px 1px 0 #131313" } : {}}
-              className="w-full font-mono font-semibold uppercase tracking-[0.14em] text-sm text-white py-3.5 rounded-full flex items-center justify-center gap-2 border-[3px] disabled:opacity-60"
-              style={{ background: "#E2231A", borderColor: "#131313", boxShadow: "5px 5px 0 #131313" }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {loading ? "Signing in..." : "Sign In"}
@@ -147,10 +141,8 @@ export default function AdminLogin() {
           </form>
         </div>
 
-        <p className="text-center font-mono text-[10px] uppercase tracking-[0.18em] mt-6 flex items-center justify-center gap-2" style={{ color: "#8a8375" }}>
-          <span className="tilt-sq !w-1.5 !h-1.5 opacity-60" />
-          Authorized access only
-          <span className="tilt-sq !w-1.5 !h-1.5 opacity-60" />
+        <p className="text-center text-slate-600 text-xs mt-6">
+          RBstars Admin Panel — Authorized access only
         </p>
       </motion.div>
     </div>
