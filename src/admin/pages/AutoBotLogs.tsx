@@ -31,7 +31,7 @@ const ACTION_STYLE: Record<string, { label: string; color: string; bg: string }>
   deliver: { label: "DELIVERED", color: "#fbbf24", bg: "rgba(251,191,36,0.12)" },
   complete: { label: "COMPLETE", color: "#4ade80", bg: "rgba(74,222,128,0.12)" },
   error: { label: "ERROR", color: "#f87171", bg: "rgba(248,113,113,0.12)" },
-  info: { label: "INFO", color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
+  info: { label: "INFO", color: "#FF7A72", bg: "rgba(167,139,250,0.12)" },
 };
 
 function fmtTime(iso: string) {
@@ -74,7 +74,7 @@ export default function AutoBotLogs() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-[#0d1f3c] border border-white/10 rounded-xl px-3 py-2">
+          <div className="flex items-center gap-2 bg-[#1B1B1B] border border-white/10 rounded-xl px-3 py-2">
             <Search className="w-4 h-4 text-slate-500" />
             <input
               value={roomFilter}
@@ -88,13 +88,13 @@ export default function AutoBotLogs() {
             className={cn("px-3 py-2 rounded-xl text-xs font-bold border transition-colors",
               autoRefresh
                 ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                : "bg-[#0d1f3c] border-white/10 text-slate-400")}
+                : "bg-[#1B1B1B] border-white/10 text-slate-400")}
           >
             AUTO REFRESH {autoRefresh ? "ON" : "OFF"}
           </button>
           <button
             onClick={() => refetch()}
-            className="px-3 py-2 rounded-xl text-xs font-bold bg-[#0d1f3c] border border-white/10 text-slate-300 hover:border-white/20 transition-colors flex items-center gap-1.5"
+            className="px-3 py-2 rounded-xl text-xs font-bold bg-[#1B1B1B] border border-white/10 text-slate-300 hover:border-white/20 transition-colors flex items-center gap-1.5"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", isFetching && "animate-spin")} />
             Refresh
@@ -105,7 +105,7 @@ export default function AutoBotLogs() {
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-14 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />
+            <div key={i} className="h-14 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />
           ))}
         </div>
       ) : logs.length === 0 ? (
@@ -126,7 +126,7 @@ export default function AutoBotLogs() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i, 15) * 0.02 }}
                 className={cn("rounded-xl border p-3.5 flex flex-col md:flex-row md:items-center gap-3",
-                  isError ? "bg-red-500/5 border-red-500/20" : "bg-[#0d1f3c] border-white/5")}
+                  isError ? "bg-red-500/5 border-red-500/20" : "bg-[#1B1B1B] border-white/5")}
               >
                 <div className="flex items-center gap-3 md:w-64 shrink-0">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"

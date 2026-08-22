@@ -70,7 +70,7 @@ function SessionRow({ session, selected, onClick, liveStatus }: SessionRowProps)
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/10 flex items-center justify-center">
           <User className="w-4 h-4 text-blue-400" />
         </div>
-        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a1628]", cfg.dot, cfg.dotPulse ? "animate-pulse" : "")} />
+        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#161616]", cfg.dot, cfg.dotPulse ? "animate-pulse" : "")} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
@@ -132,7 +132,7 @@ function OrderProfilePanel({
   ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto w-72 flex-shrink-0">
+    <div className="flex flex-col h-full bg-[#161616] border-l border-white/5 overflow-y-auto w-72 flex-shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
         <p className="text-white text-sm font-semibold">Profile</p>
@@ -190,13 +190,13 @@ function OrderProfilePanel({
           )}
           <div className="grid grid-cols-2 gap-2">
             {displayItems.map((item, i) => (
-              <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+              <div key={i} className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden flex flex-col">
                 <div
                   className="relative w-full h-16 overflow-hidden flex-shrink-0"
                   style={{
                     background: item.gradient
                       ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)`
-                      : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                      : "linear-gradient(135deg, #1B1B1B 0%, #312e81 100%)",
                   }}
                 >
                   <div
@@ -449,7 +449,7 @@ function ChatPane({ session, messages, loading, onSend, onClose, isClosed }: Cha
               onKeyDown={handleKeyDown}
               placeholder="Type a message as admin…"
               rows={1}
-              className="flex-1 bg-[#0d1f3c] border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
+              className="flex-1 bg-[#1B1B1B] border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
               style={{ minHeight: 40, maxHeight: 120 }}
             />
             <motion.button
@@ -717,7 +717,7 @@ export default function OpenChats() {
   return (
     <div className="flex h-full overflow-hidden">
       {/* ── Left: Session List ── */}
-      <div className={`${showChatMobile ? "hidden" : "flex"} md:flex flex-col w-full md:w-80 flex-shrink-0 border-r border-white/5 bg-[#0a1628]`}>
+      <div className={`${showChatMobile ? "hidden" : "flex"} md:flex flex-col w-full md:w-80 flex-shrink-0 border-r border-white/5 bg-[#161616]`}>
         <div className="px-4 py-4 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
@@ -784,7 +784,7 @@ export default function OpenChats() {
       </div>
 
       {/* ── Center: Chat ── */}
-      <div className={`${showChatMobile ? "flex" : "hidden"} md:flex flex-1 flex-col overflow-hidden bg-[#060d1a]`}>
+      <div className={`${showChatMobile ? "flex" : "hidden"} md:flex flex-1 flex-col overflow-hidden bg-[#131313]`}>
         {!selectedSession ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-600">
             <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
@@ -869,7 +869,7 @@ export default function OpenChats() {
             onClick={() => setConfirmClose(null)}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
+              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
               <div className="px-6 py-5">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
                   <Archive className="w-5 h-5 text-purple-400" />
@@ -903,7 +903,7 @@ export default function OpenChats() {
             onClick={() => setConfirmDelete(null)}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
+              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
               <div className="px-6 py-5">
                 <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
                   <Trash2 className="w-5 h-5 text-red-400" />

@@ -89,7 +89,7 @@ export default function StockerInviteAccept() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+      style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -97,11 +97,11 @@ export default function StockerInviteAccept() {
       >
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 32px rgba(99,102,241,0.4)" }}>
+            style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)", boxShadow: "0 0 32px rgba(226,35,26,0.4)" }}>
             <Archive className="w-7 h-7 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">Stocker Invitation</h1>
-          <p className="text-sm mt-1" style={{ color: "rgba(165,180,252,0.7)" }}>
+          <p className="text-sm mt-1" style={{ color: "rgba(242,238,229,0.7)" }}>
             You've been invited to join as a stocker
           </p>
         </div>
@@ -130,7 +130,7 @@ export default function StockerInviteAccept() {
             <div className="space-y-5">
               <div className="text-center">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
-                  style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.25)" }}>
+                  style={{ background: "rgba(226,35,26,0.15)", color: "#D8D2C4", border: "1px solid rgba(226,35,26,0.25)" }}>
                   <Mail className="w-3 h-3" />
                   {email}
                 </div>
@@ -149,7 +149,7 @@ export default function StockerInviteAccept() {
                 onClick={handleSendCode}
                 disabled={isLoading || codeSent}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : codeSent ? <Check className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                 {codeSent ? "Code Sent" : "Send Verification Code"}
               </motion.button>
@@ -180,7 +180,7 @@ export default function StockerInviteAccept() {
                 type="submit"
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
                 Verify Code <ChevronRight className="w-4 h-4" />
               </motion.button>
             </form>
@@ -232,7 +232,7 @@ export default function StockerInviteAccept() {
                 type="submit" disabled={isLoading}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 Complete Setup
               </motion.button>

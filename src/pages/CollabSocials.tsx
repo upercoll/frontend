@@ -36,9 +36,9 @@ function fmtDate(d: string) {
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   in_review: { label: "In Review",  color: "#d97706", bg: "rgba(251,191,36,0.15)" },
-  reviewed:  { label: "Reviewed",   color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
+  reviewed:  { label: "Reviewed",   color: "#6DB8FF", bg: "rgba(96,165,250,0.15)" },
   accepted:  { label: "Accepted",   color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
-  paid:      { label: "Paid",       color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
+  paid:      { label: "Paid",       color: "#FF7A72", bg: "rgba(167,139,250,0.15)" },
 };
 
 function YouTubeIcon({ className }: { className?: string }) {
@@ -152,8 +152,8 @@ export default function CollabSocials() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
+        style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#FF7A72" }} />
       </div>
     );
   }
@@ -161,18 +161,18 @@ export default function CollabSocials() {
   const activeQueueLabel = QUEUE_TABS.find(t => t.value === queueTab)?.label || "All";
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(226,35,26,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(219,39,119,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="relative z-10">
         {/* Header */}
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
+          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(219,39,119,0.12)" }}>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -195,7 +195,7 @@ export default function CollabSocials() {
                   <a key={label} href={href}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                     style={active
-                      ? { background: "rgba(99,102,241,0.25)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }
+                      ? { background: "rgba(226,35,26,0.25)", color: "#D8D2C4", border: "1px solid rgba(226,35,26,0.3)" }
                       : { color: "rgba(255,255,255,0.4)", border: "1px solid transparent" }}>
                     {label}
                   </a>
@@ -224,10 +224,10 @@ export default function CollabSocials() {
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
               className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
-                { label: "Total Submitted", value: stats.total, icon: Send, color: "#a78bfa" },
+                { label: "Total Submitted", value: stats.total, icon: Send, color: "#FF7A72" },
                 { label: "In Review", value: stats.inReview, icon: Clock, color: "#fbbf24" },
                 { label: "Pending Payout", value: `$${(stats.pendingPayout || 0).toFixed(2)}`, icon: DollarSign, color: "#4ade80" },
-                { label: "Total Paid Out", value: `$${(stats.totalPaid || 0).toFixed(2)}`, icon: TrendingUp, color: "#60a5fa" },
+                { label: "Total Paid Out", value: `$${(stats.totalPaid || 0).toFixed(2)}`, icon: TrendingUp, color: "#6DB8FF" },
               ].map((s, i) => (
                 <div key={i} className="rounded-2xl p-4"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -247,7 +247,7 @@ export default function CollabSocials() {
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <h2 className="font-bold text-white text-sm flex items-center gap-2">
-                <Plus className="w-4 h-4" style={{ color: "#a78bfa" }} /> Submit a Video
+                <Plus className="w-4 h-4" style={{ color: "#FF7A72" }} /> Submit a Video
               </h2>
               <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Paste your YouTube or TikTok video link to submit it for review.
@@ -289,7 +289,7 @@ export default function CollabSocials() {
                 />
                 <button onClick={handlePreview} disabled={previewing || !url.trim()}
                   className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
-                  style={{ background: "rgba(99,102,241,0.25)", border: "1px solid rgba(99,102,241,0.4)", color: "#a5b4fc" }}>
+                  style={{ background: "rgba(226,35,26,0.25)", border: "1px solid rgba(226,35,26,0.4)", color: "#D8D2C4" }}>
                   {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                   {previewing ? "Fetching…" : "Preview"}
                 </button>
@@ -353,7 +353,7 @@ export default function CollabSocials() {
                       {submitErr && <p className="text-xs text-red-400 mt-2">{submitErr}</p>}
                       <button onClick={handleSubmit} disabled={submitting}
                         className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-60"
-                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff" }}>
+                        style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)", color: "#fff" }}>
                         {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         {submitting ? "Submitting…" : "Submit Video"}
                       </button>
@@ -390,7 +390,7 @@ export default function CollabSocials() {
                       {QUEUE_TABS.map((t) => (
                         <button key={t.value} onClick={() => { setQueueTab(t.value); setQueueDropOpen(false); }}
                           className="w-full text-left px-3 py-2 text-xs font-medium transition-colors"
-                          style={{ color: queueTab === t.value ? "#a5b4fc" : "rgba(255,255,255,0.5)" }}
+                          style={{ color: queueTab === t.value ? "#D8D2C4" : "rgba(255,255,255,0.5)" }}
                           onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"}
                           onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "transparent"}>
                           {t.label}
@@ -404,11 +404,11 @@ export default function CollabSocials() {
 
             {queueLoading ? (
               <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "#a78bfa" }} />
+                <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "#FF7A72" }} />
               </div>
             ) : submissions.length === 0 ? (
               <div className="p-12 text-center">
-                <Send className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#a78bfa" }} />
+                <Send className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#FF7A72" }} />
                 <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No submissions{queueTab ? ` with status "${activeQueueLabel}"` : ""} yet.</p>
               </div>
             ) : (
@@ -476,7 +476,7 @@ export default function CollabSocials() {
                             {(s.status === "accepted" || s.status === "paid") && s.offeredAmount != null && (
                               <div className="text-right">
                                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Amount</p>
-                                <p className="text-lg font-bold" style={{ color: s.status === "paid" ? "#a78bfa" : "#4ade80" }}>
+                                <p className="text-lg font-bold" style={{ color: s.status === "paid" ? "#FF7A72" : "#4ade80" }}>
                                   ${s.offeredAmount.toFixed(2)}
                                 </p>
                               </div>
@@ -486,7 +486,7 @@ export default function CollabSocials() {
                         <a href={s.url} target="_blank" rel="noopener noreferrer"
                           className="mt-1 inline-flex items-center gap-1 text-[10px] transition-colors"
                           style={{ color: "rgba(255,255,255,0.25)" }}
-                          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "#a5b4fc"}
+                          onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.color = "#D8D2C4"}
                           onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.color = "rgba(255,255,255,0.25)"}>
                           <ExternalLink className="w-2.5 h-2.5" /> View video
                         </a>

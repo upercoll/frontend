@@ -121,14 +121,14 @@ export default function Tutorials() {
     <div className="p-6 space-y-5 max-w-[1000px] mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Tutorials</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Tutorials</h2>
           <p className="text-sm text-slate-500 mt-0.5">Manage game tutorials shown on the homepage</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: "#1e1b4b" }}
+          style={{ background: "#1B1B1B" }}
         >
           <Plus className="w-4 h-4" />
           Add Tutorial
@@ -172,7 +172,7 @@ export default function Tutorials() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{t.title}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "#1B1B1B" }}>{t.title}</p>
                       {t.description && <p className="text-xs text-slate-400 truncate mt-0.5">{t.description}</p>}
                       {t.videoUrl && <p className="text-xs text-indigo-400 truncate mt-0.5">📹 {t.videoUrl}</p>}
                     </div>
@@ -181,7 +181,7 @@ export default function Tutorials() {
                       <button
                         onClick={() => toggleActiveMut.mutate({ id: t._id, active: !t.active })}
                         className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                        style={{ background: t.active ? "#ECFDF5" : "#F3F4F6", color: t.active ? "#10B981" : "#9CA3AF" }}
+                        style={{ background: t.active ? "#ECFDF5" : "#F3F4F6", color: t.active ? "#00B06F" : "#9CA3AF" }}
                         title={t.active ? "Hide" : "Show"}
                       >
                         {t.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -189,7 +189,7 @@ export default function Tutorials() {
                       <button
                         onClick={() => openEdit(t)}
                         className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                        style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                        style={{ background: "#EEF2FF", color: "#E2231A" }}
                         title="Edit"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -229,7 +229,7 @@ export default function Tutorials() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>
+                <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>
                   {editItem ? "Edit Tutorial" : "Add Tutorial"}
                 </h3>
                 <button onClick={closeForm} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#F7F8FC", color: "#6b7280" }}>
@@ -245,7 +245,7 @@ export default function Tutorials() {
                       value={form.game} onChange={(e) => setForm({ ...form, game: e.target.value })} required
                       placeholder="Blox Fruits"
                       className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                     />
                   </div>
                   <div>
@@ -253,7 +253,7 @@ export default function Tutorials() {
                     <input
                       type="number" value={form.sortOrder} onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
                       className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                     />
                   </div>
                 </div>
@@ -264,7 +264,7 @@ export default function Tutorials() {
                     value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
                     placeholder="How to claim Blox Fruits items"
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                 </div>
 
@@ -274,7 +274,7 @@ export default function Tutorials() {
                     value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={2} placeholder="Brief description of this tutorial"
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                 </div>
 
@@ -288,7 +288,7 @@ export default function Tutorials() {
                     }}
                     placeholder="https://youtube.com/watch?v=..."
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                   {autoThumb && !thumbPreviewError && (
                     <div className="mt-2 rounded-xl overflow-hidden relative" style={{ aspectRatio: "16/9", border: "1px solid #E9EBF5" }}>
@@ -318,7 +318,7 @@ export default function Tutorials() {
                     onChange={(e) => { setThumbPreviewError(false); setForm({ ...form, thumbnailUrl: e.target.value }); }}
                     placeholder={autoThumb ? autoThumb : "https://... (leave blank to use YouTube thumbnail)"}
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                   {effectiveThumb && form.thumbnailUrl && (
                     <div className="mt-2 rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", border: "1px solid #E9EBF5" }}>
@@ -365,7 +365,7 @@ export default function Tutorials() {
                   <motion.button type="submit" disabled={isPending}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="flex-1 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                     {editItem ? "Save Changes" : "Create Tutorial"}
                   </motion.button>

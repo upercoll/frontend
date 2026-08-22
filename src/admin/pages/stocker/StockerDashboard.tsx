@@ -47,7 +47,7 @@ export default function StockerDashboard() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#FF7A72" }} />
     </div>
   );
 
@@ -75,8 +75,8 @@ export default function StockerDashboard() {
         {[
           { label: "Pending Payout", value: `$${unpaidAmount.toFixed(2)}`, icon: Clock, color: "#fbbf24", sub: "awaiting payment" },
           { label: "Total Paid Out", value: `$${totalPaid.toFixed(2)}`, icon: CheckCircle2, color: "#4ade80", sub: "all time" },
-          { label: "Commission Rate", value: `${stocker?.commissionRate || 0}%`, icon: TrendingUp, color: "#a78bfa", sub: "per delivery" },
-          { label: "Deliveries Pending", value: unpaidDeliveries.length, icon: Package, color: "#60a5fa", sub: "in current period" },
+          { label: "Commission Rate", value: `${stocker?.commissionRate || 0}%`, icon: TrendingUp, color: "#FF7A72", sub: "per delivery" },
+          { label: "Deliveries Pending", value: unpaidDeliveries.length, icon: Package, color: "#6DB8FF", sub: "in current period" },
         ].map((stat, i) => (
           <div key={i} className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <div className="flex items-center gap-2 mb-3">
@@ -95,8 +95,8 @@ export default function StockerDashboard() {
       {stocker?.cryptoAddress && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
           className="rounded-2xl px-5 py-3 flex items-center gap-3"
-          style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
-          <DollarSign className="w-4 h-4 flex-shrink-0" style={{ color: "#a5b4fc" }} />
+          style={{ background: "rgba(226,35,26,0.08)", border: "1px solid rgba(226,35,26,0.2)" }}>
+          <DollarSign className="w-4 h-4 flex-shrink-0" style={{ color: "#D8D2C4" }} />
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
             Payout address: <span className="font-mono text-white">{stocker.cryptoAddress}</span>
             {stocker.cryptoNetwork && <span style={{ color: "rgba(255,255,255,0.4)" }}> · {stocker.cryptoNetwork}</span>}
@@ -126,7 +126,7 @@ export default function StockerDashboard() {
         {showDeliveries && (
           unpaidDeliveries.length === 0 ? (
             <div className="p-10 text-center">
-              <Package className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#a78bfa" }} />
+              <Package className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#FF7A72" }} />
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>No deliveries in the current period yet.</p>
             </div>
           ) : (
@@ -147,7 +147,7 @@ export default function StockerDashboard() {
                       <td className="px-5 py-3.5 text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{fmt(d.deliveredAt)}</td>
                       <td className="px-5 py-3.5 text-sm font-medium text-white">{d.robloxUsername}</td>
                       <td className="px-5 py-3.5">
-                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc" }}>{d.game || "-"}</span>
+                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(226,35,26,0.15)", color: "#D8D2C4" }}>{d.game || "-"}</span>
                       </td>
                       <td className="px-5 py-3.5 text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
                         {(d.items || []).map((it: any) => `${it.name || "Item"} ×${Number.isFinite(it.quantity) && it.quantity > 0 ? it.quantity : 1}`).join(", ")}

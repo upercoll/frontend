@@ -6,7 +6,7 @@ import { Package, Plus, Trash2, Edit2, X, Loader2, ChevronLeft, DollarSign, Aler
 import { adminApi } from "../api";
 
 const inp = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
-const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" };
+const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" };
 
 export default function CollabView() {
   const [, params] = useRoute("/admin/collaboration/view/:id");
@@ -133,7 +133,7 @@ export default function CollabView() {
           </button>
         </Link>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{collab.name}</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>{collab.name}</h2>
           <p className="text-sm text-slate-500">{collab.email}</p>
         </div>
         <div className="ml-auto">
@@ -146,7 +146,7 @@ export default function CollabView() {
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Connected Products</p>
-          <p className="text-2xl font-bold mt-1" style={{ color: "#1e1b4b" }}>{products.length}</p>
+          <p className="text-2xl font-bold mt-1" style={{ color: "#1B1B1B" }}>{products.length}</p>
         </div>
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Unpaid Balance</p>
@@ -155,7 +155,7 @@ export default function CollabView() {
         <Link href={`/admin/collaboration/payouts/${id}`}>
           <div className="bg-white rounded-xl p-5 cursor-pointer transition-colors hover:bg-slate-50" style={{ border: "1px solid #E9EBF5" }}>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Last Payout</p>
-            <p className="text-sm font-semibold mt-1" style={{ color: "#1e1b4b" }}>
+            <p className="text-sm font-semibold mt-1" style={{ color: "#1B1B1B" }}>
               {collab.lastPayoutAt ? new Date(collab.lastPayoutAt).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
             </p>
             <p className="text-xs text-indigo-500 mt-1 flex items-center gap-1"><History className="w-3 h-3" /> View payout history</p>
@@ -166,7 +166,7 @@ export default function CollabView() {
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
           <div>
-            <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Connected Products ({products.length})</h3>
+            <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>Connected Products ({products.length})</h3>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -179,7 +179,7 @@ export default function CollabView() {
             <button
               onClick={() => { setAddModal(true); setFormError(""); setSelectedProduct(""); setCut("80"); }}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ background: "#1e1b4b" }}
+              style={{ background: "#1B1B1B" }}
             >
               <Plus className="w-4 h-4" /> Connect to products
             </button>
@@ -208,25 +208,25 @@ export default function CollabView() {
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg flex-shrink-0 overflow-hidden"
-                        style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#6366f1" }}>
+                        style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#E2231A" }}>
                         {cp.product?.imageUrl
                           ? <img src={cp.product.imageUrl} className="w-full h-full object-cover" alt="" />
                           : <div className="w-full h-full flex items-center justify-center"><Package className="w-4 h-4 text-white/60" /></div>}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{cp.productName || cp.product?.name}</p>
+                        <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{cp.productName || cp.product?.name}</p>
                         <p className="text-xs text-slate-400">{cp.product?.game || ""}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{cp.cut}%</span>
+                    <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{cp.cut}%</span>
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => { setEditModal({ cpId: cp._id, cut: String(cp.cut), productName: cp.productName || cp.product?.name }); setEditCut(String(cp.cut)); setFormError(""); }}
                         className="w-7 h-7 rounded-lg flex items-center justify-center"
-                        style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                        style={{ background: "#EEF2FF", color: "#E2231A" }}>
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => { if (confirm(`Remove ${cp.productName || cp.product?.name}?`)) removeProdMut.mutate(cp._id); }}
@@ -254,7 +254,7 @@ export default function CollabView() {
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
                 <div>
-                  <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Bulk Add Products</h3>
+                  <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Bulk Add Products</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Select multiple products and set a shared cut %</p>
                 </div>
                 <button onClick={() => setBulkModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
@@ -308,7 +308,7 @@ export default function CollabView() {
                             onClick={() => toggleBulkProduct(p._id)}
                             className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all"
                             style={{
-                              border: isSelected ? "1px solid #6366f1" : "1px solid #E9EBF5",
+                              border: isSelected ? "1px solid #E2231A" : "1px solid #E9EBF5",
                               background: isSelected ? "#EEF2FF" : "#F7F8FC",
                             }}
                           >
@@ -316,13 +316,13 @@ export default function CollabView() {
                               {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
                             </div>
                             <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0"
-                              style={{ background: p.gradient ? `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` : "#6366f1" }}>
+                              style={{ background: p.gradient ? `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` : "#E2231A" }}>
                               {p.imageUrl
                                 ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" />
                                 : <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-white/60" /></div>}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{p.name}</p>
+                              <p className="text-sm font-semibold truncate" style={{ color: "#1B1B1B" }}>{p.name}</p>
                               <p className="text-xs text-slate-400 truncate">{p.game}</p>
                             </div>
                           </div>
@@ -350,7 +350,7 @@ export default function CollabView() {
                   onClick={handleBulkAdd}
                   disabled={bulkSelected.length === 0 || bulkSaving}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "#1e1b4b" }}
+                  style={{ background: "#1B1B1B" }}
                 >
                   {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
                   Add {bulkSelected.length > 0 ? `${bulkSelected.length} ` : ""}Products
@@ -371,7 +371,7 @@ export default function CollabView() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Connect Product</h3>
+                <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Connect Product</h3>
                 <button onClick={() => setAddModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
                   <X className="w-4 h-4" />
                 </button>
@@ -401,7 +401,7 @@ export default function CollabView() {
                   </button>
                   <button type="submit" disabled={saving}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Connect
                   </button>
@@ -422,7 +422,7 @@ export default function CollabView() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Edit Cut — {editModal.productName}</h3>
+                <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Edit Cut — {editModal.productName}</h3>
                 <button onClick={() => setEditModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
                   <X className="w-4 h-4" />
                 </button>
@@ -442,7 +442,7 @@ export default function CollabView() {
                   </button>
                   <button type="submit" disabled={saving}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Save
                   </button>

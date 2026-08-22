@@ -201,9 +201,9 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1628] rounded-xl border border-white/5 overflow-hidden">
+    <div className="flex flex-col h-full bg-[#161616] rounded-xl border border-white/5 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/5 bg-[#0d1f3c] flex items-center gap-3 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-white/5 bg-[#1B1B1B] flex items-center gap-3 flex-shrink-0">
         <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
           <User className="w-4 h-4 text-blue-400" />
         </div>
@@ -268,7 +268,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
                     "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words",
                     msg.sender === "agent"
                       ? "bg-blue-600 text-white rounded-br-sm"
-                      : "bg-[#0d1f3c] text-slate-200 border border-white/5 rounded-bl-sm"
+                      : "bg-[#1B1B1B] text-slate-200 border border-white/5 rounded-bl-sm"
                   )}>
                     {msg.text}
                   </div>
@@ -283,7 +283,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
 
         {isTyping && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 items-center">
-            <div className="flex gap-1 bg-[#0d1f3c] border border-white/5 px-3 py-2 rounded-2xl rounded-bl-sm">
+            <div className="flex gap-1 bg-[#1B1B1B] border border-white/5 px-3 py-2 rounded-2xl rounded-bl-sm">
               {[0, 1, 2].map(i => (
                 <motion.div
                   key={i}
@@ -310,7 +310,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
               onKeyDown={handleKeyDown}
               placeholder={sessionStatus === "pending" ? "Type to claim this chat..." : "Type a message..."}
               rows={1}
-              className="flex-1 bg-[#0d1f3c] border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
+              className="flex-1 bg-[#1B1B1B] border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
               style={{ minHeight: 40, maxHeight: 120 }}
             />
             <motion.button

@@ -86,7 +86,7 @@ function ConvoItem({ session, selected, onClick, unread }: {
         <div className={cn("w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white", avatarColor(session.robloxUsername))}>
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
         </div>
-        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[2px] border-[#0a1628]", cfg.dot, cfg.pulse ? "animate-pulse" : "")} />
+        <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[2px] border-[#161616]", cfg.dot, cfg.pulse ? "animate-pulse" : "")} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1 mb-0.5">
@@ -139,7 +139,7 @@ function ProfilePanel({ session, isMyActive, onClose, onDeliver, onEnd, onCloseC
       : (session.items || []).map(i => ({ name: i.name, qty: i.quantity }));
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto">
+    <div className="flex flex-col h-full bg-[#161616] border-l border-white/5 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
         <p className="text-white text-sm font-semibold">Profile</p>
@@ -187,10 +187,10 @@ function ProfilePanel({ session, isMyActive, onClose, onDeliver, onEnd, onCloseC
           </div>
           <div className="grid grid-cols-2 gap-2">
             {orderItems.map((item, i) => (
-              <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+              <div key={i} className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden flex flex-col">
                 <div
                   className="relative w-full h-16 overflow-hidden flex-shrink-0"
-                  style={{ background: item.gradient ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)` : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)" }}
+                  style={{ background: item.gradient ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)` : "linear-gradient(135deg, #1B1B1B 0%, #312e81 100%)" }}
                 >
                   <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "12px 12px" }} />
                   {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />}
@@ -466,7 +466,7 @@ export default function DelivererQueue() {
     <div className="flex h-[calc(100vh-64px-48px)] overflow-hidden rounded-2xl" style={{ background: "rgba(6,9,28,0.8)", border: "1px solid rgba(255,255,255,0.06)" }}>
 
       {/* ══════ LEFT: Inbox ══════ */}
-      <div className={cn("flex flex-col flex-shrink-0 border-r border-white/5 bg-[#0a1628] w-full md:w-72", mobilePanel !== 0 ? "hidden md:flex" : "flex")}>
+      <div className={cn("flex flex-col flex-shrink-0 border-r border-white/5 bg-[#161616] w-full md:w-72", mobilePanel !== 0 ? "hidden md:flex" : "flex")}>
         <div className="px-4 py-3.5 border-b border-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -525,7 +525,7 @@ export default function DelivererQueue() {
         ) : (
           <>
             {/* Chat header */}
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0 bg-[#0a1628]">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0 bg-[#161616]">
               <button onClick={() => setMobilePanel(0)} className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 flex-shrink-0">
                 <ArrowLeft className="w-4 h-4" />
               </button>
@@ -573,7 +573,7 @@ export default function DelivererQueue() {
 
             {/* Mobile action bar */}
             {selectedSession.status === "pending" && (
-              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0">
+              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#161616] flex-shrink-0">
                 <button onClick={() => claimSession(selectedSession.roomId)} disabled={!!claiming}
                   className="w-full py-2 rounded-lg text-xs font-semibold text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
                   style={{ background: "rgba(14,165,233,0.9)" }}>
@@ -583,7 +583,7 @@ export default function DelivererQueue() {
               </div>
             )}
             {isMyActive && (
-              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0 flex gap-2">
+              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#161616] flex-shrink-0 flex gap-2">
                 <button onClick={() => setPodMode(true)}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5" />Mark as Delivered
@@ -646,8 +646,8 @@ export default function DelivererQueue() {
                   background: selectedSession.status === "claimed" ? "rgba(74,222,128,0.08)" : "rgba(124,58,237,0.08)",
                   border: `1px solid ${selectedSession.status === "claimed" ? "rgba(74,222,128,0.15)" : "rgba(196,181,253,0.15)"}`,
                 }}>
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: selectedSession.status === "claimed" ? "#4ade80" : "#a78bfa" }} />
-                  <p className="text-xs font-medium" style={{ color: selectedSession.status === "claimed" ? "#4ade80" : "#a78bfa" }}>
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: selectedSession.status === "claimed" ? "#4ade80" : "#FF7A72" }} />
+                  <p className="text-xs font-medium" style={{ color: selectedSession.status === "claimed" ? "#4ade80" : "#FF7A72" }}>
                     {selectedSession.status === "claimed" ? "Delivered — order complete" : "Chat ended"}
                   </p>
                 </div>
@@ -693,7 +693,7 @@ export default function DelivererQueue() {
       </AnimatePresence>
 
       {mobilePanel === 2 && (
-        <button onClick={() => setMobilePanel(1)} className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#0a1628] border border-white/10 rounded-lg flex items-center justify-center text-slate-400">
+        <button onClick={() => setMobilePanel(1)} className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#161616] border border-white/10 rounded-lg flex items-center justify-center text-slate-400">
           <ArrowLeft className="w-4 h-4" />
         </button>
       )}
@@ -704,7 +704,7 @@ export default function DelivererQueue() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
+              className="bg-[#1B1B1B] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Proof of Delivery</h3>
                 <p className="text-slate-400 text-xs mt-0.5">Submit proof before marking as delivered</p>
@@ -758,7 +758,7 @@ export default function DelivererQueue() {
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Notes</label>
                   <textarea value={podNotes} onChange={e => setPodNotes(e.target.value)} placeholder="Optional delivery notes…" rows={2}
-                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sky-500/50 resize-none" />
+                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-sky-500/50 resize-none" />
                 </div>
               </div>
               <div className="px-6 py-4 border-t border-white/5 flex gap-3">
@@ -785,7 +785,7 @@ export default function DelivererQueue() {
             onClick={() => setClosingSession(null)}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
+              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden">
               <div className="px-6 py-5">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
                   <Archive className="w-5 h-5 text-purple-400" />

@@ -37,17 +37,17 @@ export default function Customers() {
   return (
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
       <div>
-        <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Customers</h2>
+        <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Customers</h2>
         <p className="text-sm text-slate-500 mt-0.5">Manage customer accounts and view their order history</p>
       </div>
 
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: Users, label: "Total Customers", value: stats.total, color: "#4f46e5" },
-            { icon: Users, label: "Active Customers", value: stats.active, color: "#10b981" },
+            { icon: Users, label: "Total Customers", value: stats.total, color: "#E2231A" },
+            { icon: Users, label: "Active Customers", value: stats.active, color: "#00B06F" },
             { icon: TrendingUp, label: "New This Month", value: stats.newThisMonth, color: "#f59e0b" },
-            { icon: DollarSign, label: "Top Spender", value: stats.topSpenders?.[0] ? `$${stats.topSpenders[0].total.toFixed(2)}` : "-", color: "#8b5cf6" },
+            { icon: DollarSign, label: "Top Spender", value: stats.topSpenders?.[0] ? `$${stats.topSpenders[0].total.toFixed(2)}` : "-", color: "#DB2777" },
           ].map(({ icon: Icon, label, value, color }, i) => (
             <div key={i} className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
               <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export default function Customers() {
                   <Icon className="w-4 h-4" style={{ color }} />
                 </div>
                 <div>
-                  <p className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{typeof value === "number" ? value.toLocaleString() : value}</p>
+                  <p className="text-xl font-bold" style={{ color: "#1B1B1B" }}>{typeof value === "number" ? value.toLocaleString() : value}</p>
                   <p className="text-xs text-slate-400">{label}</p>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export default function Customers() {
 
       {stats?.topSpenders && stats.topSpenders.length > 0 && (
         <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Top Spenders</h3>
+          <h3 className="text-sm font-bold mb-4" style={{ color: "#1B1B1B" }}>Top Spenders</h3>
           <div className="space-y-3">
             {stats.topSpenders.map((s: any, i: number) => (
               <div key={i} className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function Customers() {
                   {i + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{s.robloxUsername || s._id}</p>
+                  <p className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{s.robloxUsername || s._id}</p>
                   <p className="text-xs text-slate-400 truncate">{s._id}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -97,7 +97,7 @@ export default function Customers() {
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search customers by email, name, or Roblox username..."
               className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
             />
           </div>
         </div>
@@ -135,11 +135,11 @@ export default function Customers() {
                   >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#E2231A,#E2231A)" }}>
                           <span className="text-white text-xs font-bold">{customer.displayName[0]?.toUpperCase()}</span>
                         </div>
                         <div>
-                          <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{customer.displayName}</p>
+                          <p className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{customer.displayName}</p>
                           <p className="text-xs text-slate-400 truncate max-w-[160px]">{customer.email}</p>
                         </div>
                       </div>
@@ -150,7 +150,7 @@ export default function Customers() {
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1">
                         <ShoppingBag className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{customer.orderCount || 0}</span>
+                        <span className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{customer.orderCount || 0}</span>
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
@@ -174,7 +174,7 @@ export default function Customers() {
                           }
                         }}
                         className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                        style={{ background: customer.active !== false ? "#FEF2F2" : "#ECFDF5", color: customer.active !== false ? "#EF4444" : "#10B981" }}
+                        style={{ background: customer.active !== false ? "#FEF2F2" : "#ECFDF5", color: customer.active !== false ? "#EF4444" : "#00B06F" }}
                         title={customer.active !== false ? "Disable" : "Enable"}
                       >
                         <UserX className="w-3.5 h-3.5" />

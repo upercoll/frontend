@@ -29,7 +29,7 @@ export default function DelivererHistory() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Unpaid Commission", value: fmt(d?.totalCommission ?? 0), color: "#a78bfa" },
+          { label: "Unpaid Commission", value: fmt(d?.totalCommission ?? 0), color: "#FF7A72" },
           { label: "Unpaid Revenue",    value: fmt(d?.totalRevenue ?? 0),    color: "#4ade80" },
           { label: "Total Delivered",   value: d?.totalDelivered ?? 0,       color: "#7dd3fc" },
           { label: "Rate",              value: `${d?.commissionRate ?? 20}%`, color: "#fbbf24" },

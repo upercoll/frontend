@@ -40,16 +40,16 @@ export default function StockerLayout({ children }: { children: React.ReactNode 
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #131313 0%, #0c1445 45%, #131313 100%)" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(226,35,26,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(219,39,119,0.06) 0%, transparent 70%)" }} />
       </div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
+          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(219,39,119,0.12)" }}>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -68,7 +68,7 @@ export default function StockerLayout({ children }: { children: React.ReactNode 
                   <Link key={item.href} href={item.href}>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
                       style={isActive
-                        ? { background: "rgba(99,102,241,0.2)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.3)" }
+                        ? { background: "rgba(226,35,26,0.2)", color: "#D8D2C4", border: "1px solid rgba(226,35,26,0.3)" }
                         : { color: "rgba(255,255,255,0.45)", border: "1px solid transparent" }}>
                       <item.icon className="w-3.5 h-3.5" />
                       {item.label}

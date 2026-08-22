@@ -49,13 +49,13 @@ export default function CollabCollaborators() {
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Collaborators</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Collaborators</h2>
           <p className="text-sm text-slate-500 mt-0.5">{collaborators.length} total collaborators</p>
         </div>
         <button
           onClick={() => { setModal(true); setForm({ name: "", email: "" }); setFormError(""); }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
-          style={{ background: "#1e1b4b" }}
+          style={{ background: "#1B1B1B" }}
         >
           <Plus className="w-4 h-4" /> Invite Collaborator
         </button>
@@ -93,11 +93,11 @@ export default function CollabCollaborators() {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                 >
                   <td className="px-5 py-4">
-                    <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{c.name}</p>
+                    <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{c.name}</p>
                     <p className="text-xs text-slate-400">{c.email}</p>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{c.productCount ?? 0}</span>
+                    <span className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{c.productCount ?? 0}</span>
                   </td>
                   <td className="px-5 py-4">
                     {c.status === "active"
@@ -143,7 +143,7 @@ export default function CollabCollaborators() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Invite Collaborator</h3>
+                <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Invite Collaborator</h3>
                 <button onClick={() => setModal(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
                   <X className="w-4 h-4" />
                 </button>
@@ -156,7 +156,7 @@ export default function CollabCollaborators() {
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     placeholder="e.g. John Doe"
                     className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                     required
                   />
                 </div>
@@ -168,7 +168,7 @@ export default function CollabCollaborators() {
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     placeholder="collaborator@email.com"
                     className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                     required
                   />
                 </div>
@@ -184,7 +184,7 @@ export default function CollabCollaborators() {
                   </button>
                   <button type="submit" disabled={saving}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
                     Send Invite
                   </button>

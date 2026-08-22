@@ -25,7 +25,7 @@ const STATUS_DISPLAY: Record<string, string> = {
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   pending:            { bg: "#FEF9C3", text: "#854D0E", border: "#FDE047" },
   paid:               { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
-  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#A78BFA" },
+  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#FF7A72" },
   completed:          { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
   cancelled:          { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
   refunded:           { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
@@ -138,7 +138,7 @@ export default function OrderDetail() {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#4f46e5" }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#E2231A" }} />
       </div>
     );
   }
@@ -187,7 +187,7 @@ export default function OrderDetail() {
           </Link>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#1e1b4b" }}>
+              <h2 className="text-lg sm:text-xl font-bold" style={{ color: "#1B1B1B" }}>
                 #{order.orderNumber}
               </h2>
               <StatusBadge status={order.payment?.status === "succeeded" ? "paid" : "pending"} />
@@ -213,7 +213,7 @@ export default function OrderDetail() {
           {isFulfillable && (
             <button onClick={() => setShowFulfill(true)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-white"
-              style={{ background: "#1e1b4b" }}>
+              style={{ background: "#1B1B1B" }}>
               <CheckCircle2 className="w-3.5 h-3.5" />
               Mark Completed
             </button>
@@ -273,7 +273,7 @@ export default function OrderDetail() {
                 {isFulfilled
                   ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   : <Clock className="w-4 h-4 text-amber-500" />}
-                <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>
+                <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>
                   {isFulfilled ? "Completed" : "Pending Delivery"}
                 </span>
               </div>
@@ -308,13 +308,13 @@ export default function OrderDetail() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{item.productSnapshot.name}</p>
+                      <p className="text-sm font-semibold truncate" style={{ color: "#1B1B1B" }}>{item.productSnapshot.name}</p>
                       <p className="text-xs text-slate-400">{item.productSnapshot.game}</p>
                     </div>
-                    <div className="text-right flex-shrink-0 text-sm" style={{ color: "#1e1b4b" }}>
+                    <div className="text-right flex-shrink-0 text-sm" style={{ color: "#1B1B1B" }}>
                       ${item.unitPrice.toFixed(2)} × {item.quantity}
                     </div>
-                    <div className="text-right flex-shrink-0 font-bold text-sm w-20" style={{ color: "#1e1b4b" }}>
+                    <div className="text-right flex-shrink-0 font-bold text-sm w-20" style={{ color: "#1B1B1B" }}>
                       ${item.totalPrice.toFixed(2)}
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function OrderDetail() {
                 <div className="mt-4 pt-3" style={{ borderTop: "1px solid #F3F4F6" }}>
                   <button onClick={() => setShowFulfill(true)}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     <Plus className="w-3.5 h-3.5" />
                     Add tracking / Complete
                   </button>
@@ -337,8 +337,8 @@ export default function OrderDetail() {
           {/* Payment Summary */}
           <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
             <div className="flex items-center gap-2 px-5 py-3.5" style={{ borderBottom: "1px solid #F3F4F6" }}>
-              <CreditCard className="w-4 h-4" style={{ color: isPaid ? "#10b981" : "#f59e0b" }} />
-              <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>
+              <CreditCard className="w-4 h-4" style={{ color: isPaid ? "#00B06F" : "#f59e0b" }} />
+              <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>
                 {isPaid ? "Paid" : "Unpaid"}
               </span>
             </div>
@@ -353,7 +353,7 @@ export default function OrderDetail() {
                   <span>-${order.pricing.discount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-bold pt-2" style={{ color: "#1e1b4b", borderTop: "1px solid #F3F4F6" }}>
+              <div className="flex justify-between font-bold pt-2" style={{ color: "#1B1B1B", borderTop: "1px solid #F3F4F6" }}>
                 <span>Total</span>
                 <span>${order.pricing.total.toFixed(2)}</span>
               </div>
@@ -377,10 +377,10 @@ export default function OrderDetail() {
           {/* Admin Notes */}
           <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm" style={{ color: "#1e1b4b" }}>Internal Notes</h3>
+              <h3 className="font-semibold text-sm" style={{ color: "#1B1B1B" }}>Internal Notes</h3>
               <button onClick={() => { setAdminNotes(order.adminNotes || ""); setEditNotes(true); }}
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                style={{ background: "#EEF2FF", color: "#E2231A" }}>
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -389,7 +389,7 @@ export default function OrderDetail() {
                 <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} rows={3}
                   placeholder="Add internal notes..."
                   className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} autoFocus />
+                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} autoFocus />
                 <div className="flex gap-2">
                   <button onClick={() => setEditNotes(false)}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -397,7 +397,7 @@ export default function OrderDetail() {
                   <button onClick={() => updateMut.mutate({ status: order.status, notes: adminNotes })}
                     disabled={updateMut.isPending}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {updateMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Save
                   </button>
                 </div>
@@ -412,25 +412,25 @@ export default function OrderDetail() {
           {/* Timeline */}
           <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
             <div className="px-5 py-3.5" style={{ borderBottom: "1px solid #F3F4F6" }}>
-              <h3 className="font-semibold text-sm" style={{ color: "#1e1b4b" }}>Timeline</h3>
+              <h3 className="font-semibold text-sm" style={{ color: "#1B1B1B" }}>Timeline</h3>
             </div>
             <div className="p-5">
               <div className="flex gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-                  style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                  style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
                   {((data as any)?.data?.profile?.displayName || "A")[0].toUpperCase()}
                 </div>
                 <div className="flex-1">
                   <textarea value={comment} onChange={e => setComment(e.target.value)} rows={2}
                     placeholder="Leave a comment..."
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                   <div className="flex justify-between items-center mt-2">
                     <p className="text-xs text-slate-400">Only staff can see comments</p>
                     <button onClick={() => { if (comment.trim()) timelineMut.mutate(); }}
                       disabled={!comment.trim() || timelineMut.isPending}
                       className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-40 transition-colors"
-                      style={{ background: "#1e1b4b" }}>
+                      style={{ background: "#1B1B1B" }}>
                       {timelineMut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Post"}
                     </button>
                   </div>
@@ -440,7 +440,7 @@ export default function OrderDetail() {
               <div className="space-y-3 mt-2">
                 {[...timeline].reverse().map((event, i) => (
                   <div key={i} className="flex gap-3 items-start">
-                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: "#6366f1" }} />
+                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ background: "#E2231A" }} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm" style={{ color: "#374151" }}>{event.action}</p>
                       {event.details && <p className="text-xs text-slate-400 mt-0.5">{event.details}</p>}
@@ -467,7 +467,7 @@ export default function OrderDetail() {
           {/* Notes from customer */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>Notes</h3>
+              <h3 className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>Notes</h3>
               <button className="w-6 h-6 rounded flex items-center justify-center" style={{ color: "#9ca3af" }}>
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
@@ -478,10 +478,10 @@ export default function OrderDetail() {
           {/* Order Status */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>Order Status</h3>
+              <h3 className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>Order Status</h3>
               <button onClick={() => { setNewStatus(order.status); setEditStatus(true); }}
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                style={{ background: "#EEF2FF", color: "#E2231A" }}>
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -489,7 +489,7 @@ export default function OrderDetail() {
               <div className="space-y-2">
                 <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}
                   className="w-full rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}>
                   <option value="">Select status</option>
                   {VALID_STATUSES.filter(s => isPaid || !["cancelled", "refunded"].includes(s)).map((s) => (
                     <option key={s} value={s}>{STATUS_DISPLAY[s] || s}</option>
@@ -502,7 +502,7 @@ export default function OrderDetail() {
                   <button onClick={() => { if (newStatus) updateMut.mutate({ status: newStatus }); }}
                     disabled={!newStatus || updateMut.isPending}
                     className="flex-1 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {updateMut.isPending ? "Saving…" : "Update"}
                   </button>
                 </div>
@@ -515,7 +515,7 @@ export default function OrderDetail() {
           {/* Customer */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>Customer</h3>
+              <h3 className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>Customer</h3>
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -523,7 +523,7 @@ export default function OrderDetail() {
                   <User className="w-3.5 h-3.5 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "#4f46e5" }}>{order.customer.robloxUsername}</p>
+                  <p className="text-sm font-semibold" style={{ color: "#E2231A" }}>{order.customer.robloxUsername}</p>
                   <p className="text-xs text-slate-400">{customerOrderCount} order{customerOrderCount !== 1 ? "s" : ""}</p>
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function OrderDetail() {
 
           {/* Conversion Summary */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1e1b4b" }}>Conversion summary</h3>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1B1B1B" }}>Conversion summary</h3>
             <div className="space-y-1.5 text-xs text-slate-600">
               <div className="flex items-center gap-2">
                 <Hash className="w-3.5 h-3.5 text-slate-400" />
@@ -586,14 +586,14 @@ export default function OrderDetail() {
 
           {/* Order Risk */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1e1b4b" }}>Order risk</h3>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1B1B1B" }}>Order risk</h3>
             <div className="flex items-center gap-1 mb-2">
               {["low", "medium", "high"].map((level, i) => {
                 const risk = (order as any).riskLevel || "low";
                 const activeIdx = risk === "low" ? 0 : risk === "medium" ? 1 : 2;
                 return (
                   <div key={level} className="h-2 flex-1 rounded-full"
-                    style={{ background: i <= activeIdx ? (i === 0 ? "#10b981" : i === 1 ? "#f59e0b" : "#ef4444") : "#e5e7eb" }} />
+                    style={{ background: i <= activeIdx ? (i === 0 ? "#00B06F" : i === 1 ? "#f59e0b" : "#ef4444") : "#e5e7eb" }} />
                 );
               })}
             </div>
@@ -611,12 +611,12 @@ export default function OrderDetail() {
 
           {/* Tags */}
           <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1e1b4b" }}>Tags</h3>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: "#1B1B1B" }}>Tags</h3>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {tags.map(tag => (
                 <span key={tag}
                   className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                  style={{ background: "#EEF2FF", color: "#E2231A" }}>
                   {tag}
                   <button onClick={() => handleRemoveTag(tag)} className="hover:opacity-70">
                     <X className="w-2.5 h-2.5" />
@@ -629,10 +629,10 @@ export default function OrderDetail() {
                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAddTag(); } }}
                 placeholder="Add tag..."
                 className="flex-1 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
               <button onClick={handleAddTag}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium"
-                style={{ background: "#1e1b4b", color: "white" }}>
+                style={{ background: "#1B1B1B", color: "white" }}>
                 Add
               </button>
             </div>
@@ -641,7 +641,7 @@ export default function OrderDetail() {
           {/* Claim Session */}
           {claimSession && (
             <div className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
-              <h3 className="text-sm font-semibold mb-3" style={{ color: "#1e1b4b" }}>Claim Session</h3>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "#1B1B1B" }}>Claim Session</h3>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Room ID</span>
@@ -654,12 +654,12 @@ export default function OrderDetail() {
                 {claimSession.assignedAgent && (
                   <div className="flex justify-between">
                     <span className="text-slate-400">Agent</span>
-                    <span style={{ color: "#1e1b4b" }}>{claimSession.assignedAgent.name}</span>
+                    <span style={{ color: "#1B1B1B" }}>{claimSession.assignedAgent.name}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-slate-400">Messages</span>
-                  <span style={{ color: "#1e1b4b" }}>{claimSession.messages?.length || 0}</span>
+                  <span style={{ color: "#1B1B1B" }}>{claimSession.messages?.length || 0}</span>
                 </div>
               </div>
             </div>
@@ -679,7 +679,7 @@ export default function OrderDetail() {
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
                 <div>
-                  <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Issue Refund</h3>
+                  <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Issue Refund</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Order total: ${order.pricing.total.toFixed(2)}</p>
                 </div>
                 <button onClick={() => setShowRefund(false)}
@@ -705,12 +705,12 @@ export default function OrderDetail() {
                       value={refundAmount} onChange={e => setRefundAmount(e.target.value)}
                       placeholder={order.pricing.total.toFixed(2)}
                       className="w-full rounded-xl pl-7 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button onClick={() => setRefundAmount(order.pricing.total.toFixed(2))}
                       className="text-xs px-3 py-1 rounded-lg"
-                      style={{ background: "#EEF2FF", color: "#4f46e5" }}>Full</button>
+                      style={{ background: "#EEF2FF", color: "#E2231A" }}>Full</button>
                     <button onClick={() => setRefundAmount((order.pricing.total / 2).toFixed(2))}
                       className="text-xs px-3 py-1 rounded-lg"
                       style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#6b7280" }}>50%</button>
@@ -720,7 +720,7 @@ export default function OrderDetail() {
                   <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>Reason</label>
                   <select value={refundReason} onChange={e => setRefundReason(e.target.value)}
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}>
                     {REFUND_REASONS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
@@ -756,7 +756,7 @@ export default function OrderDetail() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Complete Order</h3>
+                <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Complete Order</h3>
                 <button onClick={() => setShowFulfill(false)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ background: "#F7F8FC", color: "#6b7280" }}>
@@ -769,13 +769,13 @@ export default function OrderDetail() {
                   <input value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)}
                     placeholder="e.g. 1Z999AA10123456784"
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                 </div>
                 <div>
                   <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>Carrier (optional)</label>
                   <select value={carrier} onChange={e => setCarrier(e.target.value)}
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}>
                     <option value="">Not applicable (digital delivery)</option>
                     <option value="UPS">UPS</option>
                     <option value="FedEx">FedEx</option>
@@ -792,7 +792,7 @@ export default function OrderDetail() {
                 <button onClick={() => fulfillMut.mutate()}
                   disabled={fulfillMut.isPending}
                   className="flex-1 py-3 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: "#1e1b4b" }}>
+                  style={{ background: "#1B1B1B" }}>
                   {fulfillMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   Mark as Completed
                 </button>
@@ -807,7 +807,7 @@ export default function OrderDetail() {
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
             onClick={() => setViewChat(null)}>
             <motion.div initial={{ scale: 0.94, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 20 }}
-              className="w-full max-w-2xl h-[600px] flex flex-col bg-[#110025] rounded-2xl overflow-hidden shadow-2xl"
+              className="w-full max-w-2xl h-[600px] flex flex-col bg-[#191919] rounded-2xl overflow-hidden shadow-2xl"
               style={{ border: "1px solid rgba(196,181,253,0.15)" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"

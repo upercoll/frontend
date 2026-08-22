@@ -126,7 +126,7 @@ export default function SocialsTrackerDetail() {
           </button>
         </Link>
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{creator?.name || "Creator"}</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>{creator?.name || "Creator"}</h2>
           <p className="text-sm text-slate-500">{creator?.email}</p>
         </div>
       </div>
@@ -134,8 +134,8 @@ export default function SocialsTrackerDetail() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Videos", value: allSubmissions.length, icon: Video, color: "#6366f1" },
-          { label: "Total Views", value: fmtNum(totalViews), icon: Eye, color: "#60a5fa" },
+          { label: "Total Videos", value: allSubmissions.length, icon: Video, color: "#E2231A" },
+          { label: "Total Views", value: fmtNum(totalViews), icon: Eye, color: "#6DB8FF" },
           { label: "In Review", value: inReviewCount, icon: Clock, color: "#d97706" },
           { label: "Total Paid Out", value: `$${totalPaid.toFixed(2)}`, icon: DollarSign, color: "#059669" },
         ].map((s, i) => (
@@ -144,7 +144,7 @@ export default function SocialsTrackerDetail() {
               <s.icon className="w-4 h-4" style={{ color: s.color }} />
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{s.label}</p>
             </div>
-            <p className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{s.value}</p>
+            <p className="text-xl font-bold" style={{ color: "#1B1B1B" }}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -171,8 +171,8 @@ export default function SocialsTrackerDetail() {
       )}
 
       <div className="bg-white rounded-xl p-4 flex flex-wrap items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
-        <div className="flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Default creator rate</p><p className="text-sm font-bold mt-1" style={{ color: "#1e1b4b" }}>{creator?.socialRateType === "per_video" ? "$" : "$"}{creator?.socialRate || 0}{creator?.socialRateType === "per_video" ? " per video" : " per 1K views"}</p></div>
-        {editingRate ? <><select value={rateType} onChange={e => setRateType(e.target.value as any)} className="rounded-lg p-2 text-xs border"><option value="per_1k">Per 1K views</option><option value="per_video">Per video</option></select><input value={rate} onChange={e => setRate(e.target.value)} type="number" className="w-24 rounded-lg p-2 text-xs border" placeholder="Rate"/><button onClick={saveCreatorRate} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Save</button></> : <button onClick={() => { setRateType(creator?.socialRateType || "per_1k"); setRate(String(creator?.socialRate || "")); setEditingRate(true); }} className="px-3 py-2 rounded-lg text-xs font-bold" style={{ background: "#EEF2FF", color: "#4f46e5" }}>Change default rate</button>}
+        <div className="flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Default creator rate</p><p className="text-sm font-bold mt-1" style={{ color: "#1B1B1B" }}>{creator?.socialRateType === "per_video" ? "$" : "$"}{creator?.socialRate || 0}{creator?.socialRateType === "per_video" ? " per video" : " per 1K views"}</p></div>
+        {editingRate ? <><select value={rateType} onChange={e => setRateType(e.target.value as any)} className="rounded-lg p-2 text-xs border"><option value="per_1k">Per 1K views</option><option value="per_video">Per video</option></select><input value={rate} onChange={e => setRate(e.target.value)} type="number" className="w-24 rounded-lg p-2 text-xs border" placeholder="Rate"/><button onClick={saveCreatorRate} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Save</button></> : <button onClick={() => { setRateType(creator?.socialRateType || "per_1k"); setRate(String(creator?.socialRate || "")); setEditingRate(true); }} className="px-3 py-2 rounded-lg text-xs font-bold" style={{ background: "#EEF2FF", color: "#E2231A" }}>Change default rate</button>}
       </div>
 
       {pendingPayout <= 0 && (
@@ -184,7 +184,7 @@ export default function SocialsTrackerDetail() {
       {/* Video grid/table */}
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>
+          <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>
             Videos ({filtered.length}{statusFilter ? ` filtered` : " total"})
           </h3>
           <div className="flex gap-1">
@@ -198,7 +198,7 @@ export default function SocialsTrackerDetail() {
               <button key={t.value} onClick={() => setStatusFilter(t.value)}
                 className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap"
                 style={statusFilter === t.value
-                  ? { background: "#1e1b4b", color: "#fff" }
+                  ? { background: "#1B1B1B", color: "#fff" }
                   : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
                 {t.label}
               </button>
@@ -254,7 +254,7 @@ export default function SocialsTrackerDetail() {
 
                   {/* Info */}
                   <div className="p-3 space-y-2">
-                    <p className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: "#1e1b4b" }}>
+                    <p className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: "#1B1B1B" }}>
                       {s.title || "Untitled"}
                     </p>
                     <p className="text-xs text-slate-400">{s.channelName}</p>
@@ -308,7 +308,7 @@ export default function SocialsTrackerDetail() {
       {/* Payout history */}
       <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Payout History</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>Payout History</h3>
         </div>
         {payouts.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
@@ -337,7 +337,7 @@ export default function SocialsTrackerDetail() {
                   <td className="px-5 py-3.5 text-sm text-slate-500">{p.paidBy || "—"}</td>
                   <td className="px-5 py-3.5 text-sm text-slate-500">{fmtDateTime(p.paidAt)}</td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-bold" style={{ color: "#1e1b4b" }}>${p.amount.toFixed(2)} USD</span>
+                    <span className="text-sm font-bold" style={{ color: "#1B1B1B" }}>${p.amount.toFixed(2)} USD</span>
                   </td>
                 </tr>
               ))}
@@ -356,7 +356,7 @@ export default function SocialsTrackerDetail() {
               className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6"
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
+              <h3 className="font-bold text-base mb-2" style={{ color: "#1B1B1B" }}>Confirm Payout</h3>
               <p className="text-sm text-slate-500 mb-4">
                 Pay <strong>{creator?.name}</strong> for accepted videos. Enter a partial amount to pay less than the full balance, or leave blank to pay all.
               </p>
@@ -374,7 +374,7 @@ export default function SocialsTrackerDetail() {
                     onChange={e => setPartialAmount(e.target.value)}
                     placeholder={pendingPayout.toFixed(2)}
                     className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    style={{ background: "#fff", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#fff", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                 </div>
                 {isPartial && (

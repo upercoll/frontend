@@ -105,7 +105,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.04 }}
-      className="bg-[#0d1f3c] border border-white/5 rounded-xl p-4 space-y-4"
+      className="bg-[#1B1B1B] border border-white/5 rounded-xl p-4 space-y-4"
     >
       <div className="flex items-center gap-3">
         {game.imageUrl ? (
@@ -118,7 +118,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
         ) : (
           <div
             className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${game.gradient?.from ?? "#6366f1"}, ${game.gradient?.to ?? "#8b5cf6"})` }}
+            style={{ background: `linear-gradient(135deg, ${game.gradient?.from ?? "#E2231A"}, ${game.gradient?.to ?? "#DB2777"})` }}
           >
             <Gamepad2 className="w-5 h-5 text-white/50" />
           </div>
@@ -152,7 +152,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
 
       <div className="space-y-2">
         {slots.map((slot, i) => (
-          <div key={i} className="flex items-center gap-2 bg-[#0a1628] border border-white/8 rounded-xl px-3 py-2.5">
+          <div key={i} className="flex items-center gap-2 bg-[#161616] border border-white/8 rounded-xl px-3 py-2.5">
             <div className="flex-1 flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 flex-1 min-w-[120px]">
                 <label className="text-slate-500 text-[10px] w-7 flex-shrink-0">From</label>
@@ -206,7 +206,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
               onClick={() => saveMut.mutate()}
               disabled={saveMut.isPending}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+              style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}
             >
               {saveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save
@@ -251,7 +251,7 @@ export default function ClaimTime() {
 
       <div
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs"
-        style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.15)", color: "#a5b4fc" }}
+        style={{ background: "rgba(226,35,26,0.08)", border: "1px solid rgba(226,35,26,0.15)", color: "#D8D2C4" }}
       >
         <Clock className="w-3.5 h-3.5 flex-shrink-0" />
         <span>Current GMT+3 time: <span className="font-mono font-semibold">{getGmt3Hhmm()}</span></span>
@@ -260,7 +260,7 @@ export default function ClaimTime() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-28 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />
+            <div key={i} className="h-28 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />
           ))}
         </div>
       ) : activeGames.length === 0 ? (

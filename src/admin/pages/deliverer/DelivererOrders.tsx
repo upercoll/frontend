@@ -18,9 +18,9 @@ const STATUS_DISPLAY: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
   pending:            { bg: "rgba(254,249,195,0.15)", text: "#fde047",  dot: "#ca8a04" },
-  paid:               { bg: "rgba(219,234,254,0.12)", text: "#93c5fd",  dot: "#3b82f6" },
-  delivering:         { bg: "rgba(237,233,254,0.12)", text: "#c4b5fd",  dot: "#7c3aed" },
-  completed:          { bg: "rgba(209,250,229,0.12)", text: "#6ee7b7",  dot: "#10b981" },
+  paid:               { bg: "rgba(219,234,254,0.12)", text: "#93c5fd",  dot: "#0A84FF" },
+  delivering:         { bg: "rgba(237,233,254,0.12)", text: "#F2EEE5",  dot: "#7c3aed" },
+  completed:          { bg: "rgba(209,250,229,0.12)", text: "#6ee7b7",  dot: "#00B06F" },
   cancelled:          { bg: "rgba(254,226,226,0.12)", text: "#fca5a5",  dot: "#ef4444" },
   refunded:           { bg: "rgba(243,244,246,0.08)", text: "#9ca3af",  dot: "#6b7280" },
   partially_refunded: { bg: "rgba(255,247,237,0.12)", text: "#fdba74",  dot: "#f97316" },
@@ -213,7 +213,7 @@ export default function DelivererOrders() {
                                       <div className="relative w-full h-14" style={{
                                         background: item.productSnapshot.gradient
                                           ? `linear-gradient(135deg, ${item.productSnapshot.gradient.from} 0%, ${item.productSnapshot.gradient.to} 100%)`
-                                          : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                                          : "linear-gradient(135deg, #1B1B1B 0%, #312e81 100%)",
                                       }}>
                                         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "10px 10px" }} />
                                         {item.productSnapshot.imageUrl && (

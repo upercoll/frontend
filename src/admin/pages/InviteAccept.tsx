@@ -73,7 +73,7 @@ export default function InviteAccept() {
   };
 
   return (
-    <div className="min-h-screen bg-[#060d1a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/5 rounded-full blur-3xl" />
@@ -92,7 +92,7 @@ export default function InviteAccept() {
           <p className="text-slate-400 text-sm mt-1">Accept your invitation to get started</p>
         </div>
 
-        <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-[#1B1B1B] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
           <AnimatePresence mode="wait">
             {step === "loading" && (
               <motion.div key="loading" className="p-8 flex flex-col items-center gap-3">
@@ -122,7 +122,7 @@ export default function InviteAccept() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 bg-white/3 border border-white/5 rounded-xl p-3">
-                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: inviteData.role?.color || "#6366f1" }} />
+                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: inviteData.role?.color || "#E2231A" }} />
                       <div>
                         <p className="text-slate-400 text-xs">Role</p>
                         <p className="text-white text-sm font-medium">{inviteData.role?.name}</p>
@@ -158,7 +158,7 @@ export default function InviteAccept() {
                       placeholder="000000"
                       maxLength={6}
                       required
-                      className="w-full bg-[#0a1628] border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder-slate-700 rounded-xl py-3 focus:outline-none focus:border-blue-500/50"
+                      className="w-full bg-[#161616] border border-white/10 text-white text-center text-2xl tracking-[0.5em] placeholder-slate-700 rounded-xl py-3 focus:outline-none focus:border-blue-500/50"
                     />
                   </div>
 
@@ -166,18 +166,18 @@ export default function InviteAccept() {
                     <p className="text-slate-400 text-xs uppercase tracking-wider mb-3">Set Up Your Account</p>
                     <div className="space-y-3">
                       <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display Name" required
-                        className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                        className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                       <input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} placeholder="username"
-                        className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                        className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                       <div className="relative">
                         <input type={showPass ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (min 8 chars)" required minLength={8}
-                          className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                          className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 pr-11 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                         <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
                           {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                       <input type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="Confirm Password" required
-                        className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                        className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
                     </div>
                   </div>
 

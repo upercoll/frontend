@@ -111,7 +111,7 @@ function ConvoItem({
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
         </div>
         <span className={cn(
-          "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[2px] border-[#0a1628]",
+          "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-[2px] border-[#161616]",
           cfg.dot, cfg.pulse ? "animate-pulse" : ""
         )} />
       </div>
@@ -195,7 +195,7 @@ function ProfilePanel({
       : (session.items || []).map(i => ({ name: i.name, qty: i.quantity }));
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1628] border-l border-white/5 overflow-y-auto">
+    <div className="flex flex-col h-full bg-[#161616] border-l border-white/5 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 flex-shrink-0">
         <p className="text-white text-sm font-semibold">Profile</p>
@@ -243,14 +243,14 @@ function ProfilePanel({
           </div>
           <div className="grid grid-cols-2 gap-2">
             {orderItems.map((item, i) => (
-              <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
+              <div key={i} className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden flex flex-col">
                 {/* Gradient always shown as base; image overlaid on top — matches product card style sitewide */}
                 <div
                   className="relative w-full h-16 overflow-hidden flex-shrink-0"
                   style={{
                     background: item.gradient
                       ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)`
-                      : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                      : "linear-gradient(135deg, #1B1B1B 0%, #312e81 100%)",
                   }}
                 >
                   <div
@@ -637,11 +637,11 @@ export default function Queue() {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[#060d1a]">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-[#131313]">
 
       {/* ══════ LEFT: Inbox ══════ */}
       <div className={cn(
-        "flex flex-col flex-shrink-0 border-r border-white/5 bg-[#0a1628] w-full md:w-72",
+        "flex flex-col flex-shrink-0 border-r border-white/5 bg-[#161616] w-full md:w-72",
         mobilePanel !== 0 ? "hidden md:flex" : "flex"
       )}>
         {/* Header */}
@@ -750,7 +750,7 @@ export default function Queue() {
           </div>
         ) : selectedSession ? (
           <>
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0 bg-[#0a1628]">
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-white/5 flex-shrink-0 bg-[#161616]">
               <button onClick={() => setMobilePanel(0)}
                 className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 flex-shrink-0">
                 <ArrowLeft className="w-4 h-4" />
@@ -800,7 +800,7 @@ export default function Queue() {
             </div>
 
             {isMyActive && (
-              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#0a1628] flex-shrink-0 flex gap-2">
+              <div className="sm:hidden px-3 py-2 border-b border-white/5 bg-[#161616] flex-shrink-0 flex gap-2">
                 <button
                   onClick={() => setPodMode(true)}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"
@@ -878,7 +878,7 @@ export default function Queue() {
 
       {mobilePanel === 2 && (
         <button onClick={() => setMobilePanel(1)}
-          className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#0a1628] border border-white/10 rounded-lg flex items-center justify-center text-slate-400">
+          className="md:hidden fixed top-[72px] left-3 z-30 w-8 h-8 bg-[#161616] border border-white/10 rounded-lg flex items-center justify-center text-slate-400">
           <ArrowLeft className="w-4 h-4" />
         </button>
       )}
@@ -889,7 +889,7 @@ export default function Queue() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
+              className="bg-[#1B1B1B] border border-white/10 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md overflow-hidden">
               <div className="px-6 py-4 border-b border-white/5">
                 <h3 className="text-white font-semibold">Proof of Delivery</h3>
                 <p className="text-slate-400 text-xs mt-0.5">Submit proof before marking as completed</p>
@@ -947,12 +947,12 @@ export default function Queue() {
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Est. Delivery Time</label>
                   <input value={estDelivery} onChange={e => setEstDelivery(e.target.value)} placeholder="e.g. 5 minutes"
-                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50" />
+                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50" />
                 </div>
                 <div>
                   <label className="text-slate-300 text-sm font-medium block mb-1.5">Notes</label>
                   <textarea value={podNotes} onChange={e => setPodNotes(e.target.value)} placeholder="Optional notes…" rows={2}
-                    className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 resize-none" />
+                    className="w-full bg-[#161616] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500/50 resize-none" />
                 </div>
               </div>
               <div className="px-6 py-4 border-t border-white/5 flex gap-3">
@@ -984,7 +984,7 @@ export default function Queue() {
             <motion.div
               initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
+              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
             >
               <div className="px-6 py-5">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
@@ -1028,7 +1028,7 @@ export default function Queue() {
             <motion.div
               initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
+              className="bg-[#1B1B1B] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden"
             >
               <div className="px-6 py-5">
                 <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">

@@ -129,14 +129,14 @@ export default function SiteContent() {
                 value={String(edit.value || "")}
                 onChange={(e) => setEditing((prev) => ({ ...prev, [item.key]: { ...prev[item.key], value: e.target.value } }))}
                 rows={4}
-                className="w-full bg-[#0a1628] border border-blue-500/30 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 resize-none"
+                className="w-full bg-[#161616] border border-blue-500/30 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500/60 resize-none"
                 autoFocus
               />
             ) : (
               <input
                 value={String(edit.value || "")}
                 onChange={(e) => setEditing((prev) => ({ ...prev, [item.key]: { ...prev[item.key], value: e.target.value } }))}
-                className="w-full bg-[#0a1628] border border-blue-500/30 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60"
+                className="w-full bg-[#161616] border border-blue-500/30 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60"
                 autoFocus
               />
             )}
@@ -191,7 +191,7 @@ export default function SiteContent() {
 
       {isLoading ? (
         <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-40 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />)}
+          {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-40 bg-[#1B1B1B] rounded-xl border border-white/5 animate-pulse" />)}
         </div>
       ) : sections.length === 0 ? (
         <div className="text-center py-16 text-slate-500">
@@ -205,7 +205,7 @@ export default function SiteContent() {
             const isExpanded = expandedSections[section] !== false;
 
             return (
-              <div key={section} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden">
+              <div key={section} className="bg-[#1B1B1B] border border-white/5 rounded-xl overflow-hidden">
                 <button onClick={() => toggleSection(section)}
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/2 transition-colors">
                   <div className="flex items-center gap-3">

@@ -13,10 +13,10 @@ function Section({ icon: Icon, title, description, children }: {
     <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
       <div className="flex items-start gap-3 px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "#EEF2FF" }}>
-          <Icon className="w-4 h-4" style={{ color: "#4f46e5" }} />
+          <Icon className="w-4 h-4" style={{ color: "#E2231A" }} />
         </div>
         <div>
-          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>{title}</h3>
+          <h3 className="font-bold text-sm" style={{ color: "#1B1B1B" }}>{title}</h3>
           <p className="text-xs text-slate-400 mt-0.5">{description}</p>
         </div>
       </div>
@@ -43,7 +43,7 @@ function Toggle({ enabled, onChange, label, description }: {
         type="button"
         onClick={() => onChange(!enabled)}
         className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-        style={{ background: enabled ? "#4f46e5" : "#E5E7EB" }}
+        style={{ background: enabled ? "#E2231A" : "#E5E7EB" }}
       >
         <div
           className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow-sm"
@@ -102,7 +102,7 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#4f46e5" }} />
+        <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#E2231A" }} />
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function Settings() {
   return (
     <div className="p-6 space-y-5 max-w-[860px] mx-auto">
       <div>
-        <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Settings</h2>
+        <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Settings</h2>
         <p className="text-sm text-slate-500 mt-0.5">Configure your store settings and preferences</p>
       </div>
 
@@ -134,7 +134,7 @@ export default function Settings() {
                       onChange={(e) => setSalesTaxRate(e.target.value)}
                       min="0" max="100" step="0.01" placeholder="0"
                       className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 pr-10"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
                   </div>
@@ -150,7 +150,7 @@ export default function Settings() {
                     value={taxLabel} onChange={(e) => setTaxLabel(e.target.value)}
                     placeholder="Sales Tax"
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
                   />
                   <p className="text-xs text-slate-400 mt-1">Shown to customers at checkout</p>
                 </div>
@@ -194,7 +194,7 @@ export default function Settings() {
             type="submit" disabled={saving}
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             className="flex items-center gap-2 text-white px-6 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
-            style={{ background: "#1e1b4b" }}
+            style={{ background: "#1B1B1B" }}
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             {saved && !saving && <Check className="w-4 h-4 text-emerald-300" />}

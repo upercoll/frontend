@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const inp = "w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300";
-const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" };
+const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" };
 const labelStyle = "block text-xs font-semibold mb-1.5 text-slate-500";
 
 interface EditModalProps {
@@ -58,7 +58,7 @@ function EditModal({ stocker, onClose }: EditModalProps) {
         style={{ border: "1px solid #E9EBF5" }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Edit Stocker</h3>
+          <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Edit Stocker</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{ background: "#F7F8FC", color: "#6b7280" }}>
             <X className="w-4 h-4" />
@@ -105,7 +105,7 @@ function EditModal({ stocker, onClose }: EditModalProps) {
             </button>
             <button type="submit" disabled={saving}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-              style={{ background: "#1e1b4b" }}>
+              style={{ background: "#1B1B1B" }}>
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Save Changes
             </button>
@@ -174,7 +174,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
           <div>
-            <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Payouts — {stocker.name || stocker.email}</h3>
+            <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Payouts — {stocker.name || stocker.email}</h3>
             <p className="text-xs text-slate-400 mt-0.5">{stocker.commissionRate}% commission rate</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -185,7 +185,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#6366f1" }} />
+            <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#E2231A" }} />
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
@@ -204,10 +204,10 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
 
             {(payoutData as any)?.stocker?.cryptoAddress && (
               <div className="rounded-xl px-4 py-3 flex items-center gap-2" style={{ background: "#EEF2FF", border: "1px solid #C7D2FE" }}>
-                <DollarSign className="w-4 h-4 flex-shrink-0" style={{ color: "#4f46e5" }} />
+                <DollarSign className="w-4 h-4 flex-shrink-0" style={{ color: "#E2231A" }} />
                 <div className="text-sm">
-                  <span className="font-medium" style={{ color: "#1e1b4b" }}>Crypto: </span>
-                  <span className="font-mono text-xs" style={{ color: "#4f46e5" }}>{(payoutData as any).stocker.cryptoAddress}</span>
+                  <span className="font-medium" style={{ color: "#1B1B1B" }}>Crypto: </span>
+                  <span className="font-mono text-xs" style={{ color: "#E2231A" }}>{(payoutData as any).stocker.cryptoAddress}</span>
                   {(payoutData as any).stocker.cryptoNetwork && (
                     <span className="text-slate-400 text-xs"> · {(payoutData as any).stocker.cryptoNetwork}</span>
                   )}
@@ -260,7 +260,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
                           onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
                           onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
                           <td className="px-3 py-2.5 text-slate-500">{fmt(d.deliveredAt)}</td>
-                          <td className="px-3 py-2.5 font-medium" style={{ color: "#1e1b4b" }}>{d.robloxUsername}</td>
+                          <td className="px-3 py-2.5 font-medium" style={{ color: "#1B1B1B" }}>{d.robloxUsername}</td>
                           <td className="px-3 py-2.5 text-slate-500 max-w-[180px] truncate">
                             {(d.items || []).map((it: any) => `${it.name || "Item"}×${Number.isFinite(it.quantity) && it.quantity > 0 ? it.quantity : 1}`).join(", ")}
                           </td>
@@ -284,7 +284,7 @@ function PayoutModal({ stocker, onClose }: PayoutModalProps) {
                       <div className="flex items-center gap-3">
                         <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                         <div>
-                          <p className="font-semibold" style={{ color: "#1e1b4b" }}>${p.amount.toFixed(2)}</p>
+                          <p className="font-semibold" style={{ color: "#1B1B1B" }}>${p.amount.toFixed(2)}</p>
                           <p className="text-xs text-slate-400">{p.deliveryCount} deliveries · {fmt(p.periodStart)} → {fmt(p.periodEnd)}</p>
                           {p.notes && <p className="text-xs text-slate-400 italic">{p.notes}</p>}
                         </div>
@@ -348,7 +348,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
         <div className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+              style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
               <span className="text-white text-sm font-bold">
                 {(stocker.name || stocker.email)[0].toUpperCase()}
               </span>
@@ -356,7 +356,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-semibold text-sm" style={{ color: "#1e1b4b" }}>
+                <p className="font-semibold text-sm" style={{ color: "#1B1B1B" }}>
                   {stocker.name || stocker.email.split("@")[0]}
                 </p>
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -372,7 +372,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
 
             <div className="hidden md:flex items-center gap-4 flex-shrink-0 text-center">
               <div>
-                <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{stocker.stockedCount ?? 0}</p>
+                <p className="text-xs font-bold" style={{ color: "#1B1B1B" }}>{stocker.stockedCount ?? 0}</p>
                 <p className="text-[10px] text-slate-400">stocked</p>
               </div>
               <div>
@@ -384,7 +384,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                 <p className="text-[10px] text-slate-400">owed</p>
               </div>
               <div>
-                <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{stocker.commissionRate}%</p>
+                <p className="text-xs font-bold" style={{ color: "#1B1B1B" }}>{stocker.commissionRate}%</p>
                 <p className="text-[10px] text-slate-400">rate</p>
               </div>
             </div>
@@ -401,7 +401,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                 onClick={() => setShowEdit(true)}
                 title="Edit stocker"
                 className="w-7 h-7 rounded-lg flex items-center justify-center"
-                style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                style={{ background: "#EEF2FF", color: "#E2231A" }}>
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
               <button
@@ -440,7 +440,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
                     <>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[
-                          { label: "Total Requests", value: detail.stats.totalRequests, color: "#1e1b4b" },
+                          { label: "Total Requests", value: detail.stats.totalRequests, color: "#1B1B1B" },
                           { label: "Pending", value: detail.stats.pendingRequests, color: "#854D0E" },
                           { label: "Stocked", value: detail.stats.stockedRequests, color: "#065F46" },
                           { label: "Items Stocked", value: detail.stocker.totalStocked, color: "#1D4ED8" },
@@ -522,14 +522,14 @@ export default function StockTracking() {
     <div className="p-6 space-y-5 max-w-[900px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Stocker Tracking</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Stocker Tracking</h2>
           <p className="text-sm text-slate-500 mt-0.5">Manage stocker accounts, commissions, and payouts</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={() => { setShowInvite(true); setInviteError(""); }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-          style={{ background: "#1e1b4b" }}>
+          style={{ background: "#1B1B1B" }}>
           <Plus className="w-4 h-4" />
           Invite Stocker
         </motion.button>
@@ -538,8 +538,8 @@ export default function StockTracking() {
       {stockers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: "Total Stockers", value: stockers.length, icon: Users, color: "#6366f1" },
-            { label: "Delivered-Sale Revenue", value: `$${stockers.reduce((s, t) => s + Number((t as any).totalRevenue || 0), 0).toFixed(2)}`, icon: TrendingUp, color: "#10B981" },
+            { label: "Total Stockers", value: stockers.length, icon: Users, color: "#E2231A" },
+            { label: "Delivered-Sale Revenue", value: `$${stockers.reduce((s, t) => s + Number((t as any).totalRevenue || 0), 0).toFixed(2)}`, icon: TrendingUp, color: "#00B06F" },
             { label: "Commission Currently Owed", value: `$${stockers.reduce((s, t) => s + Number((t as any).totalCommissionOwed || 0), 0).toFixed(2)}`, icon: Package, color: "#F59E0B" },
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-2xl p-4 flex items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
@@ -548,7 +548,7 @@ export default function StockTracking() {
                 <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
               </div>
               <div>
-                <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>{stat.value}</p>
+                <p className="text-lg font-bold" style={{ color: "#1B1B1B" }}>{stat.value}</p>
                 <p className="text-xs text-slate-400">{stat.label}</p>
               </div>
             </div>
@@ -585,7 +585,7 @@ export default function StockTracking() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-lg" style={{ color: "#1e1b4b" }}>Invite Stocker</h3>
+                <h3 className="font-bold text-lg" style={{ color: "#1B1B1B" }}>Invite Stocker</h3>
                 <button onClick={() => setShowInvite(false)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ background: "#F7F8FC", color: "#6b7280" }}>
@@ -600,7 +600,7 @@ export default function StockTracking() {
                     <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} required
                       placeholder="stocker@example.com"
                       className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                      style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                   </div>
                 </div>
                 <div>
@@ -608,13 +608,13 @@ export default function StockTracking() {
                   <input type="text" value={inviteName} onChange={e => setInviteName(e.target.value)}
                     placeholder="Display name"
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                 </div>
                 <div>
                   <label className="text-sm font-semibold block mb-1.5" style={{ color: "#374151" }}>Commission Rate (%)</label>
                   <input type="number" min="0" max="100" value={inviteRate} onChange={e => setInviteRate(e.target.value)}
                     className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }} />
+                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }} />
                   <p className="text-xs text-slate-400 mt-1">Commission percentage on actual deliveries</p>
                 </div>
                 {inviteError && (
@@ -631,7 +631,7 @@ export default function StockTracking() {
                   <motion.button type="submit" disabled={inviteMut.isPending}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                     className="flex-1 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {inviteMut.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                     Send Invite
                   </motion.button>

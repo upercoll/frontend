@@ -23,7 +23,7 @@ const STATUS_DISPLAY: Record<string, string> = {
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   pending:            { bg: "#FEF9C3", text: "#854D0E", border: "#FDE047" },
   paid:               { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
-  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#A78BFA" },
+  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#FF7A72" },
   completed:          { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
   cancelled:          { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
   refunded:           { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
@@ -143,14 +143,14 @@ export default function Orders() {
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Orders</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Orders</h2>
           <p className="text-sm text-slate-500 mt-0.5">{total} total orders</p>
         </div>
         <button
           onClick={handleStripeSync}
           disabled={syncing}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60"
-          style={{ background: "#4f46e5", color: "#fff" }}
+          style={{ background: "#E2231A", color: "#fff" }}
           title="Check Stripe for any orders that were paid but not updated in the system"
         >
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
@@ -168,7 +168,7 @@ export default function Orders() {
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 placeholder="Search by order #, email, username..."
                 className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}
               />
             </div>
 
@@ -177,7 +177,7 @@ export default function Orders() {
                 <button
                   onClick={() => setBulkDropOpen((o) => !o)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  style={{ background: "#1e1b4b", color: "#fff" }}
+                  style={{ background: "#1B1B1B", color: "#fff" }}
                   disabled={bulkLoading}
                 >
                   {bulkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
@@ -220,7 +220,7 @@ export default function Orders() {
                 onClick={() => { setStatus(tab.value); setPage(1); setSelected(new Set()); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
                 style={status === tab.value
-                  ? { background: "#1e1b4b", color: "#fff" }
+                  ? { background: "#1B1B1B", color: "#fff" }
                   : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}
               >
                 {tab.label}
@@ -245,7 +245,7 @@ export default function Orders() {
                   <th className="px-4 py-3 w-10">
                     <button onClick={toggleAll}>
                       {selected.size === orders.length && orders.length > 0
-                        ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                        ? <CheckSquare className="w-4 h-4" style={{ color: "#E2231A" }} />
                         : <Square className="w-4 h-4 text-slate-300" />}
                     </button>
                   </th>
@@ -274,14 +274,14 @@ export default function Orders() {
                     >
                       <td className="px-4 py-3.5 w-10" onClick={(e) => { e.stopPropagation(); toggleSelect(order._id); }}>
                         {isSelected
-                          ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                          ? <CheckSquare className="w-4 h-4" style={{ color: "#E2231A" }} />
                           : <Square className="w-4 h-4 text-slate-300" />}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="text-sm font-mono font-semibold" style={{ color: "#4f46e5" }}>{order.orderNumber}</span>
+                        <span className="text-sm font-mono font-semibold" style={{ color: "#E2231A" }}>{order.orderNumber}</span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{order.customer.robloxUsername}</p>
+                        <p className="text-sm font-medium" style={{ color: "#1B1B1B" }}>{order.customer.robloxUsername}</p>
                         <p className="text-xs text-slate-400 truncate max-w-[160px]">{order.customer.email}</p>
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell">
@@ -300,7 +300,7 @@ export default function Orders() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${order.pricing.total.toFixed(2)}</span>
+                        <span className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>${order.pricing.total.toFixed(2)}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <StatusBadge status={order.status} />
@@ -313,7 +313,7 @@ export default function Orders() {
                           <Link href={`/admin/orders/${order._id}`}>
                             <button
                               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                              style={{ background: "#EEF2FF", color: "#E2231A" }}
                               title="View order"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -323,7 +323,7 @@ export default function Orders() {
                             <button
                               onClick={() => openChat(order._id)}
                               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                              style={{ background: "#EEF2FF", color: "#E2231A" }}
                               title="View claim chat"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
@@ -371,7 +371,7 @@ export default function Orders() {
           >
             <motion.div
               initial={{ scale: 0.94, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 20 }}
-              className="w-full max-w-2xl h-[600px] flex flex-col bg-[#110025] rounded-2xl overflow-hidden shadow-2xl"
+              className="w-full max-w-2xl h-[600px] flex flex-col bg-[#191919] rounded-2xl overflow-hidden shadow-2xl"
               style={{ border: "1px solid rgba(196,181,253,0.15)" }}
               onClick={(e) => e.stopPropagation()}
             >

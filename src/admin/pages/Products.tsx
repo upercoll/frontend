@@ -36,7 +36,7 @@ function StatusBadge({ product }: { product: Product }) {
 }
 
 const inp = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
-const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" };
+const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" };
 const labelCls = "block text-xs font-semibold mb-1.5" ;
 const labelStyle = { color: "#6b7280" };
 
@@ -231,18 +231,18 @@ export default function Products() {
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Products</h2>
+          <h2 className="text-xl font-bold" style={{ color: "#1B1B1B" }}>Products</h2>
           <p className="text-sm text-slate-500 mt-0.5">{total} total products</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => { setBulkQueue([]); setBulkDraft(EMPTY_DRAFT); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1B1B1B" }}>
             <Layers className="w-4 h-4" /> Bulk Add
           </button>
           <button onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-            style={{ background: "#1e1b4b" }}>
+            style={{ background: "#1B1B1B" }}>
             <Plus className="w-4 h-4" /> Add Product
           </button>
         </div>
@@ -268,7 +268,7 @@ export default function Products() {
               <div className="relative">
                 <button onClick={() => setBulkDropOpen(o => !o)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white"
-                  style={{ background: "#1e1b4b" }}>
+                  style={{ background: "#1B1B1B" }}>
                   {selected.size} selected <ChevronDown className="w-3.5 h-3.5" />
                 </button>
                 <AnimatePresence>
@@ -301,7 +301,7 @@ export default function Products() {
               <button key={tab.value} onClick={() => { setActiveStatus(tab.value); setPage(1); setSelected(new Set()); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
                 style={activeStatus === tab.value
-                  ? { background: "#1e1b4b", color: "#fff" }
+                  ? { background: "#1B1B1B", color: "#fff" }
                   : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
                 {tab.label}
               </button>
@@ -326,7 +326,7 @@ export default function Products() {
                   <th className="px-4 py-3 w-10">
                     <button onClick={toggleAll}>
                       {selected.size === products.length && products.length > 0
-                        ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                        ? <CheckSquare className="w-4 h-4" style={{ color: "#E2231A" }} />
                         : <Square className="w-4 h-4 text-slate-300" />}
                     </button>
                   </th>
@@ -352,7 +352,7 @@ export default function Products() {
                       onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                       <td className="px-4 py-3.5 w-10" onClick={e => { e.stopPropagation(); toggleSelect(p._id); }}>
                         {isSelected
-                          ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
+                          ? <CheckSquare className="w-4 h-4" style={{ color: "#E2231A" }} />
                           : <Square className="w-4 h-4 text-slate-300" />}
                       </td>
                       <td className="px-4 py-3.5 cursor-pointer" onClick={() => openEdit(p)}>
@@ -365,7 +365,7 @@ export default function Products() {
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{p.name}</p>
+                              <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>{p.name}</p>
                               {p.featured && <Star className="w-3 h-3 text-yellow-400 flex-shrink-0" />}
                             </div>
                             <p className="text-xs text-slate-400 truncate max-w-[200px]">{p.slug}</p>
@@ -373,11 +373,11 @@ export default function Products() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell">
-                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "#EEF2FF", color: "#4f46e5" }}>{p.game}</span>
+                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "#EEF2FF", color: "#E2231A" }}>{p.game}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <div>
-                          <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${p.price.toFixed(2)}</p>
+                          <p className="text-sm font-semibold" style={{ color: "#1B1B1B" }}>${p.price.toFixed(2)}</p>
                           {p.originalPrice ? <p className="text-xs text-slate-400 line-through">${p.originalPrice.toFixed(2)}</p> : null}
                         </div>
                       </td>
@@ -391,7 +391,7 @@ export default function Products() {
                             onBlur={() => saveOnHand(p._id)}
                             onKeyDown={e => { if (e.key === "Enter") saveOnHand(p._id); if (e.key === "Escape") setEditingOnHand(null); }}
                             className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                            style={{ border: "1px solid #E2231A", color: "#1B1B1B", background: "#fff" }}
                           />
                         ) : (
                           <button onClick={() => setEditingOnHand({ id: p._id, value: String(p.onHand ?? -1) })}
@@ -401,7 +401,7 @@ export default function Products() {
                               ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
                               : null}
                             <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-red-500" : (p.onHand ?? -1) === -1 ? "text-slate-400" : ""}`}
-                              style={(p.onHand ?? -1) > 0 ? { color: "#1e1b4b" } : undefined}>
+                              style={(p.onHand ?? -1) > 0 ? { color: "#1B1B1B" } : undefined}>
                               {(p.onHand ?? -1) === -1 ? "∞" : (p.onHand ?? 0)}
                             </span>
                             <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
@@ -418,7 +418,7 @@ export default function Products() {
                             onBlur={() => saveStock(p._id)}
                             onKeyDown={e => { if (e.key === "Enter") saveStock(p._id); if (e.key === "Escape") setEditingStock(null); }}
                             className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                            style={{ border: "1px solid #E2231A", color: "#1B1B1B", background: "#fff" }}
                           />
                         ) : (
                           <button onClick={() => setEditingStock({ id: p._id, value: String(p.stock) })}
@@ -428,7 +428,7 @@ export default function Products() {
                               ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
                               : null}
                             <span className={`text-sm font-medium ${p.stock === 0 ? "text-red-500" : p.stock === -1 ? "text-slate-400" : ""}`}
-                              style={p.stock > 0 ? { color: "#1e1b4b" } : undefined}>
+                              style={p.stock > 0 ? { color: "#1B1B1B" } : undefined}>
                               {p.stock === -1 ? "∞" : p.stock}
                             </span>
                             <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
@@ -443,7 +443,7 @@ export default function Products() {
                         <div className="flex items-center gap-1.5">
                           <button onClick={() => openEdit(p)} title="Edit product"
                             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                            style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                            style={{ background: "#EEF2FF", color: "#E2231A" }}>
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button onClick={() => { if (confirm(`Delete "${p.name}"?`)) adminApi.products.delete(p._id).then(() => qc.invalidateQueries({ queryKey: ["panel-products"] })); }}
@@ -491,7 +491,7 @@ export default function Products() {
               style={{ border: "1px solid #E9EBF5" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>{modal === "create" ? "Add Product" : `Edit — ${editing?.name}`}</h3>
+                <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>{modal === "create" ? "Add Product" : `Edit — ${editing?.name}`}</h3>
                 <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
                   <X className="w-4 h-4" />
                 </button>
@@ -605,7 +605,7 @@ export default function Products() {
                   </button>
                   <button type="submit" disabled={saving}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 transition-colors"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                     {modal === "create" ? "Create Product" : "Save Changes"}
                   </button>
@@ -628,7 +628,7 @@ export default function Products() {
 
               <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
                 <div>
-                  <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Quick Add Products</h3>
+                  <h3 className="font-bold text-base" style={{ color: "#1B1B1B" }}>Quick Add Products</h3>
                   <p className="text-xs text-slate-400 mt-0.5">Fill in a product and hit Add — repeat for each one, then create them all at once.</p>
                 </div>
                 <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
@@ -700,7 +700,7 @@ export default function Products() {
                   )}
                   <button onClick={addToQueue}
                     className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-                    style={{ background: "#EEF2FF", color: "#4f46e5", border: "1px solid #c7d2fe" }}>
+                    style={{ background: "#EEF2FF", color: "#E2231A", border: "1px solid #c7d2fe" }}>
                     <Plus className="w-4 h-4" /> Add to List
                   </button>
                 </div>
@@ -718,7 +718,7 @@ export default function Products() {
                           <div key={i} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
                             style={{ borderBottom: i < bulkQueue.length - 1 ? "1px solid #F3F4F6" : undefined }}>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
+                              <p className="text-sm font-semibold truncate" style={{ color: "#1B1B1B" }}>{item.name}</p>
                               <p className="text-xs text-slate-400 truncate">
                                 {item.game} · {(catName as any)?.name || item.category} · ${parseFloat(item.price || "0").toFixed(2)}
                                 {item.onHand !== "-1" && item.onHand ? ` · ${item.onHand} on hand` : " · ∞ on hand"}
@@ -752,7 +752,7 @@ export default function Products() {
                   </button>
                   <button onClick={handleBulkSubmit} disabled={bulkSaving || bulkQueue.length === 0}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "#1B1B1B" }}>
                     {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Create {bulkQueue.length > 0 ? `${bulkQueue.length} ` : ""}Product{bulkQueue.length !== 1 ? "s" : ""}
                   </button>

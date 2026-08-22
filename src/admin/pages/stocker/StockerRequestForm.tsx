@@ -116,7 +116,7 @@ export default function StockerRequestForm() {
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => setSuccess(false)}
             className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: "rgba(99,102,241,0.8)", border: "1px solid rgba(99,102,241,0.4)" }}>
+            style={{ background: "rgba(226,35,26,0.8)", border: "1px solid rgba(226,35,26,0.4)" }}>
             Submit Another
           </motion.button>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -183,8 +183,8 @@ export default function StockerRequestForm() {
                     className="rounded-xl overflow-hidden cursor-pointer"
                     style={{
                       background: "rgba(255,255,255,0.04)",
-                      border: inCart ? "1.5px solid rgba(99,102,241,0.6)" : "1px solid rgba(255,255,255,0.08)",
-                      boxShadow: inCart ? "0 0 0 3px rgba(99,102,241,0.1)" : "none",
+                      border: inCart ? "1.5px solid rgba(226,35,26,0.6)" : "1px solid rgba(255,255,255,0.08)",
+                      boxShadow: inCart ? "0 0 0 3px rgba(226,35,26,0.1)" : "none",
                     }}
                     onClick={() => addToCart(product)}>
                     <div className="h-20 flex items-center justify-center"
@@ -208,24 +208,24 @@ export default function StockerRequestForm() {
                               style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
                               <Minus className="w-2.5 h-2.5" />
                             </button>
-                            <span className="text-xs font-bold min-w-[16px] text-center" style={{ color: "#a5b4fc" }}>{cartItem.quantity}</span>
+                            <span className="text-xs font-bold min-w-[16px] text-center" style={{ color: "#D8D2C4" }}>{cartItem.quantity}</span>
                             <button onClick={e => { e.stopPropagation(); addToCart(product); }}
                               className="w-5 h-5 rounded flex items-center justify-center"
-                              style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                              style={{ background: "rgba(226,35,26,0.2)", color: "#D8D2C4" }}>
                               <Plus className="w-2.5 h-2.5" />
                             </button>
                           </div>
                         ) : (
                           <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: "rgba(99,102,241,0.15)" }}>
-                            <Plus className="w-2.5 h-2.5" style={{ color: "#a5b4fc" }} />
+                            style={{ background: "rgba(226,35,26,0.15)" }}>
+                            <Plus className="w-2.5 h-2.5" style={{ color: "#D8D2C4" }} />
                           </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <div className="flex-1 text-center">
                           <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>In Stock</p>
-                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock <= 0 ? "#f87171" : "#60a5fa" }}>
+                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock <= 0 ? "#f87171" : "#6DB8FF" }}>
                             {(product as any).stock < 0 ? "∞" : (product as any).stock}
                           </p>
                         </div>
@@ -252,7 +252,7 @@ export default function StockerRequestForm() {
               Request Summary
               {cart.length > 0 && (
                 <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
-                  style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                  style={{ background: "rgba(226,35,26,0.2)", color: "#D8D2C4" }}>
                   {cart.length} item{cart.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -302,7 +302,7 @@ export default function StockerRequestForm() {
                               />
                               <button onClick={() => addToCart(c.product)}
                                 className="w-5 h-5 rounded flex items-center justify-center"
-                                style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                                style={{ background: "rgba(226,35,26,0.2)", color: "#D8D2C4" }}>
                                 <Plus className="w-2.5 h-2.5" />
                               </button>
                             </div>
@@ -311,10 +311,10 @@ export default function StockerRequestForm() {
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1.5 flex-1 rounded-lg px-2 py-1.5"
                               style={{
-                                background: hasCustom ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.05)",
-                                border: `1px solid ${hasCustom ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.08)"}`,
+                                background: hasCustom ? "rgba(226,35,26,0.1)" : "rgba(255,255,255,0.05)",
+                                border: `1px solid ${hasCustom ? "rgba(226,35,26,0.3)" : "rgba(255,255,255,0.08)"}`,
                               }}>
-                              <Tag className="w-3 h-3 flex-shrink-0" style={{ color: hasCustom ? "#a5b4fc" : "rgba(255,255,255,0.3)" }} />
+                              <Tag className="w-3 h-3 flex-shrink-0" style={{ color: hasCustom ? "#D8D2C4" : "rgba(255,255,255,0.3)" }} />
                               <span className="text-[10px] font-medium flex-shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>Your price</span>
                               <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>$</span>
                               <input
@@ -323,7 +323,7 @@ export default function StockerRequestForm() {
                                 onChange={e => setCustomPrice(c.product._id, parseFloat(e.target.value) || 0)}
                                 onClick={e => e.stopPropagation()}
                                 className="flex-1 w-0 min-w-0 bg-transparent text-xs font-bold focus:outline-none"
-                                style={{ color: hasCustom ? "#a5b4fc" : "white" }}
+                                style={{ color: hasCustom ? "#D8D2C4" : "white" }}
                               />
                             </div>
                             <PriceDiffBadge storePrice={c.product.price} customPrice={c.customPrice} />
@@ -331,7 +331,7 @@ export default function StockerRequestForm() {
 
                           <div className="flex justify-between text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
                             <span>Total ({c.quantity}×)</span>
-                            <span className="font-semibold" style={{ color: hasCustom ? "#a5b4fc" : "#4ade80" }}>
+                            <span className="font-semibold" style={{ color: hasCustom ? "#D8D2C4" : "#4ade80" }}>
                               ${(c.customPrice * c.quantity).toFixed(2)}
                             </span>
                           </div>
@@ -377,7 +377,7 @@ export default function StockerRequestForm() {
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit} disabled={submitMut.isPending}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                  style={{ background: "linear-gradient(135deg,#E2231A,#DB2777)" }}>
                   {submitMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Submit Request
                 </motion.button>
