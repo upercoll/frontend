@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Shield, Lock, Check, Star,
+  ArrowLeft, Shield, Lock, Check,
   ChevronRight, ChevronDown, Zap, Package, AlertCircle,
-  User, Mail, MapPin, Tag, X, Loader2, MessageSquare,
+  User, Mail, MapPin, Tag, X, Loader2, MessageSquare, Star,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
@@ -12,27 +12,12 @@ import { useAuth } from "@/context/AuthContext";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
-function fmt4(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 16);
-  return d.replace(/(.{4})/g, "$1 ").trim();
-}
-function fmtExpiry(v: string) {
-  const d = v.replace(/\D/g, "").slice(0, 4);
-  return d.length >= 3 ? d.slice(0, 2) + "/" + d.slice(2) : d;
-}
-function fmtCvv(v: string) { return v.replace(/\D/g, "").slice(0, 4); }
+const NAVY = "#0E1A3C";
+const ROYAL = "#2B50F6";
+const GOLD = "#FFC53D";
+const MUTED = "#5A6478";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay" | "maestro" | null;
-function detectBrand(num: string): CardBrand {
-  const n = num.replace(/\s/g, "");
-  if (/^4/.test(n)) return "visa";
-  if (/^5[1-5]/.test(n) || /^2[2-7]/.test(n)) return "mastercard";
-  if (/^3[47]/.test(n)) return "amex";
-  if (/^6(?:011|5)/.test(n)) return "discover";
-  if (/^62/.test(n)) return "unionpay";
-  if (/^6(?:304|759|761|762|763)/.test(n)) return "maestro";
-  return null;
-}
 
 function VisaIcon({ w = 38 }: { w?: number }) {
   const h = Math.round(w * 0.625);
@@ -95,7 +80,6 @@ function MaestroIcon({ w = 38 }: { w?: number }) {
   );
 }
 
-
 const BRAND_ICONS = [
   { key: "visa",       el: (w: number) => <VisaIcon w={w} /> },
   { key: "mastercard", el: (w: number) => <MastercardIcon w={w} /> },
@@ -112,14 +96,15 @@ function BrandIconRow({ activeBrand }: { activeBrand: CardBrand }) {
     <div className="flex items-center gap-1">
       {BRAND_ICONS.slice(0, SHOW_BRANDS).map(b => (
         <motion.div key={b.key}
-          animate={{ opacity: activeBrand ? (activeBrand === b.key ? 1 : 0.3) : 0.7, scale: activeBrand === b.key ? 1.06 : 1 }}
+          animate={{ opacity: activeBrand ? (activeBrand === b.key ? 1 : 0.35) : 0.75, scale: activeBrand === b.key ? 1.08 : 1 }}
           transition={{ duration: 0.18 }}
           className="rounded overflow-hidden"
         >
           {b.el(30)}
         </motion.div>
       ))}
-      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "rgba(165,180,252,0.12)", color: "#818CF8" }}>
+      <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+        style={{ background: "#EEF3FB", color: ROYAL }}>
         +{EXTRA_COUNT}
       </span>
     </div>
@@ -138,27 +123,27 @@ function Input({
 }) {
   const [focused, setFocused] = useState(false);
   return (
-    <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>{label}</label>
+    <div className="space-y-1.5">
+      <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: MUTED }}>{label}</label>
       <div
-        className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
+        className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white transition-all duration-200"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#4F46E5" : "rgba(165,180,252,0.22)"}`,
-          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(79,70,229,0.12)"}` : "none",
+          border: `1.5px solid ${error ? "#D92D20" : focused ? ROYAL : "rgba(14,26,60,.14)"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(43,80,246,.12)" : "none",
         }}
       >
-        {icon && <span style={{ color: focused ? "#A5B4FC" : "#4F46E5", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: focused ? ROYAL : "#9AA3B8", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} inputMode={mode} placeholder={placeholder} value={value} maxLength={maxLen}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#6b5c8a] min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0"
+          style={{ color: NAVY }}
         />
         {right}
       </div>
-      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
-      {hint && !error && <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>{hint}</p>}
+      {error && <p className="flex items-center gap-1 mt-0.5 text-[11px] font-medium" style={{ color: "#D92D20" }}><AlertCircle size={10} />{error}</p>}
+      {hint && !error && <p className="mt-0.5 text-[10px]" style={{ color: "#9AA3B8" }}>{hint}</p>}
     </div>
   );
 }
@@ -171,70 +156,69 @@ function SelectInput({
 }) {
   const [focused, setFocused] = useState(false);
   return (
-    <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>{label}</label>
+    <div className="space-y-1.5">
+      <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: MUTED }}>{label}</label>
       <div
-        className="flex items-center gap-2.5 px-3.5 rounded-xl transition-all duration-200"
+        className="flex items-center gap-2.5 px-4 rounded-xl bg-white transition-all duration-200"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#4F46E5" : "rgba(165,180,252,0.22)"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.12)" : "none",
+          border: `1.5px solid ${error ? "#D92D20" : focused ? ROYAL : "rgba(14,26,60,.14)"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(43,80,246,.12)" : "none",
         }}
       >
-        {icon && <span style={{ color: "#4F46E5", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: "#9AA3B8", flexShrink: 0 }}>{icon}</span>}
         <select
           value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           className="flex-1 bg-transparent outline-none text-sm font-medium py-3 appearance-none cursor-pointer"
-          style={{ color: value ? "white" : "#64748B" }}
+          style={{ color: value ? NAVY : "#9AA3B8" }}
         >
           {options.map(o => (
-            <option key={o.value} value={o.value} style={{ background: "#1a0038", color: "white" }}>{o.label}</option>
+            <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
-        <ChevronDown size={13} style={{ color: "#64748B", flexShrink: 0 }} />
+        <ChevronDown size={13} style={{ color: MUTED, flexShrink: 0 }} />
       </div>
-      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
+      {error && <p className="flex items-center gap-1 mt-0.5 text-[11px] font-medium" style={{ color: "#D92D20" }}><AlertCircle size={10} />{error}</p>}
     </div>
   );
 }
 
 function Accordion({
-  open, onToggle, title, subtitle, iconBg, iconEl, headerRight, children, delay = 0, badge,
+  open, onToggle, title, subtitle, iconEl, headerRight, children, delay = 0, badge,
 }: {
   open: boolean; onToggle: () => void; title: React.ReactNode; subtitle?: React.ReactNode;
   iconBg?: string; iconEl?: React.ReactNode; headerRight?: React.ReactNode;
   children: React.ReactNode; delay?: number; badge?: React.ReactNode;
 }) {
+  void iconBg;
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.38, delay }}
-      className="rounded-2xl overflow-hidden"
+      className="rounded-2xl overflow-hidden bg-white"
       style={{
-        background: "rgba(255,255,255,0.035)",
-        border: `1.5px solid ${open ? "rgba(79,70,229,0.5)" : "rgba(165,180,252,0.13)"}`,
-        transition: "border-color 0.2s",
-        boxShadow: open ? "0 0 0 3px rgba(79,70,229,0.06)" : "none",
+        border: `1px solid ${open ? "rgba(43,80,246,.45)" : "rgba(14,26,60,.09)"}`,
+        boxShadow: open ? "var(--shadow-soft-sm)" : "var(--shadow-soft-xs)",
+        transition: "border-color .2s ease",
       }}
     >
-      <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
+      <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-4 text-left">
         {iconEl && (
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: iconBg || "rgba(79,70,229,0.22)" }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ background: "#EEF3FB", color: ROYAL }}>
             {iconEl}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-extrabold text-white">{title}</span>
+            <span className="text-sm font-bold" style={{ color: NAVY }}>{title}</span>
             {badge}
           </div>
           {subtitle && <div className="mt-0.5">{subtitle}</div>}
         </div>
         {headerRight && <div className="flex-shrink-0 ml-1">{headerRight}</div>}
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }} className="flex-shrink-0 ml-1">
-          <ChevronDown size={16} color={open ? "#A5B4FC" : "#64748B"} />
+          <ChevronDown size={16} color={open ? ROYAL : "#9AA3B8"} />
         </motion.div>
       </button>
 
@@ -247,7 +231,7 @@ function Accordion({
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             style={{ overflow: "hidden" }}
           >
-            <div className="px-4 pb-4" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
+            <div className="px-4 pb-4 pt-1" style={{ borderTop: "1px solid rgba(14,26,60,.07)" }}>
               {children}
             </div>
           </motion.div>
@@ -260,10 +244,10 @@ function Accordion({
 function RadioDot({ selected }: { selected: boolean }) {
   return (
     <div
-      className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ border: `2px solid ${selected ? "#4F46E5" : "#475569"}`, background: selected ? "#4F46E5" : "transparent", transition: "all 0.18s" }}
+      className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 transition-all"
+      style={{ border: `2px solid ${selected ? ROYAL : "rgba(14,26,60,.3)"}`, background: selected ? ROYAL : "transparent" }}
     >
-      {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+      {selected && <Check size={11} color="#fff" strokeWidth={4} />}
     </div>
   );
 }
@@ -272,14 +256,14 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
   if (!cardNum && !expiry && !cardName) return null;
 
   const themes: Record<string, { bg: string }> = {
-    visa:       { bg: "linear-gradient(135deg,#0d1057 0%,#1e3a8a 45%,#3730a3 100%)" },
-    mastercard: { bg: "linear-gradient(135deg,#1c1c1e 0%,#3d0000 50%,#7c1d00 100%)" },
-    amex:       { bg: "linear-gradient(135deg,#004c87 0%,#0073b7 55%,#00a8e0 100%)" },
-    discover:   { bg: "linear-gradient(135deg,#7c2d12 0%,#c2410c 55%,#ea580c 100%)" },
-    unionpay:   { bg: "linear-gradient(135deg,#7f1d1d 0%,#1e3a8a 50%,#1e40af 100%)" },
+    visa:       { bg: "linear-gradient(135deg,#0d1057 0%,#1e3a8a 100%)" },
+    mastercard: { bg: "linear-gradient(135deg,#1c1c1e 0%,#7c1d00 130%)" },
+    amex:       { bg: "linear-gradient(135deg,#004c87 0%,#00a8e0 100%)" },
+    discover:   { bg: "linear-gradient(135deg,#c2410c 0%,#ea580c 100%)" },
+    unionpay:   { bg: "linear-gradient(135deg,#7f1d1d 0%,#1e40af 100%)" },
     maestro:    { bg: "linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%)" },
   };
-  const bg = brand ? themes[brand].bg : "linear-gradient(135deg,#1e0050 0%,#1E1B4B 55%,#3730A3 100%)";
+  const bg = brand ? themes[brand].bg : "linear-gradient(135deg,#131C42 0%,#2B50F6 160%)";
 
   const masked = cardNum
     ? cardNum.split(" ").map((g, i) => i < 2 ? g.replace(/\d/g, "•") : g).join("  ")
@@ -291,44 +275,29 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3 }}
       className="relative mt-4 rounded-2xl overflow-hidden select-none"
-      style={{ background: bg, aspectRatio: "1.586", width: "100%" }}
+      style={{ background: bg, aspectRatio: "1.586", width: "100%", boxShadow: "var(--shadow-soft-md)" }}
     >
-      {}
-      <div className="absolute inset-0 opacity-[0.05]"
-        style={{ backgroundImage: "repeating-linear-gradient(45deg,rgba(255,255,255,.8) 0px,rgba(255,255,255,.8) 1px,transparent 1px,transparent 16px)" }} />
-      {}
-      <motion.div
-        animate={{ x: ["-120%", "220%"] }}
-        transition={{ repeat: Infinity, duration: 4.5, ease: "linear", repeatDelay: 2.5 }}
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "linear-gradient(105deg,transparent 38%,rgba(255,255,255,0.14) 50%,transparent 62%)" }}
-      />
-      {}
-      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 opacity-25 rounded-full"
-        style={{ background: "radial-gradient(circle,rgba(165,180,252,0.8),transparent 70%)", filter: "blur(20px)" }} />
+      <div className="absolute inset-0 opacity-[0.06]"
+        style={{ backgroundImage: "repeating-linear-gradient(45deg,rgba(255,255,255,.9) 0px,rgba(255,255,255,.9) 1px,transparent 1px,transparent 16px)" }} />
 
       <div className="absolute inset-0 p-5 flex flex-col justify-between">
-        {}
+        {/* Top row */}
         <div className="flex items-start justify-between">
-          {}
-          <div className="relative" style={{ width: 40, height: 30 }}>
-            <div className="absolute inset-0 rounded-md" style={{ background: "linear-gradient(135deg,#d4a843,#f0c84a,#c9982a)", boxShadow: "0 1px 4px rgba(0,0,0,0.4)" }} />
+          <div className="relative -rotate-3" style={{ width: 40, height: 30 }}>
+            <div className="absolute inset-0 rounded-md" style={{ background: GOLD, boxShadow: "0 1px 4px rgba(0,0,0,.4)" }} />
             <div className="absolute inset-0 rounded-md overflow-hidden">
-              <div className="absolute w-full" style={{ top: "33%", height: "1px", background: "rgba(0,0,0,0.25)" }} />
-              <div className="absolute w-full" style={{ top: "66%", height: "1px", background: "rgba(0,0,0,0.25)" }} />
-              <div className="absolute h-full" style={{ left: "33%", width: "1px", background: "rgba(0,0,0,0.25)" }} />
-              <div className="absolute h-full" style={{ left: "66%", width: "1px", background: "rgba(0,0,0,0.25)" }} />
-              <div className="absolute rounded-sm" style={{ top: "22%", left: "22%", right: "22%", bottom: "22%", background: "rgba(0,0,0,0.1)" }} />
+              <div className="absolute w-full" style={{ top: "33%", height: "1px", background: "rgba(0,0,0,.25)" }} />
+              <div className="absolute w-full" style={{ top: "66%", height: "1px", background: "rgba(0,0,0,.25)" }} />
+              <div className="absolute h-full" style={{ left: "33%", width: "1px", background: "rgba(0,0,0,.25)" }} />
+              <div className="absolute h-full" style={{ left: "66%", width: "1px", background: "rgba(0,0,0,.25)" }} />
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {}
-            <svg width="18" height="22" viewBox="0 0 18 22" fill="none" opacity="0.6">
+            <svg width="18" height="22" viewBox="0 0 18 22" fill="none" opacity="0.65">
               <path d="M9 11c0-1.1.9-2 2-2" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
               <path d="M9 11c0-2.2 1.8-4 4-4" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
               <path d="M9 11c0-3.3 2.7-6 6-6" stroke="white" strokeWidth="1.6" strokeLinecap="round"/>
             </svg>
-            {}
             <div>
               {brand === "visa"       && <VisaIcon w={44} />}
               {brand === "mastercard" && <MastercardIcon w={44} />}
@@ -337,28 +306,26 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
               {brand === "unionpay"   && <UnionPayIcon w={44} />}
               {brand === "maestro"    && <MaestroIcon w={44} />}
               {!brand && (
-                <div className="rounded-md flex items-center justify-center" style={{ width: 44, height: 28, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}>
-                  <span className="text-[8px] font-extrabold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>CARD</span>
+                <div className="rounded-md flex items-center justify-center" style={{ width: 44, height: 28, background: "rgba(255,255,255,.12)", border: "1px solid rgba(255,255,255,.25)" }}>
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,.55)" }}>CARD</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {}
-        <p className="font-mono text-white tracking-[0.2em] text-[15px] font-semibold drop-shadow">
+        <p className="font-mono tracking-[0.2em] text-[15px] font-semibold text-white drop-shadow">
           {masked}
         </p>
 
-        {}
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[8px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Card Holder</p>
-            <p className="text-[13px] font-extrabold uppercase tracking-wide text-white truncate max-w-[145px] drop-shadow">{cardName || "YOUR NAME"}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "rgba(255,255,255,.5)" }}>Card Holder</p>
+            <p className="text-[13px] font-bold uppercase tracking-wide truncate max-w-[145px] text-white">{cardName || "YOUR NAME"}</p>
           </div>
           <div className="text-right">
-            <p className="text-[8px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Expires</p>
-            <p className="text-[13px] font-extrabold text-white drop-shadow">{expiry || "MM / YY"}</p>
+            <p className="font-mono text-[8px] uppercase tracking-[0.15em] mb-0.5" style={{ color: "rgba(255,255,255,.5)" }}>Expires</p>
+            <p className="text-[13px] font-bold text-white">{expiry || "MM / YY"}</p>
           </div>
         </div>
       </div>
@@ -399,16 +366,17 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
   if (applied) {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center justify-between px-3.5 py-3 rounded-xl"
-        style={{ background: "rgba(34,197,94,0.1)", border: "1.5px solid rgba(34,197,94,0.35)" }}>
+        className="flex items-center justify-between px-4 py-3 rounded-xl"
+        style={{ background: "#E7F8F1", border: "1px solid rgba(14,159,110,.4)" }}>
         <div className="flex items-center gap-2">
-          <Check size={14} color="#4ade80" />
-          <span className="text-sm font-extrabold text-white">{applied.code}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>
+          <Check size={14} color="#0E9F6E" strokeWidth={3} />
+          <span className="text-sm font-bold" style={{ color: NAVY }}>{applied.code}</span>
+          <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full font-bold text-white"
+            style={{ background: "#0E9F6E" }}>
             {applied.type === "percent" ? `-${applied.value}%` : `-$${applied.value}`}
           </span>
         </div>
-        <button onClick={onRemove}><X size={14} color="#64748B" /></button>
+        <button onClick={onRemove}><X size={14} color="#9AA3B8" /></button>
       </motion.div>
     );
   }
@@ -416,25 +384,26 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
   return (
     <div className="space-y-1">
       <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.22)" }}>
-          <Tag size={13} color="#4F46E5" />
+        <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white"
+          style={{ border: "1.5px solid rgba(14,26,60,.14)" }}>
+          <Tag size={13} color={ROYAL} />
           <input
             placeholder="Enter promo code"
             value={code}
             onChange={e => { setCode(e.target.value.toUpperCase()); setErr(""); }}
             onKeyDown={e => e.key === "Enter" && handleApply()}
-            className="flex-1 bg-transparent outline-none text-sm font-bold text-white uppercase tracking-wider placeholder:text-[#6b5c8a] placeholder:normal-case placeholder:tracking-normal placeholder:font-normal"
+            className="flex-1 bg-transparent outline-none font-mono text-sm font-bold uppercase tracking-wider placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-[#9AA3B8]"
+            style={{ color: NAVY }}
           />
         </div>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
           onClick={handleApply} disabled={loading || !code.trim()}
-          className="px-4 rounded-xl font-extrabold text-sm text-white flex items-center gap-1.5"
-          style={{ background: loading || !code.trim() ? "rgba(79,70,229,0.2)" : "linear-gradient(135deg,#4F46E5,#3730A3)", minWidth: 72, justifyContent: "center" }}>
-          {loading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+          className="px-5 rounded-xl font-bold text-sm text-white disabled:opacity-50"
+          style={{ background: loading || !code.trim() ? "rgba(43,80,246,.4)" : ROYAL, minWidth: 76 }}>
+          {loading ? <Loader2 size={14} className="animate-spin" /> : "Apply"}
         </motion.button>
       </div>
-      {err && <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}><AlertCircle size={10} />{err}</p>}
+      {err && <p className="flex items-center gap-1 text-[11px] font-medium" style={{ color: "#D92D20" }}><AlertCircle size={10} />{err}</p>}
     </div>
   );
 }
@@ -451,7 +420,7 @@ function BurstParticles({ active }: { active: boolean }) {
             animate={{ opacity: 0, scale: 1, x: Math.cos((angle * Math.PI) / 180) * dist, y: Math.sin((angle * Math.PI) / 180) * dist }}
             transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.012 }}
             className="absolute top-1/2 left-1/2 rounded-full pointer-events-none"
-            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: ["#dc2626","#f97316","#ec4899","#4F46E5","#A5B4FC","#fbbf24"][i % 6], zIndex: 200 }}
+            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: ["#2B50F6","#FFC53D","#7FA5FF","#FFD84D","#0E1A3C"][i % 5], zIndex: 200 }}
           />
         );
       })}
@@ -464,87 +433,79 @@ function SuccessOverlay({ email }: { email: string }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       className="fixed inset-0 z-[200] flex items-center justify-center p-6"
-      style={{ background: "rgba(13,0,32,0.97)", backdropFilter: "blur(24px)" }}>
+      style={{ background: "rgba(11,20,55,.96)", backdropFilter: "blur(20px)" }}>
       <motion.div
         initial={{ scale: 0.75, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
         className="w-full max-w-sm text-center">
 
-        {}
-        <div className="relative flex items-center justify-center mb-6">
+        <div className="relative flex items-center justify-center mb-7">
           {[0, 1, 2].map(i => (
             <motion.div key={i}
               initial={{ scale: 0, opacity: 0.8 }} animate={{ scale: 2.5 + i * 0.6, opacity: 0 }}
               transition={{ duration: 1.3, delay: 0.2 + i * 0.15, repeat: Infinity, repeatDelay: 1.2 }}
               className="absolute w-20 h-20 rounded-full border-2"
-              style={{ borderColor: i === 0 ? "#4F46E5" : i === 1 ? "#ec4899" : "#dc2626" }} />
+              style={{ borderColor: i === 0 ? ROYAL : i === 1 ? GOLD : "#7FA5FF" }} />
           ))}
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.15 }}
             className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", boxShadow: "0 0 40px rgba(22,163,74,0.5)" }}>
+            style={{ background: "#0E9F6E", boxShadow: "0 0 48px rgba(14,159,110,.55)" }}>
             <Check size={38} color="white" strokeWidth={3} />
           </motion.div>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <h2 className="text-3xl font-extrabold text-white mb-1">Order Confirmed!</h2>
-          <p className="text-sm mb-5" style={{ color: "#818CF8" }}>
+          <h2 className="font-display text-3xl text-white mb-1 tracking-tight">Order confirmed!</h2>
+          <p className="text-sm mb-6 font-medium" style={{ color: "rgba(199,212,255,.85)" }}>
             Confirmation sent to <span className="text-white font-bold">{email || "your email"}</span>
           </p>
 
-          {}
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65 }}
-            className="rounded-2xl p-4 mb-4 text-left relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg,rgba(79,70,229,0.2),rgba(55,48,163,0.12))", border: "1.5px solid rgba(165,180,252,0.2)" }}
+            className="rounded-2xl p-4 mb-5 text-left relative overflow-hidden"
+            style={{ background: "rgba(43,80,246,.14)", border: "1px solid rgba(43,80,246,.4)" }}
           >
-            {}
-            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-20"
-              style={{ background: "radial-gradient(circle,#4F46E5,transparent)", filter: "blur(16px)" }} />
-
             <div className="flex items-start gap-3 relative">
-              {}
               <motion.div
-                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0px rgba(79,70,229,0)", "0 0 18px rgba(79,70,229,0.7)", "0 0 0px rgba(79,70,229,0)"] }}
-                transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+                animate={{ rotate: [-6, 6, -6] }}
+                transition={{ repeat: Infinity, duration: 2.4, ease: "easeInOut" }}
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: ROYAL }}
               >
                 <MessageSquare size={18} color="white" />
               </motion.div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-extrabold text-white mb-1">Get Your Items Now</p>
-                <p className="text-xs leading-relaxed" style={{ color: "#A5B4FC" }}>
+                <p className="text-sm font-bold text-white mb-1">Get Your Items Now</p>
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(199,212,255,.8)" }}>
                   Click on the{" "}
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md mx-0.5 font-bold"
-                    style={{ background: "rgba(79,70,229,0.35)", color: "#e9d5ff", verticalAlign: "middle" }}>
-                    <MessageSquare size={9} /> chat
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md mx-0.5 font-mono font-bold align-middle"
+                    style={{ background: "rgba(255,197,61,.18)", color: GOLD }}>
+                    chat
                   </span>{" "}
                   icon in the corner to open live chat, provide your details and our claim team will contact you shortly!
                 </p>
               </div>
             </div>
 
-            {}
-            <motion.div
+            <motion.span
               animate={{ x: [0, 4, 0], y: [0, 3, 0] }}
               transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
               className="absolute bottom-3 right-3 text-lg"
-              style={{ color: "#A5B4FC" }}
+              style={{ color: "rgba(199,212,255,.8)" }}
             >
               ↘
-            </motion.div>
+            </motion.span>
           </motion.div>
 
           <motion.button
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(79,70,229,0.4)" }} whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/")}
-            className="w-full py-3.5 rounded-2xl font-extrabold text-white"
-            style={{ background: "rgba(79,70,229,0.2)", border: "1px solid rgba(165,180,252,0.15)" }}>
+            className="w-full py-3.5 rounded-full font-bold text-white"
+            style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.2)" }}>
             Back to Store
           </motion.button>
         </motion.div>
@@ -820,13 +781,13 @@ export default function Checkout() {
     const baseStyle = {
       style: {
         base: {
-          color: "#ffffff",
-          fontFamily: '"Inter", system-ui, sans-serif',
-          fontSize: "14px",
+          color: "#0E1A3C",
+          fontFamily: '"Figtree", system-ui, sans-serif',
+          fontSize: "15px",
           fontSmoothing: "antialiased",
-          "::placeholder": { color: "#4b5563" },
+          "::placeholder": { color: "#9AA3B8" },
         },
-        invalid: { color: "#ef4444" },
+        invalid: { color: "#D92D20" },
       },
     };
     const numEl = elements.create("cardNumber", baseStyle);
@@ -973,15 +934,15 @@ export default function Checkout() {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6" style={{ background: "#0C0B2E" }}>
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "rgba(79,70,229,0.12)", border: "1.5px solid rgba(165,180,252,0.15)" }}>
-          <Package size={34} color="#4F46E5" />
+      <div className="min-h-screen dot-grid flex flex-col items-center justify-center gap-6 px-6" style={{ background: "#F6F8FE" }}>
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center bg-white" style={{ boxShadow: "var(--shadow-soft-md)" }}>
+          <Package size={34} color={ROYAL} />
         </div>
-        <h2 className="text-2xl font-extrabold text-white">Your cart is empty</h2>
+        <h2 className="font-display text-3xl tracking-tight" style={{ color: NAVY }}>Your cart is empty</h2>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/")}
-          className="px-8 py-3.5 rounded-2xl font-extrabold text-white"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+          className="px-8 py-3.5 rounded-full font-bold text-white"
+          style={{ background: ROYAL, boxShadow: "0 10px 26px -8px rgba(43,80,246,.5)" }}>
           Browse Items
         </motion.button>
       </div>
@@ -990,65 +951,54 @@ export default function Checkout() {
 
   return (
     <>
-      <div className="min-h-screen" style={{ background: "#0C0B2E" }}>
-        {}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          <div className="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-[0.16]" style={{ background: "radial-gradient(circle,#4F46E5,transparent 70%)", filter: "blur(70px)" }} />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[45vw] h-[45vw] rounded-full opacity-[0.1]" style={{ background: "radial-gradient(circle,#dc2626,transparent 70%)", filter: "blur(70px)" }} />
-        </div>
+      <div className="min-h-screen dot-grid" style={{ background: "#F6F8FE" }}>
+        <div className="max-w-5xl mx-auto px-4 py-6">
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 py-6">
-
-          {}
+          {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
             className="flex items-center justify-between mb-8">
             <motion.button whileHover={{ scale: 1.05, x: -2 }} whileTap={{ scale: 0.95 }}
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
-              style={{ color: "#A5B4FC", background: "rgba(79,70,229,0.1)", border: "1px solid rgba(165,180,252,0.15)" }}>
+              className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full bg-white hover:bg-white transition-colors"
+              style={{ color: NAVY, border: "1px solid rgba(14,26,60,.12)" }}>
               <ArrowLeft size={15} /> Back
             </motion.button>
 
-            {}
             <div className="flex items-center gap-2 select-none">
-              <div className="w-8 h-8 rounded-full bg-[#4F46E5] flex items-center justify-center shadow-lg">
-                <Star size={16} fill="white" color="white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white">
-                RB<span style={{ color: "#A5B4FC" }}>stars</span>
+              <svg width="28" height="28" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <rect x="12" y="12" width="40" height="40" rx="11" transform="rotate(8 32 32)" fill={NAVY} />
+                <path d="M32 20 l3.4 7.2 7.9 1 -5.8 5.6 1.4 7.9 -6.9 -3.9 -6.9 3.9 1.4 -7.9 -5.8 -5.6 7.9 -1z" fill={GOLD} />
+              </svg>
+              <span className="font-display text-xl tracking-tight" style={{ color: NAVY }}>
+                RB<span style={{ color: ROYAL }}>stars</span>
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <Lock size={12} color="#16a34a" />
-              <span style={{ color: "#16a34a" }}>Secure Checkout</span>
+            <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#0E9F6E" }}>
+              <Lock size={12} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Secure Checkout</span>
             </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-5">
 
-            {}
+            {/* LEFT — forms */}
             <div className="space-y-3.5 order-2 lg:order-1">
 
-              {}
-              <Accordion
-                open={true} onToggle={() => {}}
-                title="Contact"
-                iconEl={<Mail size={13} color="#A5B4FC" />}
-                delay={0.07}
-              >
+              {/* Contact */}
+              <Accordion open={true} onToggle={() => {}} title="Contact" iconEl={<Mail size={14} />} delay={0.07}>
                 <div className="pt-3">
-                  <Input label="Email Address" placeholder="you@example.com" value={email} onChange={setEmail} icon={<Mail size={15} />} type="text" error={errors.email} />
+                  <Input label="Email Address" placeholder="you@example.com" value={email} onChange={setEmail} icon={<Mail size={15} />} error={errors.email} />
                 </div>
               </Accordion>
 
-              {}
+              {/* Billing */}
               <Accordion
                 open={billingOpen} onToggle={() => setBillingOpen(o => !o)}
                 title="Billing Address"
-                badge={<span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "rgba(79,70,229,0.15)", color: "#818CF8" }}>Optional</span>}
-                iconEl={<MapPin size={13} color="#A5B4FC" />}
-                subtitle={!billingOpen && addr1 ? <span className="text-xs" style={{ color: "#6B7280" }}>{addr1}{city ? `, ${city}` : ""}</span> : undefined}
+                badge={<span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] px-2 py-0.5 rounded-full" style={{ background: "#EEF3FB", color: ROYAL }}>Optional</span>}
+                iconEl={<MapPin size={14} />}
+                subtitle={!billingOpen && addr1 ? <span className="text-xs" style={{ color: MUTED }}>{addr1}{city ? `, ${city}` : ""}</span> : undefined}
                 delay={0.12}
               >
                 <div className="space-y-3 pt-3">
@@ -1066,6 +1016,7 @@ export default function Checkout() {
                 </div>
               </Accordion>
 
+              {/* Express checkout */}
               <motion.div
                 initial={false}
                 animate={{
@@ -1073,40 +1024,40 @@ export default function Checkout() {
                   height: eceCollapsed ? 0 : "auto",
                 }}
                 transition={{ opacity: { duration: 0.38 }, height: { duration: 0.3 } }}
-                className="rounded-2xl overflow-hidden"
+                className="rounded-2xl overflow-hidden bg-white"
                 style={{
-                  background: "rgba(255,255,255,0.035)",
-                  border: eceAvailable === true ? "1.5px solid rgba(165,180,252,0.13)" : "none",
+                  border: eceAvailable === true ? "1px solid rgba(14,26,60,.09)" : "none",
+                  boxShadow: eceAvailable === true ? "var(--shadow-soft-xs)" : "none",
                   pointerEvents: eceAvailable === true ? "auto" : "none",
                 }}
               >
-                <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
+                <div className="px-5 py-3.5" style={{ borderBottom: "1px solid rgba(14,26,60,.07)" }}>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: MUTED }}>Express Checkout</p>
                 </div>
-                <div className="px-4 py-3" style={{ minHeight: 68 }}>
+                <div className="px-5 py-4" style={{ minHeight: 68 }}>
                   <div ref={eceContainerRef} />
                 </div>
-                <div className="flex items-center gap-3 px-4 pb-3">
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
+                <div className="flex items-center gap-3 px-5 pb-4">
+                  <div className="flex-1 h-px" style={{ background: "rgba(14,26,60,.1)" }} />
+                  <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "#9AA3B8" }}>or pay with card</span>
+                  <div className="flex-1 h-px" style={{ background: "rgba(14,26,60,.1)" }} />
                 </div>
               </motion.div>
 
-              {}
+              {/* Card */}
               <Accordion
                 open={openPayment === "card"}
                 onToggle={() => setOpenPayment("card")}
                 title="Credit / Debit Card"
                 iconEl={<RadioDot selected={openPayment === "card"} />}
-                iconBg="transparent"
                 headerRight={<BrandIconRow activeBrand={brand} />}
                 delay={0.16}
               >
-                <div className="space-y-3 pt-3">
+                <div className="space-y-3.5 pt-3">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Card Number</label>
-                    <div className="flex items-center gap-2 px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cardNum ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                    <label className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] block mb-1.5" style={{ color: MUTED }}>Card Number</label>
+                    <div className="flex items-center gap-2 px-4 rounded-xl bg-white transition-shadow focus-within:shadow-[0_0_0_3px_rgba(43,80,246,.12)]"
+                      style={{ border: `1.5px solid ${errors.cardNum ? "#D92D20" : "rgba(14,26,60,.14)"}`, minHeight: 50 }}>
                       <div ref={cardNumDivRef} className="flex-1 py-3" />
                       <AnimatePresence>
                         {brand && (
@@ -1121,22 +1072,24 @@ export default function Checkout() {
                         )}
                       </AnimatePresence>
                     </div>
-                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cardNum}</p>}
+                    {errors.cardNum && <p className="mt-1 text-[11px] font-medium" style={{ color: "#D92D20" }}>{errors.cardNum}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Expiry</label>
-                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.expiry ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                      <label className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] block mb-1.5" style={{ color: MUTED }}>Expiry</label>
+                      <div className="px-4 rounded-xl bg-white"
+                        style={{ border: `1.5px solid ${errors.expiry ? "#D92D20" : "rgba(14,26,60,.14)"}`, minHeight: 50 }}>
                         <div ref={cardExpDivRef} className="py-3" />
                       </div>
-                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.expiry}</p>}
+                      {errors.expiry && <p className="mt-1 text-[11px] font-medium" style={{ color: "#D92D20" }}>{errors.expiry}</p>}
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Security Code</label>
-                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cvv ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
+                      <label className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] block mb-1.5" style={{ color: MUTED }}>Security Code</label>
+                      <div className="px-4 rounded-xl bg-white"
+                        style={{ border: `1.5px solid ${errors.cvv ? "#D92D20" : "rgba(14,26,60,.14)"}`, minHeight: 50 }}>
                         <div ref={cardCvvDivRef} className="py-3" />
                       </div>
-                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cvv}</p>}
+                      {errors.cvv && <p className="mt-1 text-[11px] font-medium" style={{ color: "#D92D20" }}>{errors.cvv}</p>}
                     </div>
                   </div>
                   <Input label="Name on Card" placeholder="As it appears on your card" value={cardName} onChange={setCardName} icon={<User size={15} />} error={errors.cardName} />
@@ -1147,68 +1100,61 @@ export default function Checkout() {
               {errors.payment && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2.5 px-4 py-3 rounded-xl"
-                  style={{ background: "rgba(239,68,68,0.1)", border: "1.5px solid rgba(239,68,68,0.25)" }}
+                  className="flex items-start gap-2.5 px-4 py-3.5 rounded-xl bg-white"
+                  style={{ border: "1px solid rgba(217,45,32,.4)" }}
                 >
-                  <AlertCircle size={15} color="#ef4444" className="flex-shrink-0 mt-0.5" />
-                  <p className="text-sm leading-snug" style={{ color: "#ef4444" }}>{errors.payment}</p>
+                  <AlertCircle size={15} color="#D92D20" className="flex-shrink-0 mt-0.5" />
+                  <p className="text-sm leading-snug font-medium" style={{ color: "#D92D20" }}>{errors.payment}</p>
                 </motion.div>
               )}
 
-              {/* 5. Pay Button */}
+              {/* Pay button */}
               <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="relative">
                 <BurstParticles active={burst} />
                 <motion.button
                   animate={burst ? { scale: [1, 1.07, 0.97, 1.03, 1] } : { scale: 1 }}
-                  whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 45px rgba(220,38,38,0.5)" } : {}}
-                  whileTap={!loading ? { scale: 0.97 } : {}}
+                  whileHover={!loading ? { y: -2, boxShadow: "0 20px 44px -10px rgba(43,80,246,.65)" } : {}}
+                  whileTap={!loading ? { scale: 0.98 } : {}}
                   onClick={handlePay}
                   disabled={loading}
-                  className="relative w-full rounded-2xl font-extrabold text-white flex items-center justify-center gap-3 text-base overflow-hidden"
-                  style={{ background: loading ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "linear-gradient(135deg,#dc2626 0%,#9f1239 100%)", padding: "18px 0", transition: "background 0.5s" }}>
-                  {!loading && (
-                    <motion.div
-                      initial={{ x: "-100%" }} animate={{ x: "220%" }}
-                      transition={{ repeat: Infinity, duration: 2.8, ease: "linear", repeatDelay: 0.8 }}
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.11),transparent)", width: "40%" }} />
-                  )}
+                  className="relative w-full rounded-2xl font-bold text-white flex items-center justify-center gap-3 text-base transition-shadow"
+                  style={{ background: loading ? NAVY : "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", padding: "19px 0", boxShadow: "0 12px 30px -8px rgba(43,80,246,.55)", transition: "background .4s" }}>
                   {loading ? (
                     <><Loader2 size={20} className="animate-spin" /><span>Processing Payment…</span></>
                   ) : (
-                    <><Lock size={17} /><span>{`Pay — $${finalTotal.toFixed(2)}`}</span><ChevronRight size={17} /></>
+                    <><Lock size={17} /><span>{`Pay $${finalTotal.toFixed(2)} Securely`}</span><ChevronRight size={17} /></>
                   )}
                 </motion.button>
-                <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#475569" }}>
-                  <Shield size={10} /> 256-bit SSL encrypted · Powered by Stripe
+                <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#9AA3B8" }}>
+                  <Shield size={10} /> 256-bit SSL encrypted · Powered by Stripe · Free delivery
                 </p>
               </motion.div>
             </div>
 
-            {/* ── RIGHT: Order Summary ── */}
+            {/* RIGHT — Order summary */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="order-1 lg:order-2">
-              <div className="sticky top-6 rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}>
+              <div className="lg:sticky lg:top-6 rounded-3xl overflow-hidden bg-white" style={{ border: "1px solid rgba(14,26,60,.09)", boxShadow: "var(--shadow-soft-md)" }}>
 
                 {/* Summary header */}
                 <button onClick={() => setSummaryOpen(o => !o)} className="w-full flex items-center justify-between px-5 py-4 text-left">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(79,70,229,0.22)" }}>
-                      <Package size={13} color="#A5B4FC" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#EEF3FB", color: ROYAL }}>
+                      <Package size={14} />
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-white">Order Summary</p>
-                      <p className="text-xs" style={{ color: "#6B7280" }}>
+                      <p className="font-display text-base tracking-tight" style={{ color: NAVY }}>Order Summary</p>
+                      <p className="text-xs" style={{ color: MUTED }}>
                         {items.reduce((s, i) => s + i.quantity, 0)} item{items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="text-right">
-                      <p className="text-lg font-extrabold" style={{ color: "#A5B4FC" }}>${finalTotal.toFixed(2)}</p>
-                      {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${totalPrice.toFixed(2)}</p>}
+                      <p className="font-display text-lg tracking-tight" style={{ color: NAVY }}>${finalTotal.toFixed(2)}</p>
+                      {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#9AA3B8" }}>${totalPrice.toFixed(2)}</p>}
                     </div>
                     <motion.div animate={{ rotate: summaryOpen ? 180 : 0 }} transition={{ duration: 0.22 }}>
-                      <ChevronDown size={16} color={summaryOpen ? "#A5B4FC" : "#64748B"} />
+                      <ChevronDown size={16} color="#9AA3B8" />
                     </motion.div>
                   </div>
                 </button>
@@ -1221,43 +1167,41 @@ export default function Checkout() {
                       style={{ overflow: "hidden" }}>
 
                       {/* Items */}
-                      <div className="px-5 py-3 space-y-3 max-h-52 overflow-y-auto" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
+                      <div className="px-5 py-3 space-y-3 max-h-52 overflow-y-auto" style={{ borderTop: "1px dashed rgba(14,26,60,.12)" }}>
                         <AnimatePresence initial={false}>
                         {items.map((item, i) => (
-                          <motion.div key={item.id} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8, scale: 0.95 }} transition={{ delay: 0.06 + i * 0.04 }} className="flex items-center gap-3">
-                            <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
-                              <div className="w-full h-full rounded-xl overflow-hidden relative">
-                                {item.bgImageUrl ? (
+                          <motion.div key={item.id} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8, scale: 0.95 }} transition={{ delay: 0.04 + i * 0.04 }} className="flex items-center gap-3">
+                            <div className="relative flex-shrink-0" style={{ width: 44, height: 44 }}>
+                              <div className="w-full h-full rounded-xl overflow-hidden relative"
+                                style={{ background: item.bgImageUrl ? undefined : `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})`, border: "1px solid rgba(14,26,60,.1)" }}>
+                                {item.bgImageUrl && (
                                   <>
                                     <img src={item.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                                    <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` }} />
-                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
+                                    <div className="absolute inset-0" style={{ background: "rgba(11,20,55,.25)" }} />
                                   </>
                                 )}
                                 {item.image && (
-                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-contain" style={{ padding: "3px" }} />
+                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-contain p-0.5" />
                                 )}
                               </div>
                               {item.quantity > 1 && (
-                                <div className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full text-[9px] font-extrabold text-white flex items-center justify-center" style={{ background: "#4F46E5" }}>
+                                <div className="absolute -top-1.5 -right-1.5 w-[19px] h-[19px] rounded-full text-[9px] font-bold text-white flex items-center justify-center ring-2 ring-white"
+                                  style={{ background: ROYAL }}>
                                   {item.quantity}
                                 </div>
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-white truncate">{item.name}</p>
-                              {item.originalPrice && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${item.originalPrice.toFixed(2)}</p>}
+                              <p className="text-xs font-semibold truncate" style={{ color: NAVY }}>{item.name}</p>
+                              {item.originalPrice && <p className="text-[10px] line-through" style={{ color: "#9AA3B8" }}>${item.originalPrice.toFixed(2)}</p>}
                             </div>
-                            <span className="text-sm font-extrabold flex-shrink-0" style={{ color: "#A5B4FC" }}>${(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="text-sm font-bold flex-shrink-0" style={{ color: NAVY }}>${(item.price * item.quantity).toFixed(2)}</span>
                             <motion.button
-                              whileTap={{ scale: 0.88 }}
+                              whileTap={{ scale: 0.85 }}
                               onClick={() => removeItem(item.id)}
-                              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                              style={{ background: "rgba(255,255,255,0.07)", color: "#64748B" }}
+                              aria-label="Remove item"
+                              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center hover:bg-[#FDEEEC] hover:text-[#D92D20] transition-colors"
+                              style={{ background: "#EEF3FB", color: MUTED }}
                             >
                               <X size={10} strokeWidth={2.5} />
                             </motion.button>
@@ -1266,38 +1210,38 @@ export default function Checkout() {
                         </AnimatePresence>
                       </div>
 
-                      {/* Promo code */}
-                      <div className="px-5 py-3" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#64748B" }}>Discount Code</p>
+                      {/* Promo */}
+                      <div className="px-5 py-3.5" style={{ borderTop: "1px dashed rgba(14,26,60,.12)" }}>
+                        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-2" style={{ color: MUTED }}>Discount Code</p>
                         <PromoInput applied={promo} onApply={setPromo} onRemove={() => setPromo(null)} />
                       </div>
 
                       {/* Totals */}
-                      <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
+                      <div className="px-5 py-4 space-y-2.5" style={{ borderTop: "1px dashed rgba(14,26,60,.12)" }}>
                         <div className="flex justify-between">
-                          <span className="text-xs" style={{ color: "#6B7280" }}>Subtotal</span>
-                          <span className="text-xs font-semibold text-white">${totalPrice.toFixed(2)}</span>
+                          <span className="text-xs" style={{ color: MUTED }}>Subtotal</span>
+                          <span className="text-xs font-semibold" style={{ color: NAVY }}>${totalPrice.toFixed(2)}</span>
                         </div>
                         <AnimatePresence>
                           {discount > 0 && (
                             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex justify-between">
-                              <span className="text-xs flex items-center gap-1" style={{ color: "#6B7280" }}>
+                              <span className="text-xs flex items-center gap-1" style={{ color: MUTED }}>
                                 <Tag size={9} />
                                 {promo?.type === "percent" ? `${promo.value}% off` : "Discount"} ({promo?.code})
                               </span>
-                              <span className="text-xs font-semibold" style={{ color: "#4ade80" }}>-${discount.toFixed(2)}</span>
+                              <span className="text-xs font-bold" style={{ color: "#0E9F6E" }}>-${discount.toFixed(2)}</span>
                             </motion.div>
                           )}
                         </AnimatePresence>
                         <div className="flex justify-between">
-                          <span className="text-xs" style={{ color: "#6B7280" }}>Delivery</span>
-                          <span className="text-xs font-bold" style={{ color: "#4ade80" }}>FREE</span>
+                          <span className="text-xs" style={{ color: MUTED }}>Delivery</span>
+                          <span className="text-xs font-bold" style={{ color: "#0E9F6E" }}>FREE</span>
                         </div>
-                        <div className="flex justify-between items-center pt-2" style={{ borderTop: "1px solid rgba(165,180,252,0.08)" }}>
-                          <span className="text-sm font-extrabold text-white">Total</span>
+                        <div className="flex justify-between items-center pt-2.5" style={{ borderTop: "1px solid rgba(14,26,60,.09)" }}>
+                          <span className="font-display text-base tracking-tight" style={{ color: NAVY }}>Total</span>
                           <div className="text-right">
-                            <p className="text-xl font-extrabold" style={{ color: "#A5B4FC" }}>${finalTotal.toFixed(2)}</p>
-                            {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${totalPrice.toFixed(2)}</p>}
+                            <p className="font-display text-2xl tracking-tight" style={{ color: NAVY }}>${finalTotal.toFixed(2)}</p>
+                            {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#9AA3B8" }}>${totalPrice.toFixed(2)}</p>}
                           </div>
                         </div>
                       </div>
@@ -1306,11 +1250,11 @@ export default function Checkout() {
                 </AnimatePresence>
 
                 {/* Trust badges */}
-                <div className="px-5 py-3 grid grid-cols-3 gap-2" style={{ borderTop: "1px solid rgba(165,180,252,0.07)", background: "rgba(0,0,0,0.12)" }}>
-                  {[{ icon: <Zap size={13} />, label: "Instant Delivery" }, { icon: <Shield size={13} />, label: "100% Secure" }, { icon: <Star size={13} fill="#A5B4FC" color="#A5B4FC" />, label: "5★ Rated" }].map((b, i) => (
+                <div className="px-5 py-3.5 grid grid-cols-3 gap-2" style={{ borderTop: "1px solid rgba(14,26,60,.09)", background: "#F6F8FE" }}>
+                  {[{ icon: <Zap size={13} />, label: "Instant Delivery" }, { icon: <Shield size={13} />, label: "100% Secure" }, { icon: <Star size={13} fill={GOLD} />, label: "5★ Rated" }].map((b, i) => (
                     <div key={i} className="flex flex-col items-center gap-1.5 py-1.5">
-                      <div style={{ color: "#A5B4FC" }}>{b.icon}</div>
-                      <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: "#64748B" }}>{b.label}</span>
+                      <div>{b.icon}</div>
+                      <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: MUTED }}>{b.label}</span>
                     </div>
                   ))}
                 </div>

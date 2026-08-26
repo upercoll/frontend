@@ -56,7 +56,7 @@ export default function DelivererLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #0B1437 0%, #0B1437 45%, #0B1437 100%)" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
           style={{ background: "radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 70%)" }} />

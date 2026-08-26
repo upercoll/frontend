@@ -318,7 +318,7 @@ export default function RobloxJourneyScene() {
 
   return (
     <div className="relative w-full h-[260px] sm:h-[340px] md:h-[420px] rounded-3xl overflow-hidden"
-      style={{ background: "linear-gradient(135deg,#151233 0%,#1E1B4B 55%,#241f5c 100%)" }}
+      style={{ background: "linear-gradient(135deg,#151233 0%,#16204D 55%,#241f5c 100%)" }}
     >
       <div ref={containerRef} className="absolute inset-0" />
       {/* stage labels */}
@@ -327,7 +327,7 @@ export default function RobloxJourneyScene() {
           <span
             key={s.label}
             className="text-[10px] sm:text-xs font-bold uppercase tracking-widest"
-            style={{ color: "#A5B4FC" }}
+            style={{ color: "#B9C6FF" }}
           >
             {s.label}
           </span>

@@ -15,7 +15,7 @@ interface TooltipProps {
 function CustomTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0a1628] border border-white/10 rounded-lg p-3 shadow-xl">
+    <div className="bg-[#101C48] border border-white/10 rounded-lg p-3 shadow-xl">
       <p className="text-slate-400 text-xs mb-2">{label}</p>
       {payload.map((p, i) => (
         <p key={i} className="text-white text-sm font-medium">
@@ -38,7 +38,7 @@ export default function RevenueChart() {
   const chart = data?.data.chart || [];
 
   return (
-    <div className="bg-[#0d1f3c] border border-white/5 rounded-xl p-6">
+    <div className="bg-[#131F4D] border border-white/5 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-white font-semibold">Revenue Overview</h3>
@@ -70,8 +70,8 @@ export default function RevenueChart() {
           <AreaChart data={chart} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <stop offset="5%" stopColor="#5A78FF" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#5A78FF" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
@@ -91,11 +91,11 @@ export default function RevenueChart() {
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="#3b82f6"
+              stroke="#5A78FF"
               strokeWidth={2}
               fill="url(#revGradient)"
               dot={false}
-              activeDot={{ r: 4, fill: "#3b82f6" }}
+              activeDot={{ r: 4, fill: "#5A78FF" }}
             />
           </AreaChart>
         </ResponsiveContainer>

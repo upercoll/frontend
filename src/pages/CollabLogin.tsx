@@ -39,7 +39,7 @@ export default function CollabLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+      style={{ background: "linear-gradient(135deg, #0B1437 0%, #0B1437 45%, #0B1437 100%)" }}>
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"

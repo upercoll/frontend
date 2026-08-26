@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
 
 const links = ["Terms of Service", "Privacy Policy", "Contact", "Help Center"];
 const payments = ["Visa", "Mastercard", "Amex", "ApplePay", "Discover", "PayPal"];
@@ -110,76 +109,113 @@ const socials = [
 
 export default function Footer() {
   return (
-    <footer style={{ background: "#0F0C2E", borderTop: "1px solid rgba(165,180,252,0.08)" }}>
-      <div className="max-w-2xl mx-auto px-4 py-14">
+    <footer className="relative overflow-hidden" style={{ background: "#0B1437", borderTop: "1px solid rgba(14,26,60,.1)" }}>
+      {/* starfield */}
+      <div className="absolute inset-0 pattern-stars-light pointer-events-none opacity-70" />
+      <motion.div
+        className="absolute -bottom-40 -left-40 w-[480px] h-[480px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(43,80,246,.22), transparent 70%)" }}
+      />
+      <motion.div
+        className="absolute -top-32 right-[10%] w-[380px] h-[380px] rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(255,197,61,.08), transparent 70%)" }}
+      />
 
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#312E80" }}>
-              <Star size={17} fill="white" color="white" />
+      <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-10">
+
+        {/* Top row */}
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 mb-12">
+          <div className="max-w-sm">
+            <div className="flex items-center gap-2.5 mb-4">
+              <svg width="38" height="38" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                <rect x="12" y="12" width="40" height="40" rx="11" transform="rotate(8 32 32)" fill="#FFFFFF" fillOpacity=".1" stroke="rgba(255,255,255,.25)" strokeWidth="1.5"/>
+                <path d="M32 20 l3.4 7.2 7.9 1 -5.8 5.6 1.4 7.9 -6.9 -3.9 -6.9 3.9 1.4 -7.9 -5.8 -5.6 7.9 -1z" fill="#FFC53D" />
+              </svg>
+              <span className="font-display text-3xl tracking-tight text-white">
+                RB<span className="text-[#FFC53D]">stars</span>
+              </span>
             </div>
-            <span className="text-2xl font-bold text-white">RB<span style={{ color: "#A5B4FC" }}>stars</span></span>
+            <p className="text-sm leading-relaxed" style={{ color: "rgba(220,228,255,.6)" }}>
+              Your trusted marketplace for Roblox game items — fast delivery, secure payments, and 24/7 support.
+            </p>
           </div>
-          <p className="text-xs leading-relaxed max-w-sm" style={{ color: "#4B5563" }}>
-            Your trusted marketplace for Roblox game items — fast delivery, secure payments, and 24/7 support.
-          </p>
+
+          {/* Links */}
+          <nav className="grid grid-cols-2 gap-x-10 gap-y-3 content-start">
+            {links.map(l => (
+              <a
+                key={l}
+                href="#"
+                data-testid={`link-footer-${l.toLowerCase().replace(/\s+/g, "-")}`}
+                className="text-sm font-medium transition-colors duration-200 hover:text-[#FFC53D]"
+                style={{ color: "rgba(220,228,255,.75)" }}
+              >
+                {l}
+              </a>
+            ))}
+          </nav>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 mb-7">
-          {links.map(l => (
-            <a
-              key={l}
-              href="#"
-              data-testid={`link-footer-${l.toLowerCase().replace(/\s+/g, "-")}`}
-              className="text-sm transition-colors duration-200"
-              style={{ color: "#6B7280" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#A5B4FC")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#6B7280")}
-            >
-              {l}
-            </a>
-          ))}
-        </div>
+        {/* Socials + language */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-10" style={{ borderBottom: "1px solid rgba(255,255,255,.1)" }}>
+          <div className="flex items-center gap-3">
+            {socials.map(({ Component, label }) => (
+              <motion.a
+                key={label}
+                href="#"
+                aria-label={label}
+                data-testid={`link-social-${label.toLowerCase().replace(/\s/g, "-")}`}
+                whileHover={{ scale: 1.1, y: -2, backgroundColor: "#2B50F6", borderColor: "#2B50F6" }}
+                whileTap={{ scale: 0.93 }}
+                className="w-11 h-11 rounded-full flex items-center justify-center border transition-colors duration-200"
+                style={{ background: "rgba(255,255,255,.04)", borderColor: "rgba(255,255,255,.18)", color: "#fff" }}
+              >
+                <Component />
+              </motion.a>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-3 mb-8">
-          {socials.map(({ Component, label }) => (
-            <motion.a
-              key={label}
-              href="#"
-              aria-label={label}
-              data-testid={`link-social-${label.toLowerCase().replace(/\s/g, "-")}`}
-              whileHover={{ scale: 1.1, backgroundColor: "rgba(49,46,128,0.4)" }}
-              whileTap={{ scale: 0.93 }}
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors duration-200"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.1)", color: "#A5B4FC" }}
-            >
-              <Component />
-            </motion.a>
-          ))}
-        </div>
-
-        <div className="mb-7">
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm cursor-pointer" style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(165,180,252,0.1)", color: "#A5B4FC" }}>
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border cursor-pointer transition-colors hover:border-[#FFC53D]"
+            style={{ background: "rgba(255,255,255,.04)", borderColor: "rgba(255,255,255,.2)", color: "#fff" }}>
             <span>🇺🇸</span>
-            <span className="font-medium">English</span>
+            <span>English</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
-          </div>
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-8 items-center">
+        {/* Payments */}
+        <div className="flex flex-wrap gap-2.5 mb-10 items-center">
           {payments.map(p => {
             const Icon = PaymentIcons[p];
             return (
-              <div key={p} className="rounded-lg overflow-hidden shadow-sm" style={{ border: "1px solid rgba(165,180,252,0.08)" }}>
+              <div key={p} className="rounded-lg overflow-hidden" style={{ boxShadow: "0 8px 20px -6px rgba(0,0,0,.4)" }}>
                 <Icon />
               </div>
             );
           })}
         </div>
 
-        <p className="text-xs" style={{ color: "#374151" }}>
+        <p className="text-xs mb-10" style={{ color: "rgba(220,228,255,.4)" }}>
           © 2026 RBstars. All rights reserved.
         </p>
+
+        {/* Giant wordmark */}
+        <motion.div
+          initial={{ y: 60, opacity: 0 }}
+          whileInView={{ y: 0, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          aria-hidden="true"
+          className="font-display select-none pointer-events-none leading-[0.82] text-center tracking-tight"
+          style={{
+            fontSize: "clamp(64px, 14vw, 190px)",
+            color: "transparent",
+            WebkitTextStroke: "1.5px rgba(255,255,255,.16)",
+            marginBottom: "-0.1em",
+          }}
+        >
+          RBSTARS
+        </motion.div>
       </div>
     </footer>
   );
