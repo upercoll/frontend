@@ -1,12 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, Shield } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { adminApi } from "../api";
 import { useLocation } from "wouter";
-
-const NAVY = "#0E1A3C";
-const ROYAL = "#2B50F6";
 
 export default function AdminLogin() {
   const { login } = useAdminAuth();
@@ -41,7 +38,12 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen dot-grid flex items-center justify-center p-4" style={{ background: "#F6F8FE" }}>
+    <div className="min-h-screen bg-[#060d1a] flex items-center justify-center p-4">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/5 rounded-full blur-3xl" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 24, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -50,41 +52,37 @@ export default function AdminLogin() {
       >
         <div className="text-center mb-8">
           <motion.div
-            initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: -6 }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-            className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-5"
-            style={{ background: NAVY, boxShadow: "var(--shadow-soft-md)" }}
+            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20"
           >
-            <ShieldCheck className="w-8 h-8" style={{ color: "#FFC53D" }} />
+            <Shield className="w-8 h-8 text-white" />
           </motion.div>
-          <h1 className="font-display text-3xl tracking-tight" style={{ color: NAVY }}>
-            RB<span style={{ color: ROYAL }}>stars</span> Panel
-          </h1>
-          <p className="text-sm mt-2 font-medium" style={{ color: "#5A6478" }}>Sign in to your admin panel</p>
+          <h1 className="text-2xl font-bold text-white">RBstars Panel</h1>
+          <p className="text-slate-400 text-sm mt-1">Sign in to your admin panel</p>
         </div>
 
-        {/* Mode toggle */}
-        <div className="flex rounded-full p-1 mb-6 bg-white" style={{ border: "1px solid rgba(14,26,60,.12)", boxShadow: "var(--shadow-soft-xs)" }}>
+        <div className="flex bg-[#0d1f3c] border border-white/5 rounded-xl p-1 mb-6">
           {(["owner", "member"] as const).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); setError(""); }}
-              className={`flex-1 py-2.5 rounded-full text-sm font-bold transition-all ${
-                mode === m ? "text-white shadow-md" : "hover:bg-[#EEF3FB]"
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                mode === m ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
               }`}
-              style={mode === m ? { background: NAVY } : { color: "#5A6478" }}
             >
               {m === "owner" ? "Owner" : "Team Member"}
             </button>
           ))}
         </div>
 
-        <div className="rounded-3xl p-7 bg-white" style={{ border: "1px solid rgba(14,26,60,.08)", boxShadow: "var(--shadow-soft-lg)" }}>
+        <div className="bg-[#0d1f3c] border border-white/5 rounded-2xl p-6 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: "#5A6478" }}>Email address</label>
+              <label className="text-slate-300 text-sm font-medium block mb-1.5">Email address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9AA3B8" }} />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="email"
                   value={email}
@@ -92,16 +90,15 @@ export default function AdminLogin() {
                   required
                   autoComplete="email"
                   placeholder="your@email.com"
-                  className="w-full bg-white rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none transition-shadow"
-                  style={{ border: `1.5px solid ${error ? "#D92D20" : "rgba(14,26,60,.14)"}`, color: NAVY }}
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: "#5A6478" }}>Password</label>
+              <label className="text-slate-300 text-sm font-medium block mb-1.5">Password</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#9AA3B8" }} />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type={showPass ? "text" : "password"}
                   value={password}
@@ -109,15 +106,12 @@ export default function AdminLogin() {
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full bg-white rounded-xl pl-10 pr-11 py-3 text-sm focus:outline-none"
-                  style={{ border: `1.5px solid ${error ? "#D92D20" : "rgba(14,26,60,.14)"}`, color: NAVY }}
+                  className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl pl-10 pr-11 py-3 text-sm focus:outline-none focus:border-blue-500/50 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  aria-label={showPass ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-[#2B50F6] transition-colors"
-                  style={{ color: "#9AA3B8" }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                 >
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -128,8 +122,7 @@ export default function AdminLogin() {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-sm px-4 py-3 rounded-xl font-medium"
-                style={{ background: "#FDEEEC", border: "1px solid rgba(217,45,32,.35)", color: "#B42318" }}
+                className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-xl"
               >
                 {error}
               </motion.div>
@@ -138,10 +131,9 @@ export default function AdminLogin() {
             <motion.button
               type="submit"
               disabled={loading}
-              whileHover={!loading ? { y: -2, boxShadow: "0 16px 36px -10px rgba(43,80,246,.6)" } : {}}
-              whileTap={!loading ? { scale: 0.98 } : {}}
-              className="w-full font-bold text-white py-3.5 rounded-full flex items-center justify-center gap-2 transition-shadow disabled:opacity-60"
-              style={{ background: "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", boxShadow: "0 10px 26px -8px rgba(43,80,246,.55)" }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-60 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {loading ? "Signing in..." : "Sign In"}
@@ -149,8 +141,8 @@ export default function AdminLogin() {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-6 flex items-center justify-center gap-2 font-medium" style={{ color: "#9AA3B8" }}>
-          Authorized access only
+        <p className="text-center text-slate-600 text-xs mt-6">
+          RBstars Admin Panel — Authorized access only
         </p>
       </motion.div>
     </div>

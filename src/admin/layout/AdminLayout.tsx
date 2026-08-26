@@ -129,8 +129,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div
-      className="dark flex h-screen overflow-hidden relative"
-      style={{ background: "#0B1437" }}
+      className="flex h-screen overflow-hidden relative"
+      style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particles.map(p => (
@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               top: `${p.top}%`,
               width: `${p.size}px`,
               height: `${p.size}px`,
-              background: `rgba(124,92,255,${p.op})`,
+              background: `rgba(139,92,246,${p.op})`,
               animationDuration: `${p.dur}s`,
               animationDelay: `${p.delay}s`,
               ["--p-op" as string]: p.op,
@@ -150,9 +150,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           />
         ))}
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(ellipse, rgba(43,80,246,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(ellipse, rgba(124,92,255,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="hidden lg:flex relative z-10">

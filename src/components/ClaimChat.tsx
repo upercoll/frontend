@@ -50,7 +50,7 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#B9A6FF" }}>{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#a78bfa" }}>{label}</label>
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
         style={{
           background: "rgba(255,255,255,0.07)",
@@ -78,7 +78,7 @@ function Bubble({ msg }: { msg: Message }) {
         animate={{ opacity: 1, scale: 1 }}
         className="flex justify-center my-1"
       >
-        <span className="text-[10px] px-3 py-1 rounded-full font-semibold" style={{ background: "rgba(196,181,253,0.1)", color: "#B9A6FF" }}>
+        <span className="text-[10px] px-3 py-1 rounded-full font-semibold" style={{ background: "rgba(196,181,253,0.1)", color: "#a78bfa" }}>
           {msg.text}
         </span>
       </motion.div>
@@ -101,7 +101,7 @@ function Bubble({ msg }: { msg: Message }) {
       )}
       <div className={`max-w-[78%] ${isCustomer ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
         {!isCustomer && (
-          <span className="text-[9px] font-bold ml-1" style={{ color: "#B9A6FF" }}>{msg.senderName}</span>
+          <span className="text-[9px] font-bold ml-1" style={{ color: "#a78bfa" }}>{msg.senderName}</span>
         )}
         <div
           className="px-3 py-2 rounded-2xl text-sm leading-relaxed"
@@ -322,7 +322,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               <MessageSquare size={22} color="white" />
             </div>
             <h3 className="text-base font-extrabold text-white mb-1">Connect with Claim Team</h3>
-            <p className="text-xs leading-relaxed" style={{ color: "#B9A6FF" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "#a78bfa" }}>
               Fill in your details below and our team will join shortly to deliver your items.
             </p>
           </div>
@@ -347,7 +347,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               error={formErrors.contactEmail}
             />
             <div className="rounded-xl p-3" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(196,181,253,0.12)" }}>
-              <p className="text-[10px] leading-relaxed" style={{ color: "#B9A6FF" }}>
+              <p className="text-[10px] leading-relaxed" style={{ color: "#a78bfa" }}>
                 📧 A confirmation will be sent to your email when the claim team joins. You can close this chat and return any time.
               </p>
             </div>
@@ -387,12 +387,12 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                 className="w-4 h-4 rounded-full border-2 border-t-transparent"
                 style={{ borderColor: "#7c3aed", borderTopColor: "transparent" }}
               />
-              <span className="text-xs font-semibold" style={{ color: "#B9A6FF" }}>Waiting for claim team…</span>
+              <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>Waiting for claim team…</span>
             </div>
             <p className="text-[10px]" style={{ color: "#4a3a6b" }}>Usually responds within 2–5 minutes</p>
             {nextSlotAt && (
               <div className="mt-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
-                style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#B9A6FF" }}>
+                style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
                 <Clock size={11} />
                 <span>Opens at {nextSlotAt} GMT+3</span>
                 <span className="font-mono opacity-70">({fmtSlotCountdown(nextSlotAt)})</span>
@@ -415,7 +415,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               <span className="text-xs font-bold text-white">{agentName}</span>
               {step === "active" && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-auto" />}
               {step === "claimed" && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>✓ Delivered</span>}
-              {step === "ended" && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "rgba(107,92,138,0.3)", color: "#B9A6FF" }}>Ended</span>}
+              {step === "ended" && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "rgba(107,92,138,0.3)", color: "#a78bfa" }}>Ended</span>}
             </div>
           )}
 
@@ -430,7 +430,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                 <div className="px-3 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", borderRadius: "18px 18px 18px 4px" }}>
                   <div className="flex gap-1">
                     {[0, 1, 2].map(i => (
-                      <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#B9A6FF" }}
+                      <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#a78bfa" }}
                         animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                     ))}
                   </div>
@@ -451,7 +451,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                   </>
                 ) : (
                   <>
-                    <Clock size={16} color="#B9A6FF" className="mx-auto mb-1" />
+                    <Clock size={16} color="#a78bfa" className="mx-auto mb-1" />
                     <p className="text-xs font-bold text-white">Chat Ended</p>
                     <p className="text-[10px] mt-0.5" style={{ color: "#6b5c8a" }}>Thank you for using RBstars!</p>
                   </>
@@ -536,7 +536,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                 </div>
               </div>
               <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
-                <X size={14} color="#B9A6FF" />
+                <X size={14} color="#a78bfa" />
               </button>
             </div>
 

@@ -173,22 +173,22 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#2B50F6" }}>{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#4f46e5" }}>{label}</label>
       <div
         className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
         style={{
           background: "#f9fafb",
-          border: `1.5px solid ${error ? "#fca5a5" : focused ? "#2B50F6" : "#e5e7eb"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(43,80,246,0.08)" : "none",
+          border: `1.5px solid ${error ? "#fca5a5" : focused ? "#4F46E5" : "#e5e7eb"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.08)" : "none",
         }}
       >
-        {icon && <span style={{ color: "#2B50F6", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: "#4F46E5", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 font-medium min-w-0"
-          style={{ color: "#16204D" }}
+          style={{ color: "#1e1b4b" }}
         />
       </div>
       {error && <p className="text-[10px]" style={{ color: "#ef4444" }}>{error}</p>}
@@ -221,18 +221,18 @@ function Bubble({ msg }: { msg: Message }) {
     >
       {!isCustomer && (
         <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5"
-          style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}>
+          style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
           <Star size={10} fill="white" color="white" />
         </div>
       )}
       <div className={`max-w-[78%] ${isCustomer ? "items-end" : "items-start"} flex flex-col gap-0.5`}>
         {!isCustomer && (
-          <span className="text-[9px] font-bold ml-1" style={{ color: "#3D63FF" }}>{msg.senderName}</span>
+          <span className="text-[9px] font-bold ml-1" style={{ color: "#6366f1" }}>{msg.senderName}</span>
         )}
         <div
           className="px-3 py-2 text-sm leading-relaxed"
           style={{
-            background: isCustomer ? "linear-gradient(135deg,#2B50F6,#1D3BD1)" : "#f3f4f6",
+            background: isCustomer ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#f3f4f6",
             color: isCustomer ? "white" : "#374151",
             borderRadius: isCustomer ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
           }}
@@ -754,10 +754,10 @@ export default function SupportChat() {
       <div className="flex flex-col h-full">
         <div className="p-4 pb-2 text-center">
           <div className="w-11 h-11 rounded-full mx-auto mb-2.5 flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)", boxShadow: "0 0 18px rgba(43,80,246,0.25)" }}>
+            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 0 18px rgba(79,70,229,0.25)" }}>
             <MessageSquare size={20} color="white" />
           </div>
-          <h3 className="text-sm font-extrabold mb-0.5" style={{ color: "#16204D" }}>How can we help?</h3>
+          <h3 className="text-sm font-extrabold mb-0.5" style={{ color: "#1e1b4b" }}>How can we help?</h3>
           <p className="text-[11px]" style={{ color: "#6b7280" }}>Choose an option to get started</p>
         </div>
 
@@ -778,7 +778,7 @@ export default function SupportChat() {
               <Headphones size={18} color="#7c3aed" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold" style={{ color: "#16204D" }}>General Support</p>
+              <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>General Support</p>
               <p className="text-[11px] mt-0.5" style={{ color: "#6b7280" }}>FAQs, payment help & general questions</p>
             </div>
             <ChevronRight size={15} color="#9ca3af" />
@@ -807,7 +807,7 @@ export default function SupportChat() {
               <Bot size={18} color="#16a34a" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#16204D" }}>
+              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#1e1b4b" }}>
                 Auto Delivery (Bot)
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "#dcfce7", color: "#16a34a" }}>
                   INSTANT
@@ -854,7 +854,7 @@ export default function SupportChat() {
               <Package size={18} color="#dc2626" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#16204D" }}>
+              <p className="text-sm font-extrabold flex items-center gap-1.5" style={{ color: "#1e1b4b" }}>
                 Claim Chat
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "#fee2e2", color: "#dc2626" }}>
                   ITEMS
@@ -892,13 +892,13 @@ export default function SupportChat() {
           {botTyping && (
             <div className="flex items-end gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}>
+                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
               <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#3D63FF" }}
+                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366f1" }}
                       animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                   ))}
                 </div>
@@ -918,7 +918,7 @@ export default function SupportChat() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => handleFaqQuestion(f.q, f.a)}
                   className="text-left px-3 py-2 rounded-xl text-[11px] font-semibold"
-                  style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1D3BD1" }}
+                  style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#3730a3" }}
                 >
                   {f.q}
                 </motion.button>
@@ -936,14 +936,14 @@ export default function SupportChat() {
               onKeyDown={e => e.key === "Enter" && handleFaqInput()}
               placeholder="Type a question…"
               className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl min-w-0"
-              style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#16204D" }}
+              style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
             />
             <motion.button
               whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
               onClick={handleFaqInput}
               disabled={!faqInput.trim()}
               className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#2B50F6,#1D3BD1)" : "#e0e7ff" }}
+              style={{ background: faqInput.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
             >
               <Send size={14} color="white" />
             </motion.button>
@@ -968,7 +968,7 @@ export default function SupportChat() {
             <CheckCheck size={24} color="#16a34a" />
           </div>
           <div>
-            <p className="text-base font-extrabold mb-1" style={{ color: "#16204D" }}>Order Delivered!</p>
+            <p className="text-base font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Order Delivered!</p>
             <p className="text-xs leading-relaxed" style={{ color: "#6b7280" }}>
               Your items have been delivered to your Roblox account. Check your inventory!
             </p>
@@ -977,7 +977,7 @@ export default function SupportChat() {
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => { clearClaimSession(); }}
             className="text-[11px] font-semibold px-4 py-2 rounded-xl"
-            style={{ background: "#ede9fe", color: "#2B50F6", border: "1px solid #C7D4FF" }}
+            style={{ background: "#ede9fe", color: "#4f46e5", border: "1px solid #c4b5fd" }}
           >
             Start New Chat
           </motion.button>
@@ -994,8 +994,8 @@ export default function SupportChat() {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
           <div className="rounded-2xl p-4 text-center" style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe" }}>
-            <MessageSquare size={28} color="#3D63FF" className="mx-auto mb-2" />
-            <p className="text-sm font-extrabold mb-1" style={{ color: "#16204D" }}>Chat In Progress</p>
+            <MessageSquare size={28} color="#6366f1" className="mx-auto mb-2" />
+            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Chat In Progress</p>
             <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
               You already have an active claim session for this order.
             </p>
@@ -1004,7 +1004,7 @@ export default function SupportChat() {
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => handleRejoinSession()}
             className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}
+            style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
           >
             <MessageSquare size={15} />Continue Chat
           </motion.button>
@@ -1016,8 +1016,8 @@ export default function SupportChat() {
       return (
         <div className="flex flex-col h-full justify-center p-4 gap-4">
           <div className="rounded-2xl p-4 text-center" style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}>
-            <Package size={28} color="#2B50F6" className="mx-auto mb-2" />
-            <p className="text-sm font-extrabold mb-1" style={{ color: "#16204D" }}>No Recent Order Found</p>
+            <Package size={28} color="#4F46E5" className="mx-auto mb-2" />
+            <p className="text-sm font-extrabold mb-1" style={{ color: "#1e1b4b" }}>No Recent Order Found</p>
             <p className="text-[11px] leading-relaxed" style={{ color: "#6b7280" }}>
               Place an order first, then return here to claim your items. If you already ordered, your items will appear here.
             </p>
@@ -1029,7 +1029,7 @@ export default function SupportChat() {
               setClaimStep("form");
             }}
             className="w-full py-3 rounded-xl font-bold text-sm"
-            style={{ background: "#ede9fe", border: "1.5px solid #C7D4FF", color: "#2B50F6" }}
+            style={{ background: "#ede9fe", border: "1.5px solid #c4b5fd", color: "#4f46e5" }}
           >
             Open General Claim Chat
           </motion.button>
@@ -1040,7 +1040,7 @@ export default function SupportChat() {
     return (
       <div className="flex flex-col h-full">
         <div className="px-4 pt-3 pb-2">
-          <p className="text-xs font-bold" style={{ color: "#16204D" }}>Select item to claim</p>
+          <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>Select item to claim</p>
           {lastOrder.orderRef && (
             <p className="text-[10px] mt-0.5" style={{ color: "#9ca3af" }}>Order {lastOrder.orderRef}</p>
           )}
@@ -1061,10 +1061,10 @@ export default function SupportChat() {
             >
               <div
                 className="w-9 h-9 rounded-xl flex-shrink-0"
-                style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` : "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}
+                style={{ background: item.gradient ? `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` : "linear-gradient(135deg,#4F46E5,#3730A3)" }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-extrabold truncate" style={{ color: "#16204D" }}>{item.name}</p>
+                <p className="text-[11px] font-extrabold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
                 {item.quantity > 1 && (
                   <p className="text-[10px]" style={{ color: "#9ca3af" }}>Qty: {item.quantity}</p>
                 )}
@@ -1089,7 +1089,7 @@ export default function SupportChat() {
             style={{ background: "#fee2e2", border: "1px solid #fecaca" }}>
             <Package size={18} color="#dc2626" />
           </div>
-          <p className="text-sm font-extrabold" style={{ color: "#16204D" }}>Which order to claim?</p>
+          <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>Which order to claim?</p>
           <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>You have multiple orders — select one below</p>
         </div>
         <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-2 mt-1">
@@ -1107,14 +1107,14 @@ export default function SupportChat() {
               style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb" }}
             >
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}>
+                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                 <Package size={14} color="white" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold mb-0.5" style={{ color: "#9ca3af" }}>
                   Order #{order.orderRef}
                 </p>
-                <p className="text-[11px] font-extrabold truncate" style={{ color: "#16204D" }}>
+                <p className="text-[11px] font-extrabold truncate" style={{ color: "#1e1b4b" }}>
                   {order.items?.map(i => `${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join(", ") || "Items"}
                 </p>
               </div>
@@ -1134,7 +1134,7 @@ export default function SupportChat() {
             style={{ background: "#fee2e2", border: "1px solid #fecaca" }}>
             <Package size={18} color="#dc2626" />
           </div>
-          <p className="text-xs font-extrabold" style={{ color: "#16204D" }}>{selectedItem?.name} Claim</p>
+          <p className="text-xs font-extrabold" style={{ color: "#1e1b4b" }}>{selectedItem?.name} Claim</p>
           <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>Enter your details to connect with the claim team</p>
         </div>
 
@@ -1157,7 +1157,7 @@ export default function SupportChat() {
             error={formErrors.contactEmail}
           />
           <div className="rounded-xl p-3" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
-            <p className="text-[10px] leading-relaxed" style={{ color: "#1D3BD1" }}>
+            <p className="text-[10px] leading-relaxed" style={{ color: "#3730a3" }}>
               Make sure your Roblox account allows friend requests. Our agent will add you in-game to deliver your items.
             </p>
           </div>
@@ -1203,7 +1203,7 @@ export default function SupportChat() {
                 style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}
               >
                 <div className="p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#1D3BD1" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#3730a3" }}>
                     {editMode === "roblox" ? "New Roblox Username" : "New Email Address"}
                   </p>
                   <div className="flex gap-2">
@@ -1214,14 +1214,14 @@ export default function SupportChat() {
                       placeholder={editMode === "roblox" ? "New username…" : "New email…"}
                       type={editMode === "email" ? "email" : "text"}
                       className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-2.5 py-2 rounded-lg min-w-0"
-                      style={{ background: "#f9fafb", border: "1px solid #e5e7eb", color: "#16204D" }}
+                      style={{ background: "#f9fafb", border: "1px solid #e5e7eb", color: "#1e1b4b" }}
                       autoFocus
                     />
                     <button
                       onClick={handleSaveUserInfo}
                       disabled={editSaving || !editValue.trim()}
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: editValue.trim() ? "#2B50F6" : "#e0e7ff" }}
+                      style={{ background: editValue.trim() ? "#4F46E5" : "#e0e7ff" }}
                     >
                       {editSaving ? <Loader2 size={12} className="animate-spin text-white" /> : <Check size={13} color="white" />}
                     </button>
@@ -1242,14 +1242,14 @@ export default function SupportChat() {
                   <button
                     onClick={() => { setEditMode("roblox"); setEditValue(robloxUser); }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
-                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#2B50F6" }}
+                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#4f46e5" }}
                   >
                     <Gamepad2 size={11} />Change Username
                   </button>
                   <button
                     onClick={() => { setEditMode("email"); setEditValue(contactEmail); }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold"
-                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#2B50F6" }}
+                    style={{ background: "#f3f4f6", border: "1px solid #e5e7eb", color: "#4f46e5" }}
                   >
                     <Mail size={11} />Change Email
                   </button>
@@ -1266,14 +1266,14 @@ export default function SupportChat() {
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
               className="w-4 h-4 rounded-full border-2"
-              style={{ borderColor: "#2B50F6", borderTopColor: "transparent" }}
+              style={{ borderColor: "#4F46E5", borderTopColor: "transparent" }}
             />
-            <span className="text-xs font-semibold" style={{ color: "#2B50F6" }}>Waiting for claim team…</span>
+            <span className="text-xs font-semibold" style={{ color: "#4f46e5" }}>Waiting for claim team…</span>
           </div>
           <p className="text-[10px]" style={{ color: "#9ca3af" }}>Usually responds within 2–5 minutes</p>
           {nextSlotAt && (
             <div className="mt-1.5 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
-              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2B50F6" }}>
+              style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#4338ca" }}>
               <Clock size={11} />
               <span>Opens at {nextSlotAt} GMT+3</span>
               <span className="font-mono opacity-60">({fmtSlotCountdown(nextSlotAt)})</span>
@@ -1293,10 +1293,10 @@ export default function SupportChat() {
           <div className="px-4 py-2 flex items-center gap-2 border-b flex-shrink-0"
             style={{ borderColor: "#e5e7eb", background: "#f5f3ff" }}>
             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "#2B50F6" }}>
+              style={{ background: "#4F46E5" }}>
               <Star size={9} fill="white" color="white" />
             </div>
-            <span className="text-xs font-bold" style={{ color: "#16204D" }}>{agentName}</span>
+            <span className="text-xs font-bold" style={{ color: "#1e1b4b" }}>{agentName}</span>
             {claimStep === "active" && <span className="w-1.5 h-1.5 rounded-full bg-green-400 ml-auto flex-shrink-0" />}
             {claimStep === "claimed" && (
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "#dcfce7", color: "#16a34a" }}>
@@ -1304,7 +1304,7 @@ export default function SupportChat() {
               </span>
             )}
             {claimStep === "ended" && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "#ede9fe", color: "#3D63FF" }}>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto" style={{ background: "#ede9fe", color: "#6366f1" }}>
                 Ended
               </span>
             )}
@@ -1316,13 +1316,13 @@ export default function SupportChat() {
           {agentTyping && (
             <div className="flex items-end gap-2">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}>
+                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
                 <Star size={10} fill="white" color="white" />
               </div>
               <div className="px-3 py-2 rounded-2xl" style={{ background: "#f3f4f6", borderRadius: "18px 18px 18px 4px" }}>
                 <div className="flex gap-1">
                   {[0, 1, 2].map(i => (
-                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#3D63FF" }}
+                    <motion.div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: "#6366f1" }}
                       animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                   ))}
                 </div>
@@ -1345,8 +1345,8 @@ export default function SupportChat() {
                 </>
               ) : (
                 <>
-                  <Clock size={16} color="#3D63FF" className="mx-auto mb-1" />
-                  <p className="text-xs font-bold" style={{ color: "#16204D" }}>Chat Ended</p>
+                  <Clock size={16} color="#6366f1" className="mx-auto mb-1" />
+                  <p className="text-xs font-bold" style={{ color: "#1e1b4b" }}>Chat Ended</p>
                   <p className="text-[10px] mt-0.5" style={{ color: "#6b7280" }}>Thank you for using RBstars!</p>
                 </>
               )}
@@ -1364,14 +1364,14 @@ export default function SupportChat() {
                 onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleSend()}
                 placeholder="Type a message…"
                 className="flex-1 bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl min-w-0"
-                style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#16204D" }}
+                style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
               />
               <motion.button
                 whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
                 onClick={handleSend}
                 disabled={!input.trim()}
                 className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: input.trim() ? "linear-gradient(135deg,#2B50F6,#1D3BD1)" : "#e0e7ff" }}
+                style={{ background: input.trim() ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff" }}
               >
                 <Send size={14} color="white" />
               </motion.button>
@@ -1391,7 +1391,7 @@ export default function SupportChat() {
             style={{ background: "#dcfce7", border: "2px solid #86efac" }}>
             <CheckCheck size={24} color="#16a34a" />
           </div>
-          <p className="text-base font-extrabold mb-1" style={{ color: "#16204D" }}>Review Submitted!</p>
+          <p className="text-base font-extrabold mb-1" style={{ color: "#1e1b4b" }}>Review Submitted!</p>
           <p className="text-xs" style={{ color: "#6b7280" }}>Thank you for your feedback</p>
         </div>
       );
@@ -1405,15 +1405,15 @@ export default function SupportChat() {
               background: isDelivered ? "#dcfce7" : "#eff6ff",
               border: `1px solid ${isDelivered ? "#86efac" : "#bfdbfe"}`,
             }}>
-            {isDelivered ? <CheckCheck size={18} color="#16a34a" /> : <Clock size={18} color="#3D63FF" />}
+            {isDelivered ? <CheckCheck size={18} color="#16a34a" /> : <Clock size={18} color="#6366f1" />}
           </div>
-          <p className="text-sm font-extrabold" style={{ color: "#16204D" }}>
+          <p className="text-sm font-extrabold" style={{ color: "#1e1b4b" }}>
             {isDelivered ? "Items Delivered! 🎉" : "Chat Ended"}
           </p>
           <p className="text-[11px] mt-0.5" style={{ color: "#6b7280" }}>Share your experience with us</p>
         </div>
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#2B50F6" }}>Your Rating</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#4f46e5" }}>Your Rating</p>
           <div className="flex items-center gap-1.5">
             {[1, 2, 3, 4, 5].map(star => (
               <motion.button key={star} whileHover={{ scale: 1.25 }} whileTap={{ scale: 0.85 }} onClick={() => setReviewStars(star)}>
@@ -1426,7 +1426,7 @@ export default function SupportChat() {
           </div>
         </div>
         <div className="px-4 pb-2 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#2B50F6" }}>Review (optional)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4f46e5" }}>Review (optional)</p>
           <textarea
             value={reviewComment}
             onChange={e => setReviewComment(e.target.value)}
@@ -1434,11 +1434,11 @@ export default function SupportChat() {
             rows={3}
             maxLength={300}
             className="w-full bg-transparent outline-none text-sm placeholder:text-gray-400 px-3 py-2.5 rounded-xl resize-none"
-            style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#16204D" }}
+            style={{ background: "#f9fafb", border: "1.5px solid #e5e7eb", color: "#1e1b4b" }}
           />
         </div>
         <div className="px-4 pb-3 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#2B50F6" }}>Attach Proof (optional)</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "#4f46e5" }}>Attach Proof (optional)</p>
           {reviewProofPreview ? (
             <div className="relative">
               <img src={reviewProofPreview} alt="proof" className="w-full h-20 object-cover rounded-xl"
@@ -1451,7 +1451,7 @@ export default function SupportChat() {
             </div>
           ) : (
             <label className="flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer text-[11px] font-semibold"
-              style={{ background: "#f9fafb", border: "1.5px dashed #C7D4FF", color: "#3D63FF" }}>
+              style={{ background: "#f9fafb", border: "1.5px dashed #c4b5fd", color: "#6366f1" }}>
               <ImagePlus size={14} />
               Attach screenshot
               <input type="file" accept="image/*" className="hidden"
@@ -1478,7 +1478,7 @@ export default function SupportChat() {
             onClick={handleReviewSubmit}
             disabled={reviewStars === 0 || reviewSubmitting}
             className="flex-1 py-2.5 rounded-xl text-sm font-extrabold text-white flex items-center justify-center gap-1.5"
-            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#2B50F6,#1D3BD1)" : "#e0e7ff", opacity: reviewSubmitting ? 0.7 : 1 }}>
+            style={{ background: reviewStars > 0 ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "#e0e7ff", opacity: reviewSubmitting ? 0.7 : 1 }}>
             {reviewSubmitting
               ? <Loader2 size={13} className="animate-spin" />
               : <Star size={13} fill={reviewStars > 0 ? "white" : "none"} color="white" strokeWidth={2} />}
@@ -1528,12 +1528,12 @@ export default function SupportChat() {
             </button>
           ) : (
             <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)" }}>
+              style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
               <Star size={13} fill="white" color="white" />
             </div>
           )}
           <div>
-            <p className="text-sm font-extrabold leading-tight" style={{ color: "#16204D" }}>{title}</p>
+            <p className="text-sm font-extrabold leading-tight" style={{ color: "#1e1b4b" }}>{title}</p>
             <div className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
               <span className="text-[9px] font-semibold" style={{ color: "#16a34a" }}>{subtitle}</span>
@@ -1582,7 +1582,7 @@ export default function SupportChat() {
               height: "min(520px, calc(100vh - 128px))",
               background: "#ffffff",
               border: "1.5px solid #e5e7eb",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(43,80,246,0.08)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(99,102,241,0.08)",
             }}
           >
             {renderHeader()}
@@ -1609,21 +1609,21 @@ export default function SupportChat() {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.2, type: "spring", stiffness: 280, damping: 20 }}
-        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(43,80,246,0.7)" }}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(79,70,229,0.7)" }}
         whileTap={{ scale: 0.92 }}
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-6 right-4 z-[300] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl"
-        style={{ background: "linear-gradient(135deg,#2B50F6,#1D3BD1)", boxShadow: "0 4px 24px rgba(43,80,246,0.55)" }}
+        style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)", boxShadow: "0 4px 24px rgba(79,70,229,0.55)" }}
       >
         {hasActivity && (
           <motion.span
             animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute inset-0 rounded-full"
-            style={{ background: "#2B50F6" }}
+            style={{ background: "#4F46E5" }}
           />
         )}
-        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#2B50F6]" />
+        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#4F46E5]" />
         <AnimatePresence mode="wait">
           {open
             ? <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}><X size={22} color="white" /></motion.div>

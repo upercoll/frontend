@@ -1,30 +1,29 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useInView } from "framer-motion";
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
   Zap, Lock, Headphones, LayoutGrid,
-  ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag, Youtube,
+  ChevronDown, ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag, Youtube,
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
+import AnimatedGrid from "@/components/AnimatedGrid";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
-const NAVY = "#0E1A3C";
-const NAVY_DEEP = "#0B1437";
-const ROYAL = "#2B50F6";
-const GOLD = "#FFC53D";
-const MUTED = "#5A6478";
-
-const EASE_OUT = [0.22, 1, 0.36, 1] as [number, number, number, number];
-
 const fadeUp = {
-  hidden: { opacity: 0, y: 26 },
+  hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.12 + 0.35, duration: 0.65, ease: EASE_OUT },
+    transition: { delay: i * 0.15 + 0.4, duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   }),
+};
+
+const cardPop = {
+  rest:  { y: 0,  scale: 1,     boxShadow: "0 2px 10px rgba(49,46,128,0.07)" },
+  hover: { y: -4, scale: 1.012, boxShadow: "0 14px 36px rgba(49,46,128,0.16)", transition: { duration: 0.22, ease: "easeOut" } },
+  tap:   { y: 1,  scale: 0.977, boxShadow: "0 2px 8px rgba(49,46,128,0.09)",  transition: { duration: 0.1 } },
 };
 
 const steps = [
@@ -57,11 +56,42 @@ type FeaturedYouTuber = { _id: string; name: string; username: string; subscribe
 
 function subscriberLabel(n: number) { return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0)}M` : n >= 1000 ? `${(n / 1000).toFixed(n % 1000 ? 1 : 0)}K` : n.toLocaleString(); }
 
+function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
+  if (!creators.length) return null;
+  const items = [...creators, ...creators];
+  return <section className="relative px-4 py-12 overflow-hidden" style={{ background: "#F7FAFF" }}>
+    <div className="max-w-6xl mx-auto relative">
+      <div className="text-center mb-4"><span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: "#312e80" }}>Trusted by top creators</span></div>
+      <div className="relative overflow-hidden rounded-2xl p-3" style={{ background: "#fff", border: "1px solid #dbe5ff", boxShadow: "0 12px 34px rgba(49,46,128,.10)" }}>
+        <div className="flex gap-2.5 w-max" style={{ animation: "yt-trust-marquee 32s linear infinite" }}>
+          {items.map((creator, index) => <a key={`${creator._id}-${index}`} href={creator.channelUrl} target="_blank" rel="noreferrer" className="group flex flex-col items-center justify-center gap-1.5 w-[104px] h-[112px] shrink-0 rounded-xl px-2 text-center transition-transform hover:-translate-y-1" style={{ background: "#f8faff", border: "1px solid #c8d9ff", boxShadow: "0 2px 6px rgba(49,46,128,.08)" }}>
+            {creator.avatarUrl ? <img src={creator.avatarUrl} alt="" className="h-11 w-11 rounded-full object-cover ring-2 ring-indigo-100" /> : <div className="h-11 w-11 rounded-full flex items-center justify-center" style={{ background: "#4338ca" }}><Youtube size={20} fill="white" color="white" /></div>}
+            <p className="w-full truncate font-extrabold text-[11px]" style={{ color: "#1e1b4b" }}>{creator.name || creator.username}</p>
+            <p className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: "#6b7280" }}><Youtube size={10} color="#dc2626" fill="#dc2626" /> {subscriberLabel(creator.subscribers)}</p>
+          </a>)}
+        </div>
+      </div>
+    </div>
+  </section>;
+}
+
+const FALLBACK_GAMES: ShopGame[] = [
+  { _id: "1", name: "Murder Mystery 2",         slug: "murder-mystery-2",         gradient: { from: "#6d28d9", to: "#4c1d95" } },
+  { _id: "2", name: "Blade Ball",               slug: "blade-ball",               gradient: { from: "#4c1d95", to: "#2e1065" } },
+  { _id: "3", name: "Grow A Garden 2",          slug: "grow-a-garden-2",          gradient: { from: "#16a34a", to: "#4ade80" } },
+  { _id: "4", name: "Steal A Brainrot",         slug: "steal-a-brainrot",         gradient: { from: "#ea580c", to: "#f97316" } },
+  { _id: "5", name: "Blox Fruits",              slug: "blox-fruits",              gradient: { from: "#d97706", to: "#fbbf24" } },
+  { _id: "6", name: "Garden Tower Defense",     slug: "garden-tower-defense",     gradient: { from: "#15803d", to: "#84cc16" } },
+  { _id: "7", name: "99 Nights In The Forest",  slug: "99-nights-in-the-forest",  gradient: { from: "#1e3a5f", to: "#374151" } },
+  { _id: "8", name: "Dress To Impress",         slug: "dress-to-impress",         gradient: { from: "#be185d", to: "#ec4899" } },
+  { _id: "9", name: "Pet Simulator 99",         slug: "pet-simulator-99",         gradient: { from: "#ec4899", to: "#f43f5e" } },
+];
+
 const features = [
-  { icon: Zap,        title: "Fast and Reliable",   desc: "Our Claim Support Team ensures your items are delivered almost instantly.", accent: ROYAL },
-  { icon: Lock,       title: "Secure Transactions", desc: "We use trusted payment systems to keep your data safe and secure.",         accent: "#0E9F6E" },
-  { icon: Headphones, title: "Unmatched Support",   desc: "Our friendly live chat support team is available around the clock to assist you with any questions.", accent: "#8B5CF6" },
-  { icon: LayoutGrid, title: "Wide Variety",        desc: "From Jailbreak to Grow A Garden we have everything you need to enhance your gaming experience.", accent: GOLD },
+  { icon: Zap,        title: "Fast and Reliable",   desc: "Our Claim Support Team ensures your items are delivered almost instantly.",                                                        accent: "#312E80", iconBg: "rgba(49,46,128,0.1)"  },
+  { icon: Lock,       title: "Secure Transactions", desc: "We use trusted payment systems to keep your data safe and secure.",                                                                accent: "#4338CA", iconBg: "rgba(67,56,202,0.1)"   },
+  { icon: Headphones, title: "Unmatched Support",   desc: "Our friendly live chat support team is available around the clock to assist you with any questions.",                              accent: "#312E80", iconBg: "rgba(49,46,128,0.1)"  },
+  { icon: LayoutGrid, title: "Wide Variety",        desc: "From Jailbreak to Grow A Garden we have everything you need to enhance your gaming experience.",                                  accent: "#4338CA", iconBg: "rgba(67,56,202,0.1)"   },
 ];
 
 const faqs = [
@@ -73,90 +103,75 @@ const faqs = [
   { q: "What if I don't receive my items after purchasing?",   a: "If you haven't received your items within the expected timeframe, contact our support team immediately via the chat widget. We monitor all orders and will resolve any delivery issues promptly." },
 ];
 
-const TICKER_ITEMS = [
-  "Instant Delivery", "Secure Payments", "10+ Games Supported",
-  "4.9 Rating", "2,000+ Orders Delivered", "24/7 Live Support",
-  "New Stock Added Daily", "Verified Sellers", "Fast & Trusted",
-];
+/* ── Helpers ──────────────────────────────────────────────── */
 
-function StarGlyph({ size = 12, color = GOLD, stroke }: { size?: number; color?: string; stroke?: string }) {
+function ParticleField({ count = 22, light = false }: { count?: number; light?: boolean }) {
+  const particles = useMemo(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      left:  5  + (i * 4.3 + (i % 3) * 7.1)  % 90,
+      top:   3  + (i * 7.7 + (i % 5) * 11.3) % 94,
+      size:  2  + (i % 4) * 0.9,
+      dur:   6  + (i % 7) * 1.4,
+      delay: -(i * 0.65),
+      op: light ? 0.18 + (i % 4) * 0.08 : 0.12 + (i % 4) * 0.06,
+    })), [count]);
+
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={stroke || "none"} strokeWidth={stroke ? 1.5 : 0} aria-hidden="true">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <div key={p.id} className="rb-particle" style={{
+          left: `${p.left}%`, top: `${p.top}%`,
+          width: `${p.size}px`, height: `${p.size}px`,
+          background: light ? `rgba(49,46,128,${p.op})` : `rgba(165,180,252,${p.op})`,
+          animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
+          ["--p-op" as string]: p.op,
+        }} />
+      ))}
+    </div>
   );
 }
 
-/* ── Editorial section header ─────────────────────────────── */
-function SectionHead({ idx, title, accentWord, note, tone = "light" }: {
-  idx: string; title: React.ReactNode; accentWord?: React.ReactNode; note?: string; tone?: "light" | "dark";
+function GlareCard({ children, className, style, delayClass = "" }: {
+  children: React.ReactNode; className?: string; style?: React.CSSProperties; delayClass?: string;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.55, ease: EASE_OUT }}
-      className="flex items-end justify-between gap-6 mb-10"
+      initial="rest" whileHover="hover" whileTap="tap" variants={cardPop}
+      className={`relative overflow-hidden cursor-pointer ${className ?? ""}`}
+      style={style}
     >
-      <div>
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.25em] mb-3 flex items-center gap-2"
-          style={{ color: tone === "dark" ? GOLD : ROYAL }}>
-          <StarGlyph size={10} color={tone === "dark" ? GOLD : ROYAL} />{idx}
-        </p>
-        <h2 className="font-display text-4xl sm:text-[52px] leading-[1.02] tracking-tight" style={{ color: tone === "dark" ? "#fff" : NAVY }}>
-          {title}{accentWord != null && <>{" "}<span className="font-serif-italic" style={{ color: tone === "dark" ? GOLD : ROYAL }}>{accentWord}</span></>}
-        </h2>
-      </div>
-      {note && (
-        <p className="hidden sm:block text-sm text-right max-w-[250px] leading-relaxed"
-          style={{ color: tone === "dark" ? "rgba(220,228,255,.55)" : MUTED }}>
-          {note}
-        </p>
-      )}
+      {children}
+      <div className={`rb-glare-indigo ${delayClass}`} />
     </motion.div>
   );
 }
 
-/* ── FAQ accordion ────────────────────────────────────────── */
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, ease: EASE_OUT }}
-      className="rounded-2xl overflow-hidden cursor-pointer transition-shadow"
-      style={{
-        background: open ? "#fff" : "#F6F8FE",
-        border: `1px solid ${open ? ROYAL : "rgba(14,26,60,.08)"}`,
-        boxShadow: open ? "var(--shadow-soft-sm)" : "none",
-      }}
+      initial="rest" whileHover="hover" whileTap="tap" variants={cardPop}
+      className="rounded-2xl overflow-hidden cursor-pointer bg-white"
+      style={{ border: "1.5px solid rgba(49,46,128,0.1)" }}
     >
       <button
         onClick={() => setOpen(v => !v)}
         className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+        style={{ background: open ? "rgba(49,46,128,0.06)" : "transparent" }}
       >
-        <span className="font-bold text-sm leading-snug" style={{ color: NAVY }}>{q}</span>
-        <motion.div
-          animate={{ rotate: open ? 45 : 0 }}
-          transition={{ duration: 0.25 }}
-          className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: open ? ROYAL : "#EEF3FB" }}
-        >
-          <span className="relative block w-3 h-[2px]" style={{ background: open ? "#fff" : NAVY }}>
-            {!open && <span className="absolute inset-0 rotate-90" style={{ background: NAVY }} />}
-          </span>
+        <span className="font-semibold text-sm leading-snug" style={{ color: "#1E1B4B" }}>{q}</span>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }} className="flex-shrink-0">
+          <ChevronDown size={18} color="#312E80" />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div key="c"
             initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: EASE_OUT }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="px-5 pt-1 pb-5 text-sm leading-relaxed" style={{ color: MUTED }}>{a}</p>
+            <p className="px-5 pt-1 pb-4 text-sm leading-relaxed" style={{ color: "#5B5EA8" }}>{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -164,7 +179,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-/* ── Mini product card (Top Picks dark rows) ──────────────── */
+/* ── Mini product card (used in Top Picks section) ─────────── */
 function MiniProductCard({ product, game, index }: { product: MiniProduct; game: ShopGame; index: number }) {
   const { addItem } = useCart();
   const [, navigate] = useLocation();
@@ -194,78 +209,102 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.08, duration: 0.5, ease: EASE_OUT }}
+      initial={{ opacity: 0, y: 36, scale: 0.88 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ delay: 0.1 + index * 0.14, duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
       onClick={() => navigate(`/product/${product._id}`)}
-      whileHover={{ y: -6, boxShadow: "0 24px 48px -16px rgba(0,0,0,.6)" }}
       className="flex flex-col rounded-2xl overflow-hidden relative group cursor-pointer"
       style={{
-        background: "rgba(255,255,255,.04)",
-        border: "1px solid rgba(255,255,255,.12)",
-        backdropFilter: "blur(8px)",
-        transition: "box-shadow .25s ease, border-color .25s ease",
+        background: "rgba(255,255,255,0.055)",
+        border: "1.5px solid rgba(165,180,252,0.13)",
+        boxShadow: "0 2px 16px rgba(10,8,40,0.18)",
+      }}
+      whileHover={{
+        y: -6,
+        boxShadow: `0 22px 48px ${game.gradient.from}38, 0 2px 16px rgba(10,8,40,0.24)`,
+        borderColor: "rgba(165,180,252,0.32)",
       }}
     >
-      {/* Art */}
+      {/* Image / gradient area — image is outside the animated div so it never floats */}
       <div className="relative overflow-hidden" style={{ paddingTop: "82%" }}>
+        {/* Static gradient bg or game background image */}
         {game.bgImageUrl ? (
           <div className="absolute inset-0">
-            <img src={game.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0" style={{ background: "rgba(11,20,55,.35)" }} />
+            <img src={game.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ pointerEvents: "none" }} />
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
           </div>
         ) : (
-          <>
-            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${product.gradient.from},${product.gradient.to})` }} />
+          <div
+            className="absolute inset-0"
+            style={{ background: `linear-gradient(135deg, ${product.gradient.from} 0%, ${product.gradient.to} 100%)` }}
+          >
             <div className="absolute inset-0 opacity-[0.07]"
-              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.6) 1px,transparent 1px)", backgroundSize: "16px 16px" }} />
-          </>
+              style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.5) 1px,transparent 1px)", backgroundSize: "16px 16px" }} />
+            <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 55% at 50% 0%,rgba(255,255,255,0.22) 0%,transparent 70%)" }} />
+          </div>
         )}
+        {/* Shimmer on hover — purely decorative overlay */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none z-10"
+          style={{ background: "linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%)", x: "-110%" }}
+          variants={{ hover: { x: "110%", transition: { duration: 0.52, ease: "easeInOut" } } }}
+        />
+        {/* Product image — stationary, never animates y */}
         {product.imageUrl && (
           game.bgImageUrl ? (
-            <img src={product.imageUrl} alt={product.name}
-              className="absolute object-contain pointer-events-none"
-              style={{ inset: "8% 10%", width: "80%", height: "84%", filter: "drop-shadow(0 6px 14px rgba(0,0,0,.5))" }} />
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="absolute object-contain"
+              style={{ inset: "6% 8%", width: "84%", height: "88%", pointerEvents: "none", filter: "drop-shadow(0 4px 14px rgba(0,0,0,0.5))" }}
+            />
           ) : (
-            <img src={product.imageUrl} alt={product.name}
-              className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ pointerEvents: "none" }}
+            />
           )
         )}
-
+        {/* Badges */}
         {savings && !outOfStock && (
-          <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-full font-mono text-[9px] font-bold"
-            style={{ background: GOLD, color: NAVY }}>
+          <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold"
+            style={{ background: "#dc2626", color: "white" }}>
             <Tag size={8} /> Save ${savings}
           </div>
         )}
         {outOfStock && (
           <div className="absolute inset-0 z-20 flex items-center justify-center"
-            style={{ background: "rgba(11,20,55,.66)", backdropFilter: "blur(2px)" }}>
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white">Out of Stock</span>
+            style={{ background: "rgba(10,8,30,0.62)", backdropFilter: "blur(2px)" }}>
+            <span className="text-xs font-bold" style={{ color: "#818CF8" }}>Out of Stock</span>
           </div>
         )}
-
+        {/* Add-to-cart button */}
         {!outOfStock && (
           <motion.button
-            whileTap={{ scale: 0.88 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleAdd}
-            aria-label="Add to cart"
-            className="absolute bottom-2 right-2 z-20 h-8 px-3 rounded-full flex items-center gap-1.5 font-semibold text-xs text-white transition-colors"
+            className="absolute bottom-2 right-2 z-20 h-8 px-3 rounded-full flex items-center gap-1.5 shadow-lg text-white text-xs font-semibold"
             style={{
-              background: justAdded ? "#0E9F6E" : ROYAL,
-              boxShadow: "0 6px 16px -4px rgba(43,80,246,.55)",
+              background: justAdded ? "rgba(16,185,129,0.95)" : "rgba(79,70,229,0.92)",
+              border: "1.5px solid rgba(255,255,255,0.28)",
+              transition: "background 0.22s ease",
             }}
           >
             <AnimatePresence mode="wait">
               {justAdded ? (
-                <motion.span key="c" className="flex items-center gap-1" initial={{ scale: 0, rotate: -30 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
+                <motion.span key="c" className="flex items-center gap-1.5" initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }} exit={{ scale: 0 }}
                   transition={{ type: "spring", stiffness: 500, damping: 22 }}>
-                  <Check size={13} strokeWidth={3} /> Added!
+                  <Check size={13} color="white" strokeWidth={3} />
+                  Added!
                 </motion.span>
               ) : (
-                <motion.span key="s" className="flex items-center gap-1" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ duration: 0.14 }}>
-                  <ShoppingCart size={13} /> Add
+                <motion.span key="s" className="flex items-center gap-1.5" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                  transition={{ duration: 0.14 }}>
+                  <ShoppingCart size={13} color="white" />
+                  Add to Cart
                 </motion.span>
               )}
             </AnimatePresence>
@@ -273,40 +312,25 @@ function MiniProductCard({ product, game, index }: { product: MiniProduct; game:
         )}
       </div>
 
-      {/* Info */}
-      <div className="p-3.5 flex flex-col gap-1">
+      {/* Info row */}
+      <div className="p-3 md:p-4 flex flex-col gap-1">
+        <p className="text-[11px] md:text-[13px] font-semibold leading-tight text-white line-clamp-2">{product.name}</p>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-display text-lg tracking-tight text-white">${product.price.toFixed(2)}</span>
+          <span className="text-sm md:text-base font-extrabold" style={{ color: "#A5B4FC" }}>${product.price.toFixed(2)}</span>
           {product.originalPrice && (
-            <span className="text-[10px] line-through" style={{ color: "rgba(220,228,255,.45)" }}>${product.originalPrice.toFixed(2)}</span>
+            <span className="text-[10px] md:text-xs line-through" style={{ color: "#475569" }}>${product.originalPrice.toFixed(2)}</span>
           )}
         </div>
-        <p className="text-[11px] font-medium leading-tight line-clamp-2" style={{ color: "rgba(220,228,255,.75)" }}>{product.name}</p>
       </div>
     </motion.div>
   );
-}
-
-function useInViewOnce(ref: React.RefObject<HTMLDivElement | null>) {
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || inView) return;
-    const obs = new IntersectionObserver(
-      entries => entries.forEach(en => { if (en.isIntersecting) { setInView(true); obs.disconnect(); } }),
-      { rootMargin: "-80px" }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [ref, inView]);
-  return inView;
 }
 
 function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slug: string) => void }) {
   const [products, setProducts] = useState<MiniProduct[]>([]);
   const [loaded, setLoaded] = useState(false);
   const rowRef = useRef<HTMLDivElement>(null);
-  const isInView = useInViewOnce(rowRef);
+  const isInView = useInView(rowRef, { once: true, margin: "-100px" });
 
   useEffect(() => {
     if (!isInView || loaded) return;
@@ -324,57 +348,61 @@ function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slu
           originalPrice: p.originalPrice as number | undefined,
           imageUrl: p.imageUrl as string | undefined,
           stock: p.stock as number | undefined,
-          gradient: (p.gradient as { from: string; to: string }) || { from: ROYAL, to: NAVY_DEEP },
+          gradient: (p.gradient as { from: string; to: string }) || { from: game.gradient?.from || "#4F46E5", to: game.gradient?.to || "#1E1B4B" },
         }));
         setProducts(raw);
       })
       .catch(() => {});
   }, [isInView, loaded, game.slug]);
 
-  const c1 = game.gradient?.from || ROYAL;
+  const c1 = game.gradient?.from || "#4F46E5";
+  const c2 = game.gradient?.to   || "#1E1B4B";
 
   return (
-    <div ref={rowRef} className="mb-12">
-      {/* Row banner */}
+    <div ref={rowRef} className="mb-10">
+      {/* Game banner */}
       <motion.div
-        initial={{ opacity: 0, x: -24 }}
+        initial={{ opacity: 0, x: -32 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.5, ease: EASE_OUT }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="flex items-center justify-between mb-4"
       >
         <div className="flex items-center gap-3">
-          <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0"
-            style={{ background: `linear-gradient(135deg,${c1},${NAVY_DEEP})`, boxShadow: `0 6px 18px -6px ${c1}88` }}>
+          {/* Game icon */}
+          <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`, boxShadow: `0 4px 14px ${c1}55` }}>
             {game.imageUrl ? (
               <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center"><Gamepad2 size={18} color="#fff" /></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Gamepad2 size={18} color="rgba(255,255,255,0.9)" />
+              </div>
             )}
           </div>
           <div>
-            <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.28em] mb-0.5" style={{ color: "rgba(220,228,255,.45)" }}>Top Picks</p>
-            <h3 className="font-display text-lg tracking-tight text-white">{game.name}</h3>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: "rgba(165,180,252,0.55)" }}>Top Picks</p>
+            <h3 className="text-[15px] font-extrabold text-white leading-tight">{game.name}</h3>
           </div>
         </div>
         <motion.button
-          whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,.12)" }}
+          whileHover={{ scale: 1.06, background: "rgba(255,255,255,0.12)" }}
           whileTap={{ scale: 0.94 }}
           onClick={() => onNavigate(game.slug)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white border"
-          style={{ borderColor: "rgba(255,255,255,.22)", background: "rgba(255,255,255,.04)" }}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold"
+          style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(165,180,252,0.2)", color: "#A5B4FC", transition: "background 0.18s" }}
         >
           View All <ArrowRight size={11} />
         </motion.button>
       </motion.div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-3.5">
+      {/* Product cards grid */}
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
         {products.length > 0
           ? products.map((p, i) => <MiniProductCard key={p._id} product={p} game={game} index={i} />)
           : [0, 1, 2].map(i => (
               <div key={i} className="rounded-2xl animate-pulse"
-                style={{ paddingTop: "calc(82% + 58px)", background: "rgba(255,255,255,.03)", border: "1px dashed rgba(255,255,255,.1)" }} />
+                style={{ paddingTop: "calc(82% + 64px)", background: "rgba(255,255,255,0.035)", border: "1.5px dashed rgba(165,180,252,0.08)" }} />
             ))
         }
       </div>
@@ -382,55 +410,35 @@ function GameProductRow({ game, onNavigate }: { game: ShopGame; onNavigate: (slu
   );
 }
 
-/* ── Red→Navy marquee band ─────────────────────────────────── */
+/* ── Marquee ticker ─────────────────────────────────────────── */
+const TICKER_ITEMS = [
+  "Instant Delivery", "Secure Payments", "10+ Games Supported",
+  "4.9 Rating", "2,000+ Orders Delivered", "24/7 Live Support",
+  "New Stock Added Daily", "Verified Sellers", "Fast & Trusted",
+];
+
 function MarqueeTicker() {
+  // 4 copies so the -25% scroll = exactly one full set → seamless infinite loop
   const items = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
-    <section className="relative py-10 overflow-hidden" aria-hidden="true">
-      <div className="band-navy mx-[-2vw] w-[104vw] rounded-none" style={{ boxShadow: "0 20px 50px -20px rgba(14,26,60,.5)" }}>
-        <div className="marquee-track flex items-center">
-          {items.map((item, i) => (
-            <span key={i} className="flex items-center gap-7 pr-7 py-4 whitespace-nowrap">
-              <span className={`text-xl sm:text-2xl tracking-tight ${i % 2 === 0 ? "font-display font-bold" : "font-serif-italic text-[#BFD0FF]"}`}>{item}</span>
-              <StarGlyph size={11} />
-            </span>
-          ))}
-        </div>
+    <div className="relative overflow-hidden py-3" style={{ background: "linear-gradient(90deg,#1E1B4B 0%,#312E80 50%,#1E1B4B 100%)", borderTop: "1px solid rgba(165,180,252,0.15)", borderBottom: "1px solid rgba(165,180,252,0.15)" }}>
+      <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to right,#1E1B4B,transparent)" }} />
+      <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none" style={{ background: "linear-gradient(to left,#1E1B4B,transparent)" }} />
+      <div
+        className="flex items-center gap-8 whitespace-nowrap"
+        style={{
+          width: "max-content",
+          animation: "rbTicker 32s linear infinite",
+        }}
+      >
+        {items.map((item, i) => (
+          <span key={i} className="text-xs font-semibold flex items-center gap-2" style={{ color: "rgba(165,180,252,0.85)" }}>
+            {item}
+            <span className="w-1 h-1 rounded-full inline-block ml-2" style={{ background: "rgba(165,180,252,0.3)" }} />
+          </span>
+        ))}
       </div>
-    </section>
-  );
-}
-
-/* ── Featured YouTubers ───────────────────────────────────── */
-function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
-  if (!creators.length) return null;
-  return (
-    <section className="py-14" style={{ background: "#fff" }}>
-      <div className="max-w-6xl mx-auto px-4">
-        <p className="text-center font-mono text-[11px] font-semibold uppercase tracking-[0.3em] mb-7" style={{ color: MUTED }}>
-          Trusted by top creators
-        </p>
-        <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
-          {creators.map((creator, index) => (
-            <a key={`${creator._id}-${index}`} href={creator.channelUrl} target="_blank" rel="noreferrer"
-              className="group flex flex-col items-center justify-center gap-1.5 w-[124px] shrink-0 rounded-3xl px-2 py-5 text-center transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-soft-md)]"
-              style={{ background: "#fff", border: "1px solid rgba(14,26,60,.08)" }}>
-              {creator.avatarUrl ? (
-                <img src={creator.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover ring-2 ring-[#EEF3FB]" />
-              ) : (
-                <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ background: "#FF0000" }}>
-                  <Youtube size={18} color="#fff" fill="#fff" />
-                </div>
-              )}
-              <p className="w-full truncate font-bold text-[12px]" style={{ color: NAVY }}>{creator.name || creator.username}</p>
-              <p className="flex items-center gap-1 font-mono text-[10px]" style={{ color: MUTED }}>
-                <Youtube size={10} color="#dc2626" fill="#dc2626" /> {subscriberLabel(creator.subscribers)}
-              </p>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }
 
@@ -439,11 +447,10 @@ const fallbackReviews = [
   { initials: "M", name: "Max Rivera",  country: "United Kingdom", days: "14 days ago", stars: 5, text: "Super fast delivery! Got my Blade Ball items within minutes. The support team was also really helpful when I had questions about my order." },
   { initials: "S", name: "Sara K",      country: "Canada",         days: "31 days ago", stars: 5, text: "Best place to buy Roblox items hands down. Trusted sellers, fair prices, and the whole process was smooth from start to finish." },
 ];
-const avatarColors = ["#2B50F6", "#0E9F6E", "#8B5CF6"];
+const avatarColors = ["#ea580c", "#16a34a", "#2563eb"];
 
-/* ════════════════════════════════════════════════════════════
-   HOME PAGE
-════════════════════════════════════════════════════════════ */
+/* ── Home Page ────────────────────────────────────────────── */
+
 export default function Home() {
   const [shopOpen,     setShopOpen]     = useState(false);
   const [reviewIndex,  setReviewIndex]  = useState(0);
@@ -522,263 +529,202 @@ export default function Home() {
   const rating = avgRating ?? 4.9;
 
   return (
-    <main style={{ background: "#fff" }}>
+    <main>
 
-      {/* ══════════ HERO ══════════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden dot-grid">
-        {/* ambient glows */}
-        <motion.div
-          className="absolute top-[-15%] right-[-8%] w-[560px] h-[560px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(43,80,246,.1), transparent 65%)" }}
-        />
-        <motion.div
-          className="absolute bottom-[-20%] left-[-10%] w-[480px] h-[480px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(255,197,61,.12), transparent 65%)" }}
-        />
+      {/* ══════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════ */}
+      <section className="relative min-h-screen flex flex-col overflow-hidden line-grid-dark">
+        <div className="absolute inset-0"><AnimatedGrid /></div>
+        <div className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(10,8,40,.55) 0%,rgba(15,12,50,.60) 50%,rgba(10,8,40,.75) 100%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 40%,rgba(49,46,128,.22) 0%,transparent 70%)" }} />
+        <ParticleField count={28} light={false} />
 
-        {/* Floating card collage (right) */}
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-[46%] hidden lg:block" aria-hidden="true">
-          <motion.div
-            initial={{ opacity: 0, y: 40, rotate: 8 }}
-            animate={{ opacity: 1, y: [0, -14, 0], rotate: [8, 6, 8] }}
-            transition={{
-              opacity: { delay: 0.7, duration: 0.8 },
-              y: { repeat: Infinity, duration: 6, ease: "easeInOut" },
-              rotate: { repeat: Infinity, duration: 6, ease: "easeInOut" },
-            }}
-            className="absolute right-[16%] top-[14%] w-52 rounded-3xl p-4"
-            style={{ background: "#fff", border: "1px solid rgba(14,26,60,.08)", boxShadow: "var(--shadow-soft-lg)" }}
-          >
-            <div className="rounded-xl mb-3 relative overflow-hidden" style={{ paddingTop: "70%", background: "linear-gradient(135deg,#7C5CFF,#2B50F6)" }}>
-              <div className="pattern-stars-light absolute inset-0" />
-            </div>
-            <div className="h-2.5 rounded-full w-3/4 mb-2" style={{ background: "#EEF3FB" }} />
-            <div className="flex items-center justify-between">
-              <div className="h-2.5 rounded-full w-1/3" style={{ background: "#EEF3FB" }} />
-              <StarGlyph size={14} />
-            </div>
-          </motion.div>
+        <div className="relative z-10 flex flex-col items-center justify-center flex-1 text-center px-4 pt-24 pb-16">
 
-          <motion.div
-            initial={{ opacity: 0, y: 60, rotate: -6 }}
-            animate={{ opacity: 1, y: [0, 10, 0], rotate: [-6, -4, -6] }}
-            transition={{
-              opacity: { delay: 0.9, duration: 0.8 },
-              y: { repeat: Infinity, duration: 7, ease: "easeInOut", delay: 0.5 },
-              rotate: { repeat: Infinity, duration: 7, ease: "easeInOut" },
-            }}
-            className="absolute right-[42%] top-[42%] w-44 rounded-3xl p-4"
-            style={{ background: NAVY, boxShadow: "0 32px 64px -16px rgba(14,26,60,.5)" }}
-          >
-            <div className="rounded-xl mb-3 relative overflow-hidden" style={{ paddingTop: "70%", background: "linear-gradient(135deg,#FFD84D,#FFAB2E)" }}>
-              <div className="pattern-stars-light absolute inset-0" />
-            </div>
-            <div className="h-2.5 rounded-full w-2/3 mb-2" style={{ background: "rgba(255,255,255,.14)" }} />
-            <div className="h-2.5 rounded-full w-1/3" style={{ background: "rgba(255,197,61,.5)" }} />
-          </motion.div>
-
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 24, ease: "linear" }}
-            className="absolute right-[8%] bottom-[10%] w-28 h-28"
-          >
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              <defs>
-                <path id="circ" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" />
-              </defs>
-              <circle cx="50" cy="50" r="49" fill="#fff" stroke="rgba(14,26,60,.08)" />
-              <text fontSize="9.5" fontWeight="700" letterSpacing="2.5" fill={ROYAL} fontFamily="'JetBrains Mono',monospace">
-                <textPath href="#circ">INSTANT DELIVERY ★ TRUSTED ★ SINCE DAY ONE ★</textPath>
-              </text>
-              <path d="M50 36 l3.4 7.2 7.9 1 -5.8 5.6 1.4 7.9 -6.9 -3.9 -6.9 3.9 1.4 -7.9 -5.8 -5.6 7.9 -1z" fill={GOLD} transform="translate(-4,-4) scale(1.08)" />
-            </svg>
-          </motion.div>
-
-          <motion.div
-            animate={{ y: [0, -10, 0], rotate: [12, 8, 12] }}
-            transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-            className="absolute right-[30%] top-[12%] w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ background: "#fff", border: "1px solid rgba(14,26,60,.08)", boxShadow: "var(--shadow-soft-md)" }}
-          >
-            <Zap size={22} color={GOLD} fill={GOLD} />
-          </motion.div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto w-full px-4 pt-36 pb-24 lg:w-[58%] lg:px-0">
           {/* Trust badge */}
           <motion.div
             custom={0} initial="hidden" animate="visible" variants={fadeUp}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 bg-white"
-            style={{ border: "1px solid rgba(14,26,60,.1)", boxShadow: "var(--shadow-soft-xs)" }}
+            className="relative inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 overflow-hidden"
+            style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(165,180,252,.4)", backdropFilter: "blur(10px)" }}
           >
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => <StarGlyph key={i} size={12} />)}
+            <div className="rb-glare rb-glare-d1" />
+            <div className="flex items-center gap-0.5 relative z-10">
+              {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="#f59e0b" color="#f59e0b" />)}
             </div>
-            <span className="text-xs font-semibold" style={{ color: NAVY }}>
-              {rating} · Loved by 2k+ players
-            </span>
+            <span className="text-white text-sm font-bold relative z-10">2k+</span>
+            <span className="text-[#A5B4FC] text-sm relative z-10">Happy Customers</span>
           </motion.div>
 
-          {/* Headline */}
-          <h1 className="leading-[0.98] tracking-tight text-[clamp(48px,7.5vw,104px)]">
-            <span className="block overflow-hidden pb-1">
-              <motion.span
-                className="block font-display font-extrabold"
-                initial={{ y: "112%" }} animate={{ y: 0 }}
-                transition={{ delay: 0.35, duration: 0.95, ease: EASE_OUT }}
-                style={{ color: NAVY }}
-              >
-                Own the
-              </motion.span>
-            </span>
-            <span className="block overflow-hidden pb-3">
-              <motion.span
-                className="block"
-                initial={{ y: "115%" }} animate={{ y: 0 }}
-                transition={{ delay: 0.47, duration: 0.95, ease: EASE_OUT }}
-              >
-                <span className="font-serif-italic" style={{ color: ROYAL }}>whole game.</span>
-              </motion.span>
-            </span>
-          </h1>
+          {/* Heading */}
+          <motion.h1
+            custom={1} initial="hidden" animate="visible" variants={fadeUp}
+            className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-tight max-w-3xl mx-auto"
+            style={{ letterSpacing: "-0.025em" }}
+          >
+            Instantly buy your favourite{" "}
+            <span className="gradient-text">Roblox Game Item</span>{" "}
+            from the most trusted dealers!
+          </motion.h1>
 
-          {/* Sub copy */}
+          {/* Sub-copy */}
           <motion.p
             custom={2} initial="hidden" animate="visible" variants={fadeUp}
-            className="mt-6 text-lg max-w-lg leading-relaxed font-medium"
-            style={{ color: MUTED }}
+            className="mt-5 text-base sm:text-lg max-w-xl mx-auto"
+            style={{ color: "rgba(165,180,252,0.85)" }}
           >
-            Skip the grind — buy your favourite Roblox items instantly from the most trusted dealers, delivered in minutes.
+            Skip the grind. Get your items delivered in minutes — safely and securely.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Dual CTAs */}
           <motion.div
             custom={3} initial="hidden" animate="visible" variants={fadeUp}
-            className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <motion.button
               data-testid="button-shop-now"
               onClick={() => setShopOpen(true)}
-              whileHover={{ scale: 1.04, y: -2, boxShadow: "0 20px 40px -10px rgba(43,80,246,.6)" }}
-              whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center gap-3 px-9 py-4 rounded-full text-white font-bold text-base"
-              style={{ background: "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", boxShadow: "0 10px 26px -8px rgba(43,80,246,.55)" }}
+              whileHover={{ scale: 1.07, boxShadow: "0 0 40px rgba(79,70,229,0.65), 0 0 80px rgba(49,46,128,0.3)" }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-white text-lg font-bold shadow-xl"
+              style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}
             >
               <ShoppingCart size={20} /> Shop Now
             </motion.button>
             <motion.button
               onClick={() => shopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.96 }}
-              className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-bold text-base bg-white"
-              style={{ color: NAVY, border: "1.5px solid rgba(14,26,60,.16)" }}
+              whileHover={{ scale: 1.05, background: "rgba(255,255,255,0.14)" }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-white text-base font-semibold"
+              style={{ background: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(165,180,252,0.35)", backdropFilter: "blur(8px)" }}
             >
               Browse Games <ArrowRight size={16} />
             </motion.button>
           </motion.div>
 
-          {/* Stat chips */}
-          <motion.div
-            custom={4} initial="hidden" animate="visible" variants={fadeUp}
-            className="mt-14 flex flex-wrap items-center gap-x-8 gap-y-3"
-          >
-            {["Instant Delivery", "Secure Payments", "10+ Games", "24/7 Support"].map(s => (
-              <span key={s} className="inline-flex items-center gap-2 text-sm font-semibold" style={{ color: "#3D4560" }}>
-                <StarGlyph size={10} />{s}
-              </span>
-            ))}
-          </motion.div>
         </div>
       </section>
 
-      {/* ══════════ MARQUEE BAND ══════════ */}
+      {/* ══════════════════════════════════════════
+          MARQUEE TICKER
+      ══════════════════════════════════════════ */}
       <MarqueeTicker />
 
-      {/* ══════════ SHOP BY GAME ══════════ */}
+      {/* ══════════════════════════════════════════
+          SHOP BY GAME  (replaces Tutorials)
+      ══════════════════════════════════════════ */}
       <section
         id="shop-games"
         ref={shopRef}
-        className="relative py-24 px-4 scroll-mt-24"
-        style={{ background: "#F6F8FE" }}
+        className="relative py-20 px-4 overflow-hidden"
+        style={{ backgroundColor: "#F7FAFF" }}
       >
-        <div className="max-w-6xl mx-auto">
+        <div className="absolute inset-0 dot-grid pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%,rgba(49,46,128,.07) 0%,transparent 70%)" }} />
+        <ParticleField count={16} light={true} />
 
-          <SectionHead
-            idx="(01) — Browse & Buy"
-            title={<>Shop by</>}
-            accentWord="game."
-            note="Pick your game, find what you need, get it delivered in minutes."
-          />
+        <div className="max-w-5xl mx-auto relative z-10">
 
-          {/* Search */}
-          <div className="relative max-w-md mb-10">
-            <Search size={15} className="absolute left-4.5 left-[18px] top-1/2 -translate-y-1/2 pointer-events-none" color={MUTED} />
+          {/* Section header */}
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(49,46,128,.08)", border: "1px solid rgba(49,46,128,.15)" }}>
+              <Gamepad2 size={13} color="#312E80" />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#312E80" }}>Browse &amp; Buy Instantly</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#1E1B4B", letterSpacing: "-0.025em" }}>
+              Shop by{" "}
+              <span className="gradient-text-purple">Game</span>
+            </h2>
+            <p className="mt-3 text-sm" style={{ color: "#5B5EA8" }}>
+              Pick your game, find what you need, and get it delivered in minutes.
+            </p>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative max-w-md mx-auto mb-10">
+            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" color="#5B5EA8" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search games…"
-              className="w-full pl-11 pr-5 py-4 rounded-full text-sm font-medium bg-white outline-none placeholder:text-[#9AA3B8] transition-shadow"
-              style={{ border: "1px solid rgba(14,26,60,.12)", color: NAVY }}
-              onFocus={e => (e.currentTarget.style.boxShadow = "0 0 0 3px rgba(43,80,246,.15), var(--shadow-soft-sm)")}
-              onBlur={e  => (e.currentTarget.style.boxShadow = "none")}
+              className="w-full pl-10 pr-4 py-3 rounded-full text-sm font-medium bg-white outline-none transition-all"
+              style={{ border: "1.5px solid rgba(49,46,128,0.15)", color: "#1E1B4B", boxShadow: "0 2px 8px rgba(49,46,128,0.06)" }}
+              onFocus={e => (e.currentTarget.style.borderColor = "rgba(79,70,229,0.55)", e.currentTarget.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)")}
+              onBlur={e  => (e.currentTarget.style.borderColor = "rgba(49,46,128,0.15)", e.currentTarget.style.boxShadow = "0 2px 8px rgba(49,46,128,0.06)")}
             />
           </div>
 
-          {/* Grid */}
+          {/* Game grid */}
           <AnimatePresence mode="wait">
             {gamesLoading ? (
               <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="rounded-3xl animate-pulse" style={{ aspectRatio: "4/5", background: "rgba(14,26,60,.05)" }} />
+                  <div key={i} className="rounded-2xl animate-pulse" style={{ aspectRatio: "4/5", background: "rgba(49,46,128,0.08)", border: "1.5px solid rgba(49,46,128,0.1)" }} />
                 ))}
               </motion.div>
             ) : filteredGames.length === 0 ? (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="text-center py-16 rounded-3xl bg-white" style={{ border: "1px dashed rgba(14,26,60,.2)" }}>
+                className="text-center py-16" style={{ color: "#5B5EA8" }}>
                 <Package size={40} className="mx-auto mb-3 opacity-30" />
-                <p className="font-bold" style={{ color: NAVY }}>{searchQuery ? `No games found for "${searchQuery}"` : "No games available yet"}</p>
-                {searchQuery && <button onClick={() => setSearchQuery("")} className="mt-3 text-sm font-bold" style={{ color: ROYAL }}>Clear search</button>}
+                <p className="font-semibold">{searchQuery ? `No games found for "${searchQuery}"` : "No games available yet"}</p>
+                {searchQuery && <button onClick={() => setSearchQuery("")} className="mt-3 text-sm font-bold" style={{ color: "#4F46E5" }}>Clear search</button>}
               </motion.div>
             ) : (
               <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredGames.map((game, i) => {
-                  const c1 = game.gradient?.from || ROYAL;
-                  const c2 = game.gradient?.to || NAVY_DEEP;
+                  const c1 = game.gradient?.from || "#6d28d9";
+                  const c2 = game.gradient?.to   || "#4c1d95";
                   return (
                     <motion.button
                       key={game._id}
                       initial={{ opacity: 0, y: 18 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04, duration: 0.38, ease: EASE_OUT }}
-                      whileHover={{ y: -8, boxShadow: "var(--shadow-soft-lg)" }}
-                      whileTap={{ scale: 0.97 }}
+                      transition={{ delay: i * 0.04, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                      whileHover="hover"
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => navigate(`/game/${game.slug}`)}
-                      className="relative flex flex-col rounded-3xl overflow-hidden text-left"
-                      style={{ aspectRatio: "4 / 5", background: `linear-gradient(135deg,${c1},${c2})`, transition: "box-shadow .25s ease" }}
+                      className="relative flex flex-col rounded-2xl overflow-hidden text-left"
+                      style={{ border: "1.5px solid rgba(49,46,128,0.12)", aspectRatio: "4 / 5" }}
+                      variants={{
+                        hover: { scale: 1.04, boxShadow: `0 0 0 2px ${c1}cc, 0 18px 44px ${c1}44`, transition: { duration: 0.22 } },
+                      }}
                     >
-                      {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-85" />}
-                      <div className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: "linear-gradient(to top,rgba(11,20,55,.92),transparent)" }} />
-
+                      {/* Gradient bg */}
+                      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${c1} 0%,${c2} 100%)` }} />
+                      {/* Grid texture */}
+                      <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
+                      {/* Game image */}
+                      {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-75" />}
+                      {/* Shimmer on hover */}
+                      <motion.div className="absolute inset-0 pointer-events-none"
+                        style={{ background: "linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.22) 50%,transparent 65%)", x: "-100%" }}
+                        variants={{ hover: { x: "100%", transition: { duration: 0.5, ease: "easeInOut" } } }}
+                      />
+                      {/* Bottom gradient */}
+                      <div className="absolute inset-x-0 bottom-0 h-3/5" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.88) 0%,transparent 100%)" }} />
+                      {/* Item count badge */}
                       {game.productCount !== undefined && (
-                        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full font-mono text-[9px] font-bold backdrop-blur-md"
-                          style={{ background: "rgba(11,20,55,.55)", color: "rgba(255,255,255,.92)", border: "1px solid rgba(255,255,255,.18)" }}>
+                        <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={{ background: "rgba(0,0,0,0.55)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.2)", backdropFilter: "blur(6px)" }}>
                           {game.productCount} items
                         </div>
                       )}
-
-                      <div className="absolute inset-x-0 bottom-0 p-3.5 flex items-end justify-between gap-2">
-                        <span className="text-white font-bold text-[15px] leading-tight" style={{ textShadow: "0 1px 3px rgba(0,0,0,.7)" }}>
+                      {/* Name + CTA */}
+                      <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between gap-2">
+                        <span className="text-white font-bold text-sm leading-tight" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
                           {game.name}
                         </span>
-                        <motion.span
-                          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-white transition-colors"
-                          whileHover={{ backgroundColor: GOLD }}
+                        <motion.div
+                          className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                          style={{ background: "rgba(255,255,255,0.15)", color: "white", border: "1px solid rgba(255,255,255,0.25)", backdropFilter: "blur(6px)" }}
+                          variants={{ hover: { background: "rgba(255,255,255,0.95)", color: c1, transition: { duration: 0.18 } } }}
                         >
-                          <ArrowRight size={14} color={NAVY} />
-                        </motion.span>
+                          Shop <ArrowRight size={10} />
+                        </motion.div>
                       </div>
                     </motion.button>
                   );
@@ -792,10 +738,10 @@ export default function Home() {
             <div className="text-center mt-12">
               <motion.button
                 onClick={() => setShopOpen(true)}
-                whileHover={{ scale: 1.04, y: -2 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-bold text-white"
-                style={{ background: NAVY, boxShadow: "0 12px 30px -10px rgba(14,26,60,.5)" }}
+                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-white"
+                style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)", boxShadow: "0 8px 28px rgba(49,46,128,0.38)" }}
               >
                 <ShoppingCart size={16} /> View All Games
               </motion.button>
@@ -806,38 +752,79 @@ export default function Home() {
 
       <YouTuberTrustBar creators={featuredYouTubers} />
 
-      {/* ══════════ TOP PICKS (navy) ══════════ */}
-      <section className="relative py-24 px-4 pattern-grid-light overflow-hidden" style={{ backgroundColor: NAVY_DEEP }}>
-        <motion.div
-          className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(43,80,246,.18), transparent 65%)" }}
-        />
-        <div className="max-w-6xl mx-auto relative">
-          <SectionHead
-            idx="(02) — Live Stock"
-            title="Top picks,"
-            accentWord="every game."
-            note="Our hottest recommended items — add them straight to your cart."
-            tone="dark"
-          />
+      {/* ══════════════════════════════════════════
+          TOP PICKS BY GAME (scroll-reveal products)
+      ══════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden line-grid-dark" style={{ backgroundColor: "#0F0C2E" }}>
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%,rgba(79,70,229,.13) 0%,transparent 65%)" }} />
+        <ParticleField count={20} light={false} />
 
+        <div className="max-w-5xl mx-auto relative z-10">
+          {/* Section header */}
+          <div className="text-center mb-14">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(165,180,252,.1)", border: "1px solid rgba(165,180,252,.22)" }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: "#22c55e", boxShadow: "0 0 6px #22c55e" }}
+              />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#A5B4FC" }}>Live Stock</span>
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.55, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+              className="font-display text-3xl sm:text-4xl font-extrabold text-white"
+              style={{ letterSpacing: "-0.025em" }}
+            >
+              Top Picks,{" "}
+              <span style={{ background: "linear-gradient(90deg,#818CF8,#C4B5FD)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                Every Game
+              </span>
+            </motion.h2>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.16 }}
+              className="mt-3 text-sm max-w-md mx-auto"
+              style={{ color: "rgba(165,180,252,0.7)" }}
+            >
+              Scroll to reveal our hottest recommended items — add them straight to your cart.
+            </motion.p>
+          </div>
+
+          {/* Game rows */}
           {games.slice(0, 6).map(game => (
             <GameProductRow key={game._id} game={game} onNavigate={slug => navigate(`/game/${slug}`)} />
           ))}
 
+          {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mt-2"
+            className="text-center mt-6"
           >
             <motion.button
-              whileHover={{ scale: 1.04, y: -2 }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 36px rgba(79,70,229,0.55)" }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setShopOpen(true)}
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-bold text-[#0E1A3C]"
-              style={{ background: GOLD, boxShadow: "0 12px 30px -8px rgba(255,197,61,.45)" }}
+              className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-white"
+              style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)", boxShadow: "0 8px 28px rgba(49,46,128,0.45)" }}
             >
               <ShoppingCart size={16} /> Browse All Games
             </motion.button>
@@ -845,25 +832,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════ HOW IT WORKS ══════════ */}
+      {/* ══════════════════════════════════════════
+          HOW IT WORKS
+      ══════════════════════════════════════════ */}
       <section
         id="how-it-works"
         ref={howRef}
-        className="relative py-24 px-4 scroll-mt-24"
-        style={{ background: "#fff" }}
+        className="relative py-20 px-4 overflow-hidden dot-grid"
+        style={{ backgroundColor: "#FFFFFF" }}
       >
-        <div className="max-w-3xl mx-auto">
-          <SectionHead
-            idx="(03) — Simple Process"
-            title={<>How it</>}
-            accentWord="works."
-            note="Three easy steps and your items are on their way."
-          />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle,rgba(49,46,128,.06) 0%,transparent 70%)", transform: "translate(30%,-30%)" }} />
+        <ParticleField count={14} light={true} />
+
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(49,46,128,.08)", border: "1px solid rgba(49,46,128,.15)" }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#312E80" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#312E80" }}>Simple Process</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#1E1B4B", letterSpacing: "-0.025em" }}>
+              How It{" "}
+              <span className="gradient-text-purple">Works</span>
+            </h2>
+            <p className="mt-3 text-sm" style={{ color: "#5B5EA8" }}>Three easy steps and your items are on their way.</p>
+          </div>
 
           <div className="relative">
             {/* Animated progress line */}
-            <div className="absolute left-[27px] top-10 bottom-10 w-[3px] rounded-full" style={{ background: "rgba(14,26,60,.08)" }}>
-              <motion.div className="w-full rounded-full" style={{ height: lineH, background: ROYAL }} />
+            <div className="absolute left-[28px] top-8 bottom-8 w-px" style={{ background: "rgba(49,46,128,0.1)" }}>
+              <motion.div className="w-full rounded-full" style={{ height: lineH, background: "linear-gradient(to bottom,#4F46E5,#312E80)" }} />
             </div>
 
             <div className="flex flex-col gap-10">
@@ -874,26 +873,21 @@ export default function Home() {
                     initial={{ opacity: 0, x: -24 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
-                    transition={{ duration: 0.55, delay: i * 0.12, ease: EASE_OUT }}
+                    transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
                     className="flex items-start gap-5"
                   >
-                    <div className="relative z-10 flex-shrink-0 w-[56px] h-[56px] rounded-2xl flex items-center justify-center"
-                      style={{ background: "#fff", border: "1px solid rgba(14,26,60,.1)", boxShadow: "var(--shadow-soft-sm)" }}>
-                      <Icon size={22} color={ROYAL} strokeWidth={2} />
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center font-mono text-[9px] font-bold text-[#0E1A3C]"
-                        style={{ background: GOLD }}>
-                        {i + 1}
-                      </span>
+                    {/* Step icon */}
+                    <div className="relative z-10 flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center shadow-md"
+                      style={{ background: "linear-gradient(135deg,#4F46E5 0%,#312E80 100%)" }}>
+                      <Icon size={22} color="white" strokeWidth={2} />
                     </div>
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      className="flex-1 p-6 rounded-3xl"
-                      style={{ background: "#F6F8FE", border: "1px solid rgba(14,26,60,.06)", transition: "background .2s ease" }}
-                    >
-                      <span className="font-mono text-xs font-bold tracking-[0.2em]" style={{ color: ROYAL }}>{step.number}</span>
-                      <h3 className="font-display text-lg mt-1.5 mb-1.5 tracking-tight" style={{ color: NAVY }}>{step.title}</h3>
-                      <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{step.description}</p>
-                    </motion.div>
+                    <GlareCard className="flex-1 p-5 rounded-2xl bg-white" style={{ border: "1.5px solid rgba(49,46,128,0.1)" }}>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-widest" style={{ color: "#A5B4FC" }}>{step.number}</span>
+                        <h3 className="font-display font-bold text-base mt-1 mb-2" style={{ color: "#1E1B4B" }}>{step.title}</h3>
+                        <p className="text-sm leading-relaxed" style={{ color: "#5B5EA8" }}>{step.description}</p>
+                      </div>
+                    </GlareCard>
                   </motion.div>
                 );
               })}
@@ -902,39 +896,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════ WHY CHOOSE ══════════ */}
-      <section className="relative py-24 px-4 dot-grid" style={{ background: "#F6F8FE" }}>
-        <div className="max-w-6xl mx-auto">
-          <SectionHead
-            idx="(04) — Why Us"
-            title={<>Why choose</>}
-            accentWord="RBstars?"
-            note="Built by gamers, for gamers."
-          />
+      {/* ══════════════════════════════════════════
+          WHY CHOOSE
+      ══════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden dot-grid" style={{ backgroundColor: "#F7FAFF" }}>
+        <ParticleField count={20} light={true} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 60% at 80% 50%,rgba(49,46,128,.06) 0%,transparent 60%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 50% 50% at 20% 50%,rgba(67,56,202,.05) 0%,transparent 60%)" }} />
 
-          <div className="grid sm:grid-cols-2 gap-5">
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4"
+              style={{ background: "rgba(49,46,128,.08)", border: "1px solid rgba(49,46,128,.15)" }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#312E80" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#312E80" }}>Why Us</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#1E1B4B", letterSpacing: "-0.025em" }}>
+              Why Choose{" "}
+              <span className="gradient-text-purple">RBstars?</span>
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-4">
             {features.map((f, i) => {
               const Icon = f.icon;
+              const delayClasses = ["rb-glare-d1", "rb-glare-d2", "rb-glare-d3", "rb-glare-d4"];
               return (
-                <motion.div
-                  key={f.title}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-40px" }}
-                  transition={{ duration: 0.5, delay: i * 0.08, ease: EASE_OUT }}
-                  whileHover={{ y: -6, boxShadow: "var(--shadow-soft-md)" }}
-                  data-testid={`card-feature-${i + 1}`}
-                  className="p-7 rounded-3xl relative overflow-hidden bg-white"
-                  style={{ border: "1px solid rgba(14,26,60,.08)", transition: "box-shadow .25s ease" }}
+                <motion.div key={f.title}
+                  initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.58, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: `${f.accent}18` }}>
-                    <Icon size={22} color={f.accent === GOLD ? "#D99A00" : f.accent} strokeWidth={2.2} />
-                  </div>
-                  <h3 className="font-display text-lg mb-2 tracking-tight" style={{ color: NAVY }}>{f.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{f.desc}</p>
-                  <StarGlyph size={13} color={`${f.accent}`} />
-                  <span className="absolute bottom-5 right-6"><StarGlyph size={13} /></span>
+                  <GlareCard delayClass={delayClasses[i % delayClasses.length]}
+                    className="p-6 rounded-2xl bg-white" style={{ border: "1.5px solid rgba(49,46,128,0.1)" }}>
+                    <div data-testid={`card-feature-${i + 1}`}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: f.iconBg }}>
+                        <Icon size={20} color={f.accent} strokeWidth={2} />
+                      </div>
+                      <h3 className="font-display font-bold text-base mb-2" style={{ color: "#1E1B4B" }}>{f.title}</h3>
+                      <p className="text-sm leading-relaxed" style={{ color: "#5B5EA8" }}>{f.desc}</p>
+                    </div>
+                  </GlareCard>
                 </motion.div>
               );
             })}
@@ -942,45 +945,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════ TESTIMONIALS ══════════ */}
-      <section className="relative py-24 px-4 pattern-stars-light overflow-hidden" style={{ background: NAVY_DEEP }}>
-        <motion.div
-          className="absolute bottom-[-25%] left-[-10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(43,80,246,.2), transparent 65%)" }}
-        />
-        <div className="max-w-3xl mx-auto relative">
-          <SectionHead
-            idx="(05) — Reviews"
-            title={<>Trusted by</>}
-            accentWord="thousands."
-            note=""
-            tone="dark"
-          />
+      {/* ══════════════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden line-grid-dark" style={{ backgroundColor: "#0F0C2E" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 50%,rgba(79,70,229,.12) 0%,transparent 70%)" }} />
+        <ParticleField count={18} light={false} />
+
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
+              style={{ background: "rgba(165,180,252,.1)", border: "1px solid rgba(165,180,252,.2)" }}>
+              <Star size={13} fill="#f59e0b" color="#f59e0b" />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#A5B4FC" }}>Reviews</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "white", letterSpacing: "-0.025em" }}>
+              Trusted by{" "}
+              <span style={{ background: "linear-gradient(135deg,#A5B4FC 0%,#6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                Thousands
+              </span>
+            </h2>
+          </div>
 
           <AnimatePresence mode="wait">
             <motion.div
               key={reviewIndex}
               initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.38, ease: EASE_OUT }}
-              className="rounded-3xl p-7"
-              style={{ background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.12)", backdropFilter: "blur(8px)" }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-2xl p-6"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(165,180,252,0.12)" }}
             >
               <div className="flex items-center gap-1 mb-4">
-                {[...Array(reviews[reviewIndex]?.stars ?? 5)].map((_, i) => <StarGlyph key={i} size={15} />)}
+                {[...Array(reviews[reviewIndex]?.stars ?? 5)].map((_, i) => <Star key={i} size={15} fill="#f59e0b" color="#f59e0b" />)}
               </div>
-              <p className="text-[15px] leading-relaxed mb-6" style={{ color: "rgba(235,240,255,.88)" }}>
+              <p className="text-sm leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.85)" }}>
                 "{reviews[reviewIndex]?.text}"
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
                   style={{ background: avatarColors[reviewIndex % avatarColors.length] }}>
                   {reviews[reviewIndex]?.initials}
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">{reviews[reviewIndex]?.name}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em]" style={{ color: "rgba(220,228,255,.5)" }}>{reviews[reviewIndex]?.country} · {reviews[reviewIndex]?.days}</p>
+                  <p className="text-xs" style={{ color: "#A5B4FC" }}>{reviews[reviewIndex]?.country} · {reviews[reviewIndex]?.days}</p>
                 </div>
-                <StarGlyph size={16} />
               </div>
             </motion.div>
           </AnimatePresence>
@@ -989,29 +998,27 @@ export default function Home() {
           <div className="flex items-center gap-3 mt-6">
             <motion.button
               data-testid="button-prev-review"
-              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               onClick={() => setReviewIndex(p => (p - 1 + reviews.length) % reviews.length)}
-              aria-label="Previous review"
-              className="w-10 h-10 rounded-full flex items-center justify-center border transition-colors hover:bg-white/10"
-              style={{ borderColor: "rgba(255,255,255,.25)", color: "#fff" }}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white"
+              style={{ border: "1.5px solid rgba(49,46,128,0.2)" }}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={16} color="#312E80" />
             </motion.button>
             <motion.button
               data-testid="button-next-review"
-              whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               onClick={() => setReviewIndex(p => (p + 1) % reviews.length)}
-              aria-label="Next review"
-              className="w-10 h-10 rounded-full flex items-center justify-center border transition-colors hover:bg-white/10"
-              style={{ borderColor: "rgba(255,255,255,.25)", color: "#fff" }}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white"
+              style={{ border: "1.5px solid rgba(49,46,128,0.2)" }}
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={16} color="#312E80" />
             </motion.button>
             <div className="flex items-center gap-1.5 ml-2">
               {reviews.map((_, i) => (
-                <button key={i} onClick={() => setReviewIndex(i)} aria-label={`Go to review ${i + 1}`}
-                  className="rounded-full transition-all duration-300"
-                  style={{ width: i === reviewIndex ? 22 : 7, height: 7, background: i === reviewIndex ? GOLD : "rgba(255,255,255,.25)" }}
+                <button key={i} onClick={() => setReviewIndex(i)}
+                  className="rounded-full transition-all duration-200"
+                  style={{ width: i === reviewIndex ? 20 : 7, height: 7, background: i === reviewIndex ? "#4F46E5" : "rgba(165,180,252,0.25)" }}
                 />
               ))}
             </div>
@@ -1019,15 +1026,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══════════ FAQ ══════════ */}
-      <section className="relative py-24 px-4" style={{ background: "#fff" }}>
-        <div className="max-w-3xl mx-auto">
-          <SectionHead
-            idx="(06) — FAQ"
-            title={<>Questions &</>}
-            accentWord="answers."
-            note="Got questions? We've got answers."
-          />
+      {/* ══════════════════════════════════════════
+          FAQ
+      ══════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 overflow-hidden dot-grid" style={{ backgroundColor: "#F7FAFF" }}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-px"
+          style={{ background: "linear-gradient(90deg,transparent,rgba(49,46,128,.25),transparent)" }} />
+        <ParticleField count={10} light={true} />
+
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="mb-10">
+            <h2 className="font-display text-3xl sm:text-4xl font-extrabold mb-2" style={{ color: "#1E1B4B", letterSpacing: "-0.025em" }}>
+              Frequently Asked{" "}
+              <span className="gradient-text-purple">Questions</span>
+            </h2>
+            <p style={{ color: "#5B5EA8" }}>Got questions? We've got answers.</p>
+          </div>
           <div className="flex flex-col gap-3">
             {faqs.map((f, i) => <FAQItem key={i} q={f.q} a={f.a} />)}
           </div>
