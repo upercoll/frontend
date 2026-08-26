@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { Character } from "@/components/Mascot";
 
 export default function NotFound() {
   return (
@@ -11,14 +12,13 @@ export default function NotFound() {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="text-center max-w-md"
       >
-        <div className="relative inline-block mb-8">
+        <div className="relative inline-block mb-6">
           <span className="font-display text-[clamp(100px,20vw,180px)] leading-none tracking-tight block" style={{ color: "#0E1A3C" }}>
             4<span className="font-serif-italic" style={{ color: "#2B50F6" }}>0</span>4
           </span>
-          <div className="absolute -right-10 -top-2 w-16 h-16 rounded-3xl flex items-center justify-center rotate-12 bg-white"
-            style={{ boxShadow: "var(--shadow-soft-md)", border: "1px solid rgba(14,26,60,.08)" }}>
-            <Package size={24} color="#FFC53D" />
-          </div>
+        </div>
+        <div className="mx-auto mb-6 w-32 floaty">
+          <Character cfg={{ skin:"#FFD23F", shirt:"#2B50F6", pants:"#16204D", hat:"top", hatColor:"#FFC53D", face:"shock" }} size="100%" />
         </div>
         <h1 className="font-display text-3xl tracking-tight mb-2" style={{ color: "#0E1A3C" }}>
           Page not found

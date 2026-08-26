@@ -9,6 +9,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import Footer from "@/components/Footer";
+import { Character } from "@/components/Mascot";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -732,6 +733,9 @@ export default function GamePage() {
                 className="w-3 h-3 rounded-full flex-shrink-0"
                 style={{ background: "#34D399", boxShadow: "0 0 10px rgba(52,211,153,.7)" }}
               />
+              <div className="ml-auto hidden sm:block -mb-12 -mt-4 w-[76px] flex-shrink-0 drop-shadow-[0_12px_16px_rgba(0,0,0,.35)]">
+                <Character cfg={{ skin:"#FFD23F", shirt:GOLD, pants:"#16204D", hat:"crown", face:"smile" }} size="100%" />
+              </div>
             </div>
 
             {/* Desktop category chips */}
@@ -770,7 +774,9 @@ export default function GamePage() {
                   {products.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl bg-white"
                       style={{ border: "1px dashed rgba(14,26,60,.2)" }}>
-                      <Package size={48} className="mb-4 opacity-25" />
+                      <div className="mx-auto mb-2 w-24">
+                        <Character cfg={{ skin:"#FFD23F", shirt:ROYAL, pants:"#16204D", face:"uwu" }} size="100%" />
+                      </div>
                       <p className="text-base font-bold mb-2" style={{ color: NAVY }}>No products yet</p>
                       <p className="text-sm" style={{ color: MUTED }}>Products for {gameName} will appear here once added.</p>
                     </div>
@@ -850,7 +856,9 @@ export default function GamePage() {
 
                   {filteredProducts.length === 0 ? (
                     <div className="text-center py-16 rounded-3xl bg-white" style={{ border: "1px dashed rgba(14,26,60,.2)", color: MUTED }}>
-                      <Package size={40} className="mx-auto mb-3 opacity-25" />
+                      <div className="mx-auto mb-2 w-20">
+                        <Character cfg={{ skin:"#FFD23F", shirt:ROYAL, pants:"#16204D", hat:"cap", hatColor:ROYAL, face:"shock" }} size="100%" />
+                      </div>
                       <p className="text-sm font-medium">{searchQuery ? `No items found for "${searchQuery}"` : "No items in this category yet."}</p>
                     </div>
                   ) : (

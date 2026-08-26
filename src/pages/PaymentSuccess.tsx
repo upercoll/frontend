@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Package, MessageSquare, ArrowLeft, Star, Bot, Zap } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
+import { Character, ChunkIcon } from "@/components/Mascot";
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -260,6 +261,18 @@ export default function PaymentSuccess() {
               </div>
             </motion.div>
           ) : null}
+
+          {/* Mascot */}
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 260, damping: 18 }}
+            className="flex justify-center mb-5"
+          >
+            <div className="w-28">
+              <Character cfg={{ skin:"#FFD23F", shirt:ROYAL, pants:"#16204D", hat:"cap", hatColor:GOLD, face:"shock", wave:true }} size="100%" />
+            </div>
+          </motion.div>
 
           {/* CTAs */}
           <motion.div

@@ -1,11 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useSpring } from "framer-motion";
 import {
-  ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
-  Zap, Lock, Headphones, LayoutGrid,
+  ShoppingCart, Star, Gamepad2,
   ChevronLeft, ChevronRight, Search, ArrowRight, Package, Check, Tag, Youtube,
 } from "lucide-react";
 import GameSelectModal from "@/components/GameSelectModal";
+import { Character, CharacterTrack, SpeechBubble, ChunkIcon } from "@/components/Mascot";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 
@@ -28,9 +28,9 @@ const fadeUp = {
 };
 
 const steps = [
-  { icon: Gamepad2,      number: "01", title: "Choose your game",    description: "Select the game you want, browse the matching collection, and pick the item you need." },
-  { icon: MessageCircle, number: "02", title: "Reach out",           description: "Select the chat icon in the bottom-right corner and choose 'How To Claim Items.' Provide your Roblox username and order number, then wait for claim times to open." },
-  { icon: Gift,          number: "03", title: "Receive your items",  description: "Our team will add you on Roblox to complete the trade or gift your purchased items instantly." },
+  { icon: "gamepad" as const, number: "01", title: "Choose your game",    description: "Select the game you want, browse the matching collection, and pick the item you need." },
+  { icon: "chat" as const,    number: "02", title: "Reach out",           description: "Select the chat icon in the bottom-right corner and choose 'How To Claim Items.' Provide your Roblox username and order number, then wait for claim times to open." },
+  { icon: "gift" as const,    number: "03", title: "Receive your items",  description: "Our team will add you on Roblox to complete the trade or gift your purchased items instantly." },
 ];
 
 type ShopGame = {
@@ -58,10 +58,10 @@ type FeaturedYouTuber = { _id: string; name: string; username: string; subscribe
 function subscriberLabel(n: number) { return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0)}M` : n >= 1000 ? `${(n / 1000).toFixed(n % 1000 ? 1 : 0)}K` : n.toLocaleString(); }
 
 const features = [
-  { icon: Zap,        title: "Fast and Reliable",   desc: "Our Claim Support Team ensures your items are delivered almost instantly.", accent: ROYAL },
-  { icon: Lock,       title: "Secure Transactions", desc: "We use trusted payment systems to keep your data safe and secure.",         accent: "#0E9F6E" },
-  { icon: Headphones, title: "Unmatched Support",   desc: "Our friendly live chat support team is available around the clock to assist you with any questions.", accent: "#8B5CF6" },
-  { icon: LayoutGrid, title: "Wide Variety",        desc: "From Jailbreak to Grow A Garden we have everything you need to enhance your gaming experience.", accent: GOLD },
+  { icon: "bolt" as const,    title: "Fast and Reliable",   desc: "Our Claim Support Team ensures your items are delivered almost instantly." },
+  { icon: "shield" as const,  title: "Secure Transactions", desc: "We use trusted payment systems to keep your data safe and secure." },
+  { icon: "headset" as const, title: "Unmatched Support",   desc: "Our friendly live chat support team is available around the clock to assist you with any questions." },
+  { icon: "grid" as const,    title: "Wide Variety",        desc: "From Jailbreak to Grow A Garden we have everything you need to enhance your gaming experience." },
 ];
 
 const faqs = [
@@ -536,51 +536,50 @@ export default function Home() {
           style={{ background: "radial-gradient(circle, rgba(255,197,61,.12), transparent 65%)" }}
         />
 
-        {/* Floating card collage (right) */}
+        {/* Character stage (right) */}
         <div className="pointer-events-none absolute right-0 top-0 h-full w-[46%] hidden lg:block" aria-hidden="true">
-          <motion.div
-            initial={{ opacity: 0, y: 40, rotate: 8 }}
-            animate={{ opacity: 1, y: [0, -14, 0], rotate: [8, 6, 8] }}
-            transition={{
-              opacity: { delay: 0.7, duration: 0.8 },
-              y: { repeat: Infinity, duration: 6, ease: "easeInOut" },
-              rotate: { repeat: Infinity, duration: 6, ease: "easeInOut" },
-            }}
-            className="absolute right-[16%] top-[14%] w-52 rounded-3xl p-4"
-            style={{ background: "#fff", border: "1px solid rgba(14,26,60,.08)", boxShadow: "var(--shadow-soft-lg)" }}
-          >
-            <div className="rounded-xl mb-3 relative overflow-hidden" style={{ paddingTop: "70%", background: "linear-gradient(135deg,#7C5CFF,#2B50F6)" }}>
-              <div className="pattern-stars-light absolute inset-0" />
-            </div>
-            <div className="h-2.5 rounded-full w-3/4 mb-2" style={{ background: "#EEF3FB" }} />
-            <div className="flex items-center justify-between">
-              <div className="h-2.5 rounded-full w-1/3" style={{ background: "#EEF3FB" }} />
-              <StarGlyph size={14} />
-            </div>
-          </motion.div>
+          <CharacterTrack>
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-[6%] bottom-[16%] w-36 pointer-events-auto"
+            >
+              <Character cfg={{ skin:"#FFD23F", shirt:"#FF6B9D", pants:"#16204D", hat:"phones", hatColor:ROYAL, face:"chill" }} size="100%" />
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 60, rotate: -6 }}
-            animate={{ opacity: 1, y: [0, 10, 0], rotate: [-6, -4, -6] }}
-            transition={{
-              opacity: { delay: 0.9, duration: 0.8 },
-              y: { repeat: Infinity, duration: 7, ease: "easeInOut", delay: 0.5 },
-              rotate: { repeat: Infinity, duration: 7, ease: "easeInOut" },
-            }}
-            className="absolute right-[42%] top-[42%] w-44 rounded-3xl p-4"
-            style={{ background: NAVY, boxShadow: "0 32px 64px -16px rgba(14,26,60,.5)" }}
-          >
-            <div className="rounded-xl mb-3 relative overflow-hidden" style={{ paddingTop: "70%", background: "linear-gradient(135deg,#FFD84D,#FFAB2E)" }}>
-              <div className="pattern-stars-light absolute inset-0" />
-            </div>
-            <div className="h-2.5 rounded-full w-2/3 mb-2" style={{ background: "rgba(255,255,255,.14)" }} />
-            <div className="h-2.5 rounded-full w-1/3" style={{ background: "rgba(255,197,61,.5)" }} />
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-[38%] bottom-[14%] w-44 pointer-events-auto z-10"
+            >
+              <div className="mb-3 ml-2 floaty" style={{ width: "82%" }}>
+                <SpeechBubble tail="bottom-left">
+                  <span className="text-sm">Items in minutes!</span>
+                </SpeechBubble>
+              </div>
+              <Character cfg={{ skin:"#FFD23F", shirt:ROYAL, pants:"#1D3BD1", hat:"cap", hatColor:GOLD, face:"smile", wave:true }} size="100%" />
+            </motion.div>
 
+            <motion.div
+              initial={{ opacity: 0, y: 70 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.95, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute right-[4%] bottom-[15%] w-32 pointer-events-auto"
+            >
+              <Character cfg={{ skin:"#F6C89F", shirt:"#3ED598", pants:"#16204D", hat:"prop", hatColor:"#FF6B9D", face:"uwu" }} size="100%" />
+            </motion.div>
+
+            {/* ground */}
+            <div className="absolute left-[2%] right-[2%] bottom-[12%] h-[5px] rounded-full" style={{ background: "rgba(14,26,60,.14)" }} />
+          </CharacterTrack>
+
+          {/* rotating stamp */}
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 24, ease: "linear" }}
-            className="absolute right-[8%] bottom-[10%] w-28 h-28"
+            className="absolute right-[6%] top-[10%] w-28 h-28"
           >
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <defs>
@@ -594,13 +593,22 @@ export default function Home() {
             </svg>
           </motion.div>
 
+          {/* chunky floaty tiles */}
           <motion.div
-            animate={{ y: [0, -10, 0], rotate: [12, 8, 12] }}
+            animate={{ y: [0, -10, 0], rotate: [12, 7, 12] }}
             transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-            className="absolute right-[30%] top-[12%] w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ background: "#fff", border: "1px solid rgba(14,26,60,.08)", boxShadow: "var(--shadow-soft-md)" }}
+            className="absolute right-[34%] top-[13%] w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{ background: "#fff", border: "2px solid rgba(14,26,60,.9)", boxShadow: "0 5px 0 rgba(14,26,60,.85)" }}
           >
-            <Zap size={22} color={GOLD} fill={GOLD} />
+            <ChunkIcon name="bolt" size={30} />
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 8, 0], rotate: [-8, -3, -8] }}
+            transition={{ repeat: Infinity, duration: 6, ease: "easeInOut", delay: 1 }}
+            className="absolute left-[2%] bottom-[42%] w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: GOLD, border: "2px solid rgba(14,26,60,.9)", boxShadow: "0 5px 0 rgba(14,26,60,.85)" }}
+          >
+            <ChunkIcon name="star" size={28} />
           </motion.div>
         </div>
 
@@ -661,8 +669,8 @@ export default function Home() {
               onClick={() => setShopOpen(true)}
               whileHover={{ scale: 1.04, y: -2, boxShadow: "0 20px 40px -10px rgba(43,80,246,.6)" }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex items-center gap-3 px-9 py-4 rounded-full text-white font-bold text-base"
-              style={{ background: "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", boxShadow: "0 10px 26px -8px rgba(43,80,246,.55)" }}
+              className="btn3d inline-flex items-center gap-3 px-9 py-4 text-white text-base"
+              style={{ background: ROYAL }}
             >
               <ShoppingCart size={20} /> Shop Now
             </motion.button>
@@ -868,7 +876,6 @@ export default function Home() {
 
             <div className="flex flex-col gap-10">
               {steps.map((step, i) => {
-                const Icon = step.icon;
                 return (
                   <motion.div key={step.number}
                     initial={{ opacity: 0, x: -24 }}
@@ -877,11 +884,10 @@ export default function Home() {
                     transition={{ duration: 0.55, delay: i * 0.12, ease: EASE_OUT }}
                     className="flex items-start gap-5"
                   >
-                    <div className="relative z-10 flex-shrink-0 w-[56px] h-[56px] rounded-2xl flex items-center justify-center"
-                      style={{ background: "#fff", border: "1px solid rgba(14,26,60,.1)", boxShadow: "var(--shadow-soft-sm)" }}>
-                      <Icon size={22} color={ROYAL} strokeWidth={2} />
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center font-mono text-[9px] font-bold text-[#0E1A3C]"
-                        style={{ background: GOLD }}>
+                    <div className="relative z-10 flex-shrink-0 wiggle-hover">
+                      <ChunkIcon name={step.icon} size={56} />
+                      <span className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-white border-2 border-white"
+                        style={{ background: NAVY }}>
                         {i + 1}
                       </span>
                     </div>
@@ -914,7 +920,6 @@ export default function Home() {
 
           <div className="grid sm:grid-cols-2 gap-5">
             {features.map((f, i) => {
-              const Icon = f.icon;
               return (
                 <motion.div
                   key={f.title}
@@ -927,13 +932,11 @@ export default function Home() {
                   className="p-7 rounded-3xl relative overflow-hidden bg-white"
                   style={{ border: "1px solid rgba(14,26,60,.08)", transition: "box-shadow .25s ease" }}
                 >
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: `${f.accent}18` }}>
-                    <Icon size={22} color={f.accent === GOLD ? "#D99A00" : f.accent} strokeWidth={2.2} />
+                  <div className="wiggle-hover inline-block mb-5">
+                    <ChunkIcon name={f.icon} size={52} />
                   </div>
                   <h3 className="font-display text-lg mb-2 tracking-tight" style={{ color: NAVY }}>{f.title}</h3>
                   <p className="text-sm leading-relaxed" style={{ color: MUTED }}>{f.desc}</p>
-                  <StarGlyph size={13} color={`${f.accent}`} />
                   <span className="absolute bottom-5 right-6"><StarGlyph size={13} /></span>
                 </motion.div>
               );

@@ -4,8 +4,11 @@ import { X, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useLocation } from "wouter";
 import GameSelectModal from "@/components/GameSelectModal";
+import { Character, SpeechBubble } from "@/components/Mascot";
 
 const BURST_COLORS = ["#2B50F6", "#FFC53D", "#0E1A3C", "#7FA5FF", "#FFD84D"];
+
+const ROYAL = "#2B50F6";
 
 function CheckoutBurstButton({ onClick }: { onClick: () => void }) {
   const [burst, setBurst] = useState(false);
@@ -56,8 +59,8 @@ function CheckoutBurstButton({ onClick }: { onClick: () => void }) {
         whileHover={!burst ? { y: -2, boxShadow: "0 16px 36px -8px rgba(43,80,246,.6)" } : {}}
         whileTap={!burst ? { scale: 0.97 } : {}}
         onClick={handleClick}
-        className="w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-2 relative transition-shadow"
-        style={{ background: "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", boxShadow: "0 8px 22px -6px rgba(43,80,246,.55)" }}
+        className="btn3d w-full py-4 rounded-2xl font-bold text-white text-base flex items-center justify-center gap-2 relative"
+        style={{ background: ROYAL }}
       >
         <ShoppingCart size={20} />
         {burst ? "Processing…" : "Checkout"}
@@ -130,11 +133,13 @@ export default function CartDrawer() {
                   <div className="flex flex-col items-center justify-center py-16 gap-4 relative overflow-hidden rounded-3xl"
                     style={{ background: "#F6F8FE" }}>
                     <div className="pattern-dots absolute inset-0 pointer-events-none opacity-70" />
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center relative bg-white"
-                      style={{ boxShadow: "var(--shadow-soft-md)" }}>
-                      <ShoppingCart size={26} color="#2B50F6" />
+                    <div className="relative w-24">
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-max floaty z-10">
+                        <SpeechBubble tail="bottom-left"><span className="text-xs">Oops!</span></SpeechBubble>
+                      </div>
+                      <Character cfg={{ skin:"#FFD23F", shirt:"#FF6B9D", pants:"#16204D", hat:"none", face:"uwu" }} size="100%" />
                     </div>
-                    <p className="text-sm font-medium relative" style={{ color: "#5A6478" }}>Your cart is empty</p>
+                    <p className="text-sm font-medium relative" style={{ color: "#5A6478" }}>Your cart is empty!</p>
                     <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                       onClick={() => { closeCart(); setGameSelectOpen(true); }}
                       className="relative px-6 py-2.5 rounded-full text-sm font-bold text-white"

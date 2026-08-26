@@ -6,6 +6,7 @@ import {
   CheckCheck, Package, Star, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { ChunkIcon } from "@/components/Mascot";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -264,7 +265,7 @@ export default function AutoDelivery() {
               className="w-16 h-16 rounded-3xl flex items-center justify-center text-white"
               style={{ background: NAVY, boxShadow: "var(--shadow-soft-md)" }}
             >
-              <Bot size={30} color={GOLD} />
+              <ChunkIcon name="bot" size={38} />
             </motion.div>
           </div>
           <div className="text-center mb-6">
@@ -359,7 +360,7 @@ export default function AutoDelivery() {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   <div className="text-center mb-1">
                     <div className="w-11 h-11 rounded-2xl mx-auto mb-2.5 flex items-center justify-center" style={{ background: "#EEF3FB", color: ROYAL }}>
-                      <Bot size={19} />
+                      <ChunkIcon name="bot" size={26} />
                     </div>
                     <p className="text-sm font-bold mb-0.5" style={{ color: NAVY }}>How It Works</p>
                     <p className="text-[11px]" style={{ color: MUTED }}>
@@ -387,7 +388,7 @@ export default function AutoDelivery() {
                     className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
                     style={{ background: "#0E9F6E", boxShadow: "0 10px 26px -8px rgba(14,159,110,.5)" }}
                   >
-                    {creating ? <><Loader2 size={15} className="animate-spin" />Starting Bot…</> : <><Bot size={15} />Start Delivery</>}
+                    {creating ? <><Loader2 size={15} className="animate-spin" />Starting Bot…</> : <><ChunkIcon name="rocket" size={20} />Start Delivery</>}
                   </button>
                   <button
                     onClick={() => setStep("username")}
@@ -409,7 +410,7 @@ export default function AutoDelivery() {
                     className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center"
                     style={{ background: NAVY, boxShadow: "var(--shadow-soft-md)" }}
                   >
-                    <Bot size={28} color={GOLD} />
+                    <ChunkIcon name="bot" size={34} />
                   </motion.div>
                   <div>
                     <p className="font-display text-lg tracking-tight mb-1" style={{ color: NAVY }}>Bot Delivering Your Items…</p>

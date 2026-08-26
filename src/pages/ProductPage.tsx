@@ -377,9 +377,10 @@ export default function ProductPage() {
               ) : null}
 
               {(product.featured || product.bestSeller) && (
-                <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider rotate-3 text-white"
-                  style={{ background: "linear-gradient(135deg,#FF9D2E,#FF7A1A)" }}>
-                  <Flame size={11} /> Best Seller
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rotate-6 bg-white"
+                  style={{ border: "2px solid #0E1A3C", borderRadius: 999, boxShadow: "0 3px 0 #0E1A3C" }}>
+                  <Flame size={12} color="#FF7A1A" fill="#FFC53D" />
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider" style={{ color: "#0E1A3C" }}>Best Seller</span>
                 </div>
               )}
 
