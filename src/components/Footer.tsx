@@ -177,8 +177,8 @@ export default function Footer() {
 
           <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border cursor-pointer transition-colors hover:border-[#FFC53D]"
             style={{ background: "rgba(255,255,255,.04)", borderColor: "rgba(255,255,255,.2)", color: "#fff" }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17M3.5 15h17M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-            <span className="font-mono text-xs">EN</span>
+            <span>🇺🇸</span>
+            <span>English</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
           </button>
         </div>

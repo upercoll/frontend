@@ -7,9 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
-const NAVY = "#0E1A3C";
-const ROYAL = "#2B50F6";
-
 interface NavGame {
   _id: string;
   name: string;
@@ -328,8 +325,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileHover={{ scale: 1.04, y: -1, boxShadow: "0 12px 28px -8px rgba(43,80,246,.55)" }}
                 whileTap={{ scale: 0.96 }}
                 onClick={scrollToShop}
-                className="btn3d hidden md:inline-flex items-center gap-2 px-5 py-2.5 text-sm text-white"
-                style={{ background: ROYAL }}
+                className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-shadow"
+                style={{ background: "linear-gradient(180deg,#3D63FF 0%,#2B50F6 100%)", boxShadow: "0 4px 14px -4px rgba(43,80,246,.5)" }}
               >
                 <ShoppingCart size={14} /> Shop Now
               </motion.button>
