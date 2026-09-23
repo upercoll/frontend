@@ -44,6 +44,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/stock/tracking", label: "Stocker Tracking", icon: Archive,   permission: "manage_stockers", group: "Stock" },
   { href: "/admin/socials",          label: "Videos",         icon: Video,         permission: "view_socials",    group: "Socials" },
   { href: "/admin/socials/creators", label: "Creators & Payments", icon: Film,      permission: "view_socials",    group: "Socials" },
+  { href: "/admin/tickets",          label: "Support Tickets",   icon: MessageSquare, permission: "view_tickets",    group: "Support" },
   { href: "/admin/role-view", label: "Role View",       icon: Eye,             ownerOnly: true,                group: "System" },
   { href: "/admin/settings",  label: "Settings",        icon: Settings,        ownerOnly: true,                group: "System" },
 ];
@@ -61,7 +62,7 @@ const stockerNavItems: NavItem[] = [
 
 const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Overview: BarChart3, Commerce: ShoppingBag, Content: PenSquare, Team: Users,
-  System: Settings, Operations: Inbox, Stock: Archive, Socials: Video,
+  System: Settings, Operations: Inbox, Stock: Archive, Socials: Video, Support: MessageSquare,
 };
 
 const collabSubItems = [
@@ -92,7 +93,7 @@ function NavLink({ item, location, collapsed, podBadge = 0 }: { item: NavItem; l
         whileHover={{ x: collapsed ? 0 : 3 }}
         className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
         style={isActive ? {
-          background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+          background: "rgba(59,167,255,0.15)",
           color: "#a5b4fc",
           border: "1px solid rgba(99,102,241,0.25)",
           boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
@@ -115,7 +116,7 @@ function NavLink({ item, location, collapsed, podBadge = 0 }: { item: NavItem; l
       >
         {isActive && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-            style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+            style={{ background: "#3BA7FF" }} />
         )}
         <item.icon className="w-4 h-4 flex-shrink-0" />
         {!collapsed && (
@@ -184,12 +185,12 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
   const groups: string[] | undefined = isStocker
     ? ["Overview", "Stock"]
     : isOwner && !viewAsRole
-    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials", "System"]
+    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials", "Support", "System"]
     : isOwner && viewAsRole && isViewingAsAgentRole
     ? ["Overview", "Operations"]
     : isOwner && viewAsRole && !isViewingAsAgentRole
-    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials"]
-    : ["Overview", "Commerce", "Content", "Team", "Stock", "Socials"];
+    ? ["Overview", "Commerce", "Content", "Team", "Stock", "Socials", "Support"]
+    : ["Overview", "Commerce", "Content", "Team", "Stock", "Socials", "Support"];
 
   const dashboardHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/dashboard" : "/panel/dashboard";
   const profileHref = isStocker ? "/stocker/dashboard" : isOwner ? "/admin/profile" : "/panel/profile";
@@ -220,7 +221,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
               className="flex items-center gap-2.5 flex-1"
             >
               <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 16px rgba(99,102,241,0.4)" }}>
+                style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(99,102,241,0.4)" }}>
                 <span className="text-white font-bold text-sm">R</span>
               </div>
               <div>
@@ -234,7 +235,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
         </AnimatePresence>
         {collapsed && (
           <div className="w-8 h-8 rounded-xl flex items-center justify-center mx-auto"
-            style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 16px rgba(99,102,241,0.35)" }}>
+            style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(99,102,241,0.35)" }}>
             <span className="text-white font-bold text-sm">R</span>
           </div>
         )}
@@ -296,7 +297,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   onClick={() => setClaimQueueOpen(o => !o)}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    background: "rgba(59,167,255,0.15)",
                     color: "#a5b4fc",
                     border: "1px solid rgba(99,102,241,0.25)",
                     boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
@@ -319,7 +320,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 >
                   {isQueueActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-                      style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+                      style={{ background: "#3BA7FF" }} />
                   )}
                   <Inbox className="w-4 h-4 flex-shrink-0" />
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
@@ -349,7 +350,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                           <Link key={sub.section} href="/panel/queue">
                             <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                               style={isActive ? {
-                                background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
+                                background: "rgba(59,167,255,0.1)",
                                 color: "#a5b4fc",
                                 border: "1px solid rgba(99,102,241,0.2)",
                               } : {
@@ -391,7 +392,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   onClick={() => setCollabOpen(o => !o)}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isCollabActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    background: "rgba(59,167,255,0.15)",
                     color: "#a5b4fc",
                     border: "1px solid rgba(99,102,241,0.25)",
                     boxShadow: "0 0 12px rgba(99,102,241,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
@@ -414,7 +415,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 >
                   {isCollabActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-                      style={{ background: "linear-gradient(180deg,#818cf8,#8b5cf6)" }} />
+                      style={{ background: "#3BA7FF" }} />
                   )}
                   <CollabIcon className="w-4 h-4 flex-shrink-0" />
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm font-medium truncate flex-1">
@@ -438,7 +439,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                           <Link key={sub.href} href={sub.href}>
                             <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                               style={isActive ? {
-                                background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
+                                background: "rgba(59,167,255,0.1)",
                                 color: "#a5b4fc",
                                 border: "1px solid rgba(99,102,241,0.2)",
                               } : {
@@ -457,7 +458,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                       <Link href="/admin/collaboration/payouts-all">
                         <div className="flex items-center gap-3 px-3 py-2 ml-4 rounded-xl cursor-pointer transition-all mb-0.5 text-sm"
                           style={location.startsWith("/admin/collaboration/payouts-all") ? {
-                            background: "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.08) 100%)",
+                            background: "rgba(59,167,255,0.1)",
                             color: "#a5b4fc",
                             border: "1px solid rgba(99,102,241,0.2)",
                           } : {
@@ -488,7 +489,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                   whileHover={{ x: 3 }}
                   className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    background: "rgba(59,167,255,0.15)",
                     color: "#a5b4fc",
                     border: "1px solid rgba(99,102,241,0.25)",
                   } : {
@@ -511,7 +512,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 <motion.div
                   className="relative flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all mb-0.5"
                   style={isQueueActive ? {
-                    background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.12) 100%)",
+                    background: "rgba(59,167,255,0.15)",
                     color: "#a5b4fc",
                     border: "1px solid rgba(99,102,241,0.25)",
                   } : {
@@ -539,7 +540,7 @@ export default function Sidebar({ collapsed, onToggle, podBadge = 0 }: SidebarPr
                 onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
             ) : (
               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                style={{ background: "#3BA7FF" }}>
                 <span className="text-white text-xs font-bold">
                   {(profile?.displayName || user?.email || "?")[0].toUpperCase()}
                 </span>

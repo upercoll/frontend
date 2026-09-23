@@ -60,7 +60,7 @@ export default function ProfileSetup() {
         className="w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
+          <div className="w-16 h-16 rounded-2xl bg-[#3BA7FF] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/20">
             <User className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">Set Up Your Profile</h1>
@@ -128,7 +128,7 @@ export default function ProfileSetup() {
 
             <motion.button type="submit" disabled={saving || !displayName.trim()}
               whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-blue-500/20">
+              className="w-full bg-[#3BA7FF] text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow-lg shadow-blue-500/20">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
               {saving ? "Saving..." : "Complete Setup & Enter Panel"}
             </motion.button>

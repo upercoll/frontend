@@ -13,7 +13,7 @@ export default function ChatButton() {
       whileTap={{ scale: 0.92 }}
       className="fixed bottom-6 right-4 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl"
       style={{
-        background: "linear-gradient(135deg,#7c3aed 0%,#6d28d9 100%)",
+        background: "#3BA7FF",
         boxShadow: "0 4px 20px rgba(124,58,237,0.5)",
       }}
     >

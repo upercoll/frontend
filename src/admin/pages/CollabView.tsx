@@ -208,7 +208,7 @@ export default function CollabView() {
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg flex-shrink-0 overflow-hidden"
-                        style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#6366f1" }}>
+                        style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#3BA7FF" }}>
                         {cp.product?.imageUrl
                           ? <img src={cp.product.imageUrl} className="w-full h-full object-cover" alt="" />
                           : <div className="w-full h-full flex items-center justify-center"><Package className="w-4 h-4 text-white/60" /></div>}
@@ -316,7 +316,7 @@ export default function CollabView() {
                               {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
                             </div>
                             <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0"
-                              style={{ background: p.gradient ? `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` : "#6366f1" }}>
+                              style={{ background: p.gradient ? `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` : "#3BA7FF" }}>
                               {p.imageUrl
                                 ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" />
                                 : <div className="w-full h-full flex items-center justify-center"><Package className="w-3 h-3 text-white/60" /></div>}

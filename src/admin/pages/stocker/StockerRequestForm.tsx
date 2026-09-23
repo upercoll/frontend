@@ -377,7 +377,7 @@ export default function StockerRequestForm() {
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit} disabled={submitMut.isPending}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+                  style={{ background: "#3BA7FF" }}>
                   {submitMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Submit Request
                 </motion.button>

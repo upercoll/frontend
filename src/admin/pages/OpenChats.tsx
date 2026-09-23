@@ -67,7 +67,7 @@ function SessionRow({ session, selected, onClick, liveStatus }: SessionRowProps)
       )}
     >
       <div className="relative flex-shrink-0 mt-0.5">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/10 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-full bg-[#3BA7FF]/20 border border-blue-500/10 flex items-center justify-center">
           <User className="w-4 h-4 text-blue-400" />
         </div>
         <span className={cn("absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0a1628]", cfg.dot, cfg.dotPulse ? "animate-pulse" : "")} />
@@ -143,7 +143,7 @@ function OrderProfilePanel({
 
       {/* Avatar + name + status */}
       <div className="px-4 pt-5 pb-4 border-b border-white/5 text-center flex-shrink-0">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">
+        <div className="w-14 h-14 rounded-full bg-[#3BA7FF] flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">
           {session.robloxUsername[0]?.toUpperCase() ?? "?"}
         </div>
         <p className="text-white font-semibold text-sm">{session.robloxUsername}</p>
@@ -196,7 +196,7 @@ function OrderProfilePanel({
                   style={{
                     background: item.gradient
                       ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)`
-                      : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                      : "#1C2A34",
                   }}
                 >
                   <div

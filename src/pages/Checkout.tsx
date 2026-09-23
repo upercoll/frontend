@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Shield, Lock, Check, Star,
-  ChevronRight, ChevronDown, Zap, Package, AlertCircle,
+  Shield, Lock, Check, Star,
+  ChevronRight, ChevronDown, Package, AlertCircle,
   User, Mail, MapPin, Tag, X, Loader2, MessageSquare,
+  Box, Globe, HelpCircle,
+  Headphones, ShieldCheck, Truck,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
@@ -119,7 +121,7 @@ function BrandIconRow({ activeBrand }: { activeBrand: CardBrand }) {
           {b.el(30)}
         </motion.div>
       ))}
-      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "rgba(165,180,252,0.12)", color: "#818CF8" }}>
+      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "rgba(165,180,252,0.12)", color: "#3BA7FF" }}>
         +{EXTRA_COUNT}
       </span>
     </div>
@@ -139,26 +141,26 @@ function Input({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>{label}</label>
       <div
         className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#4F46E5" : "rgba(165,180,252,0.22)"}`,
-          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(79,70,229,0.12)"}` : "none",
+          background: "#0C141B",
+          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "#2C414E"}`,
+          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(59,167,255,0.12)"}` : "none",
         }}
       >
-        {icon && <span style={{ color: focused ? "#A5B4FC" : "#4F46E5", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: focused ? "#3BA7FF" : "#9BAEBB", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} inputMode={mode} placeholder={placeholder} value={value} maxLength={maxLen}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#6b5c8a] min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#637784] min-w-0"
         />
         {right}
       </div>
       {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
-      {hint && !error && <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>{hint}</p>}
+      {hint && !error && <p className="text-[10px] mt-0.5" style={{ color: "#637784" }}>{hint}</p>}
     </div>
   );
 }
@@ -172,98 +174,29 @@ function SelectInput({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>{label}</label>
       <div
         className="flex items-center gap-2.5 px-3.5 rounded-xl transition-all duration-200"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#4F46E5" : "rgba(165,180,252,0.22)"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(79,70,229,0.12)" : "none",
+          background: "#0C141B",
+          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "#2C414E"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(59,167,255,0.12)" : "none",
         }}
       >
-        {icon && <span style={{ color: "#4F46E5", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: "#9BAEBB", flexShrink: 0 }}>{icon}</span>}
         <select
           value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           className="flex-1 bg-transparent outline-none text-sm font-medium py-3 appearance-none cursor-pointer"
-          style={{ color: value ? "white" : "#64748B" }}
+          style={{ color: value ? "white" : "#637784" }}
         >
           {options.map(o => (
-            <option key={o.value} value={o.value} style={{ background: "#1a0038", color: "white" }}>{o.label}</option>
+            <option key={o.value} value={o.value} style={{ background: "#0C141B", color: "white" }}>{o.label}</option>
           ))}
         </select>
-        <ChevronDown size={13} style={{ color: "#64748B", flexShrink: 0 }} />
+        <ChevronDown size={13} style={{ color: "#637784", flexShrink: 0 }} />
       </div>
       {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
-    </div>
-  );
-}
-
-function Accordion({
-  open, onToggle, title, subtitle, iconBg, iconEl, headerRight, children, delay = 0, badge,
-}: {
-  open: boolean; onToggle: () => void; title: React.ReactNode; subtitle?: React.ReactNode;
-  iconBg?: string; iconEl?: React.ReactNode; headerRight?: React.ReactNode;
-  children: React.ReactNode; delay?: number; badge?: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.38, delay }}
-      className="rounded-2xl overflow-hidden"
-      style={{
-        background: "rgba(255,255,255,0.035)",
-        border: `1.5px solid ${open ? "rgba(79,70,229,0.5)" : "rgba(165,180,252,0.13)"}`,
-        transition: "border-color 0.2s",
-        boxShadow: open ? "0 0 0 3px rgba(79,70,229,0.06)" : "none",
-      }}
-    >
-      <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-3.5 text-left">
-        {iconEl && (
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: iconBg || "rgba(79,70,229,0.22)" }}>
-            {iconEl}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-extrabold text-white">{title}</span>
-            {badge}
-          </div>
-          {subtitle && <div className="mt-0.5">{subtitle}</div>}
-        </div>
-        {headerRight && <div className="flex-shrink-0 ml-1">{headerRight}</div>}
-        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.22 }} className="flex-shrink-0 ml-1">
-          <ChevronDown size={16} color={open ? "#A5B4FC" : "#64748B"} />
-        </motion.div>
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            style={{ overflow: "hidden" }}
-          >
-            <div className="px-4 pb-4" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-function RadioDot({ selected }: { selected: boolean }) {
-  return (
-    <div
-      className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-      style={{ border: `2px solid ${selected ? "#4F46E5" : "#475569"}`, background: selected ? "#4F46E5" : "transparent", transition: "all 0.18s" }}
-    >
-      {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
     </div>
   );
 }
@@ -279,7 +212,7 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
     unionpay:   { bg: "linear-gradient(135deg,#7f1d1d 0%,#1e3a8a 50%,#1e40af 100%)" },
     maestro:    { bg: "linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%)" },
   };
-  const bg = brand ? themes[brand].bg : "linear-gradient(135deg,#1e0050 0%,#1E1B4B 55%,#3730A3 100%)";
+  const bg = brand ? themes[brand].bg : "linear-gradient(135deg,#131C23 0%,#1C2A34 55%,#2C414E 100%)";
 
   const masked = cardNum
     ? cardNum.split(" ").map((g, i) => i < 2 ? g.replace(/\d/g, "•") : g).join("  ")
@@ -372,6 +305,23 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [showGiftCards, setShowGiftCards] = useState(false);
+
+  const giftCards = (() => {
+    try {
+      const raw = localStorage.getItem("rbstars_gift_card");
+      if (!raw) return [];
+      const card = JSON.parse(raw);
+      if (card.used) return [];
+      return [card];
+    } catch { return []; }
+  })();
+
+  function applyGiftCard(card: { code: string; type: string; value: number }) {
+    onApply({ code: card.code, type: card.type as "percent" | "fixed", value: card.value });
+    setCode("");
+    setShowGiftCards(false);
+  }
 
   async function handleApply() {
     if (!code.trim()) return;
@@ -396,6 +346,8 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
     }
   }
 
+  const [focused, setFocused] = useState(false);
+
   if (applied) {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
@@ -408,32 +360,60 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
             {applied.type === "percent" ? `-${applied.value}%` : `-$${applied.value}`}
           </span>
         </div>
-        <button onClick={onRemove}><X size={14} color="#64748B" /></button>
+        <button onClick={onRemove}><X size={14} color="#637784" /></button>
       </motion.div>
     );
   }
 
   return (
-    <div className="space-y-1">
-      <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 px-3 py-2.5 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(165,180,252,0.22)" }}>
-          <Tag size={13} color="#4F46E5" />
-          <input
-            placeholder="Enter promo code"
-            value={code}
-            onChange={e => { setCode(e.target.value.toUpperCase()); setErr(""); }}
-            onKeyDown={e => e.key === "Enter" && handleApply()}
-            className="flex-1 bg-transparent outline-none text-sm font-bold text-white uppercase tracking-wider placeholder:text-[#6b5c8a] placeholder:normal-case placeholder:tracking-normal placeholder:font-normal"
-          />
-        </div>
+    <div className="space-y-1 relative">
+      <div className="relative flex items-center rounded-xl overflow-hidden transition-all duration-200"
+        style={{ background: "#0C141B", border: `1.5px solid ${focused ? "#3BA7FF" : "#2C414E"}`, boxShadow: focused ? "0 0 12px rgba(59,167,255,0.35), 0 0 0 3px rgba(59,167,255,0.12)" : "none" }}>
+        <input
+          placeholder="Discount code or gift card"
+          value={code}
+          onChange={e => { setCode(e.target.value.toUpperCase()); setErr(""); }}
+          onFocus={() => { setFocused(true); if (giftCards.length > 0) setShowGiftCards(true); }}
+          onBlur={() => { setFocused(false); setTimeout(() => setShowGiftCards(false), 200); }}
+          onKeyDown={e => e.key === "Enter" && handleApply()}
+          className="flex-1 bg-transparent outline-none text-sm font-bold text-white tracking-wide placeholder:text-[#637784] placeholder:font-bold placeholder:text-sm px-5 py-[18px]"
+        />
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
           onClick={handleApply} disabled={loading || !code.trim()}
-          className="px-4 rounded-xl font-extrabold text-sm text-white flex items-center gap-1.5"
-          style={{ background: loading || !code.trim() ? "rgba(79,70,229,0.2)" : "linear-gradient(135deg,#4F46E5,#3730A3)", minWidth: 72, justifyContent: "center" }}>
-          {loading ? <Loader2 size={13} className="animate-spin" /> : "Apply"}
+          className="absolute right-0 top-0 bottom-0 px-6 font-extrabold text-sm text-white flex items-center justify-center rounded-r-[11px] transition-colors"
+          style={{ background: loading || !code.trim() ? "rgba(59,167,255,0.15)" : "#3BA7FF" }}>
+          {loading ? <Loader2 size={14} className="animate-spin" /> : "Apply"}
         </motion.button>
       </div>
+
+      {/* Gift card dropdown */}
+      {showGiftCards && giftCards.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+          className="absolute left-0 right-0 z-20 mt-1 rounded-xl overflow-hidden"
+          style={{ background: "#1C2A34", border: "1.5px solid #2C414E", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          <div className="px-3 py-2" style={{ borderBottom: "1px solid #2C414E" }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#637784" }}>Available Gift Cards</p>
+          </div>
+          {giftCards.map((card: any) => (
+            <button key={card.code} onClick={() => applyGiftCard(card)}
+              className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-white/5">
+              <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/IMG_0750.png" alt="" className="w-full h-full object-contain" />
+              </div>
+                <div>
+                  <p className="text-xs font-extrabold" style={{ color: "#F4F8FB" }}>{card.code}</p>
+                  <p className="text-[10px]" style={{ color: "#637784" }}>{card.label}</p>
+                </div>
+              </div>
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>
+                -{card.value}%
+              </span>
+            </button>
+          ))}
+        </motion.div>
+      )}
+
       {err && <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}><AlertCircle size={10} />{err}</p>}
     </div>
   );
@@ -451,7 +431,7 @@ function BurstParticles({ active }: { active: boolean }) {
             animate={{ opacity: 0, scale: 1, x: Math.cos((angle * Math.PI) / 180) * dist, y: Math.sin((angle * Math.PI) / 180) * dist }}
             transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.012 }}
             className="absolute top-1/2 left-1/2 rounded-full pointer-events-none"
-            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: ["#dc2626","#f97316","#ec4899","#4F46E5","#A5B4FC","#fbbf24"][i % 6], zIndex: 200 }}
+            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: ["#dc2626","#f97316","#ec4899","#3BA7FF","#9BAEBB","#fbbf24"][i % 6], zIndex: 200 }}
           />
         );
       })}
@@ -464,7 +444,7 @@ function SuccessOverlay({ email }: { email: string }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       className="fixed inset-0 z-[200] flex items-center justify-center p-6"
-      style={{ background: "rgba(13,0,32,0.97)", backdropFilter: "blur(24px)" }}>
+      style={{ background: "rgba(19,28,35,0.97)", backdropFilter: "blur(24px)" }}>
       <motion.div
         initial={{ scale: 0.75, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
@@ -477,19 +457,19 @@ function SuccessOverlay({ email }: { email: string }) {
               initial={{ scale: 0, opacity: 0.8 }} animate={{ scale: 2.5 + i * 0.6, opacity: 0 }}
               transition={{ duration: 1.3, delay: 0.2 + i * 0.15, repeat: Infinity, repeatDelay: 1.2 }}
               className="absolute w-20 h-20 rounded-full border-2"
-              style={{ borderColor: i === 0 ? "#4F46E5" : i === 1 ? "#ec4899" : "#dc2626" }} />
+              style={{ borderColor: i === 0 ? "#3BA7FF" : i === 1 ? "#ec4899" : "#dc2626" }} />
           ))}
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.15 }}
             className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg,#16a34a,#15803d)", boxShadow: "0 0 40px rgba(22,163,74,0.5)" }}>
+            style={{ background: "#16a34a", boxShadow: "0 0 40px rgba(22,163,74,0.5)" }}>
             <Check size={38} color="white" strokeWidth={3} />
           </motion.div>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
           <h2 className="text-3xl font-extrabold text-white mb-1">Order Confirmed!</h2>
-          <p className="text-sm mb-5" style={{ color: "#818CF8" }}>
+          <p className="text-sm mb-5" style={{ color: "#3BA7FF" }}>
             Confirmation sent to <span className="text-white font-bold">{email || "your email"}</span>
           </p>
 
@@ -498,29 +478,29 @@ function SuccessOverlay({ email }: { email: string }) {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65 }}
             className="rounded-2xl p-4 mb-4 text-left relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg,rgba(79,70,229,0.2),rgba(55,48,163,0.12))", border: "1.5px solid rgba(165,180,252,0.2)" }}
+            style={{ background: "rgba(59,167,255,0.2)", border: "1.5px solid rgba(165,180,252,0.2)" }}
           >
             {}
             <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-20"
-              style={{ background: "radial-gradient(circle,#4F46E5,transparent)", filter: "blur(16px)" }} />
+              style={{ background: "rgba(59,167,255,0.15)", filter: "blur(16px)" }} />
 
             <div className="flex items-start gap-3 relative">
               {}
               <motion.div
-                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0px rgba(79,70,229,0)", "0 0 18px rgba(79,70,229,0.7)", "0 0 0px rgba(79,70,229,0)"] }}
+                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0px rgba(59,167,255,0)", "0 0 18px rgba(59,167,255,0.7)", "0 0 0px rgba(59,167,255,0)"] }}
                 transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}
+                style={{ background: "#3BA7FF" }}
               >
                 <MessageSquare size={18} color="white" />
               </motion.div>
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-extrabold text-white mb-1">Get Your Items Now</p>
-                <p className="text-xs leading-relaxed" style={{ color: "#A5B4FC" }}>
+                <p className="text-xs leading-relaxed" style={{ color: "#9BAEBB" }}>
                   Click on the{" "}
                   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md mx-0.5 font-bold"
-                    style={{ background: "rgba(79,70,229,0.35)", color: "#e9d5ff", verticalAlign: "middle" }}>
+                    style={{ background: "rgba(59,167,255,0.35)", color: "#9BAEBB", verticalAlign: "middle" }}>
                     <MessageSquare size={9} /> chat
                   </span>{" "}
                   icon in the corner to open live chat, provide your details and our claim team will contact you shortly!
@@ -533,7 +513,7 @@ function SuccessOverlay({ email }: { email: string }) {
               animate={{ x: [0, 4, 0], y: [0, 3, 0] }}
               transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
               className="absolute bottom-3 right-3 text-lg"
-              style={{ color: "#A5B4FC" }}
+              style={{ color: "#9BAEBB" }}
             >
               ↘
             </motion.div>
@@ -541,10 +521,10 @@ function SuccessOverlay({ email }: { email: string }) {
 
           <motion.button
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(79,70,229,0.4)" }} whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(59,167,255,0.4)" }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/")}
             className="w-full py-3.5 rounded-2xl font-extrabold text-white"
-            style={{ background: "rgba(79,70,229,0.2)", border: "1px solid rgba(165,180,252,0.15)" }}>
+            style={{ background: "rgba(59,167,255,0.2)", border: "1px solid rgba(165,180,252,0.15)" }}>
             Back to Store
           </motion.button>
         </motion.div>
@@ -658,14 +638,22 @@ export default function Checkout() {
   const { user, openAuthModal } = useAuth();
 
   const [promo, setPromo] = useState<PromoState>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("rbstars_gift_card");
+    if (stored && !promo) {
+      try {
+        const card = JSON.parse(stored);
+        if (!card.used) {
+          setPromo({ code: card.code, type: card.type, value: card.value });
+        }
+      } catch {}
+    }
+  }, []);
   const discount = promo
     ? promo.type === "percent" ? totalPrice * (promo.value / 100) : Math.min(promo.value, totalPrice)
     : 0;
   const finalTotal = Math.max(0, totalPrice - discount);
-
-  const [summaryOpen, setSummaryOpen] = useState(true);
-  const [billingOpen, setBillingOpen] = useState(false);
-  const [openPayment, setOpenPayment] = useState<"card">("card");
 
   const [email, setEmail] = useState(user?.email || "");
 
@@ -798,6 +786,14 @@ export default function Checkout() {
         if (error) throw new Error(error.message);
 
         clearCart();
+        try {
+          const gcRaw = localStorage.getItem("rbstars_gift_card");
+          if (gcRaw) {
+            const gc = JSON.parse(gcRaw);
+            gc.used = true;
+            localStorage.setItem("rbstars_gift_card", JSON.stringify(gc));
+          }
+        } catch {}
         navigate("/order-success");
       } catch (err) {
         setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
@@ -824,7 +820,7 @@ export default function Checkout() {
           fontFamily: '"Inter", system-ui, sans-serif',
           fontSize: "14px",
           fontSmoothing: "antialiased",
-          "::placeholder": { color: "#4b5563" },
+          "::placeholder": { color: "#637784" },
         },
         invalid: { color: "#ef4444" },
       },
@@ -973,15 +969,15 @@ export default function Checkout() {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6" style={{ background: "#0C0B2E" }}>
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "rgba(79,70,229,0.12)", border: "1.5px solid rgba(165,180,252,0.15)" }}>
-          <Package size={34} color="#4F46E5" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6" style={{ background: "#131C23" }}>
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+          <Package size={34} color="#3BA7FF" />
         </div>
         <h2 className="text-2xl font-extrabold text-white">Your cart is empty</h2>
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           onClick={() => navigate("/")}
           className="px-8 py-3.5 rounded-2xl font-extrabold text-white"
-          style={{ background: "linear-gradient(135deg,#4F46E5,#3730A3)" }}>
+          style={{ background: "#3BA7FF" }}>
           Browse Items
         </motion.button>
       </div>
@@ -990,336 +986,261 @@ export default function Checkout() {
 
   return (
     <>
-      <div className="min-h-screen" style={{ background: "#0C0B2E" }}>
-        {}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
-          <div className="absolute top-[-15%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-[0.16]" style={{ background: "radial-gradient(circle,#4F46E5,transparent 70%)", filter: "blur(70px)" }} />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[45vw] h-[45vw] rounded-full opacity-[0.1]" style={{ background: "radial-gradient(circle,#dc2626,transparent 70%)", filter: "blur(70px)" }} />
+      <div className="min-h-screen" style={{ background: "#131C23" }}>
+        {/* ── TOPBAR ── */}
+        <div className="w-full relative overflow-hidden sm:h-[73px] h-[60px]" style={{ borderBottom: "1px solid #2C414E", background: "#0F1920" }}>
+          {/* Right side — neat row */}
+          <img src="/item-star.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+          <img src="/item-gem.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+          <img src="/item-crystals.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+
+          {/* Left side — neat row */}
+          <img src="/item-controller.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+          <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+          <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+
+          {/* Center logo */}
+          <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center" style={{ background: "#3BA7FF", boxShadow: "0 2px 10px rgba(59,167,255,0.4)" }}>
+              <Star size={18} fill="white" color="white" />
+            </div>
+            <span className="font-extrabold tracking-tight text-white" style={{ fontSize: 22, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
+              RB<span style={{ color: "#3BA7FF" }}>stars</span>
+            </span>
+          </button>
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 py-6">
+        {/* ── LAYOUT ── */}
+        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row">
 
-          {}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-            className="flex items-center justify-between mb-8">
-            <motion.button whileHover={{ scale: 1.05, x: -2 }} whileTap={{ scale: 0.95 }}
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-xl"
-              style={{ color: "#A5B4FC", background: "rgba(79,70,229,0.1)", border: "1px solid rgba(165,180,252,0.15)" }}>
-              <ArrowLeft size={15} /> Back
-            </motion.button>
+          {/* ── LEFT COLUMN ── */}
+          <div className="flex-1 px-6 md:px-16 py-10 lg:py-14 lg:max-w-[860px]">
 
-            {}
-            <div className="flex items-center gap-2 select-none">
-              <div className="w-8 h-8 rounded-full bg-[#4F46E5] flex items-center justify-center shadow-lg">
-                <Star size={16} fill="white" color="white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white">
-                RB<span style={{ color: "#A5B4FC" }}>stars</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs font-semibold">
-              <Lock size={12} color="#16a34a" />
-              <span style={{ color: "#16a34a" }}>Secure Checkout</span>
-            </div>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_390px] gap-5">
-
-            {}
-            <div className="space-y-3.5 order-2 lg:order-1">
-
-              {}
-              <Accordion
-                open={true} onToggle={() => {}}
-                title="Contact"
-                iconEl={<Mail size={13} color="#A5B4FC" />}
-                delay={0.07}
-              >
-                <div className="pt-3">
-                  <Input label="Email Address" placeholder="you@example.com" value={email} onChange={setEmail} icon={<Mail size={15} />} type="text" error={errors.email} />
-                </div>
-              </Accordion>
-
-              {}
-              <Accordion
-                open={billingOpen} onToggle={() => setBillingOpen(o => !o)}
-                title="Billing Address"
-                badge={<span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full" style={{ background: "rgba(79,70,229,0.15)", color: "#818CF8" }}>Optional</span>}
-                iconEl={<MapPin size={13} color="#A5B4FC" />}
-                subtitle={!billingOpen && addr1 ? <span className="text-xs" style={{ color: "#6B7280" }}>{addr1}{city ? `, ${city}` : ""}</span> : undefined}
-                delay={0.12}
-              >
-                <div className="space-y-3 pt-3">
-                  <Input label="Full Name" placeholder="John Doe" value={billName} onChange={setBillName} icon={<User size={15} />} />
-                  <Input label="Address Line 1" placeholder="123 Main Street" value={addr1} onChange={setAddr1} icon={<MapPin size={15} />} />
-                  <Input label="Address Line 2" placeholder="Apt, Suite (optional)" value={addr2} onChange={setAddr2} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input label="City" placeholder="New York" value={city} onChange={setCity} />
-                    <Input label="State / Province" placeholder="NY" value={stateVal} onChange={setStateVal} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Input label="ZIP / Postal Code" placeholder="10001" value={zip} onChange={setZip} mode="numeric" />
-                    <SelectInput label="Country" value={country} onChange={setCountry} options={COUNTRIES} />
-                  </div>
-                </div>
-              </Accordion>
-
-              <motion.div
-                initial={false}
-                animate={{
-                  opacity: eceAvailable === true ? 1 : 0,
-                  height: eceCollapsed ? 0 : "auto",
-                }}
-                transition={{ opacity: { duration: 0.38 }, height: { duration: 0.3 } }}
-                className="rounded-2xl overflow-hidden"
-                style={{
-                  background: "rgba(255,255,255,0.035)",
-                  border: eceAvailable === true ? "1.5px solid rgba(165,180,252,0.13)" : "none",
-                  pointerEvents: eceAvailable === true ? "auto" : "none",
-                }}
-              >
-                <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(165,180,252,0.07)" }}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#818CF8" }}>Express Checkout</p>
-                </div>
-                <div className="px-4 py-3" style={{ minHeight: 68 }}>
-                  <div ref={eceContainerRef} />
-                </div>
-                <div className="flex items-center gap-3 px-4 pb-3">
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "#475569" }}>or pay with card</span>
-                  <div className="flex-1 h-px" style={{ background: "rgba(165,180,252,0.12)" }} />
-                </div>
-              </motion.div>
-
-              {}
-              <Accordion
-                open={openPayment === "card"}
-                onToggle={() => setOpenPayment("card")}
-                title="Credit / Debit Card"
-                iconEl={<RadioDot selected={openPayment === "card"} />}
-                iconBg="transparent"
-                headerRight={<BrandIconRow activeBrand={brand} />}
-                delay={0.16}
-              >
-                <div className="space-y-3 pt-3">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Card Number</label>
-                    <div className="flex items-center gap-2 px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cardNum ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
-                      <div ref={cardNumDivRef} className="flex-1 py-3" />
-                      <AnimatePresence>
-                        {brand && (
-                          <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-                            {brand === "visa"       && <VisaIcon w={30} />}
-                            {brand === "mastercard" && <MastercardIcon w={30} />}
-                            {brand === "amex"       && <AmexIcon w={30} />}
-                            {brand === "discover"   && <DiscoverIcon w={30} />}
-                            {brand === "unionpay"   && <UnionPayIcon w={30} />}
-                            {brand === "maestro"    && <MaestroIcon w={30} />}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cardNum}</p>}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Expiry</label>
-                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.expiry ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
-                        <div ref={cardExpDivRef} className="py-3" />
-                      </div>
-                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.expiry}</p>}
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#818CF8" }}>Security Code</label>
-                      <div className="px-3 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: `1.5px solid ${errors.cvv ? "rgba(239,68,68,0.5)" : "rgba(165,180,252,0.15)"}`, minHeight: 44 }}>
-                        <div ref={cardCvvDivRef} className="py-3" />
-                      </div>
-                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: "#ef4444" }}>{errors.cvv}</p>}
-                    </div>
-                  </div>
-                  <Input label="Name on Card" placeholder="As it appears on your card" value={cardName} onChange={setCardName} icon={<User size={15} />} error={errors.cardName} />
-                  <CardPreview cardNum="" expiry="" cardName={cardName} brand={brand} />
-                </div>
-              </Accordion>
-
-              {errors.payment && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2.5 px-4 py-3 rounded-xl"
-                  style={{ background: "rgba(239,68,68,0.1)", border: "1.5px solid rgba(239,68,68,0.25)" }}
+            {/* Express Checkout */}
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="mb-8">
+              <p className="text-center text-sm font-semibold mb-4" style={{ color: "#637784" }}>Express checkout</p>
+              <div className="flex gap-3">
+                <motion.div initial={false}
+                  animate={{ opacity: eceAvailable === true ? 1 : 0, height: eceCollapsed ? 0 : "auto" }}
+                  transition={{ opacity: { duration: 0.38 }, height: { duration: 0.3 } }}
+                  className="flex-1"
+                  style={{ pointerEvents: eceAvailable === true ? "auto" : "none" }}
                 >
-                  <AlertCircle size={15} color="#ef4444" className="flex-shrink-0 mt-0.5" />
-                  <p className="text-sm leading-snug" style={{ color: "#ef4444" }}>{errors.payment}</p>
+                  <div ref={eceContainerRef} style={{ minHeight: 52 }} />
                 </motion.div>
-              )}
-
-              {/* 5. Pay Button */}
-              <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }} className="relative">
-                <BurstParticles active={burst} />
-                <motion.button
-                  animate={burst ? { scale: [1, 1.07, 0.97, 1.03, 1] } : { scale: 1 }}
-                  whileHover={!loading ? { scale: 1.02, boxShadow: "0 0 45px rgba(220,38,38,0.5)" } : {}}
-                  whileTap={!loading ? { scale: 0.97 } : {}}
-                  onClick={handlePay}
-                  disabled={loading}
-                  className="relative w-full rounded-2xl font-extrabold text-white flex items-center justify-center gap-3 text-base overflow-hidden"
-                  style={{ background: loading ? "linear-gradient(135deg,#4F46E5,#3730A3)" : "linear-gradient(135deg,#dc2626 0%,#9f1239 100%)", padding: "18px 0", transition: "background 0.5s" }}>
-                  {!loading && (
-                    <motion.div
-                      initial={{ x: "-100%" }} animate={{ x: "220%" }}
-                      transition={{ repeat: Infinity, duration: 2.8, ease: "linear", repeatDelay: 0.8 }}
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(90deg,transparent,rgba(255,255,255,0.11),transparent)", width: "40%" }} />
-                  )}
-                  {loading ? (
-                    <><Loader2 size={20} className="animate-spin" /><span>Processing Payment…</span></>
-                  ) : (
-                    <><Lock size={17} /><span>{`Pay — $${finalTotal.toFixed(2)}`}</span><ChevronRight size={17} /></>
-                  )}
-                </motion.button>
-                <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#475569" }}>
-                  <Shield size={10} /> 256-bit SSL encrypted · Powered by Stripe
-                </p>
-              </motion.div>
-            </div>
-
-            {/* ── RIGHT: Order Summary ── */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.05 }} className="order-1 lg:order-2">
-              <div className="sticky top-6 rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.035)", border: "1.5px solid rgba(165,180,252,0.13)" }}>
-
-                {/* Summary header */}
-                <button onClick={() => setSummaryOpen(o => !o)} className="w-full flex items-center justify-between px-5 py-4 text-left">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(79,70,229,0.22)" }}>
-                      <Package size={13} color="#A5B4FC" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-extrabold text-white">Order Summary</p>
-                      <p className="text-xs" style={{ color: "#6B7280" }}>
-                        {items.reduce((s, i) => s + i.quantity, 0)} item{items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className="text-lg font-extrabold" style={{ color: "#A5B4FC" }}>${finalTotal.toFixed(2)}</p>
-                      {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${totalPrice.toFixed(2)}</p>}
-                    </div>
-                    <motion.div animate={{ rotate: summaryOpen ? 180 : 0 }} transition={{ duration: 0.22 }}>
-                      <ChevronDown size={16} color={summaryOpen ? "#A5B4FC" : "#64748B"} />
-                    </motion.div>
-                  </div>
-                </button>
-
-                <AnimatePresence initial={false}>
-                  {summaryOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                      style={{ overflow: "hidden" }}>
-
-                      {/* Items */}
-                      <div className="px-5 py-3 space-y-3 max-h-52 overflow-y-auto" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
-                        <AnimatePresence initial={false}>
-                        {items.map((item, i) => (
-                          <motion.div key={item.id} initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8, scale: 0.95 }} transition={{ delay: 0.06 + i * 0.04 }} className="flex items-center gap-3">
-                            <div className="relative flex-shrink-0" style={{ width: 42, height: 42 }}>
-                              <div className="w-full h-full rounded-xl overflow-hidden relative">
-                                {item.bgImageUrl ? (
-                                  <>
-                                    <img src={item.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                                    <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
-                                  </>
-                                ) : (
-                                  <>
-                                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${item.gradient[0]},${item.gradient[1]})` }} />
-                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "8px 8px" }} />
-                                  </>
-                                )}
-                                {item.image && (
-                                  <img src={item.image} alt={item.name} className="absolute inset-0 w-full h-full object-contain" style={{ padding: "3px" }} />
-                                )}
-                              </div>
-                              {item.quantity > 1 && (
-                                <div className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full text-[9px] font-extrabold text-white flex items-center justify-center" style={{ background: "#4F46E5" }}>
-                                  {item.quantity}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-white truncate">{item.name}</p>
-                              {item.originalPrice && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${item.originalPrice.toFixed(2)}</p>}
-                            </div>
-                            <span className="text-sm font-extrabold flex-shrink-0" style={{ color: "#A5B4FC" }}>${(item.price * item.quantity).toFixed(2)}</span>
-                            <motion.button
-                              whileTap={{ scale: 0.88 }}
-                              onClick={() => removeItem(item.id)}
-                              className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                              style={{ background: "rgba(255,255,255,0.07)", color: "#64748B" }}
-                            >
-                              <X size={10} strokeWidth={2.5} />
-                            </motion.button>
-                          </motion.div>
-                        ))}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Promo code */}
-                      <div className="px-5 py-3" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "#64748B" }}>Discount Code</p>
-                        <PromoInput applied={promo} onApply={setPromo} onRemove={() => setPromo(null)} />
-                      </div>
-
-                      {/* Totals */}
-                      <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(165,180,252,0.07)" }}>
-                        <div className="flex justify-between">
-                          <span className="text-xs" style={{ color: "#6B7280" }}>Subtotal</span>
-                          <span className="text-xs font-semibold text-white">${totalPrice.toFixed(2)}</span>
-                        </div>
-                        <AnimatePresence>
-                          {discount > 0 && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="flex justify-between">
-                              <span className="text-xs flex items-center gap-1" style={{ color: "#6B7280" }}>
-                                <Tag size={9} />
-                                {promo?.type === "percent" ? `${promo.value}% off` : "Discount"} ({promo?.code})
-                              </span>
-                              <span className="text-xs font-semibold" style={{ color: "#4ade80" }}>-${discount.toFixed(2)}</span>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                        <div className="flex justify-between">
-                          <span className="text-xs" style={{ color: "#6B7280" }}>Delivery</span>
-                          <span className="text-xs font-bold" style={{ color: "#4ade80" }}>FREE</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-2" style={{ borderTop: "1px solid rgba(165,180,252,0.08)" }}>
-                          <span className="text-sm font-extrabold text-white">Total</span>
-                          <div className="text-right">
-                            <p className="text-xl font-extrabold" style={{ color: "#A5B4FC" }}>${finalTotal.toFixed(2)}</p>
-                            {discount > 0 && <p className="text-[10px] line-through" style={{ color: "#475569" }}>${totalPrice.toFixed(2)}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Trust badges */}
-                <div className="px-5 py-3 grid grid-cols-3 gap-2" style={{ borderTop: "1px solid rgba(165,180,252,0.07)", background: "rgba(0,0,0,0.12)" }}>
-                  {[{ icon: <Zap size={13} />, label: "Instant Delivery" }, { icon: <Shield size={13} />, label: "100% Secure" }, { icon: <Star size={13} fill="#A5B4FC" color="#A5B4FC" />, label: "5★ Rated" }].map((b, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1.5 py-1.5">
-                      <div style={{ color: "#A5B4FC" }}>{b.icon}</div>
-                      <span className="text-[9px] font-bold text-center uppercase tracking-wider" style={{ color: "#64748B" }}>{b.label}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </motion.div>
 
+            {/* OR Divider */}
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px" style={{ background: "#2C414E" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#637784" }}>OR</span>
+              <div className="flex-1 h-px" style={{ background: "#2C414E" }} />
+            </div>
+
+            {/* Contact */}
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-8">
+              <h2 className="text-xl font-extrabold text-white mb-4">Contact Email <span className="text-sm font-semibold" style={{ color: "#637784" }}>(Used for Delivery)</span></h2>
+              <div className="relative">
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.email ? "rgba(239,68,68,0.5)" : "#2C414E"}` }}>
+                  <Mail size={16} style={{ color: "#9BAEBB", flexShrink: 0 }} />
+                  <input type="email" placeholder="you@example.com" value={email}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#4b5563] min-w-0" />
+                </div>
+                {errors.email && <p className="text-[11px] mt-1.5 flex items-center gap-1" style={{ color: "#f87171" }}><AlertCircle size={10} />{errors.email}</p>}
+              </div>
+              <label className="flex items-start gap-3 mt-4 cursor-pointer select-none group">
+                <input type="checkbox" defaultChecked
+                  className="mt-1 w-4 h-4 rounded accent-[#3BA7FF] cursor-pointer" />
+                <span className="text-sm leading-relaxed group-hover:text-white transition-colors" style={{ color: "#9BAEBB" }}>
+                  Get exclusive discounts and offers on Roblox items. Check your email to confirm your subscription!
+                </span>
+              </label>
+            </motion.div>
+
+            {/* Payment */}
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
+              <h2 className="text-xl font-extrabold text-white mb-1.5">Payment</h2>
+              <p className="text-sm mb-5" style={{ color: "#637784" }}>All transactions are secure and encrypted.</p>
+
+              {/* Credit card method */}
+              <div className="rounded-2xl p-5 mb-4" style={{ background: "#1C2A34", border: "1.5px solid #2C414E", overflow: "visible" }}>
+                <div className="flex items-center gap-3.5 p-4 rounded-xl mb-4" style={{ background: "#0C141B", border: "1.5px solid #3BA7FF", boxShadow: "0 0 12px rgba(59,167,255,0.25), 0 0 0 3px rgba(59,167,255,0.08)" }}>
+                  <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0" style={{ border: "2px solid #3BA7FF", background: "#3BA7FF" }}>
+                    <div className="w-2 h-2 rounded-full bg-white" />
+                  </div>
+                  <span className="text-sm font-bold text-white flex-1">Credit card</span>
+                  <img src="/payment-cards.png" alt="Visa, Mastercard, American Express" className="h-8 rounded-md object-contain" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.3))" }} />
+                </div>
+
+                {/* Card fields */}
+                <div className="space-y-3" style={{ position: "relative", zIndex: 1 }}>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Card number</label>
+                    <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cardNum ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                      <div ref={cardNumDivRef} className="flex-1 py-3" style={{ position: "relative", zIndex: 2 }} />
+                      <Lock size={14} style={{ color: "#637784", flexShrink: 0 }} />
+                    </div>
+                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cardNum}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Expiration</label>
+                      <div className="relative px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.expiry ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                        <div ref={cardExpDivRef} className="py-3" style={{ position: "relative", zIndex: 2 }} />
+                      </div>
+                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.expiry}</p>}
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Security code</label>
+                      <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cvv ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                        <div ref={cardCvvDivRef} className="flex-1 py-3" style={{ position: "relative", zIndex: 2 }} />
+                        <HelpCircle size={14} style={{ color: "#637784", flexShrink: 0 }} />
+                      </div>
+                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cvv}</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Name on card</label>
+                    <div className="flex items-center gap-3 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cardName ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48 }}>
+                      <User size={15} style={{ color: "#9BAEBB", flexShrink: 0 }} />
+                      <input type="text" placeholder="As it appears on your card" value={cardName}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setCardName(e.target.value)}
+                        className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#4b5563] min-w-0" />
+                    </div>
+                    {errors.cardName && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cardName}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <CardPreview cardNum="" expiry="" cardName={cardName} brand={brand} />
+            </motion.div>
+
+            {/* Billing Address */}
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="mb-8">
+              <h2 className="text-xl font-extrabold text-white mb-4">Billing address</h2>
+
+              {/* Country selector */}
+              <div className="mb-3.5">
+                <SelectInput label="Country / Region" value={country} onChange={setCountry} options={COUNTRIES} icon={<Globe size={15} />} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3.5">
+                <Input label="First name" placeholder="John" value={billName} onChange={setBillName} />
+                <Input label="Last name" placeholder="Doe" value={addr2} onChange={setAddr2} />
+              </div>
+              <div className="mb-3.5">
+                <Input label="Address" placeholder="123 Main Street" value={addr1} onChange={setAddr1} icon={<MapPin size={15} />} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input label="City" placeholder="New York" value={city} onChange={setCity} />
+                <Input label="Postal code" placeholder="(optional)" value={zip} onChange={setZip} mode="numeric" />
+              </div>
+            </motion.div>
+
+            <div className="h-px mb-6" style={{ background: "#2C414E" }} />
+
+            {/* Payment Error */}
+            {errors.payment && (
+              <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2.5 px-4 py-3 rounded-xl mb-6"
+                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}>
+                <AlertCircle size={15} color="#EF4444" className="flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-snug" style={{ color: "#EF4444" }}>{errors.payment}</p>
+              </motion.div>
+            )}
+
+            {/* Pay Button */}
+            <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="relative">
+              <BurstParticles active={burst} />
+              <motion.button
+                animate={burst ? { scale: [1, 1.07, 0.97, 1.03, 1] } : { scale: 1 }}
+                whileHover={!loading ? { scale: 1.02 } : {}}
+                whileTap={!loading ? { scale: 0.97 } : {}}
+                onClick={handlePay}
+                disabled={loading}
+                className="relative w-full rounded-2xl font-extrabold text-white flex items-center justify-center gap-3 text-base"
+                style={{ background: "#3BA7FF", padding: "18px 0", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)" }}>
+                {loading ? (
+                  <><Loader2 size={20} className="animate-spin" /><span>Processing Payment...</span></>
+                ) : (
+                  <span>{`Pay — $${finalTotal.toFixed(2)}`}</span>
+                )}
+              </motion.button>
+              <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#637784" }}>
+                <Shield size={10} /> 256-bit SSL encrypted · Powered by Stripe
+              </p>
+            </motion.div>
           </div>
+
+          {/* ── RIGHT COLUMN: ORDER SUMMARY ── */}
+          <div className="lg:w-[520px] flex-shrink-0 px-6 md:px-10 py-10 lg:py-14" style={{ borderLeft: "1px solid #2C414E" }}>
+            <div className="lg:sticky lg:top-6">
+
+              {/* Order Items */}
+              <div className="mb-6">
+                {items.map((item, i) => (
+                  <motion.div key={item.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 + i * 0.04 }}
+                    className="flex items-center gap-4 mb-5">
+                    <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+                      <div className="w-full h-full rounded-xl overflow-hidden" style={{ background: "#1C2A34", border: "2px solid #F4F8FB" }}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : item.bgImageUrl ? (
+                          <div className="w-full h-full relative">
+                            <img src={item.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: item.gradient?.[0] || "#2C414E" }}>
+                            <Box size={24} color="#637784" />
+                          </div>
+                        )}
+                      </div>
+                      {item.quantity > 1 && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-[11px] font-extrabold text-white flex items-center justify-center"
+                          style={{ background: "#3BA7FF", border: "2px solid #131C23" }}>
+                          {item.quantity}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-semibold text-white truncate">{item.name}</p>
+                    </div>
+                    <span className="text-base font-extrabold flex-shrink-0" style={{ color: "#F4F8FB" }}>${(item.price * item.quantity).toFixed(2)}</span>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Promo Code */}
+              <div className="mb-6">
+                <PromoInput applied={promo} onApply={setPromo} onRemove={() => setPromo(null)} />
+              </div>
+
+              {/* Total */}
+              <div className="flex items-center justify-between py-5" style={{ borderTop: "1px solid #2C414E" }}>
+                <span className="text-2xl font-extrabold text-white">Total</span>
+                <div className="text-right flex items-baseline gap-1.5">
+                  <span className="text-sm font-semibold" style={{ color: "#637784" }}>USD</span>
+                  <span className="text-3xl font-extrabold" style={{ color: "#F4F8FB" }}>${finalTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Support / Guarantee / Delivery Banner */}
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="rounded-2xl overflow-hidden mt-2">
+                <img src="/banner-support.jpg" alt="Support, Guarantee, Delivery" className="w-full h-auto object-cover" />
+              </motion.div>
+
+            </div>
+          </div>
+
         </div>
       </div>
     </>
   );
+
 }

@@ -61,7 +61,7 @@ function RequestDetailModal({ req, deliveries, onClose }: DetailModalProps) {
         <div className="flex items-start justify-between px-6 py-4 flex-shrink-0" style={{ borderBottom: "1px solid #F3F4F6" }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+              style={{ background: "#3BA7FF" }}>
               <Archive className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -468,7 +468,7 @@ export default function StockerHistory() {
                   >
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
+style={{ background: "#3BA7FF" }}>
                         <Archive className="w-5 h-5 text-white" />
                       </div>
 

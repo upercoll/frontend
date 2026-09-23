@@ -54,10 +54,10 @@ function Field({
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all"
         style={{
           background: "rgba(255,255,255,0.07)",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#7c3aed" : "rgba(196,181,253,0.2)"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(124,58,237,0.1)" : "none",
+          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "rgba(196,181,253,0.2)"}`,
+          boxShadow: focused ? "0 0 0 3px rgba(59,167,255,0.1)" : "none",
         }}>
-        {icon && <span style={{ color: "#7c3aed", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: "#3BA7FF", flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
@@ -95,7 +95,7 @@ function Bubble({ msg }: { msg: Message }) {
     >
       {!isCustomer && (
         <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5"
-          style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>
+          style={{ background: "#3BA7FF" }}>
           <Star size={10} fill="white" color="white" />
         </div>
       )}
@@ -107,7 +107,7 @@ function Bubble({ msg }: { msg: Message }) {
           className="px-3 py-2 rounded-2xl text-sm leading-relaxed"
           style={{
             background: isCustomer
-              ? "linear-gradient(135deg,#7c3aed,#6d28d9)"
+              ? "#3BA7FF"
               : "rgba(255,255,255,0.07)",
             color: "white",
             borderRadius: isCustomer ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
@@ -153,6 +153,16 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    function handleOpenClaim(e: Event) {
+      const detail = (e as CustomEvent).detail || {};
+      setOpen(true);
+      if (detail.orderEmail) setContactEmail(detail.orderEmail);
+    }
+    window.addEventListener("rbstars:open-claim", handleOpenClaim);
+    return () => window.removeEventListener("rbstars:open-claim", handleOpenClaim);
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -318,7 +328,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           {}
           <div className="p-4 pb-3 text-center">
             <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 0 20px rgba(124,58,237,0.4)" }}>
+              style={{ background: "#3BA7FF", boxShadow: "0 0 20px rgba(59,167,255,0.4)" }}>
               <MessageSquare size={22} color="white" />
             </div>
             <h3 className="text-base font-extrabold text-white mb-1">Connect with Claim Team</h3>
@@ -346,7 +356,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               type="email"
               error={formErrors.contactEmail}
             />
-            <div className="rounded-xl p-3" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(196,181,253,0.12)" }}>
+            <div className="rounded-xl p-3" style={{ background: "rgba(59,167,255,0.1)", border: "1px solid rgba(196,181,253,0.12)" }}>
               <p className="text-[10px] leading-relaxed" style={{ color: "#a78bfa" }}>
                 📧 A confirmation will be sent to your email when the claim team joins. You can close this chat and return any time.
               </p>
@@ -363,7 +373,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               onClick={handleFormSubmit}
               disabled={submitting}
               className="w-full py-3 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg,#dc2626,#9f1239)" }}
+              style={{ background: "#dc2626" }}
             >
               {submitting ? <><Loader2 size={15} className="animate-spin" />Connecting…</> : <><MessageSquare size={15} />Start Claim Chat</>}
             </motion.button>
@@ -385,14 +395,14 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               <motion.div
                 animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
                 className="w-4 h-4 rounded-full border-2 border-t-transparent"
-                style={{ borderColor: "#7c3aed", borderTopColor: "transparent" }}
+                style={{ borderColor: "#3BA7FF", borderTopColor: "transparent" }}
               />
               <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>Waiting for claim team…</span>
             </div>
             <p className="text-[10px]" style={{ color: "#4a3a6b" }}>Usually responds within 2–5 minutes</p>
             {nextSlotAt && (
               <div className="mt-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
-                style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
+                style={{ background: "rgba(59,167,255,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
                 <Clock size={11} />
                 <span>Opens at {nextSlotAt} GMT+3</span>
                 <span className="font-mono opacity-70">({fmtSlotCountdown(nextSlotAt)})</span>
@@ -408,8 +418,8 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         <div className="flex flex-col h-full">
           {}
           {agentName && (
-            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ borderColor: "rgba(196,181,253,0.08)", background: "rgba(124,58,237,0.08)" }}>
-              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#7c3aed" }}>
+            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ borderColor: "rgba(196,181,253,0.08)", background: "rgba(59,167,255,0.08)" }}>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#3BA7FF" }}>
                 <Star size={9} fill="white" color="white" />
               </div>
               <span className="text-xs font-bold text-white">{agentName}</span>
@@ -424,7 +434,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
             {messages.map(m => <Bubble key={m.id} msg={m} />)}
             {agentTyping && (
               <div className="flex items-end gap-2">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#3BA7FF" }}>
                   <Star size={10} fill="white" color="white" />
                 </div>
                 <div className="px-3 py-2 rounded-2xl" style={{ background: "rgba(255,255,255,0.07)", borderRadius: "18px 18px 18px 4px" }}>
@@ -442,7 +452,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           {}
           {(step === "ended" || step === "claimed") && (
             <div className="px-4 py-3 text-center" style={{ borderTop: "1px solid rgba(196,181,253,0.08)" }}>
-              <div className="rounded-xl p-3" style={{ background: step === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(124,58,237,0.1)", border: `1px solid ${step === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(196,181,253,0.12)"}` }}>
+              <div className="rounded-xl p-3" style={{ background: step === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(59,167,255,0.1)", border: `1px solid ${step === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(196,181,253,0.12)"}` }}>
                 {step === "claimed" ? (
                   <>
                     <CheckCheck size={16} color="#4ade80" className="mx-auto mb-1" />
@@ -483,7 +493,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: input.trim() ? "linear-gradient(135deg,#7c3aed,#6d28d9)" : "rgba(124,58,237,0.15)" }}
+                  style={{ background: input.trim() ? "#3BA7FF" : "rgba(59,167,255,0.15)" }}
                 >
                   <Send size={14} color="white" />
                 </motion.button>
@@ -515,14 +525,14 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               height: 480,
               background: "#110025",
               border: "1.5px solid rgba(196,181,253,0.18)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.15)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,167,255,0.15)",
             }}
           >
             {}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,rgba(124,58,237,0.35),rgba(109,40,217,0.2))", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
+              style={{ background: "rgba(59,167,255,0.35)", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)" }}>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#3BA7FF" }}>
                   <Star size={13} fill="white" color="white" />
                 </div>
                 <div>
@@ -553,11 +563,11 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.5, type: "spring", stiffness: 280, damping: 20 }}
-        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(124,58,237,0.7)" }}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(59,167,255,0.7)" }}
         whileTap={{ scale: 0.92 }}
         onClick={() => { setOpen(o => !o); if (!open && step === "idle") setStep("form"); }}
         className="fixed bottom-6 right-4 z-[300] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl"
-        style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 4px 24px rgba(124,58,237,0.55)" }}
+        style={{ background: "#3BA7FF", boxShadow: "0 4px 24px rgba(59,167,255,0.55)" }}
       >
         {}
         {hasUnread && (
@@ -565,10 +575,10 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
             animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute inset-0 rounded-full"
-            style={{ background: "#7c3aed" }}
+            style={{ background: "#3BA7FF" }}
           />
         )}
-        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#7c3aed]" />
+        <span className="absolute top-1 right-1 w-3 h-3 rounded-full bg-green-400 border-2 border-[#3BA7FF]" />
         <AnimatePresence mode="wait">
           {open
             ? <motion.div key="x" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}><X size={22} color="white" /></motion.div>

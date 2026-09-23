@@ -118,7 +118,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
         ) : (
           <div
             className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-            style={{ background: `linear-gradient(135deg, ${game.gradient?.from ?? "#6366f1"}, ${game.gradient?.to ?? "#8b5cf6"})` }}
+            style={{ background: "#3BA7FF" }}
           >
             <Gamepad2 className="w-5 h-5 text-white/50" />
           </div>
@@ -206,7 +206,7 @@ function GameClaimCard({ game, idx }: { game: Game; idx: number }) {
               onClick={() => saveMut.mutate()}
               disabled={saveMut.isPending}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white"
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}
+              style={{ background: "#3BA7FF" }}
             >
               {saveMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save

@@ -56,24 +56,24 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
           <motion.div key="sheet"
             initial={{ opacity: 0, scale: 0.95, y: 24 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 24 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-x-4 bottom-4 top-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:top-1/2 sm:-translate-y-1/2 sm:bottom-auto sm:w-full sm:max-w-[520px] sm:max-h-[85vh] flex flex-col rounded-3xl overflow-hidden"
-            style={{ zIndex: zBase, background: "#0F0C2E", border: "1.5px solid rgba(165,180,252,0.15)" }}>
+            style={{ zIndex: zBase, background: "#131C23", border: "1.5px solid rgba(59,167,255,0.15)" }}>
 
             <div className="line-grid-dark" style={{ position: "absolute", inset: 0, pointerEvents: "none", opacity: 0.65, borderRadius: "inherit" }} />
-            <div className="rb-particle" style={{ width: 7, height: 7, background: "#A5B4FC", left: "8%",  top: "15%", animationDuration: "8.4s",  animationDelay: "0s",    "--p-op": 0.20 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 5, height: 5, background: "#818CF8", left: "82%", top: "8%",  animationDuration: "7.1s",  animationDelay: "-2.3s", "--p-op": 0.15 } as React.CSSProperties} />
+            <div className="rb-particle" style={{ width: 7, height: 7, background: "#3BA7FF", left: "8%",  top: "15%", animationDuration: "8.4s",  animationDelay: "0s",    "--p-op": 0.20 } as React.CSSProperties} />
+            <div className="rb-particle" style={{ width: 5, height: 5, background: "#5CB8FF", left: "82%", top: "8%",  animationDuration: "7.1s",  animationDelay: "-2.3s", "--p-op": 0.15 } as React.CSSProperties} />
             <div className="rb-particle" style={{ width: 9, height: 9, background: "#6366F1", left: "50%", top: "25%", animationDuration: "10.2s", animationDelay: "-5.1s", "--p-op": 0.12 } as React.CSSProperties} />
             <div className="rb-particle" style={{ width: 4, height: 4, background: "#C7D2FE", left: "25%", top: "65%", animationDuration: "6.9s",  animationDelay: "-1.8s", "--p-op": 0.18 } as React.CSSProperties} />
-            <div className="rb-particle" style={{ width: 6, height: 6, background: "#818CF8", left: "72%", top: "58%", animationDuration: "9.0s",  animationDelay: "-3.4s", "--p-op": 0.14 } as React.CSSProperties} />
+            <div className="rb-particle" style={{ width: 6, height: 6, background: "#5CB8FF", left: "72%", top: "58%", animationDuration: "9.0s",  animationDelay: "-3.4s", "--p-op": 0.14 } as React.CSSProperties} />
 
             <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ position: "relative" }}>
               <h2 className="text-xl font-extrabold" style={{
-                background: "linear-gradient(135deg,#A5B4FC 0%,#4F46E5 60%,#818CF8 100%)",
+                background: "#3BA7FF",
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
               }}>Select a Game</h2>
               <motion.button data-testid="button-close-game-modal" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                 onClick={onClose}
                 className="w-9 h-9 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(165,180,252,0.15)", color: "#A5B4FC" }}>
+                style={{ background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(59,167,255,0.15)", color: "#3BA7FF" }}>
                 <X size={17} />
               </motion.button>
             </div>
@@ -82,19 +82,19 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
               {loading ? (
                 <div className="grid grid-cols-3 gap-3">
                   {Array.from({ length: 9 }).map((_, i) => (
-                    <div key={i} className="aspect-square rounded-2xl animate-pulse" style={{ background: "rgba(165,180,252,0.07)", border: "1.5px solid rgba(165,180,252,0.1)" }} />
+                    <div key={i} className="aspect-square rounded-2xl animate-pulse" style={{ background: "rgba(59,167,255,0.07)", border: "1.5px solid rgba(59,167,255,0.1)" }} />
                   ))}
                 </div>
               ) : games.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Gamepad2 size={40} color="rgba(165,180,252,0.3)" className="mb-3" />
-                  <p className="text-sm font-medium" style={{ color: "rgba(165,180,252,0.5)" }}>No games available yet</p>
+                  <Gamepad2 size={40} color="rgba(59,167,255,0.3)" className="mb-3" />
+                  <p className="text-sm font-medium" style={{ color: "rgba(59,167,255,0.5)" }}>No games available yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-3">
                   {games.map((game, i) => {
-                    const c1 = game.gradient?.from || "#4F46E5";
-                    const c2 = game.gradient?.to || "#1E1B4B";
+                    const c1 = game.gradient?.from || "#3BA7FF";
+                    const c2 = game.gradient?.to || "#131C23";
                     return (
                       <motion.button key={game._id}
                         initial={{ opacity: 0, scale: 0.88 }}
@@ -105,7 +105,7 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
                         data-testid={`button-game-${i + 1}`}
                         onClick={() => handleSelect(game.slug)}
                         className="relative flex flex-col rounded-2xl overflow-hidden aspect-square"
-                        style={{ border: "1.5px solid rgba(165,180,252,0.12)", transition: "border-color 0.2s ease, box-shadow 0.2s ease" }}
+                        style={{ border: "1.5px solid rgba(59,167,255,0.12)", transition: "border-color 0.2s ease, box-shadow 0.2s ease" }}
                         variants={{
                           hover: {
                             scale: 1.06,
@@ -114,7 +114,7 @@ export default function GameSelectModal({ open, onClose, zBase = 80 }: Props) {
                           },
                         }}
                       >
-                        <div className="absolute inset-0" style={{ background: `linear-gradient(135deg,${c1} 0%,${c2} 100%)` }} />
+                        <div className="absolute inset-0" style={{ background: c1 }} />
                         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
                         {game.imageUrl ? (
                           <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-80" />

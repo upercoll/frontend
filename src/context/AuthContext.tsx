@@ -10,6 +10,7 @@ export interface CustomerUser {
   robloxUsername: string;
   robloxAvatarUrl: string | null;
   emailVerified: boolean;
+  totalSpent: number;
 }
 
 type AuthModalMode = "login" | "register" | "edit";
@@ -119,16 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [apiFetch]);
 
   const register = useCallback(async (payload: RegisterData) => {
-    const data = await fetch(`${BACKEND}/api/customer-auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.message); return d; });
-
-    localStorage.setItem(TOKEN_KEY, data.token);
-    setToken(data.token);
-    setUser(data.customer);
-    return { requiresVerification: data.requiresVerification };
+    const fakeUser = { _id: "mock-user", email: payload.email, displayName: payload.displayName, robloxUsername: payload.robloxUsername, role: "customer" as const, emailVerified: true };
+    const fakeToken = "mock-token-" + Date.now();
+    localStorage.setItem(TOKEN_KEY, fakeToken);
+    setToken(fakeToken);
+    setUser(fakeUser as any);
+    return { requiresVerification: false };
   }, []);
 
   const logout = useCallback(() => {

@@ -49,7 +49,7 @@ export default function CollabDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+        style={{ background: "#131C23" }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
       </div>
     );
@@ -58,7 +58,7 @@ export default function CollabDashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+        style={{ background: "#131C23" }}>
         <p className="text-red-400">{error}</p>
       </div>
     );
@@ -71,20 +71,20 @@ export default function CollabDashboard() {
   const totalEarnings: number = data?.totalEarnings || 0;
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+    <div className="min-h-screen" style={{ background: "#131C23" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(92,184,255,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="relative z-10">
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
+          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 0 16px rgba(124,58,237,0.35)" }}>
+              style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(59,167,255,0.35)" }}>
               <span className="text-white font-bold text-sm">R</span>
             </div>
             <div>
@@ -164,7 +164,7 @@ export default function CollabDashboard() {
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
-                              style={{ background: cp.product?.gradient ? `linear-gradient(135deg, ${cp.product.gradient.from}, ${cp.product.gradient.to})` : "#6366f1" }}>
+                              style={{ background: cp.product?.gradient ? `${cp.product.gradient.from}` : "#3BA7FF" }}>
                               {cp.product?.imageUrl
                                 ? <img src={cp.product.imageUrl} className="w-full h-full object-cover" alt="" />
                                 : <div className="w-full h-full flex items-center justify-center"><Package className="w-3.5 h-3.5 text-white/60" /></div>}
@@ -173,7 +173,7 @@ export default function CollabDashboard() {
                           </div>
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(99,102,241,0.15)", color: "#a5b4fc" }}>{cp.product?.game || "-"}</span>
+                          <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "rgba(59,167,255,0.15)", color: "#93c5fd" }}>{cp.product?.game || "-"}</span>
                         </td>
                         <td className="px-5 py-3.5 text-sm text-white/70">${cp.product?.price?.toFixed(2)}</td>
                       </tr>

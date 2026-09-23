@@ -120,8 +120,8 @@ function ManageAssignmentsModal({ deliverer, onClose, onSaved }: { deliverer: an
               style={{ background: "rgba(255,255,255,0.05)" }}>Cancel</button>
             <button onClick={() => mutate()} disabled={isPending}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
-              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Assignments
+style={{ background: "#3BA7FF" }}>
+               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Save Assignments
             </button>
           </div>
         </div>
@@ -210,8 +210,8 @@ export default function DeliveryMemberDetail() {
       <div className="rounded-2xl p-5 flex items-start gap-4"
         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 font-bold text-xl"
-          style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)", color: "#fff" }}>
-          {(d.name || d.email)[0].toUpperCase()}
+style={{ background: "#3BA7FF", color: "#fff" }}>
+           {(d.name || d.email)[0].toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-white font-bold text-lg">{d.name || d.email}</h2>

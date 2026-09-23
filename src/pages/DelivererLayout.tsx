@@ -56,25 +56,25 @@ export default function DelivererLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
+    <div className="min-h-screen" style={{ background: "#131C23" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(14,165,233,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(2,132,199,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.06) 0%, transparent 70%)" }} />
       </div>
       <div className="relative z-10 flex flex-col min-h-screen">
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(14,165,233,0.12)" }}>
+          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(59,167,255,0.12)" }}>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)", boxShadow: "0 0 16px rgba(14,165,233,0.35)" }}>
+                style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(59,167,255,0.35)" }}>
                 <Truck className="w-4 h-4 text-white" />
               </div>
               <div>
                 <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
-                <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(14,165,233,0.7)" }}>Delivery Portal</p>
+                <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(59,167,255,0.7)" }}>Delivery Portal</p>
               </div>
             </div>
             <nav className="hidden sm:flex items-center gap-1 ml-4">
@@ -84,7 +84,7 @@ export default function DelivererLayout({ children }: { children: React.ReactNod
                   <Link key={item.href} href={item.href}>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
                       style={isActive
-                        ? { background: "rgba(14,165,233,0.2)", color: "#7dd3fc", border: "1px solid rgba(14,165,233,0.3)" }
+                        ? { background: "rgba(59,167,255,0.2)", color: "#7dd3fc", border: "1px solid rgba(59,167,255,0.3)" }
                         : { color: "rgba(255,255,255,0.45)", border: "1px solid transparent" }}>
                       <item.icon className="w-3.5 h-3.5" />
                       {item.label}

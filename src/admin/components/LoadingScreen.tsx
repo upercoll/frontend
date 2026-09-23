@@ -8,7 +8,7 @@ export default function LoadingScreen({ message = "Loading..." }: { message?: st
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-4"
       >
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-[#3BA7FF] flex items-center justify-center">
           <motion.span
             animate={{ rotate: 360 }}
             transition={{ repeat: Infinity, duration: 1, ease: "linear" }}

@@ -176,7 +176,7 @@ export default function Monitor() {
                           {agent.profile?.profilePicture ? (
                             <img src={agent.profile.profilePicture} className="w-9 h-9 rounded-full object-cover" alt="" />
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 border border-blue-500/10 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-full bg-[#3BA7FF]/20 border border-blue-500/10 flex items-center justify-center">
                               <span className="text-blue-400 text-xs font-bold">
                                 {(agent.profile?.displayName || agent.member.email)[0].toUpperCase()}
                               </span>

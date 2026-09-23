@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, ShoppingBag, ShoppingCart, User } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import GameSelectModal from "@/components/GameSelectModal";
 
 const tabs = [
   { id: "home",    label: "Home",    Icon: Home },
@@ -17,7 +15,6 @@ export default function MobileBottomNav() {
   const [location, navigate] = useLocation();
   const { totalItems, openCart } = useCart();
   const { user, openAuthModal } = useAuth();
-  const [shopOpen, setShopOpen] = useState(false);
 
   const activeId =
     location === "/"           ? "home"
@@ -26,7 +23,7 @@ export default function MobileBottomNav() {
 
   function handleTab(id: (typeof tabs)[number]["id"]) {
     if (id === "home")    { navigate("/"); }
-    if (id === "shop")    { setShopOpen(true); }
+    if (id === "shop")    { navigate("/browse"); }
     if (id === "cart")    { openCart(); }
     if (id === "account") {
       if (user) openAuthModal("edit");
@@ -42,7 +39,7 @@ export default function MobileBottomNav() {
         style={{
           background: "rgba(10,8,40,0.92)",
           backdropFilter: "blur(18px)",
-          borderTop: "1px solid rgba(165,180,252,0.13)",
+          borderTop: "1px solid rgba(59,167,255,0.13)",
         }}
       >
         <div className="flex items-center justify-around px-2" style={{ paddingBottom: "env(safe-area-inset-bottom, 4px)" }}>
@@ -67,7 +64,7 @@ export default function MobileBottomNav() {
                       exit={{ scale: 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 20 }}
                       className="absolute top-2 right-1/2 translate-x-3 -translate-y-0.5 min-w-[17px] h-[17px] rounded-full flex items-center justify-center text-[10px] font-extrabold z-10"
-                      style={{ background: "#4F46E5", color: "white", border: "2px solid rgba(10,8,40,0.92)" }}
+                      style={{ background: "#3BA7FF", color: "white", border: "2px solid rgba(10,8,40,0.92)" }}
                     >
                       {totalItems > 99 ? "99+" : totalItems}
                     </motion.span>
@@ -75,14 +72,14 @@ export default function MobileBottomNav() {
                 )}
 
                 <motion.div
-                  animate={{ color: isActive ? "#818CF8" : "rgba(165,180,252,0.5)" }}
+                  animate={{ color: isActive ? "#5CB8FF" : "rgba(59,167,255,0.5)" }}
                   transition={{ duration: 0.18 }}
                 >
                   <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
                 </motion.div>
 
                 <motion.span
-                  animate={{ color: isActive ? "#818CF8" : "rgba(165,180,252,0.45)" }}
+                  animate={{ color: isActive ? "#5CB8FF" : "rgba(59,167,255,0.45)" }}
                   transition={{ duration: 0.18 }}
                   className="text-[10px] font-semibold leading-none"
                 >
@@ -94,7 +91,7 @@ export default function MobileBottomNav() {
                   <motion.div
                     layoutId="nav-active-dot"
                     className="absolute top-1.5 w-1 h-1 rounded-full"
-                    style={{ background: "#818CF8", boxShadow: "0 0 6px #818CF8" }}
+                    style={{ background: "#5CB8FF", boxShadow: "0 0 6px #5CB8FF" }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
@@ -106,8 +103,6 @@ export default function MobileBottomNav() {
 
       {/* Extra spacer so page content doesn't hide behind the nav */}
       <div className="h-[68px] md:hidden" />
-
-      <GameSelectModal open={shopOpen} onClose={() => setShopOpen(false)} zBase={60} />
     </>
   );
 }
