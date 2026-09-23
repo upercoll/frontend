@@ -190,7 +190,7 @@ function ProfilePanel({ session, isMyActive, onClose, onDeliver, onEnd, onCloseC
               <div key={i} className="bg-[#0d1f3c] border border-white/5 rounded-xl overflow-hidden flex flex-col">
                 <div
                   className="relative w-full h-16 overflow-hidden flex-shrink-0"
-                  style={{ background: item.gradient ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)` : "#1C2A34" }}
+                  style={{ background: item.gradient ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)` : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)" }}
                 >
                   <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "12px 12px" }} />
                   {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="absolute inset-0 w-full h-full object-cover" />}

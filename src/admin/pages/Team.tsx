@@ -139,7 +139,7 @@ export default function Team() {
                       <img src={member.profile.profilePicture} className="w-10 h-10 rounded-full object-cover" alt="" />
                     ) : (
                       <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ background: "#3BA7FF" }}>
+                        style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
                         <span className="text-white text-sm font-bold">
                           {(member.profile?.displayName || member.email)[0].toUpperCase()}
                         </span>

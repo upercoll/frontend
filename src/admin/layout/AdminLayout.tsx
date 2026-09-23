@@ -39,8 +39,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/stocker/dashboard": "Dashboard",
   "/stocker/request": "New Stock Request",
   "/stocker/history": "My Requests",
-  "/admin/tickets": "Support Tickets",
-  "/panel/tickets": "Support Tickets",
 };
 
 const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view", "/admin/collaboration"];
@@ -62,7 +60,6 @@ const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/proof-of-delivery", permission: "view_pod" },
   { prefix: "/admin/stock",            permission: "view_stock" },
   { prefix: "/admin/socials",          permission: "view_socials" },
-  { prefix: "/admin/tickets",          permission: "view_tickets" },
 ];
 
 interface AdminLayoutProps {
@@ -133,7 +130,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div
       className="flex h-screen overflow-hidden relative"
-      style={{ background: "#131C23" }}
+      style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particles.map(p => (
@@ -153,9 +150,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           />
         ))}
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: "rgba(59,167,255,0.07)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "rgba(92,184,255,0.06)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="hidden lg:flex relative z-10">

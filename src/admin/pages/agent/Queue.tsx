@@ -250,7 +250,7 @@ function ProfilePanel({
                   style={{
                     background: item.gradient
                       ? `linear-gradient(135deg, ${item.gradient.from} 0%, ${item.gradient.to} 100%)`
-                      : "#1C2A34",
+                      : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
                   }}
                 >
                   <div

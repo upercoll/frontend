@@ -123,9 +123,9 @@ function InviteModal({ onClose }: { onClose: () => void }) {
             </button>
             <button onClick={() => mutate()} disabled={isPending || !email}
               className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-style={{ background: "#3BA7FF" }}>
-               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-               Send Invite
+              style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              Send Invite
             </button>
           </div>
         </div>
@@ -158,8 +158,8 @@ export default function DeliveryTeam() {
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={() => setShowInvite(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-style={{ background: "#3BA7FF" }}>
-           <Plus className="w-4 h-4" /> Invite Deliverer
+          style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
+          <Plus className="w-4 h-4" /> Invite Deliverer
         </motion.button>
       </div>
 
@@ -206,7 +206,7 @@ style={{ background: "#3BA7FF" }}>
                 <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
                   className="flex items-center gap-4 px-5 py-4 cursor-pointer group transition-colors hover:bg-white/3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm"
-                    style={{ background: "#3BA7FF", color: "#fff" }}>
+                    style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)", color: "#fff" }}>
                     {(d.name || d.email)[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">

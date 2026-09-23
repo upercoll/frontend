@@ -150,7 +150,7 @@ export default function SocialsDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "#131C23" }}>
+        style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
         <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
       </div>
     );
@@ -159,20 +159,20 @@ export default function SocialsDashboard() {
   const activeQueueLabel = QUEUE_TABS.find(t => t.value === queueTab)?.label || "All";
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #060a1a 0%, #0c1445 45%, #060a1a 100%)" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(92,184,255,0.06) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }} />
       </div>
 
       <div className="relative z-10">
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
+          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(59,167,255,0.35)" }}>
+              style={{ background: "linear-gradient(135deg,#7c3aed,#6d28d9)", boxShadow: "0 0 16px rgba(124,58,237,0.35)" }}>
               <span className="text-white font-bold text-sm">R</span>
             </div>
             <div>
@@ -266,7 +266,7 @@ export default function SocialsDashboard() {
                 />
                 <button onClick={handlePreview} disabled={previewing || !url.trim()}
                   className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
-                  style={{ background: "rgba(59,167,255,0.25)", border: "1px solid rgba(59,167,255,0.4)", color: "#93c5fd" }}>
+                  style={{ background: "rgba(99,102,241,0.25)", border: "1px solid rgba(99,102,241,0.4)", color: "#a5b4fc" }}>
                   {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                   {previewing ? "Fetching…" : "Preview"}
                 </button>
@@ -320,7 +320,7 @@ export default function SocialsDashboard() {
                       {submitErr && <p className="text-xs text-red-400 mt-2">{submitErr}</p>}
                       <button onClick={handleSubmit} disabled={submitting}
                         className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-60"
-                        style={{ background: "#3BA7FF", color: "#fff" }}>
+                        style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff" }}>
                         {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         {submitting ? "Submitting…" : "Submit Video"}
                       </button>
@@ -419,13 +419,13 @@ export default function SocialsDashboard() {
                             Submitted {fmtDate(s.createdAt)}
                           </span>
                           {s.adminNote && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: "rgba(59,167,255,0.12)", color: "#93c5fd" }}>
+                            <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: "rgba(99,102,241,0.12)", color: "#a5b4fc" }}>
                               Note: {s.adminNote}
                             </span>
                           )}
                           <a href={s.url} target="_blank" rel="noopener noreferrer"
                             className="flex items-center gap-1 text-[10px] ml-auto"
-                            style={{ color: "rgba(59,167,255,0.7)" }}>
+                            style={{ color: "rgba(99,102,241,0.7)" }}>
                             <ExternalLink className="w-2.5 h-2.5" /> View
                           </a>
                         </div>

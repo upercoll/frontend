@@ -417,7 +417,7 @@ export default function OrderDetail() {
             <div className="p-5">
               <div className="flex gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white"
-                  style={{ background: "#3BA7FF" }}>
+                  style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
                   {((data as any)?.data?.profile?.displayName || "A")[0].toUpperCase()}
                 </div>
                 <div className="flex-1">

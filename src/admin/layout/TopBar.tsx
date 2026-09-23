@@ -196,7 +196,7 @@ export default function TopBar({ title, onMenuClick }: TopBarProps) {
                 style={{ boxShadow: "0 0 0 2px rgba(99,102,241,0.4)" }} alt="" />
             ) : (
               <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "#3BA7FF", boxShadow: "0 0 12px rgba(59,167,255,0.35)" }}>
+                style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow: "0 0 12px rgba(99,102,241,0.35)" }}>
                 <span className="text-white text-xs font-bold">
                   {(profile?.displayName || user?.email || "?")[0].toUpperCase()}
                 </span>

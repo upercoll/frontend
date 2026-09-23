@@ -8,22 +8,16 @@ import CartDrawer from "@/components/CartDrawer";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
+import SupportChat from "@/components/SupportChat";
 import AuthModal from "@/components/AuthModal";
 import WelcomeModal from "@/components/WelcomeModal";
-import WelcomeGiftModal from "@/components/WelcomeGiftModal";
 import Home from "@/pages/Home";
 import GamePage from "@/pages/GamePage";
 import ProductPage from "@/pages/ProductPage";
 import Checkout from "@/pages/Checkout";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import AutoDelivery from "@/pages/AutoDelivery";
-import ClaimChatPage from "@/pages/ClaimChatPage";
-import ProfilePage from "@/pages/ProfilePage";
-import BrowseGames from "@/pages/BrowseGames";
 import NotFound from "@/pages/not-found";
-import TicketList from "@/pages/TicketList";
-import TicketThread from "@/pages/TicketThread";
-import CreateTicket from "@/pages/CreateTicket";
 import CollabInviteAccept from "@/pages/CollabInviteAccept";
 import CollabLogin from "@/pages/CollabLogin";
 import CollabDashboard from "@/pages/CollabDashboard";
@@ -90,7 +84,6 @@ import StockTracking from "@/admin/pages/stock/StockTracking";
 import SocialsAdmin from "@/admin/pages/SocialsAdmin";
 import SocialsCreators from "@/admin/pages/SocialsCreator";
 import SocialsTrackerDetail from "@/admin/pages/SocialsTrackerDetail";
-import TicketDashboard from "@/admin/pages/TicketDashboard";
 
 import StockerDashboard from "@/admin/pages/stocker/StockerDashboard";
 import StockerRequestForm from "@/admin/pages/stocker/StockerRequestForm";
@@ -171,12 +164,10 @@ function StorefrontRouter() {
   const isCheckout = location === "/checkout";
   const isSuccess = location === "/order-success";
   const isAutoDelivery = location === "/auto-delivery";
-  const isClaimChat = location === "/claim-chat";
-  const isProfile = location === "/profile";
 
   return (
     <>
-      {!isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && <Navbar dark={isGamePage || isProductPage} />}
+      {!isCheckout && !isSuccess && !isAutoDelivery && <Navbar dark={isGamePage || isProductPage} />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
@@ -184,20 +175,14 @@ function StorefrontRouter() {
         <Route path="/checkout" component={Checkout} />
         <Route path="/order-success" component={PaymentSuccess} />
         <Route path="/auto-delivery" component={AutoDelivery} />
-        <Route path="/claim-chat" component={ClaimChatPage} />
-        <Route path="/browse" component={BrowseGames} />
-        <Route path="/tickets/new" component={CreateTicket} />
-        <Route path="/tickets/:ticketId" component={TicketThread} />
-        <Route path="/tickets" component={TicketList} />
-        <Route path="/profile" component={ProfilePage} />
         <Route component={NotFound} />
       </Switch>
-      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && <Footer />}
+      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && <Footer />}
+      <SupportChat />
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
-      <WelcomeGiftModal />
-      {!isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && <MobileBottomNav />}
+      {!isCheckout && !isSuccess && !isAutoDelivery && <MobileBottomNav />}
       <DiscordFloat />
     </>
   );
@@ -322,9 +307,6 @@ function AdminRouter() {
       </Route>
       <Route path="/admin/socials">
         <AdminLayout><SocialsAdmin /></AdminLayout>
-      </Route>
-      <Route path="/admin/tickets">
-        <AdminLayout><TicketDashboard /></AdminLayout>
       </Route>
       <Route path="/admin">
         {() => { window.location.replace("/admin/login"); return null; }}

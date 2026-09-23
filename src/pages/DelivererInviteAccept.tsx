@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useParams } from "wouter";
-import { motion } from "framer-motion";
-import { Loader2, Check, Eye, EyeOff, Mail } from "lucide-react";
-import StaffInviteLayout from "@/components/StaffInviteLayout";
+import { Loader2, CheckCircle, AlertCircle, Eye, EyeOff, Truck } from "lucide-react";
 
-const BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
+const BASE = import.meta.env.VITE_API_URL || "";
 
 async function apiGet(path: string) {
   const res = await fetch(`${BASE}/api/deliverer${path}`);
@@ -15,7 +13,9 @@ async function apiGet(path: string) {
 
 async function apiPost(path: string, body: unknown) {
   const res = await fetch(`${BASE}/api/deliverer${path}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Request failed");
@@ -44,14 +44,18 @@ export default function DelivererInviteAccept() {
 
   const sendCode = async () => {
     setLoading(true); setError("");
-    try { await apiPost(`/auth/invite/${token}/send-code`, {}); setStep("code"); }
-    catch (err: any) { setError(err.message); }
+    try {
+      await apiPost(`/auth/invite/${token}/send-code`, {});
+      setStep("code");
+    } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
 
   const verifyAndSetup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || !password || password.length < 8) { setError("Enter the verification code and a password (min 8 chars)"); return; }
+    if (!code || !password || password.length < 8) {
+      setError("Enter the verification code and a password (min 8 chars)"); return;
+    }
     setLoading(true); setError("");
     try {
       const res = await apiPost(`/auth/invite/${token}/verify`, { code, password, displayName });
@@ -62,92 +66,91 @@ export default function DelivererInviteAccept() {
     finally { setLoading(false); }
   };
 
-  const stepLabel =
-    step === "loading" ? "Validating your invitation..." :
-    step === "error" ? "Something went wrong" :
-    step === "verify" ? "Accept your delivery team invitation" :
-    step === "code" || step === "setup" ? "Set up your account" :
-    "Account activated!";
-
   return (
-    <StaffInviteLayout portalName="Delivery Team Invitation" description="You've been invited to join the RBstars delivery team." step={stepLabel}>
-      {step === "loading" && (
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#3BA7FF" }} />
+    <div className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: "linear-gradient(135deg,#060a1a 0%,#0c1445 45%,#060a1a 100%)" }}>
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)", boxShadow: "0 0 24px rgba(14,165,233,0.4)" }}>
+            <Truck className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">RBstars</h1>
+          <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Delivery Team Invite</p>
         </div>
-      )}
 
-      {step === "error" && (
-        <div className="text-center py-4">
-          <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(239,68,68,0.15)", border: "2px solid #ef4444" }}>
-            <span className="text-xl">✕</span>
-          </div>
-          <p className="font-semibold mb-1" style={{ color: "#F4F8FB" }}>Invalid Invite</p>
-          <p className="text-sm" style={{ color: "#9BAEBB" }}>{error}</p>
-        </div>
-      )}
+        <div className="rounded-2xl p-8" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          {step === "loading" && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-sky-400" />
+            </div>
+          )}
 
-      {step === "verify" && (
-        <div className="space-y-4">
-          <div className="rounded-xl p-3" style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#3BA7FF" }}>Email</p>
-            <p className="text-sm font-medium" style={{ color: "#F4F8FB" }}>{email}</p>
-          </div>
-          <p className="text-sm" style={{ color: "#9BAEBB" }}>A verification code will be sent to your email.</p>
-          {error && <p className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>}
-          <motion.button onClick={sendCode} disabled={loading}
-            className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-            Send Verification Code
-          </motion.button>
-        </div>
-      )}
+          {step === "error" && (
+            <div className="text-center py-4">
+              <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
 
-      {(step === "code" || step === "setup") && (
-        <form onSubmit={verifyAndSetup} className="space-y-4">
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Verification Code</label>
-            <input value={code} onChange={e => setCode(e.target.value)} placeholder="6-digit code" required
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none font-medium tracking-widest"
-              style={{ background: "#0C141B", border: "1.5px solid #2C414E", color: "#F4F8FB" }} />
-          </div>
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Display Name</label>
-            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name"
-              className="w-full rounded-xl px-4 py-3 text-sm focus:outline-none font-medium"
-              style={{ background: "#0C141B", border: "1.5px solid #2C414E", color: "#F4F8FB" }} />
-          </div>
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Password</label>
-            <div className="relative">
-              <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
-                className="w-full rounded-xl px-4 pr-11 py-3 text-sm focus:outline-none font-medium"
-                style={{ background: "#0C141B", border: "1.5px solid #2C414E", color: "#F4F8FB" }} />
-              <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "#637784" }}>
-                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          {step === "verify" && (
+            <div className="text-center">
+              <p className="text-white text-sm mb-2">You've been invited as a Delivery Team member</p>
+              <p className="text-sky-400 text-sm font-semibold mb-6">{email}</p>
+              {error && <p className="text-red-400 text-xs mb-4">{error}</p>}
+              <button onClick={sendCode} disabled={loading}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Send Verification Code
               </button>
             </div>
-          </div>
-          {error && <p className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>}
-          <motion.button type="submit" disabled={loading}
-            className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            Activate Account
-          </motion.button>
-        </form>
-      )}
+          )}
 
-      {step === "done" && (
-        <motion.div key="done" className="text-center py-4">
-          <div className="w-14 h-14 rounded-full mx-auto mb-3 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)", border: "2px solid #22C55E" }}>
-            <Check className="w-6 h-6" style={{ color: "#22C55E" }} />
-          </div>
-          <p className="font-bold text-lg mb-1" style={{ color: "#F4F8FB" }}>Account Activated!</p>
-          <p className="text-sm" style={{ color: "#9BAEBB" }}>Redirecting to dashboard...</p>
-        </motion.div>
-      )}
-    </StaffInviteLayout>
+          {(step === "code" || step === "setup") && (
+            <form onSubmit={verifyAndSetup} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-white/50">Verification Code</label>
+                <input value={code} onChange={e => setCode(e.target.value)} placeholder="6-digit code" required
+                  className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none tracking-widest"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-white/50">Display Name</label>
+                <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Your name"
+                  className="w-full rounded-xl px-4 py-2.5 text-sm focus:outline-none"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1.5 text-white/50">Password</label>
+                <div className="relative">
+                  <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
+                    className="w-full rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }} />
+                  <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60">
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              {error && <p className="text-red-400 text-xs">{error}</p>}
+              <button type="submit" disabled={loading}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg,#0ea5e9,#0284c7)" }}>
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                Activate Account
+              </button>
+            </form>
+          )}
+
+          {step === "done" && (
+            <div className="text-center py-4">
+              <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
+              <p className="text-white font-semibold">Account activated!</p>
+              <p className="text-white/40 text-sm mt-1">Redirecting to dashboard…</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

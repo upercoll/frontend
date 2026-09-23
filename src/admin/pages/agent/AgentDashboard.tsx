@@ -27,7 +27,7 @@ const GLASS = {
 } as React.CSSProperties;
 
 const GLASS_ACCENT = (color: string) => ({
-  background: `${color}18`,
+  background: `linear-gradient(135deg, ${color}18 0%, ${color}06 100%)`,
   backdropFilter: "blur(16px)",
   WebkitBackdropFilter: "blur(16px)",
   border: `1px solid ${color}30`,
@@ -43,7 +43,7 @@ function SectionHeading({ icon: Icon, title, action }: { icon: React.ComponentTy
         <Icon className="w-3.5 h-3.5" style={{ color: "#a5b4fc" }} />
       </div>
       <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{title}</h2>
-      <div className="flex-1 h-px" style={{ background: "rgba(59,167,255,0.2)" }} />
+      <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(99,102,241,0.2), transparent)" }} />
       {action}
     </div>
   );
@@ -217,7 +217,7 @@ export default function AgentDashboard() {
             <Link href="/panel/queue">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className="p-5 rounded-2xl cursor-pointer"
-                style={{ background: "rgba(59,167,255,0.25)", border: "1px solid rgba(99,102,241,0.3)" }}>
+                style={{ background: "linear-gradient(135deg,rgba(99,102,241,0.25) 0%,rgba(139,92,246,0.15) 100%)", border: "1px solid rgba(99,102,241,0.3)" }}>
                 <MessageSquare className="w-8 h-8 mb-3" style={{ color: "#a5b4fc" }} />
                 <p className="text-white font-bold text-lg">Claim Queue</p>
                 <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>Answer incoming claim requests</p>

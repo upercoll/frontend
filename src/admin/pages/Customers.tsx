@@ -135,7 +135,7 @@ export default function Customers() {
                   >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#3BA7FF" }}>
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg,#6366f1,#4f46e5)" }}>
                           <span className="text-white text-xs font-bold">{customer.displayName[0]?.toUpperCase()}</span>
                         </div>
                         <div>

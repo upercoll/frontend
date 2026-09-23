@@ -170,7 +170,7 @@ export default function DelivererDashboard() {
       <Link href="/deliverer/queue">
         <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
           className="flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer"
-          style={{ background: "rgba(59,167,255,0.15)", border: "1px solid rgba(14,165,233,0.2)" }}>
+          style={{ background: "linear-gradient(135deg,rgba(14,165,233,0.15),rgba(2,132,199,0.08))", border: "1px solid rgba(14,165,233,0.2)" }}>
           <div className="flex items-center gap-3">
             <MessageSquareIcon />
             <div>

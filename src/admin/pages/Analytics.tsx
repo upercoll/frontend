@@ -112,7 +112,7 @@ export default function Analytics() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={DollarSign} label="Revenue" value={summary?.revenue || 0}
-          growth={summary?.revenueGrowth} prefix="$" color="#3BA7FF"
+          growth={summary?.revenueGrowth} prefix="$" color="#4f46e5"
         />
         <StatCard
           icon={ShoppingBag} label="Orders" value={summary?.orders || 0}
@@ -188,7 +188,7 @@ export default function Analytics() {
                   animate={{ height: `${height}%` }}
                   transition={{ delay: i * 0.02, duration: 0.4 }}
                   className="flex-1 rounded-t-sm relative group cursor-pointer"
-                  style={{ background: "#3BA7FF", minHeight: point.revenue > 0 ? 2 : 0 }}
+                  style={{ background: "linear-gradient(to top, #4f46e5, #818cf8)", minHeight: point.revenue > 0 ? 2 : 0 }}
                 >
                   {point.revenue > 0 && (
                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">

@@ -213,7 +213,7 @@ export default function DelivererOrders() {
                                       <div className="relative w-full h-14" style={{
                                         background: item.productSnapshot.gradient
                                           ? `linear-gradient(135deg, ${item.productSnapshot.gradient.from} 0%, ${item.productSnapshot.gradient.to} 100%)`
-                                          : "#1C2A34",
+                                          : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
                                       }}>
                                         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", backgroundSize: "10px 10px" }} />
                                         {item.productSnapshot.imageUrl && (

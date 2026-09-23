@@ -82,7 +82,7 @@ export default function AdminProfilePage() {
             {picture ? (
               <img src={picture} className="w-20 h-20 rounded-full object-cover ring-4 ring-blue-500/20" alt="" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#3BA7FF]/20 border-2 border-blue-500/20 flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-700/20 border-2 border-blue-500/20 flex items-center justify-center">
                 <User className="w-8 h-8 text-blue-400" />
               </div>
             )}

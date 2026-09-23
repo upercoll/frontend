@@ -348,7 +348,7 @@ function StockerCard({ stocker }: { stocker: Stocker }) {
         <div className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: "#3BA7FF" }}>
+              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
               <span className="text-white text-sm font-bold">
                 {(stocker.name || stocker.email)[0].toUpperCase()}
               </span>
