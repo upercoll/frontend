@@ -1242,7 +1242,9 @@ export default function Checkout() {
           </div>
 
           {/* ── RIGHT COLUMN: ORDER SUMMARY ── */}
-          <div className="lg:w-[520px] flex-shrink-0 px-6 md:px-10 py-10 lg:py-14" style={{ borderLeft: "1px solid #2C414E" }}>
+          {/* borderLeft is lg-gated: the split only starts at lg, so below it the
+              column is full-width and an ungated border drew a stray hairline. */}
+          <div className="lg:w-[520px] flex-shrink-0 px-6 md:px-10 py-10 lg:py-14 lg:border-l lg:border-[#2C414E]">
             <div className="lg:sticky lg:top-6">
 
               {/* Order Items */}

@@ -379,10 +379,10 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row">
+      <div className="flex flex-col md:flex-row">
 
         {/* LEFT PANEL */}
-        <div className="hidden sm:flex w-[380px] flex-shrink-0 flex-col items-center justify-center p-8 relative overflow-hidden" style={{ background: "#0D1520", height: "calc(100vh - 73px)", position: "sticky", top: 73 }}>
+        <div className="hidden md:flex w-[380px] flex-shrink-0 flex-col items-center justify-center p-8 relative overflow-hidden" style={{ background: "#0D1520", height: "calc(100vh - 73px)", position: "sticky", top: 73 }}>
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-[10%] left-[15%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.4 }} />
             <div className="absolute top-[25%] right-[20%] w-1.5 h-1.5 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
@@ -394,13 +394,12 @@ export default function ProfilePage() {
           </div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
 
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative z-10 mb-2">
-            <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain" />
-          </motion.div>
           <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }} className="relative z-10 text-center">
-            <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: "#637784" }}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "#3BA7FF" }}>
+              My Profile
+            </p>
+            <p className="text-sm leading-relaxed max-w-[240px] mx-auto" style={{ color: "#637784" }}>
               Manage your profile, track your level, and unlock exclusive rewards.
             </p>
           </motion.div>

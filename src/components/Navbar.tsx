@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck, Gamepad2, ArrowRight, Headphones, MessageSquare } from "lucide-react";
+import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCheck, Gamepad2, ArrowRight, Headphones, MessageSquare, Gift } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -105,15 +105,18 @@ export default function Navbar({ dark = false }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Games are pulled by BOTH the desktop "Games" dropdown (gamesOpen) and the
+  // mobile drawer (menuOpen) — the drawer renders `games` directly, so it must
+  // trigger the fetch too or the mobile Games grid renders empty.
   useEffect(() => {
-    if (!gamesOpen || games.length > 0) return;
+    if ((!gamesOpen && !menuOpen) || games.length > 0) return;
     setGamesLoading(true);
     fetch(`${BACKEND}/api/games?active=true`)
       .then(r => r.json())
       .then(d => setGames(d.data?.games || []))
       .catch(() => {})
       .finally(() => setGamesLoading(false));
-  }, [gamesOpen]);
+  }, [gamesOpen, menuOpen]);
 
   function goToGame(slug: string) {
     setTappedGame(slug);
@@ -182,6 +185,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
               {/* Desktop nav links */}
               <nav className="hidden md:flex items-center gap-0.5 ml-4">
                 <DesktopNavLink label="How It Works" onClick={scrollToHowItWorks} lightMode={lightMode} />
+                <DesktopNavLink label="Rewards" onClick={() => navigate("/profile")} lightMode={lightMode} />
 
                 {/* Games dropdown */}
                 <div ref={gamesDropdownRef} className="relative">
@@ -200,11 +204,32 @@ export default function Navbar({ dark = false }: NavbarProps) {
                       color: location.startsWith("/game/") ? "#3BA7FF" : "rgba(255,255,255,0.85)",
                     }}
                   >
-                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black" style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>?</span>
+                    {/* Current game's art instead of a static "?" — swaps as you
+                        move between /game/:slug pages. Falls back to the game's
+                        initial on its brand colour when it has no image. */}
                     {(() => {
                       const slug = location.replace("/game/", "");
-                      const current = games.find(g => g.slug === slug);
-                      return current ? current.name : "Select Game";
+                      const current = location.startsWith("/game/") ? games.find(g => g.slug === slug) : undefined;
+                      return (
+                        <>
+                          <span
+                            className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
+                            style={{
+                              background: current ? current.gradient?.from : "rgba(255,255,255,0.08)",
+                              border: current ? "1px solid rgba(255,255,255,0.28)" : "none",
+                            }}
+                          >
+                            {current?.imageUrl ? (
+                              <img src={current.imageUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-black" style={{ color: current ? "#fff" : "rgba(255,255,255,0.5)" }}>
+                                {current ? current.name.charAt(0) : "?"}
+                              </span>
+                            )}
+                          </span>
+                          {current ? current.name : "Select Game"}
+                        </>
+                      );
                     })()}
                     <motion.div animate={{ rotate: gamesOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                       <ChevronDown size={13} />
@@ -515,60 +540,28 @@ export default function Navbar({ dark = false }: NavbarProps) {
             {/* Section label */}
             <div className="px-5 mb-3 flex-shrink-0">
               <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: "rgba(59,167,255,0.5)" }}>
-                Games
+                Rewards
               </p>
             </div>
 
-            {/* Games list */}
-            <div className="flex-1 overflow-y-auto px-5 pb-6">
-              {gamesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    className="w-6 h-6 rounded-full border-2 border-t-transparent"
-                    style={{ borderColor: "rgba(59,167,255,0.3)", borderTopColor: "#3BA7FF" }} />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {games.map((game, i) => {
-                    const c1 = game.gradient?.from || "#6d28d9";
-                    const c2 = game.gradient?.to   || "#4c1d95";
-                    const tapped = tappedGame === game.slug;
-                    return (
-                      <motion.button
-                        key={game._id}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04, duration: 0.3 }}
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() => goToGame(game.slug)}
-                        className="relative flex flex-col rounded-2xl overflow-hidden"
-                        style={{
-                          border: tapped ? `2px solid ${c1}` : "1.5px solid rgba(59,167,255,0.12)",
-                          aspectRatio: "1 / 1",
-                          transition: "border-color 0.2s ease",
-                        }}
-                      >
-                        <div className="absolute inset-0" style={{ background: c1 }} />
-                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.4) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.4) 1px,transparent 1px)", backgroundSize: "18px 18px" }} />
-                        {game.imageUrl && <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover opacity-75" />}
-                        <div className="absolute inset-x-0 bottom-0 h-2/3" style={{ background: "linear-gradient(to top,rgba(0,0,0,0.8),transparent)" }} />
-                        <span className="absolute bottom-2 left-2 right-2 text-white font-bold text-xs leading-tight text-left" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}>
-                          {game.name}
-                        </span>
-                        {tapped && (
-                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="absolute inset-0 flex items-center justify-center rounded-2xl"
-                            style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(2px)" }}>
-                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                              className="w-6 h-6 rounded-full border-2 border-t-transparent"
-                              style={{ borderColor: "rgba(255,255,255,0.4)", borderTopColor: "white" }} />
-                          </motion.div>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              )}
+            {/* Rewards — daily spin wheel (replaces the old in-drawer Games grid;
+                games are still one tap away via "Browse Shop" above) */}
+            <div className="px-5 mb-6 flex flex-col gap-2 flex-shrink-0">
+              <motion.button
+                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}
+                onClick={() => { setMenuOpen(false); navigate("/profile"); }}
+                className="w-full py-3.5 rounded-xl font-bold text-white flex items-center gap-3 text-left"
+                style={{ background: "rgba(59,167,255,0.14)", border: "1px solid rgba(59,167,255,0.3)" }}
+              >
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#3BA7FF" }}>
+                  <Gift size={15} color="white" />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-sm font-bold">Rewards</span>
+                  <span className="block text-[10px] font-medium" style={{ color: "#9BAEBB" }}>Spin the wheel — win up to 30% OFF</span>
+                </span>
+                <ArrowRight size={15} color="#3BA7FF" />
+              </motion.button>
             </div>
 
             {/* Support section */}

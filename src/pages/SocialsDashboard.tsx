@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LogOut, Loader2, Plus, Eye, CheckCircle, Clock, ChevronDown,
+  LayoutDashboard, Loader2, Plus, Eye, CheckCircle, Clock, ChevronDown,
   AlertCircle, ExternalLink, DollarSign, TrendingUp, Send,
 } from "lucide-react";
+import PanelShell, { PanelNavItem } from "@/components/PanelShell";
 
 const BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
 
@@ -34,24 +35,25 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+/* Shopify status palette (tokens defined on .pn-shell in admin/panel.css) */
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  active:    { label: "Tracking",   color: "#a5b4fc", bg: "rgba(129,140,248,0.15)" },
-  in_review: { label: "In Review",  color: "#d97706", bg: "rgba(251,191,36,0.15)" },
-  reviewed:  { label: "Reviewed",   color: "#60a5fa", bg: "rgba(96,165,250,0.15)" },
-  accepted:  { label: "Accepted",   color: "#4ade80", bg: "rgba(74,222,128,0.15)" },
-  paid:      { label: "Paid",       color: "#a78bfa", bg: "rgba(167,139,250,0.15)" },
+  active:    { label: "Tracking",  color: "var(--pn-info-fg)",    bg: "var(--pn-info-bg)" },
+  in_review: { label: "In Review", color: "var(--pn-warning-fg)", bg: "var(--pn-warning-bg)" },
+  reviewed:  { label: "Reviewed",  color: "var(--pn-info-fg)",    bg: "var(--pn-info-bg)" },
+  accepted:  { label: "Accepted",  color: "var(--pn-success-fg)", bg: "var(--pn-success-bg)" },
+  paid:      { label: "Paid",      color: "var(--pn-success-fg)", bg: "var(--pn-success-bg)" },
 };
 
-function YouTubeIcon({ className }: { className?: string }) {
+function YouTubeIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
     </svg>
   );
 }
-function TikTokIcon({ className }: { className?: string }) {
+function TikTokIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <svg className={className} style={style} viewBox="0 0 24 24" fill="currentColor">
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.89a8.27 8.27 0 0 0 4.84 1.55V7a4.85 4.85 0 0 1-1.07-.31z" />
     </svg>
   );
@@ -64,6 +66,10 @@ const QUEUE_TABS = [
   { label: "Reviewed", value: "reviewed" },
   { label: "Accepted", value: "accepted" },
   { label: "Paid", value: "paid" },
+];
+
+const navItems: PanelNavItem[] = [
+  { href: "/socials/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 export default function SocialsDashboard() {
@@ -113,6 +119,11 @@ export default function SocialsDashboard() {
 
   useEffect(() => { loadQueue(); loadStats(); }, [loadQueue, loadStats]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("social_token");
+    navigate("/socials/login");
+  };
+
   const requestPayout = async () => {
     setRequestingPayout(true); setPayoutMessage("");
     try { await socialFetch("/social/request-payout", "POST"); setPayoutMessage("Payout requested — your manager has been notified."); }
@@ -149,291 +160,308 @@ export default function SocialsDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center"
-        style={{ background: "#131C23" }}>
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#a78bfa" }} />
-      </div>
+      <PanelShell eyebrow="Creator portal" navItems={navItems} user={null} onLogout={handleLogout}>
+        <div className="p-6 max-w-[1100px] mx-auto flex items-center gap-2 text-sm" style={{ color: "var(--pn-text-3)" }}>
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading your dashboard…
+        </div>
+      </PanelShell>
     );
   }
 
   const activeQueueLabel = QUEUE_TABS.find(t => t.value === queueTab)?.label || "All";
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
-        <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(92,184,255,0.06) 0%, transparent 70%)" }} />
-      </div>
+    <PanelShell
+      eyebrow="Creator portal"
+      navItems={navItems}
+      user={creator ? { name: creator.name, email: creator.email, role: "Content creator" } : null}
+      onLogout={handleLogout}
+    >
+      <div className="p-6 max-w-[1100px] mx-auto space-y-6">
+        {/* ── KPI row ── */}
+        {stats && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { label: "Total Submitted", value: stats.total, icon: Send },
+              { label: "In Review", value: stats.inReview, icon: Clock },
+              { label: "Pending Payout", value: `$${(stats.pendingPayout || 0).toFixed(2)}`, icon: DollarSign },
+              { label: "Total Paid Out", value: `$${(stats.totalPaid || 0).toFixed(2)}`, icon: TrendingUp },
+            ].map((s, i) => (
+              <div key={i} className="pn-metric">
+                <span className="pn-metric__label">
+                  <s.icon className="w-3.5 h-3.5" style={{ color: "var(--pn-text-3)" }} />
+                  {s.label}
+                </span>
+                <span className="pn-metric__value">{s.value}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
-      <div className="relative z-10">
-        <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6,9,28,0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center"><img src="/rb-logo.png" alt="RBstars" className="w-full h-full object-contain" /></div>
+        {/* ── Payout callout ── */}
+        <div
+          className="pn-card flex items-center justify-between gap-4 px-5 py-4"
+          style={{ borderColor: "var(--pn-success-line)", background: "var(--pn-success-bg)" }}
+        >
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--pn-success-fg)" }}>Ready for a payout?</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--pn-success-fg)", opacity: 0.85 }}>
+              Request your available balance directly from your dashboard.
+            </p>
+          </div>
+          <button
+            onClick={requestPayout}
+            disabled={requestingPayout || !(stats?.pendingPayout > 0)}
+            className="pn-btn pn-btn--primary shrink-0"
+          >
+            {requestingPayout ? "Requesting…" : "Request payout"}
+          </button>
+        </div>
+        {payoutMessage && (
+          <p className="text-xs text-center" style={{ color: payoutMessage.startsWith("Payout") ? "var(--pn-success-fg)" : "var(--pn-critical-fg)" }}>
+            {payoutMessage}
+          </p>
+        )}
+
+        {/* ── Submit a video ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.05 }}
+          className="pn-card overflow-hidden">
+          <div className="pn-cardhead">
             <div>
-              <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(167,139,250,0.7)" }}>Creator Portal</p>
+              <h3 className="flex items-center gap-2">
+                <Plus className="w-4 h-4" style={{ color: "var(--pn-action)" }} /> Submit a Video
+              </h3>
+              <p>Paste your YouTube or TikTok video link. Views and earnings start tracking immediately.</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-white text-xs font-semibold">{creator?.name}</p>
-              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{creator?.email}</p>
-            </div>
-            <button onClick={() => { localStorage.removeItem("social_token"); navigate("/socials/login"); }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-              style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#f87171"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}>
-              <LogOut className="w-3.5 h-3.5" /> Log out
-            </button>
-          </div>
-        </header>
 
-        <main className="p-6 max-w-[1100px] mx-auto space-y-6">
-          {stats && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { label: "Total Submitted", value: stats.total, icon: Send, color: "#a78bfa" },
-                { label: "In Review", value: stats.inReview, icon: Clock, color: "#fbbf24" },
-                { label: "Pending Payout", value: `$${(stats.pendingPayout || 0).toFixed(2)}`, icon: DollarSign, color: "#4ade80" },
-                { label: "Total Paid Out", value: `$${(stats.totalPaid || 0).toFixed(2)}`, icon: TrendingUp, color: "#60a5fa" },
-              ].map((s, i) => (
-                <div key={i} className="rounded-2xl p-4"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <s.icon className="w-4 h-4" style={{ color: s.color }} />
-                    <p className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</p>
-                  </div>
-                  <p className="text-xl font-bold text-white">{s.value}</p>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          <div className="flex items-center justify-between gap-4 rounded-2xl px-5 py-4" style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.2)" }}>
-            <div><p className="text-sm font-bold text-white">Ready for a payout?</p><p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,.55)" }}>Request your available balance directly from your dashboard.</p></div>
-            <button onClick={requestPayout} disabled={requestingPayout || !(stats?.pendingPayout > 0)} className="shrink-0 px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50" style={{ background: "#4ade80", color: "#09231a" }}>{requestingPayout ? "Requesting…" : "Request payout"}</button>
-          </div>
-          {payoutMessage && <p className="text-xs text-center" style={{ color: payoutMessage.startsWith("Payout") ? "#4ade80" : "#f87171" }}>{payoutMessage}</p>}
-
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.05 }}
-            className="rounded-2xl overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="px-5 py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <h2 className="font-bold text-white text-sm flex items-center gap-2">
-                <Plus className="w-4 h-4" style={{ color: "#a78bfa" }} /> Submit a Video
-              </h2>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-                Paste your YouTube or TikTok video link. Views and earnings start tracking immediately.
-              </p>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div className="flex gap-3">
-                {(["youtube", "tiktok"] as const).map((p) => (
-                  <button key={p} onClick={() => { setPlatform(p); setPreview(null); setPreviewErr(""); setSubmitOk(false); }}
-                    className="flex items-center gap-2.5 px-4 py-3 rounded-xl font-semibold text-sm transition-all flex-1"
-                    style={platform === p ? {
-                      background: p === "youtube" ? "rgba(255,0,0,0.2)" : "rgba(0,0,0,0.4)",
-                      border: `1px solid ${p === "youtube" ? "rgba(255,0,0,0.5)" : "rgba(255,255,255,0.3)"}`,
-                      color: p === "youtube" ? "#f87171" : "rgba(255,255,255,0.9)",
-                    } : {
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "rgba(255,255,255,0.4)",
-                    }}>
-                    {p === "youtube" ? <YouTubeIcon className="w-5 h-5" /> : <TikTokIcon className="w-5 h-5" />}
-                    {p === "youtube" ? "YouTube" : "TikTok"}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex gap-2">
-                <input
-                  value={url}
-                  onChange={(e) => { setUrl(e.target.value); setPreview(null); setPreviewErr(""); setSubmitOk(false); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") handlePreview(); }}
-                  placeholder={platform === "youtube" ? "https://www.youtube.com/watch?v=..." : "https://www.tiktok.com/@user/video/..."}
-                  className="flex-1 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/50"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "#fff" }}
-                />
-                <button onClick={handlePreview} disabled={previewing || !url.trim()}
-                  className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
-                  style={{ background: "rgba(59,167,255,0.25)", border: "1px solid rgba(59,167,255,0.4)", color: "#93c5fd" }}>
-                  {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  {previewing ? "Fetching…" : "Preview"}
+          <div className="p-5 space-y-4">
+            <div className="flex gap-3">
+              {(["youtube", "tiktok"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => { setPlatform(p); setPreview(null); setPreviewErr(""); setSubmitOk(false); }}
+                  className="flex items-center justify-center gap-2.5 px-4 py-3 rounded-lg font-semibold text-sm transition-all flex-1"
+                  style={platform === p ? {
+                    background: "var(--pn-action-tint)",
+                    border: "1px solid var(--pn-action-border)",
+                    color: "var(--pn-action)",
+                  } : {
+                    background: "var(--pn-surface)",
+                    border: "1px solid var(--pn-border-strong)",
+                    color: "var(--pn-text-2)",
+                  }}
+                >
+                  {p === "youtube" ? <YouTubeIcon className="w-5 h-5" /> : <TikTokIcon className="w-5 h-5" />}
+                  {p === "youtube" ? "YouTube" : "TikTok"}
                 </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                value={url}
+                onChange={(e) => { setUrl(e.target.value); setPreview(null); setPreviewErr(""); setSubmitOk(false); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handlePreview(); }}
+                placeholder={platform === "youtube" ? "https://www.youtube.com/watch?v=..." : "https://www.tiktok.com/@user/video/..."}
+                className="flex-1 rounded-lg px-4 py-3 text-sm focus:outline-none"
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border-strong)", color: "var(--pn-text)" }}
+              />
+              <button
+                onClick={handlePreview}
+                disabled={previewing || !url.trim()}
+                className="pn-btn pn-btn--secondary px-4 py-3 rounded-lg flex items-center gap-2"
+              >
+                {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                {previewing ? "Fetching…" : "Preview"}
+              </button>
+            </div>
+
+            {previewErr && (
+              <div
+                className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg"
+                style={{ background: "var(--pn-critical-bg)", border: "1px solid var(--pn-critical-line)", color: "var(--pn-critical-fg)" }}
+              >
+                <AlertCircle className="w-4 h-4 flex-shrink-0" /> {previewErr}
               </div>
+            )}
 
-              {previewErr && (
-                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 px-4 py-3 rounded-xl" style={{ border: "1px solid rgba(239,68,68,0.2)" }}>
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" /> {previewErr}
-                </div>
+            {submitOk && (
+              <div
+                className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg"
+                style={{ background: "var(--pn-success-bg)", border: "1px solid var(--pn-success-line)", color: "var(--pn-success-fg)" }}
+              >
+                <CheckCircle className="w-4 h-4 flex-shrink-0" /> Video submitted! It's now in your queue as "In Review".
+              </div>
+            )}
+
+            <AnimatePresence>
+              {preview && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="rounded-lg overflow-hidden flex gap-4 p-4"
+                  style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)" }}>
+                  <div className="flex-shrink-0 w-36 h-24 rounded-lg overflow-hidden relative" style={{ background: "var(--pn-surface-3)", border: "1px solid var(--pn-border)" }}>
+                    {preview.thumbnail
+                      ? <img src={preview.thumbnail} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center">
+                          {preview.platform === "youtube"
+                            ? <YouTubeIcon className="w-8 h-8" style={{ color: "#DC2626" } as any} />
+                            : <TikTokIcon className="w-8 h-8" style={{ color: "var(--pn-text)" } as any} />}
+                        </div>}
+                    <div className="absolute bottom-1 right-1">
+                      {preview.platform === "youtube"
+                        ? <YouTubeIcon className="w-4 h-4" style={{ color: "#DC2626" } as any} />
+                        : <TikTokIcon className="w-4 h-4" style={{ color: "var(--pn-text)" } as any} />}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate" style={{ color: "var(--pn-text)" }}>{preview.title || "Untitled video"}</p>
+                    <p className="text-xs mt-1" style={{ color: "var(--pn-text-3)" }}>{preview.channelName || "Unknown channel"}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      {preview.views > 0 && (
+                        <div className="text-xs" style={{ color: "var(--pn-text-3)" }}>
+                          👁 <span className="font-semibold" style={{ color: "var(--pn-text)" }}>{fmtNum(preview.views)}</span> views
+                        </div>
+                      )}
+                      {preview.likes > 0 && (
+                        <div className="text-xs" style={{ color: "var(--pn-text-3)" }}>
+                          ♥ <span className="font-semibold" style={{ color: "var(--pn-text)" }}>{fmtNum(preview.likes)}</span> likes
+                        </div>
+                      )}
+                      {preview.views === 0 && (
+                        <p className="text-xs" style={{ color: "var(--pn-text-3)" }}>Analytics shown after admin review</p>
+                      )}
+                    </div>
+                    {submitErr && <p className="text-xs mt-2" style={{ color: "var(--pn-critical-fg)" }}>{submitErr}</p>}
+                    <button onClick={handleSubmit} disabled={submitting} className="pn-btn pn-btn--primary mt-3">
+                      {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                      {submitting ? "Submitting…" : "Submit Video"}
+                    </button>
+                  </div>
+                </motion.div>
               )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
 
-              {submitOk && (
-                <div className="flex items-center gap-2 text-sm px-4 py-3 rounded-xl" style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.2)", color: "#4ade80" }}>
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" /> Video submitted! It's now in your queue as "In Review".
-                </div>
-              )}
-
+        {/* ── Submission queue ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.1 }}
+          className="pn-card overflow-hidden">
+          <div className="pn-cardhead">
+            <div>
+              <h3>Submission Queue</h3>
+              <p>Track the status of your submitted videos.</p>
+            </div>
+            <div className="relative ml-auto">
+              <button
+                onClick={() => setQueueDropOpen(o => !o)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border-strong)", color: "var(--pn-text-2)" }}
+              >
+                {activeQueueLabel} <ChevronDown className="w-3.5 h-3.5" />
+              </button>
               <AnimatePresence>
-                {preview && (
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                    className="rounded-xl overflow-hidden flex gap-4 p-4"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                    <div className="flex-shrink-0 w-36 h-24 rounded-lg overflow-hidden relative" style={{ background: "#1a1a2e" }}>
-                      {preview.thumbnail
-                        ? <img src={preview.thumbnail} alt="" className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center">
-                            {preview.platform === "youtube" ? <YouTubeIcon className="w-8 h-8 text-red-500" /> : <TikTokIcon className="w-8 h-8 text-white" />}
-                          </div>}
-                      <div className="absolute bottom-1 right-1">
-                        {preview.platform === "youtube" ? <YouTubeIcon className="w-4 h-4 text-red-500" /> : <TikTokIcon className="w-4 h-4 text-white" />}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-sm truncate">{preview.title || "Untitled video"}</p>
-                      <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.5)" }}>{preview.channelName || "Unknown channel"}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        {preview.views > 0 && (
-                          <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                            👁 <span className="font-semibold text-white">{fmtNum(preview.views)}</span> views
-                          </div>
-                        )}
-                        {preview.likes > 0 && (
-                          <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                            ♥ <span className="font-semibold text-white">{fmtNum(preview.likes)}</span> likes
-                          </div>
-                        )}
-                        {preview.views === 0 && (
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Analytics shown after admin review</p>
-                        )}
-                      </div>
-                      {submitErr && <p className="text-xs text-red-400 mt-2">{submitErr}</p>}
-                      <button onClick={handleSubmit} disabled={submitting}
-                        className="mt-3 flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold disabled:opacity-60"
-                        style={{ background: "#3BA7FF", color: "#fff" }}>
-                        {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                        {submitting ? "Submitting…" : "Submit Video"}
+                {queueDropOpen && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                    className="absolute right-0 top-full mt-1 w-36 rounded-lg overflow-hidden z-20 py-1"
+                    style={{ background: "var(--pn-surface)", border: "1px solid var(--pn-border)", boxShadow: "var(--pn-shadow-2)" }}>
+                    {QUEUE_TABS.map((t) => (
+                      <button
+                        key={t.value}
+                        onClick={() => { setQueueTab(t.value); setQueueDropOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs font-medium transition-colors"
+                        style={{ color: queueTab === t.value ? "var(--pn-action)" : "var(--pn-text-2)" }}
+                        onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "var(--pn-surface-3)"}
+                        onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "transparent"}
+                      >
+                        {t.label}
                       </button>
-                    </div>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: 0.1 }}
-            className="rounded-2xl overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <div>
-                <h2 className="font-bold text-white text-sm">Submission Queue</h2>
-                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Track the status of your submitted videos.</p>
-              </div>
-              <div className="relative">
-                <button onClick={() => setQueueDropOpen(o => !o)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
-                  {activeQueueLabel} <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-                <AnimatePresence>
-                  {queueDropOpen && (
-                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                      className="absolute right-0 top-full mt-1 w-36 rounded-xl overflow-hidden z-20"
-                      style={{ background: "rgba(15,20,50,0.98)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      {QUEUE_TABS.map((t) => (
-                        <button key={t.value} onClick={() => { setQueueTab(t.value); setQueueDropOpen(false); }}
-                          className="w-full text-left px-3 py-2 text-xs font-medium transition-colors"
-                          style={{ color: queueTab === t.value ? "#a5b4fc" : "rgba(255,255,255,0.5)" }}
-                          onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"}
-                          onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = "transparent"}>
-                          {t.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+          {queueLoading ? (
+            <div className="p-8 text-center">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "var(--pn-text-3)" }} />
             </div>
-
-            {queueLoading ? (
-              <div className="p-8 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto" style={{ color: "#a78bfa" }} />
-              </div>
-            ) : submissions.length === 0 ? (
-              <div className="p-12 text-center">
-                <Send className="w-8 h-8 mx-auto mb-2 opacity-20" style={{ color: "#a78bfa" }} />
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  No submissions{queueTab ? ` with status "${activeQueueLabel}"` : ""} yet.
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-                {submissions.map((s: any) => {
-                  const cfg = STATUS_CFG[s.status] || STATUS_CFG.in_review;
-                  return (
-                    <div key={s._id} className="flex items-start gap-4 px-5 py-4">
-                      <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden relative" style={{ background: "#1a1a2e" }}>
-                        {s.thumbnail
-                          ? <img src={s.thumbnail} alt="" className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center">
-                              {s.platform === "youtube" ? <YouTubeIcon className="w-6 h-6 text-red-500" /> : <TikTokIcon className="w-6 h-6 text-white" />}
-                            </div>}
-                        <div className="absolute bottom-1 right-1">
-                          {s.platform === "youtube" ? <YouTubeIcon className="w-3 h-3 text-red-400" /> : <TikTokIcon className="w-3 h-3 text-white" />}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-white text-sm truncate">{s.title || "Untitled"}</p>
-                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{s.channelName}</p>
-                            <div className="flex items-center gap-3 mt-1">
-                              {s.views > 0 && <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>👁 {fmtNum(s.views)}</span>}
-                              {s.likes > 0 && <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>♥ {fmtNum(s.likes)}</span>}
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ background: cfg.bg, color: cfg.color }}>
-                              {cfg.label}
-                            </span>
-                            {s.offeredAmount != null && (
-                              <span className="text-sm font-bold" style={{ color: "#4ade80" }}>${s.offeredAmount.toFixed(2)}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>
-                            Submitted {fmtDate(s.createdAt)}
-                          </span>
-                          {s.adminNote && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-md" style={{ background: "rgba(59,167,255,0.12)", color: "#93c5fd" }}>
-                              Note: {s.adminNote}
-                            </span>
-                          )}
-                          <a href={s.url} target="_blank" rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-[10px] ml-auto"
-                            style={{ color: "rgba(59,167,255,0.7)" }}>
-                            <ExternalLink className="w-2.5 h-2.5" /> View
-                          </a>
-                        </div>
+          ) : submissions.length === 0 ? (
+            <div className="p-12 text-center">
+              <Send className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--pn-text-3)" }} />
+              <p className="text-sm" style={{ color: "var(--pn-text-3)" }}>
+                No submissions{queueTab ? ` with status "${activeQueueLabel}"` : ""} yet.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y" style={{ borderColor: "var(--pn-divider)" }}>
+              {submissions.map((s: any) => {
+                const cfg = STATUS_CFG[s.status] || STATUS_CFG.in_review;
+                return (
+                  <div key={s._id} className="flex items-start gap-4 px-5 py-4">
+                    <div className="flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden relative"
+                      style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)" }}>
+                      {s.thumbnail
+                        ? <img src={s.thumbnail} alt="" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center">
+                            {s.platform === "youtube"
+                              ? <YouTubeIcon className="w-6 h-6" style={{ color: "#DC2626" } as any} />
+                              : <TikTokIcon className="w-6 h-6" style={{ color: "var(--pn-text)" } as any} />}
+                          </div>}
+                      <div className="absolute bottom-1 right-1">
+                        {s.platform === "youtube"
+                          ? <YouTubeIcon className="w-3 h-3" style={{ color: "#DC2626" } as any} />
+                          : <TikTokIcon className="w-3 h-3" style={{ color: "var(--pn-text)" } as any} />}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-        </main>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: "var(--pn-text)" }}>{s.title || "Untitled"}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--pn-text-3)" }}>{s.channelName}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            {s.views > 0 && <span className="text-xs" style={{ color: "var(--pn-text-3)" }}>👁 {fmtNum(s.views)}</span>}
+                            {s.likes > 0 && <span className="text-xs" style={{ color: "var(--pn-text-3)" }}>♥ {fmtNum(s.likes)}</span>}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                          <span className="pn-badge" style={{ background: cfg.bg, color: cfg.color }}>
+                            <span className="pn-badge__dot" />
+                            {cfg.label}
+                          </span>
+                          {s.offeredAmount != null && (
+                            <span className="text-sm font-bold" style={{ color: "var(--pn-success-fg)" }}>${s.offeredAmount.toFixed(2)}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>
+                          Submitted {fmtDate(s.createdAt)}
+                        </span>
+                        {s.adminNote && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-md"
+                            style={{ background: "var(--pn-info-bg)", color: "var(--pn-info-fg)" }}>
+                            Note: {s.adminNote}
+                          </span>
+                        )}
+                        <a href={s.url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[10px] ml-auto"
+                          style={{ color: "var(--pn-action)" }}>
+                          <ExternalLink className="w-2.5 h-2.5" /> View
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </motion.div>
       </div>
-    </div>
+    </PanelShell>
   );
 }

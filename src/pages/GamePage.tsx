@@ -32,36 +32,6 @@ function getIcon(name?: string): LucideIcon {
 
 const CATEGORY_COLORS = ["#3BA7FF", "#F97316", "#22C55E", "#EC4899", "#EAB308", "#8B5CF6", "#06B6D4", "#EF4444"];
 
-const FALLBACK_CATEGORIES: ApiCategory[] = [
-  { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf", game: "" },
-  { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench", game: "" },
-  { _id: "cat-pets", name: "Pets", slug: "pets", icon: "pawprint", game: "" },
-  { _id: "cat-decor", name: "Decor", slug: "decor", icon: "star", game: "" },
-];
-
-const FALLBACK_PRODUCTS: Product[] = [
-  { id: "fp1", name: "Carrot Seed", price: 4.99, originalPrice: 7.99, gradient: ["#15803D", "#22C55E"], categoryId: "cat-seeds", featured: true, bestSeller: true, imageUrl: "/65.avif" },
-  { id: "fp2", name: "Tomato Seed", price: 3.49, originalPrice: 5.49, gradient: ["#DC2626", "#F87171"], categoryId: "cat-seeds" },
-  { id: "fp3", name: "Corn Seed", price: 6.99, originalPrice: 9.99, gradient: ["#EAB308", "#FDE047"], categoryId: "cat-seeds", featured: true },
-  { id: "fp4", name: "Blueberry Seed", price: 12.99, originalPrice: 17.99, gradient: ["#2563EB", "#60A5FA"], categoryId: "cat-seeds", bestSeller: true },
-  { id: "fp5", name: "Strawberry Seed", price: 8.49, originalPrice: 11.99, gradient: ["#E11D48", "#FB7185"], categoryId: "cat-seeds" },
-  { id: "fp6", name: "Golden Watering Can", price: 24.99, originalPrice: 34.99, gradient: ["#D97706", "#FBBF24"], categoryId: "cat-gears", featured: true, bestSeller: true },
-  { id: "fp7", name: "Basic Watering Can", price: 2.99, originalPrice: 4.99, gradient: ["#64748B", "#94A3B8"], categoryId: "cat-gears" },
-  { id: "fp8", name: "Advanced Sprinkler", price: 19.99, originalPrice: 27.99, gradient: ["#0EA5E9", "#38BDF8"], categoryId: "cat-gears", featured: true },
-  { id: "fp9", name: "Super Sprinkler", price: 39.99, originalPrice: 54.99, gradient: ["#7C3AED", "#A78BFA"], categoryId: "cat-gears", bestSeller: true },
-  { id: "fp10", name: "Bunny", price: 14.99, originalPrice: 19.99, gradient: ["#EC4899", "#F9A8D4"], categoryId: "cat-pets", featured: true },
-  { id: "fp11", name: "Cat", price: 9.99, originalPrice: 14.99, gradient: ["#F97316", "#FDBA74"], categoryId: "cat-pets" },
-  { id: "fp12", name: "Dog", price: 11.99, originalPrice: 16.99, gradient: ["#92400E", "#D97706"], categoryId: "cat-pets", bestSeller: true },
-  { id: "fp13", name: "Raccoon", price: 29.99, originalPrice: 42.99, gradient: ["#6B7280", "#9CA3AF"], categoryId: "cat-pets" },
-  { id: "fp14", name: "Fairy Lantern", price: 7.49, gradient: ["#A855F7", "#C084FC"], categoryId: "cat-decor" },
-  { id: "fp15", name: "Garden Gnome", price: 5.99, originalPrice: 8.99, gradient: ["#16A34A", "#4ADE80"], categoryId: "cat-decor" },
-  { id: "fp16", name: "Hedge Fence", price: 3.99, gradient: ["#166534", "#22C55E"], categoryId: "cat-decor" },
-  { id: "fp17", name: "Mushroom Lamp", price: 15.99, originalPrice: 21.99, gradient: ["#DC2626", "#FCA5A5"], categoryId: "cat-decor", featured: true },
-  { id: "fp18", name: "Fruit Notifier", price: 49.99, originalPrice: 69.99, gradient: ["#EA580C", "#FB923C"], categoryId: "cat-gears", featured: true, bestSeller: true },
-  { id: "fp19", name: "Lavender Seed", price: 22.99, originalPrice: 32.99, gradient: ["#7C3AED", "#C4B5FD"], categoryId: "cat-seeds" },
-  { id: "fp20", name: "Watermelon Seed", price: 16.99, originalPrice: 22.99, gradient: ["#16A34A", "#86EFAC"], categoryId: "cat-seeds", outOfStock: true },
-];
-
 function PriceSlider({ min, max, value, onChange }: { min: number; max: number; value: [number, number]; onChange: (v: [number, number]) => void }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<"min" | "max" | null>(null);
@@ -254,8 +224,8 @@ export default function GamePage() {
         if (gameRes.success && gameRes.data?.game) setGameInfo(gameRes.data.game);
         else setGameInfo({ _id: slug, name: gameName, gradient: { from: "#3BA7FF", to: "#131C23" }, slug });
         const fetchedCats = catsRes.data || [];
-        setCategories(fetchedCats.length > 0 ? fetchedCats : FALLBACK_CATEGORIES);
-        setLoadError(ok ? null : "Could not load the store. Showing cached content.");
+        setCategories(fetchedCats);
+        setLoadError(ok ? null : "Could not load the store. Refresh to retry.");
         const fetchedProducts = (prodsRes.data || []).map((p: Record<string, unknown>) => ({
           id: p._id as string, name: p.name as string, price: p.price as number,
           originalPrice: p.originalPrice as number | undefined,
@@ -268,7 +238,7 @@ export default function GamePage() {
           categoryId: typeof p.category === "object" && p.category !== null ? (p.category as { _id: string })._id : p.category as string,
           featured: p.featured as boolean, bestSeller: p.bestSeller as boolean,
         }));
-        setProducts(fetchedProducts.length > 0 ? fetchedProducts : FALLBACK_PRODUCTS);
+        setProducts(fetchedProducts);
       } finally { setLoading(false); }
     }
     attempt(1);
@@ -416,8 +386,9 @@ export default function GamePage() {
         <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
           {/* Tabs row + search + sort */}
           <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3 flex-wrap" style={{ borderBottom: "1px solid #2C414E" }}>
-            {/* Mobile category scroll */}
-            <div className="flex items-center gap-2 overflow-x-auto lg:hidden flex-1" style={{ scrollbarWidth: "none" }}>
+            {/* Mobile category scroll — full-width row of its own so the
+                search box below can't squeeze (and cut off) the filters. */}
+            <div className="flex items-center gap-2 overflow-x-auto lg:hidden w-full" style={{ scrollbarWidth: "none" }}>
               {tabs.map(tab => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -437,13 +408,14 @@ export default function GamePage() {
               })}
             </div>
 
-            {/* Desktop tabs */}
-            <div className="hidden lg:flex items-center gap-2 flex-1">
+            {/* Desktop tabs — every tab the same width (flex-1), so the row
+                stays even instead of tracking label letter-count. */}
+            <div className="hidden lg:flex items-center gap-2 flex-1 min-w-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
               {tabs.map(tab => {
                 const active = activeTab === tab.id;
                 return (
                   <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all"
+                    className="flex-1 min-w-[96px] justify-center flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all"
                     style={{
                       background: active ? "#3BA7FF" : "#1C2A34",
                       color: active ? "white" : "#9BAEBB",
@@ -457,12 +429,12 @@ export default function GamePage() {
             </div>
 
             {/* Search */}
-            <div className="flex items-center gap-2 px-3 h-9 rounded-xl min-w-[180px] flex-shrink-0"
+            <div className="flex items-center gap-2 px-3 h-9 rounded-xl flex-1 min-w-[140px] sm:min-w-[180px]"
               style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
               <Search size={14} color="#637784" />
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search items"
-                className="flex-1 bg-transparent outline-none text-sm" style={{ color: "#F4F8FB" }} />
+                className="flex-1 bg-transparent outline-none text-sm min-w-0" style={{ color: "#F4F8FB" }} />
             </div>
 
             {/* Sort dropdown */}

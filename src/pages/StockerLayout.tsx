@@ -1,6 +1,7 @@
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
-import { LogOut, Archive, ClipboardList, LayoutDashboard, DollarSign } from "lucide-react";
+import { Archive, ClipboardList, LayoutDashboard, DollarSign } from "lucide-react";
+import PanelShell, { PanelNavItem } from "@/components/PanelShell";
 
 const BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
 
@@ -15,15 +16,15 @@ async function apiGet(path: string) {
   return data;
 }
 
-const navItems = [
-  { href: "/stocker/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/stocker/payouts", label: "My Payouts", icon: DollarSign },
-  { href: "/stocker/request", label: "New Request", icon: ClipboardList },
-  { href: "/stocker/history", label: "My History", icon: Archive },
+const navItems: PanelNavItem[] = [
+  { href: "/stocker/dashboard", label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/stocker/payouts",   label: "My Payouts",  icon: DollarSign },
+  { href: "/stocker/request",   label: "New Request", icon: ClipboardList },
+  { href: "/stocker/history",   label: "My History",  icon: Archive },
 ];
 
 export default function StockerLayout({ children }: { children: React.ReactNode }) {
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const [stocker, setStocker] = useState<any>(null);
 
   useEffect(() => {
@@ -40,60 +41,17 @@ export default function StockerLayout({ children }: { children: React.ReactNode 
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
-        <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(92,184,255,0.06) 0%, transparent 70%)" }} />
-      </div>
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
-          style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center"><img src="/rb-logo.png" alt="RBstars" className="w-full h-full object-contain" /></div>
-              <div>
-                <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(167,139,250,0.7)" }}>Stocker Portal</p>
-              </div>
-            </div>
-            <nav className="hidden sm:flex items-center gap-1 ml-4">
-              {navItems.map(item => {
-                const isActive = location === item.href;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-all"
-                      style={isActive
-                        ? { background: "rgba(59,167,255,0.2)", color: "#93c5fd", border: "1px solid rgba(59,167,255,0.3)" }
-                        : { color: "rgba(255,255,255,0.45)", border: "1px solid transparent" }}>
-                      <item.icon className="w-3.5 h-3.5" />
-                      {item.label}
-                    </div>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            {stocker && (
-              <div className="text-right hidden sm:block">
-                <p className="text-white text-xs font-semibold">{stocker.name || stocker.email}</p>
-                <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>{stocker.commissionRate}% commission</p>
-              </div>
-            )}
-            <button onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
-              style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#f87171"; (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}>
-              <LogOut className="w-3.5 h-3.5" /> Log out
-            </button>
-          </div>
-        </header>
-        <main className="flex-1 p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+    <PanelShell
+      eyebrow="Stocker portal"
+      navItems={navItems}
+      user={stocker ? {
+        name: stocker.name || stocker.email,
+        email: stocker.email,
+        role: stocker.commissionRate != null ? `${stocker.commissionRate}% commission` : "Stocker",
+      } : null}
+      onLogout={handleLogout}
+    >
+      {children}
+    </PanelShell>
   );
 }

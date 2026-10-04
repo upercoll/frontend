@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
@@ -78,15 +78,15 @@ function HeroSparkle({ x, y, size, color, delay }: { x: string; y: string; size:
 
 function HeroBadge({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <div className="flex items-center gap-3.5 px-5 py-3.5 rounded-xl"
+    <div className="flex items-center gap-2.5 sm:gap-3.5 px-3.5 py-2.5 sm:px-5 sm:py-3.5 rounded-xl"
       style={{ background: HC.card, border: "1px solid " + HC.border }}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{ background: HC.bgSecondary, border: "1px solid " + HC.border }}>
         {icon}
       </div>
       <div>
-        <p className="text-base font-bold" style={{ color: HC.textPrimary }}>{title}</p>
-        <p className="text-sm" style={{ color: HC.textSecondary }}>{subtitle}</p>
+        <p className="text-sm sm:text-base font-bold leading-tight" style={{ color: HC.textPrimary }}>{title}</p>
+        <p className="text-xs sm:text-sm leading-tight" style={{ color: HC.textSecondary }}>{subtitle}</p>
       </div>
     </div>
   );
@@ -217,7 +217,7 @@ function MarqueeStrip({ games }: { games: ShopGame[] }) {
 /* ── Marketplace ──────────────────────────────────────────── */
 
 
-function AllGamesSection({ games }: { games: ShopGame[] }) {
+function AllGamesSection({ games, loading, onRetry }: { games: ShopGame[]; loading?: boolean; onRetry?: () => void }) {
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
 
@@ -269,7 +269,40 @@ function AllGamesSection({ games }: { games: ShopGame[] }) {
           Choose a game to browse available items and make a purchase.
         </p>
 
-        {/* Games grid — 5 per row on large */}
+        {/* Games grid — 5 per row on large. While loading (or if the store
+            API is still waking up) we show skeletons / a real empty state
+            instead of a hardcoded list of games that don't exist. */}
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5" aria-busy="true" aria-label="Loading games">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-2xl animate-pulse"
+                style={{ background: HC.card, border: "1px solid " + HC.border, aspectRatio: "1 / 1" }}
+              />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl px-6 py-14 text-center" style={{ background: HC.card, border: "1px solid " + HC.border }}>
+            <p className="text-lg font-extrabold" style={{ color: HC.textPrimary }}>
+              {search.trim() ? "No games match that search." : "No games to show yet."}
+            </p>
+            <p className="text-sm mt-2" style={{ color: HC.textSecondary }}>
+              {search.trim()
+                ? "Try a different name, or clear the search."
+                : "The store is still loading its catalogue — give it a second."}
+            </p>
+            {!search.trim() && onRetry && (
+              <button
+                onClick={onRetry}
+                className="mt-5 px-6 py-3 rounded-xl text-sm font-extrabold text-white transition-transform hover:-translate-y-0.5"
+                style={{ background: HC.accent }}
+              >
+                Try again
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
           {filtered.map((game, i) => (
             <motion.div
@@ -311,6 +344,7 @@ function AllGamesSection({ games }: { games: ShopGame[] }) {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );
@@ -336,19 +370,6 @@ function YouTuberTrustBar({ creators }: { creators: FeaturedYouTuber[] }) {
     </div>
   </section>;
 }
-
-const FALLBACK_GAMES: ShopGame[] = [
-  { _id: "1", name: "Murder Mystery 2",         slug: "murder-mystery-2",         gradient: { from: "#1C2A34", to: "#22333F" } },
-  { _id: "2", name: "Blade Ball",               slug: "blade-ball",               gradient: { from: "#22333F", to: "#2C414E" } },
-  { _id: "3", name: "Grow A Garden 2",          slug: "grow-a-garden-2",          gradient: { from: "#15803D", to: "#22C55E" } },
-  { _id: "4", name: "Steal A Brainrot",         slug: "steal-a-brainrot",         gradient: { from: "#EA580C", to: "#F97316" } },
-  { _id: "5", name: "Blox Fruits",              slug: "blox-fruits",              gradient: { from: "#D97706", to: "#FBBF24" } },
-  { _id: "6", name: "Garden Tower Defense",     slug: "garden-tower-defense",     gradient: { from: "#15803D", to: "#84CC16" } },
-  { _id: "7", name: "99 Nights In The Forest",  slug: "99-nights-in-the-forest",  gradient: { from: "#1E3A5F", to: "#374151" } },
-  { _id: "8", name: "Dress To Impress",         slug: "dress-to-impress",         gradient: { from: "#BE185D", to: "#EC4899" } },
-  { _id: "9", name: "Pet Simulator 99",         slug: "pet-simulator-99",         gradient: { from: "#EC4899", to: "#F43F5E" } },
-];
-
 
 /* ── Helpers ──────────────────────────────────────────────── */
 
@@ -400,9 +421,13 @@ export default function Home() {
 
   /* section animation */
 
-  /* fetch games for shop grid (retry — the backend can be slow to wake up) */
-  useEffect(() => {
-    async function attempt(round: number) {
+  /* Fetch games for the "Pick Your Game" grid (retry — the backend sleeps on
+     Render and can take ~30s to wake). We deliberately do NOT fall back to a
+     hardcoded list: those placeholder games don't exist on the store, so every
+     card led to a 404. We show skeletons, then a real empty state with retry. */
+  const loadGames = useCallback(async () => {
+    setGamesLoading(true);
+    for (let round = 1; round <= 3; round++) {
       try {
         const res = await fetch(`${BACKEND}/api/games?active=true`);
         const d = await res.json();
@@ -412,15 +437,13 @@ export default function Home() {
           setGamesLoading(false);
           return;
         }
-        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
-        else setGamesLoading(false);
-      } catch {
-        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
-        else setGamesLoading(false);
-      }
+      } catch { /* keep going */ }
+      if (round < 3) await new Promise(r => setTimeout(r, 800 * round));
     }
-    attempt(1);
+    setGamesLoading(false);
   }, []);
+
+  useEffect(() => { loadGames(); }, [loadGames]);
 
   useEffect(() => { fetch(`${BACKEND}/api/socials/featured-youtubers`).then(r => r.json()).then(d => setFeaturedYouTubers(d.data?.creators || [])).catch(() => {}); }, []);
 
@@ -492,7 +515,7 @@ export default function Home() {
             {/* Badges */}
             <motion.div
               custom={3} initial="hidden" animate="visible" variants={fadeUp}
-              className="mt-8 flex flex-row flex-wrap gap-2.5"
+              className="mt-8 flex flex-row flex-wrap gap-2.5 justify-center lg:justify-start"
             >
               <HeroBadge icon={<IconShield size={16} color={HC.accent} />} title="100%" subtitle="Secure" />
               <HeroBadge icon={<IconBolt size={16} color={HC.accent} />} title="Instant" subtitle="Delivery" />
@@ -518,7 +541,9 @@ export default function Home() {
           </div>
 
           {/* Right — glass display cases on stands */}
-          <div className="flex items-end justify-center gap-8 sm:gap-12 lg:gap-14 relative min-h-[380px] sm:min-h-[440px]">
+          {/* Mobile/tablet: showcase hidden — hero stays a single clean column.
+              lg+ (the `lg:flex-row` split) is unchanged. */}
+          <div className="hidden lg:flex items-end justify-center gap-8 sm:gap-12 lg:gap-14 relative min-h-[380px] sm:min-h-[440px]">
             {/* Shared ambient glow behind both cases */}
             <div className="absolute inset-0 pointer-events-none"
               style={{
@@ -655,7 +680,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           MARKETPLACE
       ══════════════════════════════════════════ */}
-      <AllGamesSection games={games.length > 0 ? games : FALLBACK_GAMES} />
+      <AllGamesSection games={games} loading={gamesLoading} onRetry={loadGames} />
 
       {/* ══════════════════════════════════════════
           HOW IT WORKS (3 step cards)

@@ -17,8 +17,11 @@ export default function MobileBottomNav() {
   const { user, openAuthModal } = useAuth();
 
   const activeId =
-    location === "/"           ? "home"
-    : location.startsWith("/game/") ? "shop"
+    location === "/"                       ? "home"
+    : location.startsWith("/game/")        ? "shop"
+    : location.startsWith("/browse")       ? "shop"
+    : location.startsWith("/product/")     ? "shop"
+    : location === "/profile"              ? "account"
     : null;
 
   function handleTab(id: (typeof tabs)[number]["id"]) {
@@ -101,8 +104,10 @@ export default function MobileBottomNav() {
         </div>
       </nav>
 
-      {/* Extra spacer so page content doesn't hide behind the nav */}
-      <div className="h-[68px] md:hidden" />
+      {/* Extra spacer so page content doesn't hide behind the nav.
+          Safe-area is added because the nav itself pads for it on notched phones,
+          so a fixed 68px left the footer's last row covered there. */}
+      <div className="h-[68px] md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }} />
     </>
   );
 }

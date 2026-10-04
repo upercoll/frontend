@@ -103,7 +103,10 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
           onKeyDown={e => handleKey(i, e)}
           onPaste={handlePaste}
           whileFocus={{ scale: 1.08 }}
-          className="w-11 h-14 rounded-xl text-center text-xl font-extrabold text-white outline-none transition-all duration-200"
+          /* min-w-0 lets these shrink below their 44px basis when the row is
+             narrow — without it the default min-width:auto pins them and the
+             6th box gets clipped by the modal's overflow-hidden on small phones. */
+          className="w-11 min-w-0 h-14 rounded-xl text-center text-xl font-extrabold text-white outline-none transition-all duration-200"
           style={{
             background: "#1C2A34",
             border: `2px solid ${value[i] ? "#3BA7FF" : "#2C414E"}`,
@@ -355,7 +358,7 @@ export default function AuthModal() {
       <motion.div
         key="auth-backdrop"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto p-4"
         style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
         onClick={e => { if (e.target === e.currentTarget) closeAuthModal(); }}
       >
@@ -365,7 +368,10 @@ export default function AuthModal() {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.92, opacity: 0, y: 20 }}
           transition={{ type: "spring", stiffness: 300, damping: 28 }}
-          className="w-full max-w-[740px] relative overflow-hidden rounded-3xl flex flex-col sm:flex-row"
+          /* my-auto (not just align-items:center) so an over-tall card stays
+             reachable — centered flex children otherwise clip at the top with
+             no way to scroll up to them. Identical placement when it fits. */
+          className="w-full max-w-[740px] my-auto relative overflow-hidden rounded-3xl flex flex-col sm:flex-row"
           style={{
             background: "#131C23",
             border: "1px solid #2C414E",

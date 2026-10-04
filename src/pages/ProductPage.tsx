@@ -21,30 +21,6 @@ interface ApiProduct {
   featured?: boolean; bestSeller?: boolean; tags?: string[];
 }
 
-const FALLBACK_PRODUCTS: Record<string, ApiProduct> = {
-  "fp1": { _id: "fp1", name: "Carrot Seed", slug: "carrot-seed", price: 4.99, originalPrice: 7.99, game: "grow-a-garden-2", gradient: { from: "#15803D", to: "#22C55E" }, imageUrl: "/65.avif", stock: 10, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" }, featured: true, bestSeller: true },
-  "fp2": { _id: "fp2", name: "Tomato Seed", slug: "tomato-seed", price: 3.49, originalPrice: 5.49, game: "grow-a-garden-2", gradient: { from: "#DC2626", to: "#F87171" }, stock: 15, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" } },
-  "fp3": { _id: "fp3", name: "Corn Seed", slug: "corn-seed", price: 6.99, originalPrice: 9.99, game: "grow-a-garden-2", gradient: { from: "#EAB308", to: "#FDE047" }, stock: 8, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" }, featured: true },
-  "fp4": { _id: "fp4", name: "Blueberry Seed", slug: "blueberry-seed", price: 12.99, originalPrice: 17.99, game: "grow-a-garden-2", gradient: { from: "#2563EB", to: "#60A5FA" }, stock: 5, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" }, bestSeller: true },
-  "fp5": { _id: "fp5", name: "Strawberry Seed", slug: "strawberry-seed", price: 8.49, originalPrice: 11.99, game: "grow-a-garden-2", gradient: { from: "#E11D48", to: "#FB7185" }, stock: 12, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" } },
-  "fp6": { _id: "fp6", name: "Golden Watering Can", slug: "golden-watering-can", price: 24.99, originalPrice: 34.99, game: "grow-a-garden-2", gradient: { from: "#D97706", to: "#FBBF24" }, stock: 3, category: { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench" }, featured: true, bestSeller: true },
-  "fp7": { _id: "fp7", name: "Basic Watering Can", slug: "basic-watering-can", price: 2.99, originalPrice: 4.99, game: "grow-a-garden-2", gradient: { from: "#64748B", to: "#94A3B8" }, stock: 20, category: { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench" } },
-  "fp8": { _id: "fp8", name: "Advanced Sprinkler", slug: "advanced-sprinkler", price: 19.99, originalPrice: 27.99, game: "grow-a-garden-2", gradient: { from: "#0EA5E9", to: "#38BDF8" }, stock: 6, category: { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench" }, featured: true },
-  "fp9": { _id: "fp9", name: "Super Sprinkler", slug: "super-sprinkler", price: 39.99, originalPrice: 54.99, game: "grow-a-garden-2", gradient: { from: "#7C3AED", to: "#A78BFA" }, stock: 2, category: { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench" }, bestSeller: true },
-  "fp10": { _id: "fp10", name: "Bunny", slug: "bunny", price: 14.99, originalPrice: 19.99, game: "grow-a-garden-2", gradient: { from: "#EC4899", to: "#F9A8D4" }, stock: 7, category: { _id: "cat-pets", name: "Pets", slug: "pets", icon: "pawprint" }, featured: true },
-  "fp11": { _id: "fp11", name: "Cat", slug: "cat", price: 9.99, originalPrice: 14.99, game: "grow-a-garden-2", gradient: { from: "#F97316", to: "#FDBA74" }, stock: 10, category: { _id: "cat-pets", name: "Pets", slug: "pets", icon: "pawprint" } },
-  "fp12": { _id: "fp12", name: "Dog", slug: "dog", price: 11.99, originalPrice: 16.99, game: "grow-a-garden-2", gradient: { from: "#92400E", to: "#D97706" }, stock: 9, category: { _id: "cat-pets", name: "Pets", slug: "pets", icon: "pawprint" }, bestSeller: true },
-  "fp13": { _id: "fp13", name: "Raccoon", slug: "raccoon", price: 29.99, originalPrice: 42.99, game: "grow-a-garden-2", gradient: { from: "#6B7280", to: "#9CA3AF" }, stock: 4, category: { _id: "cat-pets", name: "Pets", slug: "pets", icon: "pawprint" } },
-  "fp14": { _id: "fp14", name: "Fairy Lantern", slug: "fairy-lantern", price: 7.49, game: "grow-a-garden-2", gradient: { from: "#A855F7", to: "#C084FC" }, stock: 11, category: { _id: "cat-decor", name: "Decor", slug: "decor", icon: "star" } },
-  "fp15": { _id: "fp15", name: "Garden Gnome", slug: "garden-gnome", price: 5.99, originalPrice: 8.99, game: "grow-a-garden-2", gradient: { from: "#16A34A", to: "#4ADE80" }, stock: 14, category: { _id: "cat-decor", name: "Decor", slug: "decor", icon: "star" } },
-  "fp16": { _id: "fp16", name: "Hedge Fence", slug: "hedge-fence", price: 3.99, game: "grow-a-garden-2", gradient: { from: "#166534", to: "#22C55E" }, stock: 18, category: { _id: "cat-decor", name: "Decor", slug: "decor", icon: "star" } },
-  "fp17": { _id: "fp17", name: "Mushroom Lamp", slug: "mushroom-lamp", price: 15.99, originalPrice: 21.99, game: "grow-a-garden-2", gradient: { from: "#DC2626", to: "#FCA5A5" }, stock: 5, category: { _id: "cat-decor", name: "Decor", slug: "decor", icon: "star" }, featured: true },
-  "fp18": { _id: "fp18", name: "Fruit Notifier", slug: "fruit-notifier", price: 49.99, originalPrice: 69.99, game: "grow-a-garden-2", gradient: { from: "#EA580C", to: "#FB923C" }, stock: 1, category: { _id: "cat-gears", name: "Gears", slug: "gears", icon: "wrench" }, featured: true, bestSeller: true },
-  "fp19": { _id: "fp19", name: "Lavender Seed", slug: "lavender-seed", price: 22.99, originalPrice: 32.99, game: "grow-a-garden-2", gradient: { from: "#7C3AED", to: "#C4B5FD" }, stock: 3, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" } },
-  "fp20": { _id: "fp20", name: "Watermelon Seed", slug: "watermelon-seed", price: 16.99, originalPrice: 22.99, game: "grow-a-garden-2", gradient: { from: "#16A34A", to: "#86EFAC" }, stock: 0, category: { _id: "cat-seeds", name: "Seeds", slug: "seeds", icon: "leaf" } },
-};
-
-const ALL_PRODUCTS = Object.values(FALLBACK_PRODUCTS);
 
 const RV_KEY = "rbstars_recently_viewed";
 function getRecentlyViewed(): string[] {
@@ -69,6 +45,9 @@ export default function ProductPage() {
   const [noticeAck, setNoticeAck] = useState(false);
   const [pickedVariants, setPickedVariants] = useState<Record<string, string>>({});
   const [gameBgImageUrl, setGameBgImageUrl] = useState<string | undefined>(undefined);
+  // Real catalogue powering "Similar Items" + "Recently Viewed".
+  const [catalog, setCatalog] = useState<ApiProduct[]>([]);
+  const [related, setRelated] = useState<ApiProduct[]>([]);
 
   useEffect(() => {
     if (!params.id) return;
@@ -83,39 +62,66 @@ export default function ProductPage() {
     fetch(`${BACKEND}/api/products/${params.id}`)
       .then(r => r.json())
       .then(data => {
-        if (!data.success || !data.data) {
-          const fb = FALLBACK_PRODUCTS[params.id!];
-          if (fb) { setProduct(fb); pushRecentlyViewed(params.id!); }
-          else { setNotFound(true); }
-        } else {
+        if (!data.success || !data.data) setNotFound(true);
+        else {
           setProduct(data.data);
           pushRecentlyViewed(data.data._id);
           if (data.data.gameBgImageUrl) setGameBgImageUrl(data.data.gameBgImageUrl);
         }
       })
-      .catch(() => {
-        const fb = FALLBACK_PRODUCTS[params.id!];
-        if (fb) { setProduct(fb); pushRecentlyViewed(params.id!); }
-        else { setNotFound(true); }
-      })
+      .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
+  }, [params.id]);
+
+  /* Catalogue — used for Similar Items / Recently Viewed. Previously these
+     sections were computed against a hardcoded demo array, so they never
+     rendered anything real. */
+  useEffect(() => {
+    let alive = true;
+    fetch(`${BACKEND}/api/products?limit=200`)
+      .then(r => r.json())
+      .then(d => { if (alive && d?.success && Array.isArray(d.data)) setCatalog(d.data); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!params.id) return;
+    let alive = true;
+    setRelated([]);
+    fetch(`${BACKEND}/api/products/${params.id}/related`)
+      .then(r => r.json())
+      .then(d => { if (alive && d?.success && Array.isArray(d.data)) setRelated(d.data); })
+      .catch(() => {});
+    return () => { alive = false; };
   }, [params.id]);
 
   const categoryId = product && typeof product.category === "object" ? product.category._id : (product?.category as string | undefined);
   const categoryName = product && typeof product.category === "object" ? product.category.name : undefined;
 
   const similarProducts = useMemo(() => {
-    if (!categoryId) return [];
-    return ALL_PRODUCTS.filter(p => {
-      const catId = typeof p.category === "object" ? p.category._id : p.category;
-      return catId === categoryId && p._id !== product?._id && !p.outOfStock;
-    }).slice(0, 8);
-  }, [categoryId, product]);
+    if (!categoryId && related.length === 0) return [];
+    // Prefer the dedicated /related endpoint; fall back to filtering the
+    // catalogue locally when it comes back empty (single-item category).
+    const base = related.length > 0
+      ? related
+      : catalog.filter(p => {
+          const catId = typeof p.category === "object" ? p.category._id : p.category;
+          return catId === categoryId;
+        });
+    return base
+      .filter(p => p._id !== product?._id && !p.outOfStock)
+      .slice(0, 8);
+  }, [related, catalog, categoryId, product]);
 
   const recentlyViewedProducts = useMemo(() => {
+    if (catalog.length === 0) return [];
     const ids = getRecentlyViewed().filter(id => id !== product?._id);
-    return ids.slice(0, 3).map(id => ALL_PRODUCTS.find(p => p._id === id)).filter(Boolean) as ApiProduct[];
-  }, [product]);
+    return ids
+      .map(id => catalog.find(p => p._id === id))
+      .filter(Boolean)
+      .slice(0, 3) as ApiProduct[];
+  }, [catalog, product]);
 
   useEffect(() => {
     if (product) pushRecentlyViewed(product._id);
@@ -195,7 +201,7 @@ export default function ProductPage() {
   const maxQty = isUnlimitedStock ? Number.POSITIVE_INFINITY : rawCap;
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
+    <div className="min-h-screen pb-28 md:pb-0" style={{ background: "#131C23" }}>
       <div style={{ height: "100px" }} />
 
       {/* Back + breadcrumb */}
@@ -497,10 +503,12 @@ export default function ProductPage() {
 
       <Footer />
 
-      {/* Mobile sticky CTA */}
+      {/* Mobile sticky CTA. Product pages exclude MobileBottomNav (see App.tsx),
+          so this bar owns the bottom edge; safe-area keeps it clear of the
+          iOS home indicator. */}
       {!product.outOfStock && (
         <div className="fixed bottom-0 left-0 right-0 z-40 px-3 py-2.5 md:hidden"
-          style={{ background: "#131C23", borderTop: "1px solid #2C414E" }}>
+          style={{ background: "#131C23", borderTop: "1px solid #2C414E", paddingBottom: "calc(0.625rem + env(safe-area-inset-bottom, 0px))" }}>
           <div className="flex gap-2">
             <motion.button whileTap={{ scale: 0.96 }} onClick={handleAddToCart} disabled={buyLocked}
               className="w-14 rounded-xl flex items-center justify-center disabled:opacity-40"

@@ -265,21 +265,15 @@ function HeroPanel({ step }: { step: PageStep }) {
         style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }}
       />
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-        className="relative z-10 mb-2"
-      >
-        <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain"
-        />
-      </motion.div>
-      <motion.div
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
         className="relative z-10"
       >
-        <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: "#637784" }}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "#3BA7FF" }}>
+          Claim Chat
+        </p>
+        <p className="text-sm leading-relaxed max-w-[240px] mx-auto" style={{ color: "#637784" }}>
           {stepText[step]}
         </p>
       </motion.div>
@@ -536,12 +530,20 @@ export default function ClaimChatPage() {
         <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
           <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
         </button>
+        <button
+          onClick={() => (window.history.length > 1 ? window.history.back() : navigate("/"))}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-xl select-none md:hidden"
+          style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#F4F8FB" }}
+          aria-label="Go back"
+        >
+          <ArrowLeft size={17} />
+        </button>
       </div>
 
       {/* Main split layout */}
-      <div className="flex flex-col sm:flex-row min-h-[calc(100vh-73px)]">
+      <div className="flex flex-col md:flex-row min-h-[calc(100vh-73px)]">
         {/* Left hero panel */}
-        <div className="hidden sm:flex w-[380px] flex-shrink-0">
+        <div className="hidden md:flex w-[380px] flex-shrink-0">
           <HeroPanel step={step} />
         </div>
 

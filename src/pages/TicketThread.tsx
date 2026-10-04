@@ -95,7 +95,7 @@ const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
 
 function Skeleton() {
   return (
-    <div className="flex min-h-screen flex-col pt-24" style={{ background: "#131C23" }}>
+    <div className="flex min-h-screen flex-col pt-[65px]" style={{ background: "#131C23" }}>
       <div className="border-b px-6 py-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
         <div className="h-4 w-20 animate-pulse rounded" style={{ background: "#1C2A34" }} />
       </div>
@@ -348,10 +348,12 @@ export default function TicketThread() {
   const pr = PRIORITY_CONFIG[data.priority] || PRIORITY_CONFIG.medium;
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      {/* Header */}
+    <div className="min-h-screen pt-[65px]" style={{ background: "#131C23" }}>
+      {/* Header — parks just under the fixed Navbar (64px bar + 1px border).
+          The loading/error states already offset with pt-24; this view didn't,
+          so the header sat behind the navbar. */}
       <div
-        className="sticky top-0 z-10 border-b"
+        className="sticky top-[65px] z-10 border-b"
         style={{ background: "#0F1920", borderColor: "rgba(255,255,255,0.08)" }}
       >
         <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6">
@@ -522,10 +524,11 @@ export default function TicketThread() {
         </div>
       </div>
 
-      {/* Reply editor */}
+      {/* Reply editor — offset above MobileBottomNav on mobile only
+          (nav is md:hidden and ~68px + safe-area tall). */}
       {data.status !== "closed" && (
         <div
-          className="sticky bottom-0 border-t"
+          className="sticky bottom-[calc(68px_+_env(safe-area-inset-bottom,0px))] md:bottom-0 border-t"
           style={{ background: "#0F1920", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
