@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import { adminApi } from "../api";
 import type { Order, ClaimSession } from "../types";
 import ChatWindow from "../components/ChatWindow";
+import { PageHeader } from "../components/kit";
 
 const STATUS_DISPLAY: Record<string, string> = {
   pending:            "Unpaid",
@@ -21,13 +22,13 @@ const STATUS_DISPLAY: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  pending:            { bg: "#FEF9C3", text: "#854D0E", border: "#FDE047" },
-  paid:               { bg: "#DBEAFE", text: "#1E40AF", border: "#93C5FD" },
-  delivering:         { bg: "#EDE9FE", text: "#5B21B6", border: "#A78BFA" },
-  completed:          { bg: "#D1FAE5", text: "#065F46", border: "#6EE7B7" },
-  cancelled:          { bg: "#FEE2E2", text: "#991B1B", border: "#FCA5A5" },
-  refunded:           { bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
-  partially_refunded: { bg: "#FFF7ED", text: "#9A3412", border: "#FDBA74" },
+  pending:            { bg: "var(--pn-warning-bg)", text: "var(--pn-warning-fg)", border: "var(--pn-warning-line)" },
+  paid:               { bg: "var(--pn-action-tint)", text: "var(--pn-info-fg)", border: "var(--pn-action-border)" },
+  delivering:         { bg: "var(--pn-action-tint)", text: "var(--pn-action)", border: "var(--pn-action-border)" },
+  completed:          { bg: "var(--pn-success-bg)", text: "var(--pn-success-fg)", border: "var(--pn-success-line)" },
+  cancelled:          { bg: "var(--pn-critical-bg)", text: "var(--pn-critical-fg)", border: "var(--pn-critical-line)" },
+  refunded:           { bg: "var(--pn-surface-2)", text: "var(--pn-text)", border: "var(--pn-border-strong)" },
+  partially_refunded: { bg: "var(--pn-warning-bg)", text: "var(--pn-warning-fg)", border: "var(--pn-warning-line)" },
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -141,34 +142,30 @@ export default function Orders() {
 
   return (
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Orders</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{total} total orders</p>
-        </div>
+      <PageHeader title="Orders" description={`${total} total orders`}>
         <button
           onClick={handleStripeSync}
           disabled={syncing}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-60"
-          style={{ background: "#4f46e5", color: "#fff" }}
+          style={{ background: "var(--pn-action)", color: "#fff" }}
           title="Check Stripe for any orders that were paid but not updated in the system"
         >
           {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           {syncing ? "Syncing..." : "Sync with Stripe"}
         </button>
-      </div>
+      </PageHeader>
 
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+      <div className="bg-[var(--pn-surface)] rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--pn-text-3)]" />
               <input
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 placeholder="Search by order #, email, username..."
-                className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--pn-action-border)]"
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
               />
             </div>
 
@@ -177,7 +174,7 @@ export default function Orders() {
                 <button
                   onClick={() => setBulkDropOpen((o) => !o)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  style={{ background: "#1e1b4b", color: "#fff" }}
+                  style={{ background: "var(--pn-primary)", color: "#fff" }}
                   disabled={bulkLoading}
                 >
                   {bulkLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
@@ -190,18 +187,18 @@ export default function Orders() {
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -4 }}
-                      className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl z-10 overflow-hidden"
-                      style={{ border: "1px solid #E9EBF5" }}
+                      className="absolute right-0 top-full mt-1.5 w-44 bg-[var(--pn-surface)] rounded-xl z-10 overflow-hidden"
+                      style={{ border: "1px solid var(--pn-border)" }}
                     >
-                      <div className="px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Update Status</p>
+                      <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--pn-text-3)]">Update Status</p>
                       </div>
                       {VALID_STATUSES.map((s) => (
                         <button
                           key={s}
                           onClick={() => handleBulkUpdate(s)}
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#F7F8FC] transition-colors"
-                          style={{ color: "#374151" }}
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-[var(--pn-surface-2)] transition-colors"
+                          style={{ color: "var(--pn-text)" }}
                         >
                           → {STATUS_DISPLAY[s] || s}
                         </button>
@@ -220,8 +217,8 @@ export default function Orders() {
                 onClick={() => { setStatus(tab.value); setPage(1); setSelected(new Set()); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
                 style={status === tab.value
-                  ? { background: "#1e1b4b", color: "#fff" }
-                  : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}
+                  ? { background: "var(--pn-primary)", color: "#fff" }
+                  : { background: "var(--pn-surface-2)", color: "var(--pn-text-2)", border: "1px solid var(--pn-border)" }}
               >
                 {tab.label}
               </button>
@@ -232,29 +229,29 @@ export default function Orders() {
         {isLoading ? (
           <div className="p-5 space-y-2.5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />
+              <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: "var(--pn-surface-2)" }} />
             ))}
           </div>
         ) : orders.length === 0 ? (
-          <div className="p-16 text-center text-slate-400">No orders found</div>
+          <div className="p-16 text-center text-[var(--pn-text-3)]">No orders found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
+                <tr style={{ background: "var(--pn-surface-2)", borderBottom: "1px solid var(--pn-border)" }}>
                   <th className="px-4 py-3 w-10">
                     <button onClick={toggleAll}>
                       {selected.size === orders.length && orders.length > 0
-                        ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
-                        : <Square className="w-4 h-4 text-slate-300" />}
+                        ? <CheckSquare className="w-4 h-4" style={{ color: "var(--pn-action)" }} />
+                        : <Square className="w-4 h-4 text-[var(--pn-text-3)]" />}
                     </button>
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Order</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Customer</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Items</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Total</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Order</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Customer</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden md:table-cell">Items</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Total</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden lg:table-cell">Date</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -266,54 +263,54 @@ export default function Orders() {
                       key={order._id}
                       className="transition-colors cursor-pointer"
                       style={{
-                        borderBottom: "1px solid #F3F4F6",
-                        background: isSelected ? "#EEF2FF" : undefined,
+                        borderBottom: "1px solid var(--pn-border)",
+                        background: isSelected ? "var(--pn-action-tint)" : undefined,
                       }}
-                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = "#F9FAFB"; }}
+                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = "var(--pn-surface-2)"; }}
                       onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = "transparent"; }}
                     >
                       <td className="px-4 py-3.5 w-10" onClick={(e) => { e.stopPropagation(); toggleSelect(order._id); }}>
                         {isSelected
-                          ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
-                          : <Square className="w-4 h-4 text-slate-300" />}
+                          ? <CheckSquare className="w-4 h-4" style={{ color: "var(--pn-action)" }} />
+                          : <Square className="w-4 h-4 text-[var(--pn-text-3)]" />}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="text-sm font-mono font-semibold" style={{ color: "#4f46e5" }}>{order.orderNumber}</span>
+                        <span className="text-sm font-mono font-semibold" style={{ color: "var(--pn-action)" }}>{order.orderNumber}</span>
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{order.customer.robloxUsername}</p>
-                        <p className="text-xs text-slate-400 truncate max-w-[160px]">{order.customer.email}</p>
+                        <p className="text-sm font-medium" style={{ color: "var(--pn-text)" }}>{order.customer.robloxUsername}</p>
+                        <p className="text-xs text-[var(--pn-text-3)] truncate max-w-[160px]">{order.customer.email}</p>
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell">
                         <div className="flex items-center gap-1.5">
                           {order.items?.[0]?.productSnapshot?.imageUrl ? (
                             <img src={order.items[0].productSnapshot.imageUrl} className="w-6 h-6 rounded object-cover flex-shrink-0" alt="" />
                           ) : (
-                            <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: order.items?.[0]?.productSnapshot?.gradient ? `linear-gradient(135deg, ${order.items[0].productSnapshot.gradient.from}, ${order.items[0].productSnapshot.gradient.to})` : "#E5E7EB" }}>
-                              <Package className="w-3 h-3 text-white" />
+                            <div className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0" style={{ background: order.items?.[0]?.productSnapshot?.gradient ? `linear-gradient(135deg, ${order.items[0].productSnapshot.gradient.from}, ${order.items[0].productSnapshot.gradient.to})` : "var(--pn-border)" }}>
+                              <Package className="w-3 h-3 text-[var(--pn-text)]" />
                             </div>
                           )}
-                          <span className="text-sm text-slate-600 truncate max-w-[180px]">
+                          <span className="text-sm text-[var(--pn-text-2)] truncate max-w-[180px]">
                             {order.items?.slice(0, 2).map((i) => i.productSnapshot.name).join(", ")}
                             {(order.items?.length || 0) > 2 && ` +${(order.items?.length || 0) - 2} more`}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${order.pricing.total.toFixed(2)}</span>
+                        <span className="text-sm font-semibold" style={{ color: "var(--pn-text)" }}>${(order.pricing?.total ?? 0).toFixed(2)}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <StatusBadge status={order.status} />
                       </td>
                       <td className="px-4 py-3.5 hidden lg:table-cell">
-                        <span className="text-xs text-slate-400">{new Date(order.createdAt).toLocaleDateString()}</span>
+                        <span className="text-xs text-[var(--pn-text-3)]">{new Date(order.createdAt).toLocaleDateString()}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-1.5">
                           <Link href={`/admin/orders/${order._id}`}>
                             <button
                               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                              style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}
                               title="View order"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -323,7 +320,7 @@ export default function Orders() {
                             <button
                               onClick={() => openChat(order._id)}
                               className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                              style={{ background: "#EEF2FF", color: "#4f46e5" }}
+                              style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}
                               title="View claim chat"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
@@ -340,20 +337,20 @@ export default function Orders() {
         )}
 
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-            <p className="text-sm text-slate-400">Page {page} of {pages} · {total} orders</p>
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid var(--pn-border)" }}>
+            <p className="text-sm text-[var(--pn-text-3)]">Page {page} of {pages} · {total} orders</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(pages, p + 1))} disabled={page === pages}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -366,17 +363,17 @@ export default function Orders() {
         {viewChat && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 pn-scrim z-50 flex items-center justify-center p-4"
             onClick={() => setViewChat(null)}
           >
             <motion.div
               initial={{ scale: 0.94, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.94, y: 20 }}
-              className="w-full max-w-2xl h-[600px] flex flex-col bg-[#110025] rounded-2xl overflow-hidden shadow-2xl"
-              style={{ border: "1px solid rgba(196,181,253,0.15)" }}
+              className="w-full max-w-2xl h-[600px] flex flex-col pn-modal"
+              style={{ border: "1px solid var(--pn-border)" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ background: "rgba(124,58,237,0.2)", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
-                <h3 className="text-white font-semibold">
+              <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ background: "var(--pn-action-tint)", borderBottom: "1px solid var(--pn-border)" }}>
+                <h3 className="text-[var(--pn-text)] font-semibold">
                   {(() => {
                     const GENERIC = ["general claim", "claim chat"];
                     const name = viewChat.itemName?.trim();
@@ -385,7 +382,7 @@ export default function Orders() {
                     return first?.name || `Claim — ${viewChat.robloxUsername}`;
                   })()}
                 </h3>
-                <button onClick={() => setViewChat(null)} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                <button onClick={() => setViewChat(null)} className="w-8 h-8 rounded-lg bg-[var(--pn-surface-2)] flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text)] transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>

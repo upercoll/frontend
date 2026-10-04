@@ -3,7 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ShoppingCart, Zap, ShieldCheck, Tag, Check, Package,
-  Minus, Plus, Star, X, ChevronRight,
+  Minus, Plus, Star, X, ChevronRight, AlertTriangle, Info,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import Footer from "@/components/Footer";
@@ -16,6 +16,8 @@ interface ApiProduct {
   category?: ApiCategory | string; price: number; originalPrice?: number;
   gradient: { from: string; to: string }; imageUrl?: string; images?: string[];
   features?: string[]; stock: number; onHand?: number; outOfStock?: boolean;
+  notice?: { text?: string; required?: boolean };
+  variations?: { name: string; options: string[] }[];
   featured?: boolean; bestSeller?: boolean; tags?: string[];
 }
 
@@ -64,6 +66,8 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const [buying, setBuying] = useState(false);
+  const [noticeAck, setNoticeAck] = useState(false);
+  const [pickedVariants, setPickedVariants] = useState<Record<string, string>>({});
   const [gameBgImageUrl, setGameBgImageUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -71,6 +75,8 @@ export default function ProductPage() {
     setLoading(true);
     setNotFound(false);
     setQuantity(1);
+    setNoticeAck(false);
+    setPickedVariants({});
     window.scrollTo(0, 0);
     setGameBgImageUrl(undefined);
 
@@ -118,8 +124,14 @@ export default function ProductPage() {
   const savings = product?.originalPrice && !product.outOfStock
     ? (product.originalPrice - product.price).toFixed(2) : null;
 
+  const noticeText = product?.notice?.text?.trim() || "";
+  const noticeRequired = !!product?.notice?.required && !!noticeText;
+  // A required notice blocks the buy buttons until the buyer ticks "I understand".
+  const buyLocked = noticeRequired && !noticeAck;
+  const featureList = product?.features?.filter(Boolean) || [];
+
   function handleAddToCart() {
-    if (!product || product.outOfStock) return;
+    if (!product || product.outOfStock || buyLocked) return;
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
       gradient: [product.gradient.from, product.gradient.to], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl,
@@ -132,7 +144,7 @@ export default function ProductPage() {
   }
 
   function handleBuyNow() {
-    if (!product || product.outOfStock) return;
+    if (!product || product.outOfStock || buyLocked) return;
     setBuying(true);
     addItem({
       id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice,
@@ -174,6 +186,13 @@ export default function ProductPage() {
       </div>
     );
   }
+
+  // Backend uses stock/onHand = -1 for "unlimited". Only clamp the stepper
+  // when a real, finite cap exists — otherwise the + button was permanently
+  // disabled and "-1 available" rendered.
+  const rawCap = product?.onHand ?? product?.stock;
+  const isUnlimitedStock = rawCap == null || rawCap < 0;
+  const maxQty = isUnlimitedStock ? Number.POSITIVE_INFINITY : rawCap;
 
   return (
     <div className="min-h-screen" style={{ background: "#131C23" }}>
@@ -242,8 +261,71 @@ export default function ProductPage() {
               )}
             </div>
 
+            {noticeText && (
+              <div className="mb-4 rounded-xl p-3.5" style={{
+                background: noticeRequired ? "rgba(245,158,11,0.08)" : "rgba(59,167,255,0.07)",
+                border: `1px solid ${noticeRequired ? "rgba(245,158,11,0.45)" : "#2C414E"}`,
+              }}>
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" color={noticeRequired ? "#F59E0B" : "#3BA7FF"} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: noticeRequired ? "#F59E0B" : "#3BA7FF" }}>
+                      {noticeRequired ? "Please read before buying" : "Notice"}
+                    </p>
+                    <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: "#9BAEBB" }}>{noticeText}</p>
+                    {noticeRequired && (
+                      <label className="flex items-start gap-2 mt-2.5 cursor-pointer select-none w-fit">
+                        <input type="checkbox" checked={noticeAck} onChange={e => setNoticeAck(e.target.checked)}
+                          className="w-4 h-4 mt-0.5 flex-shrink-0 accent-amber-500 rounded" />
+                        <span className="text-xs font-semibold" style={{ color: noticeAck ? "#22C55E" : "#F4F8FB" }}>
+                          I understand and meet this requirement
+                        </span>
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {product.description && (
-              <p className="text-sm leading-relaxed mb-4" style={{ color: "#9BAEBB" }}>{product.description}</p>
+              <p className="text-sm leading-relaxed mb-4 whitespace-pre-line" style={{ color: "#9BAEBB" }}>{product.description}</p>
+            )}
+
+            {/* Display-only variations — informational, never affect price or delivery */}
+            {(product.variations || []).filter(v => v.name && v.options?.length).map(v => (
+              <div key={v.name} className="mb-4">
+                <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#637784" }}>{v.name}</p>
+                <div className="flex flex-wrap gap-2">
+                  {v.options.map(opt => {
+                    const picked = pickedVariants[v.name] === opt;
+                    return (
+                      <button key={opt} type="button"
+                        onClick={() => setPickedVariants(prev => ({ ...prev, [v.name]: opt }))}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                        style={picked
+                          ? { background: "#3BA7FF", color: "#fff", boxShadow: "0 2px 0 0 #2980b9" }
+                          : { background: "#1C2A34", color: "#9BAEBB", border: "1px solid #2C414E" }}>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Key features — collected in the admin form, rendered here */}
+            {featureList.length > 0 && (
+              <div className="mb-4 rounded-xl p-3.5" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+                <p className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#637784" }}>What you get</p>
+                <ul className="flex flex-col gap-1.5">
+                  {featureList.map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "#9BAEBB" }}>
+                      <Check size={14} strokeWidth={3} className="flex-shrink-0 mt-0.5" color="#22C55E" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             {/* Quantity selector */}
@@ -262,17 +344,17 @@ export default function ProductPage() {
                       <span className="text-sm font-extrabold" style={{ color: "#9BAEBB" }}>{quantity}</span>
                     </div>
                     <motion.button whileTap={{ scale: 0.9 }}
-                      onClick={() => setQuantity(q => Math.min(product.onHand ?? product.stock, q + 1))}
+                      onClick={() => setQuantity(q => Math.min(maxQty, q + 1))}
                       className="w-12 h-10 flex items-center justify-center rounded-r-lg ml-1"
-                      disabled={quantity >= (product.onHand ?? product.stock)}
-                      style={{ background: quantity >= (product.onHand ?? product.stock) ? "#2C414E" : "#3BA7FF", color: "white",
-                        boxShadow: quantity >= (product.onHand ?? product.stock) ? "none" : "0 3px 0 0 #2980b9",
-                        cursor: quantity >= (product.onHand ?? product.stock) ? "not-allowed" : "pointer" }}>
+                      disabled={quantity >= maxQty}
+                      style={{ background: quantity >= maxQty ? "#2C414E" : "#3BA7FF", color: "white",
+                        boxShadow: quantity >= maxQty ? "none" : "0 3px 0 0 #2980b9",
+                        cursor: quantity >= maxQty ? "not-allowed" : "pointer" }}>
                       <Plus size={15} strokeWidth={2.5} />
                     </motion.button>
                   </div>
                   <span className="text-xs font-medium" style={{ color: "#637784" }}>
-                    {product.onHand ?? product.stock} available
+                    {isUnlimitedStock ? "Unlimited stock" : `${rawCap} available`}
                   </span>
                 </div>
               </div>
@@ -280,7 +362,7 @@ export default function ProductPage() {
 
             {/* Buttons */}
             <div className="flex gap-3 mb-5">
-              <motion.button whileTap={!product.outOfStock ? { scale: 0.97 } : {}} onClick={handleAddToCart} disabled={product.outOfStock}
+              <motion.button whileTap={!product.outOfStock && !buyLocked ? { scale: 0.97 } : {}} onClick={handleAddToCart} disabled={product.outOfStock || buyLocked}
                 className="flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
                 style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)", color: "white" }}>
                 <AnimatePresence mode="wait">
@@ -295,13 +377,19 @@ export default function ProductPage() {
                   )}
                 </AnimatePresence>
               </motion.button>
-              <motion.button whileTap={!product.outOfStock ? { scale: 0.97 } : {}} onClick={handleBuyNow}
-                disabled={product.outOfStock || buying}
+              <motion.button whileTap={!product.outOfStock && !buyLocked ? { scale: 0.97 } : {}} onClick={handleBuyNow}
+                disabled={product.outOfStock || buying || buyLocked}
                 className="flex-1 py-3.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40"
                 style={{ background: "#22C55E", boxShadow: "0 4px 0 0 #15803a, 0 6px 16px rgba(0,0,0,0.3)" }}>
-                <span>{product.outOfStock ? "Out of Stock" : "Buy Now"}</span>
+                <span>{product.outOfStock ? "Out of Stock" : buyLocked ? "Acknowledge notice to buy" : "Buy Now"}</span>
               </motion.button>
             </div>
+
+            {buyLocked && (
+              <p className="text-[11px] font-semibold text-center -mt-3 mb-4 flex items-center justify-center gap-1.5" style={{ color: "#F59E0B" }}>
+                <Info size={13} /> Tick the notice above to unlock purchasing
+              </p>
+            )}
 
             {/* Trust */}
             <div className="flex flex-col items-center gap-3 mb-2 mt-1 px-5 py-4 rounded-xl"
@@ -414,16 +502,16 @@ export default function ProductPage() {
         <div className="fixed bottom-0 left-0 right-0 z-40 px-3 py-2.5 md:hidden"
           style={{ background: "#131C23", borderTop: "1px solid #2C414E" }}>
           <div className="flex gap-2">
-            <motion.button whileTap={{ scale: 0.96 }} onClick={handleAddToCart}
-              className="w-14 rounded-xl flex items-center justify-center"
+            <motion.button whileTap={{ scale: 0.96 }} onClick={handleAddToCart} disabled={buyLocked}
+              className="w-14 rounded-xl flex items-center justify-center disabled:opacity-40"
               style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
               {justAdded ? <Check size={18} color="#22C55E" strokeWidth={3} /> : <ShoppingCart size={18} color="#3BA7FF" />}
             </motion.button>
-            <motion.button whileTap={{ scale: 0.97 }} onClick={handleBuyNow}
-              className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-              style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9" }}>
+            <motion.button whileTap={{ scale: 0.97 }} onClick={handleBuyNow} disabled={buyLocked}
+              className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40"
+              style={{ background: buyLocked ? "#2C414E" : "#3BA7FF", boxShadow: buyLocked ? "none" : "0 4px 0 0 #2980b9" }}>
               <Zap size={16} fill="white" />
-              <span>{`Buy Now${quantity > 1 ? ` (×${quantity})` : ""}`}</span>
+              <span>{buyLocked ? "Acknowledge notice first" : `Buy Now${quantity > 1 ? ` (×${quantity})` : ""}`}</span>
             </motion.button>
           </div>
         </div>

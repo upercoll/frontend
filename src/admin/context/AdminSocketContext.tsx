@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, useCallback, ReactNode } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAdminAuth } from "./AdminAuthContext";
+import { playClaimSound, playOrderSound, primeAudio } from "../lib/sounds";
 import type { ClaimSession } from "../types";
 
 interface ClaimPopup {
@@ -44,38 +45,26 @@ interface AdminSocketContextType {
   activeClaims: LiveClaimSession[];
   pendingClaims: PendingClaim[];
   removePendingClaim: (roomId: string) => void;
+  /** Newest first. Unread ones are flagged so the bell can badge them. */
+  newOrders: NewOrderAlert[];
+  unreadOrders: number;
+  markOrdersRead: () => void;
+}
+
+export interface NewOrderAlert {
+  orderId: string;
+  orderNumber: string;
+  total: number;
+  itemCount: number;
+  customerEmail: string;
+  robloxUsername: string;
+  receivedAt: number;
+  read?: boolean;
 }
 
 const AdminSocketContext = createContext<AdminSocketContextType | null>(null);
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || "";
-
-function playNotificationSound() {
-  try {
-    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-
-    const playTone = (freq: number, start: number, duration: number, volume: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, start);
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(volume, start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      osc.start(start);
-      osc.stop(start + duration);
-    };
-
-    const t = ctx.currentTime;
-    playTone(880, t, 0.3, 0.28);
-    playTone(1108, t + 0.12, 0.28, 0.22);
-    playTone(1318, t + 0.24, 0.45, 0.18);
-  } catch {}
-}
 
 export function AdminSocketProvider({ children }: { children: ReactNode }) {
   const { user, token, profile } = useAdminAuth();
@@ -85,10 +74,14 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
   const [onlineAgents, setOnlineAgents] = useState<{ agentId: string; agentName: string; games: string[] }[]>([]);
   const [activeClaims, setActiveClaims] = useState<LiveClaimSession[]>([]);
   const [pendingClaims, setPendingClaims] = useState<PendingClaim[]>([]);
+  const [newOrders, setNewOrders] = useState<NewOrderAlert[]>([]);
+  const [unreadOrders, setUnreadOrders] = useState(0);
 
   const removePendingClaim = useCallback((roomId: string) => {
     setPendingClaims(prev => prev.filter(c => c.roomId !== roomId));
   }, []);
+
+  const markOrdersRead = useCallback(() => setUnreadOrders(0), []);
 
   useEffect(() => {
     if (!user || !token) {
@@ -111,6 +104,7 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
     socket.on("connect", () => {
       setConnected(true);
+      primeAudio();
 
       if (user.type === "team_member" && user.claimGames?.length) {
         socket.emit("queue:join", {
@@ -130,7 +124,7 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
         if (exists) return prev;
         return [data, ...prev];
       });
-      playNotificationSound();
+      playClaimSound();
     });
 
     socket.on("queue:claim_taken", ({ roomId }: { roomId: string }) => {
@@ -160,9 +154,28 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
 
       if (user.isOwner) {
         setClaimPopup({ ...data, isOwnerAlert: true });
-        playNotificationSound();
+        playClaimSound();
       }
     });
+
+    // An order just got paid. Plays on EVERY admin page (this provider wraps
+    // the whole panel), not just the Orders screen.
+    socket.on(
+      "admin:new_order",
+      (data: {
+        orderId: string;
+        orderNumber: string;
+        total: number;
+        itemCount: number;
+        customerEmail: string;
+        robloxUsername: string;
+      }) => {
+        const alert: NewOrderAlert = { ...data, receivedAt: Date.now() };
+        setNewOrders((prev) => [alert, ...prev].slice(0, 25));
+        setUnreadOrders((n) => n + 1);
+        playOrderSound();
+      }
+    );
 
     socket.on("admin:claim_status_changed", ({ roomId, status, agentName }: { roomId: string; status: string; agentName?: string }) => {
       setActiveClaims(prev =>
@@ -219,6 +232,9 @@ export function AdminSocketProvider({ children }: { children: ReactNode }) {
         activeClaims,
         pendingClaims,
         removePendingClaim,
+        newOrders,
+        unreadOrders,
+        markOrdersRead,
       }}
     >
       {children}

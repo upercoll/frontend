@@ -6,6 +6,7 @@ import {
   IconCart, IconCreditCard, IconRocket,
   IconSearch, IconClose, IconStar,
 } from "@/components/SiteIcons";
+import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -15,24 +16,15 @@ type ShopGame = {
   imageUrl?: string; bgImageUrl?: string; active?: boolean; productCount?: number;
 };
 
-const FALLBACK_GAMES: ShopGame[] = [
-  { _id: "1", name: "Murder Mystery 2",         slug: "murder-mystery-2",         gradient: { from: "#1C2A34", to: "#22333F" } },
-  { _id: "2", name: "Blade Ball",               slug: "blade-ball",               gradient: { from: "#22333F", to: "#2C414E" } },
-  { _id: "3", name: "Grow A Garden 2",          slug: "grow-a-garden-2",          gradient: { from: "#15803D", to: "#22C55E" } },
-  { _id: "4", name: "Steal A Brainrot",         slug: "steal-a-brainrot",         gradient: { from: "#EA580C", to: "#F97316" } },
-  { _id: "5", name: "Blox Fruits",              slug: "blox-fruits",              gradient: { from: "#D97706", to: "#FBBF24" } },
-  { _id: "6", name: "Garden Tower Defense",     slug: "garden-tower-defense",     gradient: { from: "#15803D", to: "#84CC16" } },
-  { _id: "7", name: "99 Nights In The Forest",  slug: "99-nights-in-the-forest",  gradient: { from: "#1E3A5F", to: "#374151" } },
-  { _id: "8", name: "Dress To Impress",         slug: "dress-to-impress",         gradient: { from: "#BE185D", to: "#EC4899" } },
-  { _id: "9", name: "Pet Simulator 99",         slug: "pet-simulator-99",         gradient: { from: "#EC4899", to: "#F43F5E" } },
-];
-
 const steps = [
   { icon: IconCart, number: "01", title: "Choose your items", description: "Select the game you want, browse the matching collection, and pick the item you need.", image: "/step-choose.png" },
   { icon: IconCreditCard, number: "02", title: "Secure Checkout", description: "Complete your purchase through our secure checkout — we accept all major cards and PayPal with 256-bit SSL encryption.", image: "/step-checkout.png" },
   { icon: IconRocket, number: "03", title: "Fast Delivery", description: "Our team delivers your items in minutes — just provide your Roblox username after checkout and we'll trade or gift them to you instantly.", image: "/step-delivery.png" },
 ];
 
+/* Shown only until the real reviews arrive (backend cold start). If fewer
+   than 3 real reviews come back we keep these rather than flash an empty
+   carousel — but they are never presented as live data. */
 const fallbackReviews = [
   { initials: "D", name: "Dawn Hughes", country: "United States", stars: 5, text: "Cheap: the prices were much cheaper than other adopt me stores. Easy: it's idiot proof, all you do is join and it gives you your items instantly. Good service: every time I had an issue they responded really quickly." },
   { initials: "M", name: "Max Rivera", country: "United Kingdom", stars: 5, text: "Super fast delivery! Got my items within minutes. The support team was also really helpful when I had questions about my order." },
@@ -46,18 +38,56 @@ export default function BrowseGames() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [reviewIndex, setReviewIndex] = useState(0);
-  const [reviews] = useState(fallbackReviews);
+  const [reviews, setReviews] = useState(fallbackReviews);
+  const stats = usePublicStats();
 
+  /* Retry — the backend sleeps on Render and can take ~30s to wake. The old
+     code fell back to a hardcoded list of 9 games that don't exist on the
+     store, so every card led to a 404. Better to show the real empty state. */
   useEffect(() => {
-    setLoading(true);
-    fetch(`${BACKEND}/api/games?active=true`)
+    let alive = true;
+    async function attempt(round: number) {
+      try {
+        const res = await fetch(`${BACKEND}/api/games?active=true`);
+        const d = await res.json();
+        const fetched: ShopGame[] = d.data?.games || [];
+        if (!alive) return;
+        if (fetched.length > 0) {
+          setGames(fetched);
+          setLoading(false);
+          return;
+        }
+        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
+        else setLoading(false);
+      } catch {
+        if (!alive) return;
+        if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
+        else setLoading(false);
+      }
+    }
+    attempt(1);
+    return () => { alive = false; };
+  }, []);
+
+  /* Real reviews, same source the homepage uses */
+  useEffect(() => {
+    fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
       .then(r => r.json())
-      .then(d => {
-        const fetched = d.data?.games || [];
-        setGames(fetched.length > 0 ? fetched : FALLBACK_GAMES);
+      .then(data => {
+        const raw = data?.data?.reviews;
+        if (Array.isArray(raw) && raw.length >= 3) {
+          setReviews(raw.map((r: { name: string; rating: number; comment: string; submittedAt: string }) => ({
+            initials: r.name.charAt(0).toUpperCase(),
+            name: r.name,
+            country: r.submittedAt
+              ? `${Math.floor((Date.now() - new Date(r.submittedAt).getTime()) / 86400000)} days ago`
+              : "Recently",
+            stars: r.rating,
+            text: r.comment,
+          })));
+        }
       })
-      .catch(() => setGames(FALLBACK_GAMES))
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -266,7 +296,14 @@ export default function BrowseGames() {
         <div className="relative z-10 px-6 sm:px-10 lg:px-16 max-w-6xl mx-auto">
           <div className="mb-10">
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#F4F8FB", letterSpacing: "-0.025em" }}>
-              Trusted By <span style={{ color: "#3BA7FF" }}>2,000+</span> Customers
+              {stats ? (
+                <>
+                  Trusted By <span style={{ color: "#3BA7FF" }}>{formatCount(stats.customers)}</span>{" "}
+                  {stats.customers === 1 ? "Customer" : "Customers"}
+                </>
+              ) : (
+                <>Trusted By Our <span style={{ color: "#3BA7FF" }}>Customers</span></>
+              )}
             </h2>
           </div>
           <motion.div
@@ -285,7 +322,9 @@ export default function BrowseGames() {
                 Real Players, <span style={{ color: "#3BA7FF" }}>Real Reviews</span>
               </h3>
               <p className="text-xs mt-1.5 max-w-[200px]" style={{ color: "#9BAEBB" }}>
-                Thousands of happy customers trust RBstars.
+                {stats && stats.reviews > 0
+                  ? `${formatCount(stats.reviews)} verified reviews from real buyers.`
+                  : "Verified reviews from real buyers."}
               </p>
             </div>
 

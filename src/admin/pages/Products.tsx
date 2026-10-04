@@ -9,13 +9,19 @@ import {
 import { adminApi } from "../api";
 import type { Product, Category, Game } from "../types";
 import ImageUpload from "../components/ImageUpload";
+import { PageHeader } from "../components/kit";
 
 type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; onHand: string; imageUrl: string };
 
 const DEFAULT_FORM = {
   name: "", description: "", game: "", category: "", price: "",
-  originalPrice: "", gradFrom: "#7c3aed", gradTo: "#4c1d95",
+  // Must be a real hex value: this feeds <input type="color"> and is persisted
+  // into gradient.from/to. A CSS variable here rendered as black AND was saved
+  // literally as "var(--pn-action)".
+  originalPrice: "", gradFrom: "#3BA7FF", gradTo: "#131C23",
   imageUrl: "" as string | string[], images: [] as string[], features: "",
+  notice: "", noticeRequired: false,
+  variations: [] as { name: string; options: string }[],
   featured: false, bestSeller: false,
   stock: "-1", onHand: "-1", tags: "", active: true, outOfStock: false,
 };
@@ -29,16 +35,16 @@ const FILTER_TABS = [
 
 function StatusBadge({ product }: { product: Product }) {
   if (!product.active)
-    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#F3F4F6", color: "#374151", borderColor: "#D1D5DB" }}>Inactive</span>;
+    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "var(--pn-surface-2)", color: "var(--pn-text)", borderColor: "var(--pn-border-strong)" }}>Inactive</span>;
   if (product.outOfStock)
-    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#FEF9C3", color: "#854D0E", borderColor: "#FDE047" }}>Out of Stock</span>;
-  return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "#ECFDF5", color: "#065F46", borderColor: "#34D399" }}>Active</span>;
+    return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "var(--pn-warning-bg)", color: "var(--pn-warning-fg)", borderColor: "var(--pn-warning-line)" }}>Out of Stock</span>;
+  return <span className="text-xs px-2.5 py-1 rounded-full font-semibold border" style={{ background: "var(--pn-success-bg)", color: "var(--pn-success-fg)", borderColor: "var(--pn-success-line)" }}>Active</span>;
 }
 
 const inp = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200";
-const inpStyle = { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" };
+const inpStyle = { background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" };
 const labelCls = "block text-xs font-semibold mb-1.5" ;
-const labelStyle = { color: "#6b7280" };
+const labelStyle = { color: "var(--pn-text-2)" };
 
 export default function Products() {
   const qc = useQueryClient();
@@ -93,6 +99,8 @@ export default function Products() {
       price: String(p.price), originalPrice: String(p.originalPrice || ""),
       gradFrom: p.gradient.from, gradTo: p.gradient.to,
       imageUrl: p.imageUrl || "", images: p.images || [], features: p.features?.join(", ") || "",
+      notice: p.notice?.text || "", noticeRequired: !!p.notice?.required,
+      variations: (p.variations || []).map(v => ({ name: v.name, options: v.options.join(", ") })),
       featured: p.featured, bestSeller: p.bestSeller,
       stock: String(p.stock), onHand: String(p.onHand ?? -1), tags: p.tags?.join(", ") || "",
       active: p.active !== false, outOfStock: p.outOfStock || false,
@@ -119,6 +127,13 @@ export default function Products() {
       if (typeof form.imageUrl === "string" && form.imageUrl) fd.append("imageUrl", form.imageUrl);
       if (form.images.length > 0) fd.append("images", JSON.stringify(form.images));
       if (form.features.trim()) fd.append("features", JSON.stringify(form.features.split(",").map(f => f.trim()).filter(Boolean)));
+      // Notice + display-only variations travel as JSON, parsed/sanitized server-side.
+      fd.append("notice", JSON.stringify({ text: form.notice.trim(), required: form.noticeRequired }));
+      fd.append("variations", JSON.stringify(
+        form.variations
+          .map(v => ({ name: v.name.trim(), options: v.options.split(",").map(o => o.trim()).filter(Boolean) }))
+          .filter(v => v.name && v.options.length > 0)
+      ));
       fd.append("featured", String(form.featured));
       fd.append("bestSeller", String(form.bestSeller));
       fd.append("stock", form.stock);
@@ -225,34 +240,30 @@ export default function Products() {
     }
   };
 
-  const inputCls = `${inp} focus:ring-indigo-300`;
+  const inputCls = `${inp} focus:ring-[var(--pn-action-border)]`;
 
   return (
     <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Products</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{total} total products</p>
-        </div>
+      <PageHeader title="Products" description={`${total} total products`}>
         <div className="flex gap-2">
           <button onClick={() => { setBulkQueue([]); setBulkDraft(EMPTY_DRAFT); setBulkError(""); setBulkResult(null); setModal("bulk"); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
-            style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}>
+            style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
             <Layers className="w-4 h-4" /> Bulk Add
           </button>
           <button onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors"
-            style={{ background: "#1e1b4b" }}>
+            style={{ background: "var(--pn-primary)" }}>
             <Plus className="w-4 h-4" /> Add Product
           </button>
         </div>
-      </div>
+      </PageHeader>
 
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+      <div className="bg-[var(--pn-surface)] rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--pn-text-3)]" />
               <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
                 placeholder="Search products by name, tag..."
                 className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
@@ -268,16 +279,16 @@ export default function Products() {
               <div className="relative">
                 <button onClick={() => setBulkDropOpen(o => !o)}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white"
-                  style={{ background: "#1e1b4b" }}>
+                  style={{ background: "var(--pn-primary)" }}>
                   {selected.size} selected <ChevronDown className="w-3.5 h-3.5" />
                 </button>
                 <AnimatePresence>
                   {bulkDropOpen && (
                     <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                      className="absolute right-0 top-full mt-1.5 w-44 bg-white rounded-xl shadow-xl z-20 overflow-hidden"
-                      style={{ border: "1px solid #E9EBF5" }}>
-                      <div className="px-3 py-2" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bulk Actions</p>
+                      className="absolute right-0 top-full mt-1.5 w-44 bg-[var(--pn-surface)] rounded-xl z-20 overflow-hidden"
+                      style={{ border: "1px solid var(--pn-border)" }}>
+                      <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--pn-text-3)]">Bulk Actions</p>
                       </div>
                       {[
                         { label: "Set Active", action: "activate" as const },
@@ -285,8 +296,8 @@ export default function Products() {
                         { label: "Delete", action: "delete" as const },
                       ].map(item => (
                         <button key={item.action} onClick={() => handleBulkAction(item.action)}
-                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-slate-50 transition-colors"
-                          style={{ color: item.action === "delete" ? "#dc2626" : "#374151" }}>
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-[var(--pn-surface-2)] transition-colors"
+                          style={{ color: item.action === "delete" ? "var(--pn-critical-text)" : "var(--pn-text)" }}>
                           {item.label}
                         </button>
                       ))}
@@ -301,8 +312,8 @@ export default function Products() {
               <button key={tab.value} onClick={() => { setActiveStatus(tab.value); setPage(1); setSelected(new Set()); }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
                 style={activeStatus === tab.value
-                  ? { background: "#1e1b4b", color: "#fff" }
-                  : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
+                  ? { background: "var(--pn-primary)", color: "#fff" }
+                  : { background: "var(--pn-surface-2)", color: "var(--pn-text-2)", border: "1px solid var(--pn-border)" }}>
                 {tab.label}
               </button>
             ))}
@@ -311,10 +322,10 @@ export default function Products() {
 
         {isLoading ? (
           <div className="p-5 space-y-2.5">
-            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />)}
+            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: "var(--pn-surface-2)" }} />)}
           </div>
         ) : products.length === 0 ? (
-          <div className="p-16 text-center text-slate-400">
+          <div className="p-16 text-center text-[var(--pn-text-3)]">
             <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p>No products found.</p>
           </div>
@@ -322,21 +333,21 @@ export default function Products() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
+                <tr style={{ background: "var(--pn-surface-2)", borderBottom: "1px solid var(--pn-border)" }}>
                   <th className="px-4 py-3 w-10">
                     <button onClick={toggleAll}>
                       {selected.size === products.length && products.length > 0
-                        ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
-                        : <Square className="w-4 h-4 text-slate-300" />}
+                        ? <CheckSquare className="w-4 h-4" style={{ color: "var(--pn-action)" }} />
+                        : <Square className="w-4 h-4 text-[var(--pn-text-3)]" />}
                     </button>
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Product</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Game</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Price</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">On Hand</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">In Stock</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Sales</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Product</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden md:table-cell">Game</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Price</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">On Hand</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">In Stock</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden lg:table-cell">Sales</th>
                   <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
@@ -347,13 +358,13 @@ export default function Products() {
                   return (
                     <tr key={p._id}
                       className="transition-colors"
-                      style={{ borderBottom: "1px solid #F3F4F6", background: isSelected ? "#EEF2FF" : undefined }}
-                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#F9FAFB"; }}
+                      style={{ borderBottom: "1px solid var(--pn-border)", background: isSelected ? "var(--pn-action-tint)" : undefined }}
+                      onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "var(--pn-surface-2)"; }}
                       onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}>
                       <td className="px-4 py-3.5 w-10" onClick={e => { e.stopPropagation(); toggleSelect(p._id); }}>
                         {isSelected
-                          ? <CheckSquare className="w-4 h-4" style={{ color: "#4f46e5" }} />
-                          : <Square className="w-4 h-4 text-slate-300" />}
+                          ? <CheckSquare className="w-4 h-4" style={{ color: "var(--pn-action)" }} />
+                          : <Square className="w-4 h-4 text-[var(--pn-text-3)]" />}
                       </td>
                       <td className="px-4 py-3.5 cursor-pointer" onClick={() => openEdit(p)}>
                         <div className="flex items-center gap-3">
@@ -361,24 +372,24 @@ export default function Products() {
                             style={{ background: `linear-gradient(135deg, ${p.gradient.from}, ${p.gradient.to})` }}>
                             {p.imageUrl
                               ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" />
-                              : <div className="w-full h-full flex items-center justify-center"><Package className="w-4 h-4 text-white/60" /></div>}
+                              : <div className="w-full h-full flex items-center justify-center"><Package className="w-4 h-4 text-[var(--pn-text-2)]" /></div>}
                           </div>
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>{p.name}</p>
-                              {p.featured && <Star className="w-3 h-3 text-yellow-400 flex-shrink-0" />}
+                              <p className="text-sm font-semibold" style={{ color: "var(--pn-text)" }}>{p.name}</p>
+                              {p.featured && <Star className="w-3 h-3 text-[var(--pn-warning-fg)] flex-shrink-0" />}
                             </div>
-                            <p className="text-xs text-slate-400 truncate max-w-[200px]">{p.slug}</p>
+                            <p className="text-xs text-[var(--pn-text-3)] truncate max-w-[200px]">{p.slug}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3.5 hidden md:table-cell">
-                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "#EEF2FF", color: "#4f46e5" }}>{p.game}</span>
+                        <span className="text-xs px-2 py-1 rounded-md font-medium" style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>{p.game}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <div>
-                          <p className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${p.price.toFixed(2)}</p>
-                          {p.originalPrice ? <p className="text-xs text-slate-400 line-through">${p.originalPrice.toFixed(2)}</p> : null}
+                          <p className="text-sm font-semibold" style={{ color: "var(--pn-text)" }}>${p.price.toFixed(2)}</p>
+                          {p.originalPrice ? <p className="text-xs text-[var(--pn-text-3)] line-through">${p.originalPrice.toFixed(2)}</p> : null}
                         </div>
                       </td>
                       <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
@@ -390,21 +401,21 @@ export default function Products() {
                             onChange={e => setEditingOnHand({ id: p._id, value: e.target.value })}
                             onBlur={() => saveOnHand(p._id)}
                             onKeyDown={e => { if (e.key === "Enter") saveOnHand(p._id); if (e.key === "Escape") setEditingOnHand(null); }}
-                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--pn-action-border)]"
+                            style={{ border: "1px solid var(--pn-action-border)", color: "var(--pn-text)", background: "#fff" }}
                           />
                         ) : (
                           <button onClick={() => setEditingOnHand({ id: p._id, value: String(p.onHand ?? -1) })}
                             className="flex items-center gap-1 group text-left"
                             title="Click to edit on hand quantity">
                             {onHandSaving === p._id
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--pn-text-3)]" />
                               : null}
-                            <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-red-500" : (p.onHand ?? -1) === -1 ? "text-slate-400" : ""}`}
-                              style={(p.onHand ?? -1) > 0 ? { color: "#1e1b4b" } : undefined}>
+                            <span className={`text-sm font-medium ${(p.onHand ?? -1) === 0 ? "text-[var(--pn-critical-text)]" : (p.onHand ?? -1) === -1 ? "text-[var(--pn-text-3)]" : ""}`}
+                              style={(p.onHand ?? -1) > 0 ? { color: "var(--pn-text)" } : undefined}>
                               {(p.onHand ?? -1) === -1 ? "∞" : (p.onHand ?? 0)}
                             </span>
-                            <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
+                            <Edit2 className="w-3 h-3 text-[var(--pn-text-3)] group-hover:text-[var(--pn-action)] transition-colors ml-0.5" />
                           </button>
                         )}
                       </td>
@@ -417,39 +428,39 @@ export default function Products() {
                             onChange={e => setEditingStock({ id: p._id, value: e.target.value })}
                             onBlur={() => saveStock(p._id)}
                             onKeyDown={e => { if (e.key === "Enter") saveStock(p._id); if (e.key === "Escape") setEditingStock(null); }}
-                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                            style={{ border: "1px solid #4f46e5", color: "#1e1b4b", background: "#fff" }}
+                            className="w-20 px-2 py-1 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--pn-action-border)]"
+                            style={{ border: "1px solid var(--pn-action-border)", color: "var(--pn-text)", background: "#fff" }}
                           />
                         ) : (
                           <button onClick={() => setEditingStock({ id: p._id, value: String(p.stock) })}
                             className="flex items-center gap-1 group text-left"
                             title="Click to edit available stock">
                             {stockSaving === p._id
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
+                              ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--pn-text-3)]" />
                               : null}
-                            <span className={`text-sm font-medium ${p.stock === 0 ? "text-red-500" : p.stock === -1 ? "text-slate-400" : ""}`}
-                              style={p.stock > 0 ? { color: "#1e1b4b" } : undefined}>
+                            <span className={`text-sm font-medium ${p.stock === 0 ? "text-[var(--pn-critical-text)]" : p.stock === -1 ? "text-[var(--pn-text-3)]" : ""}`}
+                              style={p.stock > 0 ? { color: "var(--pn-text)" } : undefined}>
                               {p.stock === -1 ? "∞" : p.stock}
                             </span>
-                            <Edit2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-400 transition-colors ml-0.5" />
+                            <Edit2 className="w-3 h-3 text-[var(--pn-text-3)] group-hover:text-[var(--pn-action)] transition-colors ml-0.5" />
                           </button>
                         )}
                       </td>
                       <td className="px-4 py-3.5"><StatusBadge product={p} /></td>
                       <td className="px-4 py-3.5 hidden lg:table-cell">
-                        <span className="text-sm text-slate-500">{p.salesCount || 0}</span>
+                        <span className="text-sm text-[var(--pn-text-2)]">{p.salesCount || 0}</span>
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-1.5">
                           <button onClick={() => openEdit(p)} title="Edit product"
                             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                            style={{ background: "#EEF2FF", color: "#4f46e5" }}>
+                            style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button onClick={() => { if (confirm(`Delete "${p.name}"?`)) adminApi.products.delete(p._id).then(() => qc.invalidateQueries({ queryKey: ["panel-products"] })); }}
                             title="Delete product"
                             className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                            style={{ background: "#FEE2E2", color: "#dc2626" }}>
+                            style={{ background: "var(--pn-critical-bg)", color: "var(--pn-critical-text)" }}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -463,17 +474,17 @@ export default function Products() {
         )}
 
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid #F3F4F6" }}>
-            <p className="text-sm text-slate-400">Page {page} of {pages} · {total} products</p>
+          <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: "1px solid var(--pn-border)" }}>
+            <p className="text-sm text-[var(--pn-text-3)]">Page {page} of {pages} · {total} products</p>
             <div className="flex gap-2">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
                 className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-30"
-                style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -487,12 +498,12 @@ export default function Products() {
             className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={() => setModal(null)}>
             <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
-              className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl"
-              style={{ border: "1px solid #E9EBF5" }}
+              className="pn-modal w-full max-w-2xl my-8"
+              style={{ border: "1px solid var(--pn-border)" }}
               onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>{modal === "create" ? "Add Product" : `Edit — ${editing?.name}`}</h3>
-                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+                <h3 className="font-bold text-base" style={{ color: "var(--pn-text)" }}>{modal === "create" ? "Add Product" : `Edit — ${editing?.name}`}</h3>
+                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text-2)]" style={{ background: "var(--pn-surface-2)" }}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -521,51 +532,95 @@ export default function Products() {
                     <input type="number" step="0.01" min="0" value={form.price} onChange={e => setF("price", e.target.value)} required className={inputCls} style={inpStyle} placeholder="0.00" />
                   </div>
                   <div>
-                    <label className={labelCls} style={labelStyle}>Original Price <span className="text-slate-400 font-normal">(for strike-through)</span></label>
+                    <label className={labelCls} style={labelStyle}>Original Price <span className="text-[var(--pn-text-3)] font-normal">(for strike-through)</span></label>
                     <input type="number" step="0.01" min="0" value={form.originalPrice} onChange={e => setF("originalPrice", e.target.value)} className={inputCls} style={inpStyle} placeholder="0.00" />
                   </div>
                   <div>
-                    <label className={labelCls} style={labelStyle}>In Stock <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
+                    <label className={labelCls} style={labelStyle}>In Stock <span className="text-[var(--pn-text-3)] font-normal">(-1 = unlimited)</span></label>
                     <input type="number" value={form.stock} onChange={e => setF("stock", e.target.value)} className={inputCls} style={inpStyle} />
-                    <p className="text-[10px] text-slate-400 mt-1">Available for customers to order</p>
+                    <p className="text-[10px] text-[var(--pn-text-3)] mt-1">Available for customers to order</p>
                   </div>
                   <div>
-                    <label className={labelCls} style={labelStyle}>On Hand <span className="text-slate-400 font-normal">(-1 = unlimited)</span></label>
+                    <label className={labelCls} style={labelStyle}>On Hand <span className="text-[var(--pn-text-3)] font-normal">(-1 = unlimited)</span></label>
                     <input type="number" value={form.onHand} onChange={e => setF("onHand", e.target.value)} className={inputCls} style={inpStyle} />
-                    <p className="text-[10px] text-slate-400 mt-1">Physical quantity in your account</p>
+                    <p className="text-[10px] text-[var(--pn-text-3)] mt-1">Physical quantity in your account</p>
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Description</label>
-                    <textarea value={form.description} onChange={e => setF("description", e.target.value)} rows={2} className={`${inputCls} resize-none`} style={inpStyle} placeholder="Short description..." />
+                    <label className={labelCls} style={labelStyle}>Description <span className="text-[var(--pn-text-3)] font-normal">(shown on the product page — use new lines for detail)</span></label>
+                    <textarea value={form.description} onChange={e => setF("description", e.target.value)} rows={5} className={`${inputCls} resize-y`} style={inpStyle} placeholder="What the buyer gets, how it works, anything they need to know before buying..." />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Purchase Notice <span className="text-[var(--pn-text-3)] font-normal">(banner on the product page)</span></label>
+                    <textarea value={form.notice} onChange={e => setF("notice", e.target.value)} rows={2} className={`${inputCls} resize-none`} style={inpStyle}
+                      placeholder='e.g. You can only use this item if you own the boat.' />
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer select-none w-fit">
+                      <input type="checkbox" checked={form.noticeRequired} onChange={e => setF("noticeRequired", e.target.checked)}
+                        className="w-4 h-4 accent-indigo-600 rounded" />
+                      <span className="text-xs font-medium" style={{ color: "var(--pn-text)" }}>
+                        Require acknowledgment before buying
+                      </span>
+                    </label>
+                  </div>
+                  <div className="col-span-2">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className={labelCls} style={labelStyle}>Variations <span className="text-[var(--pn-text-3)] font-normal">(display only — no price or delivery impact)</span></label>
+                      <button type="button" onClick={() => setF("variations", [...form.variations, { name: "", options: "" }])}
+                        className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                        style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
+                        + Add group
+                      </button>
+                    </div>
+                    {form.variations.length === 0 && (
+                      <p className="text-[11px] text-[var(--pn-text-3)] mb-1">
+                        No variations. Add a group like <span className="font-semibold" style={{ color: "var(--pn-text-2)" }}>Skin Style → Ember, Frost, Shadow</span>.
+                      </p>
+                    )}
+                    <div className="flex flex-col gap-2">
+                      {form.variations.map((v, i) => (
+                        <div key={i} className="flex gap-2 items-start rounded-lg p-2" style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)" }}>
+                          <input value={v.name} placeholder="Group name (e.g. Skin Style)"
+                            onChange={e => setF("variations", form.variations.map((x, idx) => idx === i ? { ...x, name: e.target.value } : x))}
+                            className={`${inputCls} !w-40 !py-1.5 !text-xs`} style={inpStyle} />
+                          <input value={v.options} placeholder="Options, comma-separated (Ember, Frost, Shadow)"
+                            onChange={e => setF("variations", form.variations.map((x, idx) => idx === i ? { ...x, options: e.target.value } : x))}
+                            className={`${inputCls} flex-1 !py-1.5 !text-xs`} style={inpStyle} />
+                          <button type="button" aria-label="Remove variation group"
+                            onClick={() => setF("variations", form.variations.filter((_, idx) => idx !== i))}
+                            className="px-2 py-1.5 rounded-lg text-xs" style={{ color: "var(--pn-critical-text)" }}>
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className={labelCls} style={labelStyle}>Gradient From</label>
                     <div className="flex gap-2">
-                      <input type="color" value={form.gradFrom} onChange={e => setF("gradFrom", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "#E9EBF5" }} />
+                      <input type="color" value={form.gradFrom} onChange={e => setF("gradFrom", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "var(--pn-border)" }} />
                       <input value={form.gradFrom} onChange={e => setF("gradFrom", e.target.value)} className={`${inputCls} flex-1`} style={inpStyle} />
                     </div>
                   </div>
                   <div>
                     <label className={labelCls} style={labelStyle}>Gradient To</label>
                     <div className="flex gap-2">
-                      <input type="color" value={form.gradTo} onChange={e => setF("gradTo", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "#E9EBF5" }} />
+                      <input type="color" value={form.gradTo} onChange={e => setF("gradTo", e.target.value)} className="w-10 h-10 rounded-lg border cursor-pointer" style={{ borderColor: "var(--pn-border)" }} />
                       <input value={form.gradTo} onChange={e => setF("gradTo", e.target.value)} className={`${inputCls} flex-1`} style={inpStyle} />
                     </div>
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Product Image <span className="text-slate-400 font-normal">(cover / thumbnail)</span></label>
+                    <label className={labelCls} style={labelStyle}>Product Image <span className="text-[var(--pn-text-3)] font-normal">(cover / thumbnail)</span></label>
                     <ImageUpload value={form.imageUrl} onChange={url => setF("imageUrl", url)} folder="rbstars/products" />
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Gallery Images <span className="text-slate-400 font-normal">(shown on the product page)</span></label>
+                    <label className={labelCls} style={labelStyle}>Gallery Images <span className="text-[var(--pn-text-3)] font-normal">(shown on the product page)</span></label>
                     <ImageUpload value={form.images} onChange={urls => setF("images", urls)} multiple maxFiles={8} folder="rbstars/products" label="Upload gallery images" />
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Key Features <span className="text-slate-400 font-normal">(comma-separated, shown as a checklist)</span></label>
+                    <label className={labelCls} style={labelStyle}>Key Features <span className="text-[var(--pn-text-3)] font-normal">(comma-separated, shown as a checklist)</span></label>
                     <input value={form.features} onChange={e => setF("features", e.target.value)} className={inputCls} style={inpStyle} placeholder="Instant trade, Untradeable-safe, Limited stock" />
                   </div>
                   <div className="col-span-2">
-                    <label className={labelCls} style={labelStyle}>Tags <span className="text-slate-400 font-normal">(comma-separated)</span></label>
+                    <label className={labelCls} style={labelStyle}>Tags <span className="text-[var(--pn-text-3)] font-normal">(comma-separated)</span></label>
                     <input value={form.tags} onChange={e => setF("tags", e.target.value)} className={inputCls} style={inpStyle} placeholder="rare, godly, limited" />
                   </div>
                 </div>
@@ -579,33 +634,33 @@ export default function Products() {
                     <label key={key} className="flex items-center gap-2 cursor-pointer select-none">
                       <input type="checkbox" checked={form[key] as boolean} onChange={e => setF(key, e.target.checked)}
                         className="w-4 h-4 accent-indigo-600 rounded" />
-                      <span className="text-sm font-medium" style={{ color: "#374151" }}>{label}</span>
+                      <span className="text-sm font-medium" style={{ color: "var(--pn-text)" }}>{label}</span>
                     </label>
                   ))}
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <button type="button" onClick={() => setF("active", !form.active)} className="transition-colors">
                       {form.active
-                        ? <ToggleRight className="w-5 h-5" style={{ color: "#16a34a" }} />
-                        : <ToggleLeft className="w-5 h-5 text-slate-400" />}
+                        ? <ToggleRight className="w-5 h-5" style={{ color: "var(--pn-success-fg)" }} />
+                        : <ToggleLeft className="w-5 h-5 text-[var(--pn-text-3)]" />}
                     </button>
-                    <span className="text-sm font-medium" style={{ color: "#374151" }}>Active / Listed</span>
+                    <span className="text-sm font-medium" style={{ color: "var(--pn-text)" }}>Active / Listed</span>
                   </label>
                 </div>
 
                 {formError && (
-                  <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm text-[var(--pn-critical-text)] bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-lg px-4 py-3">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" /> {formError}
                   </div>
                 )}
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setModal(null)}
                     className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                    style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                     Cancel
                   </button>
                   <button type="submit" disabled={saving}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60 transition-colors"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "var(--pn-primary)" }}>
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                     {modal === "create" ? "Create Product" : "Save Changes"}
                   </button>
@@ -622,23 +677,23 @@ export default function Products() {
             className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={() => setModal(null)}>
             <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
-              className="bg-white rounded-2xl w-full max-w-2xl my-8 shadow-2xl"
-              style={{ border: "1px solid #E9EBF5" }}
+              className="pn-modal w-full max-w-2xl my-8"
+              style={{ border: "1px solid var(--pn-border)" }}
               onClick={e => e.stopPropagation()}>
 
-              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
+              <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
                 <div>
-                  <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Quick Add Products</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">Fill in a product and hit Add — repeat for each one, then create them all at once.</p>
+                  <h3 className="font-bold text-base" style={{ color: "var(--pn-text)" }}>Quick Add Products</h3>
+                  <p className="text-xs text-[var(--pn-text-3)] mt-0.5">Fill in a product and hit Add — repeat for each one, then create them all at once.</p>
                 </div>
-                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
+                <button onClick={() => setModal(null)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text-2)]" style={{ background: "var(--pn-surface-2)" }}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-6 space-y-5">
-                <div className="rounded-xl p-4 space-y-3" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">New Product</p>
+                <div className="rounded-xl p-4 space-y-3" style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)" }}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">New Product</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <input
@@ -663,13 +718,13 @@ export default function Products() {
                       ))}
                     </select>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--pn-text-3)] text-sm">$</span>
                       <input type="number" step="0.01" min="0" value={bulkDraft.price}
                         onChange={e => setBulkDraft(d => ({ ...d, price: e.target.value }))}
                         placeholder="Price *" className={`${inputCls} pl-7`} style={inpStyle} />
                     </div>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--pn-text-3)] text-sm">$</span>
                       <input type="number" step="0.01" min="0" value={bulkDraft.originalPrice}
                         onChange={e => setBulkDraft(d => ({ ...d, originalPrice: e.target.value }))}
                         placeholder="Orig price" className={`${inputCls} pl-7`} style={inpStyle} />
@@ -694,13 +749,13 @@ export default function Products() {
                     </div>
                   </div>
                   {bulkError && (
-                    <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 text-xs text-[var(--pn-critical-text)] bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-lg px-3 py-2">
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" /> {bulkError}
                     </div>
                   )}
                   <button onClick={addToQueue}
                     className="w-full py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-                    style={{ background: "#EEF2FF", color: "#4f46e5", border: "1px solid #c7d2fe" }}>
+                    style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)", border: "1px solid var(--pn-action-border)" }}>
                     <Plus className="w-4 h-4" /> Add to List
                   </button>
                 </div>
@@ -708,24 +763,24 @@ export default function Products() {
                 {bulkQueue.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{bulkQueue.length} product{bulkQueue.length !== 1 ? "s" : ""} queued</p>
-                      <button onClick={() => setBulkQueue([])} className="text-xs text-slate-400 hover:text-red-500 transition-colors">Clear all</button>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">{bulkQueue.length} product{bulkQueue.length !== 1 ? "s" : ""} queued</p>
+                      <button onClick={() => setBulkQueue([])} className="text-xs text-[var(--pn-text-3)] hover:text-[var(--pn-critical-text)] transition-colors">Clear all</button>
                     </div>
-                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5" }}>
+                    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)" }}>
                       {bulkQueue.map((item, i) => {
                         const catName = allCats.find((c: any) => c._id === item.category || c._id?.toString() === item.category);
                         return (
-                          <div key={i} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50"
-                            style={{ borderBottom: i < bulkQueue.length - 1 ? "1px solid #F3F4F6" : undefined }}>
+                          <div key={i} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--pn-surface-2)]"
+                            style={{ borderBottom: i < bulkQueue.length - 1 ? "1px solid var(--pn-border)" : undefined }}>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate" style={{ color: "#1e1b4b" }}>{item.name}</p>
-                              <p className="text-xs text-slate-400 truncate">
+                              <p className="text-sm font-semibold truncate" style={{ color: "var(--pn-text)" }}>{item.name}</p>
+                              <p className="text-xs text-[var(--pn-text-3)] truncate">
                                 {item.game} · {(catName as any)?.name || item.category} · ${parseFloat(item.price || "0").toFixed(2)}
                                 {item.onHand !== "-1" && item.onHand ? ` · ${item.onHand} on hand` : " · ∞ on hand"}
                               </p>
                             </div>
                             <button onClick={() => removeFromQueue(i)}
-                              className="w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0">
+                              className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--pn-text-2)] hover:text-[var(--pn-critical-text)] hover:bg-[var(--pn-critical-bg)] transition-colors flex-shrink-0">
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -736,10 +791,10 @@ export default function Products() {
                 )}
 
                 {bulkResult && bulkResult.errors.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 space-y-1">
-                    <p className="text-sm font-semibold text-yellow-700">{bulkResult.total} created, {bulkResult.errors.length} failed:</p>
+                  <div className="bg-[var(--pn-warning-bg)] border border-[var(--pn-warning-line)] rounded-xl px-4 py-3 space-y-1">
+                    <p className="text-sm font-semibold text-[var(--pn-warning-fg)]">{bulkResult.total} created, {bulkResult.errors.length} failed:</p>
                     {bulkResult.errors.map((e: any, i: number) => (
-                      <p key={i} className="text-xs text-yellow-600">• {e.name}: {e.error}</p>
+                      <p key={i} className="text-xs text-[var(--pn-warning-fg)]">• {e.name}: {e.error}</p>
                     ))}
                   </div>
                 )}
@@ -747,12 +802,12 @@ export default function Products() {
                 <div className="flex gap-3">
                   <button onClick={() => setModal(null)}
                     className="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                    style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                     Cancel
                   </button>
                   <button onClick={handleBulkSubmit} disabled={bulkSaving || bulkQueue.length === 0}
                     className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                    style={{ background: "#1e1b4b" }}>
+                    style={{ background: "var(--pn-primary)" }}>
                     {bulkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                     Create {bulkQueue.length > 0 ? `${bulkQueue.length} ` : ""}Product{bulkQueue.length !== 1 ? "s" : ""}
                   </button>

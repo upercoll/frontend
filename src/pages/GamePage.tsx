@@ -112,7 +112,10 @@ function ProductCard({ product, index, gameInfo, navigate, onAdd, qty }: {
   navigate: (url: string) => void; onAdd: (p: Product) => void; qty: number;
 }) {
   const { updateQty, removeItem } = useCart();
-  const maxStock = product.stock ?? 99;
+  // stock of -1 means "unlimited" on the backend — clamp ONLY when a real,
+  // finite cap was set. The old `product.stock ?? 99` treated -1 as the cap and
+  // disabled the Add to Cart button for every product with unlimited stock.
+  const maxStock = product.stock != null && product.stock >= 0 ? product.stock : 999;
   const atMax = qty >= maxStock;
   const savings = product.originalPrice && !product.outOfStock
     ? Math.round((product.originalPrice - product.price) / product.originalPrice * 100) : null;
@@ -257,7 +260,9 @@ export default function GamePage() {
           id: p._id as string, name: p.name as string, price: p.price as number,
           originalPrice: p.originalPrice as number | undefined,
           stock: p.stock as number | undefined,
-          outOfStock: (p.stock as number) === 0,
+          // Respect the explicit outOfStock flag as well — the admin can toggle
+          // it independently of the numeric stock count.
+          outOfStock: p.outOfStock === true || (p.stock as number) === 0,
           gradient: [(p.gradient as { from: string; to: string })?.from || "#3BA7FF", (p.gradient as { from: string; to: string })?.to || "#131C23"] as [string, string],
           imageUrl: p.imageUrl as string | undefined,
           categoryId: typeof p.category === "object" && p.category !== null ? (p.category as { _id: string })._id : p.category as string,
@@ -302,8 +307,9 @@ export default function GamePage() {
   const activeTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
   const activeTabCount = categoryCounts[activeTab] || 0;
 
-  const priceMin = useMemo(() => products.length > 0 ? Math.min(...products.filter(p => !p.outOfStock).map(p => p.price)) : 0, [products]);
-  const priceMax = useMemo(() => products.length > 0 ? Math.max(...products.filter(p => !p.outOfStock).map(p => p.price)) : 0, [products]);
+  const inStockPrices = products.filter(p => !p.outOfStock).map(p => p.price);
+  const priceMin = useMemo(() => inStockPrices.length ? Math.min(...inStockPrices) : 0, [products]);
+  const priceMax = useMemo(() => inStockPrices.length ? Math.max(...inStockPrices) : 0, [products]);
 
   useEffect(() => {
     if (products.length > 0) setPriceRange([priceMin, priceMax]);

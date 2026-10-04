@@ -143,12 +143,9 @@ function HeroPanel({ step }: { step: Step }) {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-        className="relative z-10 mb-6"
+        className="relative z-10 mb-2"
       >
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
-          style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 8px 24px rgba(59,167,255,0.3)" }}>
-          <Star size={36} fill="white" color="white" />
-        </div>
+        <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain" />
       </motion.div>
 
       {/* Text */}
@@ -158,14 +155,11 @@ function HeroPanel({ step }: { step: Step }) {
         transition={{ delay: 0.2 }}
         className="relative z-10"
       >
-        <h1 className="text-3xl font-black tracking-tight mb-2" style={{ color: "#F4F8FB" }}>
-          RB<span style={{ color: "#3BA7FF" }}>stars</span>
-        </h1>
         <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: "#637784" }}>
           {step === "login"
             ? "Welcome back! Sign in to access your account and orders."
             : step === "register"
-            ? "Join thousands of Roblox traders. Fast, safe, reliable."
+            ? "Join RBstars. Fast, safe, reliable."
             : step === "verify"
             ? "One step away from your new account."
             : "Keep your profile up to date."}
@@ -320,7 +314,21 @@ export default function AuthModal() {
     if (Object.keys(errs).length) return setFieldErrors(errs);
     setLoading(true);
     try {
-      updateUser({ displayName: displayName.trim(), robloxUsername: robloxUsername.trim(), ...(robloxAvatar ? { robloxAvatarUrl: robloxAvatar } : {}) });
+      // Persist to the server — the old code only updated local state, so the
+      // edit was lost on the next reload (and the stale profile stayed in
+      // localStorage).
+      const res = await fetch(`${BACKEND}/api/customer-auth/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("rbstars_customer_token")}` },
+        body: JSON.stringify({
+          displayName: displayName.trim(),
+          robloxUsername: robloxUsername.trim(),
+          ...(robloxAvatar ? { robloxAvatarUrl: robloxAvatar } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.message || "Update failed");
+      updateUser(data?.customer || { displayName: displayName.trim(), robloxUsername: robloxUsername.trim() });
       closeAuthModal();
     } catch (e: any) {
       setError(e.message || "Update failed");
@@ -382,10 +390,7 @@ export default function AuthModal() {
             <div className="flex-1 p-7 sm:p-8 flex flex-col justify-center">
               {/* Mobile logo */}
               <div className="sm:hidden flex items-center gap-2.5 mb-5">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#3BA7FF" }}>
-                  <Star size={17} fill="white" color="white" />
-                </div>
-                <span className="text-lg font-black" style={{ color: "#F4F8FB" }}>RB<span style={{ color: "#3BA7FF" }}>stars</span></span>
+                <img src="/rb-logo.png" alt="RBstars" className="w-10 h-10 object-contain" />
               </div>
 
               <AnimatePresence mode="wait">

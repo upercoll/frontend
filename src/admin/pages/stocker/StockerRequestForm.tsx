@@ -19,7 +19,7 @@ function PriceDiffBadge({ storePrice, customPrice }: { storePrice: number; custo
   const up = diff > 0;
   return (
     <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-      style={{ background: up ? "#ECFDF5" : "#FEF2F2", color: up ? "#059669" : "#DC2626" }}>
+      style={{ background: up ? "var(--pn-success-bg)" : "var(--pn-critical-bg)", color: up ? "var(--pn-success-fg)" : "var(--pn-critical-text)" }}>
       {up ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
       {up ? "+" : ""}{pct}%
     </span>
@@ -106,23 +106,23 @@ export default function StockerRequestForm() {
       <div className="flex flex-col items-center justify-center h-full py-20 space-y-4">
         <div className="w-16 h-16 rounded-full flex items-center justify-center"
           style={{ background: "rgba(74,222,128,0.12)", border: "2px solid rgba(74,222,128,0.3)" }}>
-          <Check className="w-8 h-8" style={{ color: "#4ade80" }} />
+          <Check className="w-8 h-8" style={{ color: "var(--pn-success-fg)" }} />
         </div>
-        <h2 className="text-xl font-bold text-white">Request Submitted!</h2>
-        <p className="text-sm text-center max-w-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+        <h2 className="text-xl font-bold text-[var(--pn-text)]">Request Submitted!</h2>
+        <p className="text-sm text-center max-w-sm" style={{ color: "var(--pn-text-2)" }}>
           Your stock request has been submitted and is pending admin approval.
         </p>
         <div className="flex gap-3">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => setSuccess(false)}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: "rgba(99,102,241,0.8)", border: "1px solid rgba(99,102,241,0.4)" }}>
+            className="px-5 py-2.5 rounded-xl text-sm font-semibold text-[var(--pn-text)]"
+            style={{ background: "var(--pn-action-tint)", border: "1px solid var(--pn-action-border)" }}>
             Submit Another
           </motion.button>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/stocker/history")}
             className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
+            style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)", color: "var(--pn-text-2)" }}>
             View My Requests
           </motion.button>
         </div>
@@ -133,8 +133,8 @@ export default function StockerRequestForm() {
   return (
     <div className="max-w-[1100px] mx-auto space-y-5">
       <div>
-        <h2 className="text-xl font-bold text-white">New Stock Request</h2>
-        <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <h2 className="text-xl font-bold text-[var(--pn-text)]">New Stock Request</h2>
+        <p className="text-sm mt-0.5" style={{ color: "var(--pn-text-3)" }}>
           Pick products, set your prices, and submit for admin approval
         </p>
       </div>
@@ -143,17 +143,17 @@ export default function StockerRequestForm() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--pn-text-3)" }} />
               <input
                 type="text" value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search products..."
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }}
+                style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
               />
             </div>
             <select value={selectedGame} onChange={e => setSelectedGame(e.target.value)}
               className="rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
+              style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)", color: "var(--pn-text-2)" }}>
               <option value="">All Games</option>
               {games.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
@@ -163,14 +163,14 @@ export default function StockerRequestForm() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-28 rounded-xl animate-pulse"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.06)" }} />
+                  style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)" }} />
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12 rounded-2xl"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <Package className="w-10 h-10 mx-auto mb-2" style={{ color: "rgba(255,255,255,0.15)" }} />
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>No products found</p>
+            <div className="text-center py-12 rounded-xl"
+              style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)" }}>
+              <Package className="w-10 h-10 mx-auto mb-2" style={{ color: "var(--pn-text-3)" }} />
+              <p className="text-sm" style={{ color: "var(--pn-text-3)" }}>No products found</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -182,57 +182,57 @@ export default function StockerRequestForm() {
                   <motion.div key={product._id} whileHover={{ y: -2 }}
                     className="rounded-xl overflow-hidden cursor-pointer"
                     style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: inCart ? "1.5px solid rgba(99,102,241,0.6)" : "1px solid rgba(255,255,255,0.08)",
-                      boxShadow: inCart ? "0 0 0 3px rgba(99,102,241,0.1)" : "none",
+                      background: "rgba(0,0,0,0.04)",
+                      border: inCart ? "1.5px solid var(--pn-action-border)" : "1px solid var(--pn-text-3)",
+                      boxShadow: inCart ? "0 0 0 3px var(--pn-action)" : "none",
                     }}
                     onClick={() => addToCart(product)}>
                     <div className="h-20 flex items-center justify-center"
                       style={{
                         background: gradient
                           ? `linear-gradient(135deg, ${gradient.from}, ${gradient.to})`
-                          : product.imageUrl ? "transparent" : "rgba(255,255,255,0.05)"
+                          : product.imageUrl ? "transparent" : "var(--pn-text-3)"
                       }}>
                       {product.imageUrl
                         ? <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                        : <Package className="w-8 h-8 text-white/30" />}
+                        : <Package className="w-8 h-8 text-[var(--pn-text-3)]" />}
                     </div>
                     <div className="p-2.5">
-                      <p className="text-xs font-semibold truncate text-white">{product.name}</p>
+                      <p className="text-xs font-semibold truncate text-[var(--pn-text)]">{product.name}</p>
                       <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs font-bold" style={{ color: "#4ade80" }}>${product.price.toFixed(2)}</span>
+                        <span className="text-xs font-bold" style={{ color: "var(--pn-success-fg)" }}>${product.price.toFixed(2)}</span>
                         {inCart ? (
                           <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
                             <button onClick={e => { e.stopPropagation(); removeFromCart(product._id); }}
                               className="w-5 h-5 rounded flex items-center justify-center"
-                              style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+                              style={{ background: "var(--pn-critical-bg)", color: "var(--pn-critical-text)" }}>
                               <Minus className="w-2.5 h-2.5" />
                             </button>
-                            <span className="text-xs font-bold min-w-[16px] text-center" style={{ color: "#a5b4fc" }}>{cartItem.quantity}</span>
+                            <span className="text-xs font-bold min-w-[16px] text-center" style={{ color: "var(--pn-action)" }}>{cartItem.quantity}</span>
                             <button onClick={e => { e.stopPropagation(); addToCart(product); }}
                               className="w-5 h-5 rounded flex items-center justify-center"
-                              style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                              style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>
                               <Plus className="w-2.5 h-2.5" />
                             </button>
                           </div>
                         ) : (
                           <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: "rgba(99,102,241,0.15)" }}>
-                            <Plus className="w-2.5 h-2.5" style={{ color: "#a5b4fc" }} />
+                            style={{ background: "var(--pn-action-tint)" }}>
+                            <Plus className="w-2.5 h-2.5" style={{ color: "var(--pn-action)" }} />
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="flex items-center gap-2 mt-1.5 pt-1.5" style={{ borderTop: "1px solid var(--pn-border)" }}>
                         <div className="flex-1 text-center">
-                          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>In Stock</p>
-                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock <= 0 ? "#f87171" : "#60a5fa" }}>
+                          <p className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>In Stock</p>
+                          <p className="text-[11px] font-bold" style={{ color: (product as any).stock <= 0 ? "var(--pn-critical-text)" : "var(--pn-action)" }}>
                             {(product as any).stock < 0 ? "∞" : (product as any).stock}
                           </p>
                         </div>
-                        <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.08)" }} />
+                        <div className="w-px h-4" style={{ background: "rgba(0,0,0,0.04)" }} />
                         <div className="flex-1 text-center">
-                          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>On Hand</p>
-                          <p className="text-[11px] font-bold" style={{ color: "#4ade80" }}>
+                          <p className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>On Hand</p>
+                          <p className="text-[11px] font-bold" style={{ color: "var(--pn-success-fg)" }}>
                             {(product as any).stock < 0 ? "∞" : ((product as any).onHand ?? (product as any).stock)}
                           </p>
                         </div>
@@ -246,13 +246,13 @@ export default function StockerRequestForm() {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="rounded-2xl p-4 sticky top-4"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <h3 className="font-semibold text-sm mb-3 text-white">
+          <div className="rounded-xl p-4 sticky top-4"
+            style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)" }}>
+            <h3 className="font-semibold text-sm mb-3 text-[var(--pn-text)]">
               Request Summary
               {cart.length > 0 && (
                 <span className="ml-1.5 text-xs px-1.5 py-0.5 rounded-full"
-                  style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                  style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>
                   {cart.length} item{cart.length !== 1 ? "s" : ""}
                 </span>
               )}
@@ -260,8 +260,8 @@ export default function StockerRequestForm() {
 
             {cart.length === 0 ? (
               <div className="text-center py-8">
-                <Package className="w-8 h-8 mx-auto mb-2" style={{ color: "rgba(255,255,255,0.15)" }} />
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Click products to add them</p>
+                <Package className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--pn-text-3)" }} />
+                <p className="text-xs" style={{ color: "var(--pn-text-3)" }}>Click products to add them</p>
               </div>
             ) : (
               <>
@@ -274,22 +274,22 @@ export default function StockerRequestForm() {
                         <motion.div key={c.product._id}
                           initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
                           className="rounded-xl p-2.5 space-y-2"
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                          style={{ background: "rgba(0,0,0,0.04)", border: "1px solid var(--pn-border)" }}>
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
-                              style={{ background: c.product.gradient ? `linear-gradient(135deg,${c.product.gradient.from},${c.product.gradient.to})` : "rgba(255,255,255,0.08)" }}>
+                              style={{ background: c.product.gradient ? `linear-gradient(135deg,${c.product.gradient.from},${c.product.gradient.to})` : "var(--pn-text-3)" }}>
                               {c.product.imageUrl && <img src={c.product.imageUrl} alt={c.product.name} className="w-full h-full object-cover" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold truncate text-white">{c.product.name}</p>
-                              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                              <p className="text-xs font-semibold truncate text-[var(--pn-text)]">{c.product.name}</p>
+                              <p className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>
                                 Store: ${c.product.price.toFixed(2)}
                               </p>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <button onClick={() => removeFromCart(c.product._id)}
                                 className="w-5 h-5 rounded flex items-center justify-center"
-                                style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+                                style={{ background: "var(--pn-critical-bg)", color: "var(--pn-critical-text)" }}>
                                 <Minus className="w-2.5 h-2.5" />
                               </button>
                               <input
@@ -298,11 +298,11 @@ export default function StockerRequestForm() {
                                 onChange={e => setCartQuantity(c.product._id, parseInt(e.target.value) || 1)}
                                 onClick={e => (e.target as HTMLInputElement).select()}
                                 className="w-10 text-center text-xs font-bold bg-transparent focus:outline-none rounded px-0.5"
-                                style={{ color: "white", border: "1px solid rgba(255,255,255,0.15)" }}
+                                style={{ color: "var(--pn-text)", border: "1px solid var(--pn-border)", background: "var(--pn-surface)" }}
                               />
                               <button onClick={() => addToCart(c.product)}
                                 className="w-5 h-5 rounded flex items-center justify-center"
-                                style={{ background: "rgba(99,102,241,0.2)", color: "#a5b4fc" }}>
+                                style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>
                                 <Plus className="w-2.5 h-2.5" />
                               </button>
                             </div>
@@ -311,27 +311,27 @@ export default function StockerRequestForm() {
                           <div className="flex items-center gap-2">
                             <div className="flex items-center gap-1.5 flex-1 rounded-lg px-2 py-1.5"
                               style={{
-                                background: hasCustom ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.05)",
-                                border: `1px solid ${hasCustom ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.08)"}`,
+                                background: hasCustom ? "var(--pn-action-tint)" : "var(--pn-text-3)",
+                                border: `1px solid ${hasCustom ? "var(--pn-action-border)" : "var(--pn-text-3)"}`,
                               }}>
-                              <Tag className="w-3 h-3 flex-shrink-0" style={{ color: hasCustom ? "#a5b4fc" : "rgba(255,255,255,0.3)" }} />
-                              <span className="text-[10px] font-medium flex-shrink-0" style={{ color: "rgba(255,255,255,0.4)" }}>Your price</span>
-                              <span className="text-[10px] flex-shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>$</span>
+                              <Tag className="w-3 h-3 flex-shrink-0" style={{ color: hasCustom ? "var(--pn-action)" : "var(--pn-text-3)" }} />
+                              <span className="text-[10px] font-medium flex-shrink-0" style={{ color: "var(--pn-text-3)" }}>Your price</span>
+                              <span className="text-[10px] flex-shrink-0" style={{ color: "var(--pn-text-3)" }}>$</span>
                               <input
                                 type="number" min="0" step="0.01"
                                 value={c.customPrice}
                                 onChange={e => setCustomPrice(c.product._id, parseFloat(e.target.value) || 0)}
                                 onClick={e => e.stopPropagation()}
                                 className="flex-1 w-0 min-w-0 bg-transparent text-xs font-bold focus:outline-none"
-                                style={{ color: hasCustom ? "#a5b4fc" : "white" }}
+                                style={{ color: hasCustom ? "var(--pn-action)" : "white" }}
                               />
                             </div>
                             <PriceDiffBadge storePrice={c.product.price} customPrice={c.customPrice} />
                           </div>
 
-                          <div className="flex justify-between text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          <div className="flex justify-between text-[10px]" style={{ color: "var(--pn-text-3)" }}>
                             <span>Total ({c.quantity}×)</span>
-                            <span className="font-semibold" style={{ color: hasCustom ? "#a5b4fc" : "#4ade80" }}>
+                            <span className="font-semibold" style={{ color: hasCustom ? "var(--pn-action)" : "var(--pn-success-fg)" }}>
                               ${(c.customPrice * c.quantity).toFixed(2)}
                             </span>
                           </div>
@@ -341,35 +341,35 @@ export default function StockerRequestForm() {
                   </AnimatePresence>
                 </div>
 
-                <div className="space-y-2 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                <div className="space-y-2 py-3" style={{ borderTop: "1px solid var(--pn-border)" }}>
                   {hasCustomPrices && (
-                    <div className="flex justify-between text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    <div className="flex justify-between text-xs" style={{ color: "var(--pn-text-3)" }}>
                       <span>Store total</span>
                       <span className="font-medium line-through">${storeTotal.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: "var(--pn-text-2)" }}>
                       {hasCustomPrices ? "Your total" : "Projected value"}
                     </span>
-                    <span className="font-bold" style={{ color: "#4ade80" }}>${customTotal.toFixed(2)}</span>
+                    <span className="font-bold" style={{ color: "var(--pn-success-fg)" }}>${customTotal.toFixed(2)}</span>
                   </div>
                   {hasCustomPrices && (
                     <div className="flex justify-between text-xs">
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Difference</span>
-                      <span className="font-bold" style={{ color: totalDiff >= 0 ? "#4ade80" : "#f87171" }}>
+                      <span style={{ color: "var(--pn-text-3)" }}>Difference</span>
+                      <span className="font-bold" style={{ color: totalDiff >= 0 ? "var(--pn-success-fg)" : "var(--pn-critical-text)" }}>
                         {totalDiff >= 0 ? "+" : ""}${totalDiff.toFixed(2)}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Total units</span>
-                    <span className="font-semibold text-white">{cart.reduce((s, c) => s + c.quantity, 0)}</span>
+                    <span style={{ color: "var(--pn-text-3)" }}>Total units</span>
+                    <span className="font-semibold text-[var(--pn-text)]">{cart.reduce((s, c) => s + c.quantity, 0)}</span>
                   </div>
                   {cartGame && (
                     <div className="flex justify-between text-xs">
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Game</span>
-                      <span className="font-semibold text-white">{cartGame}</span>
+                      <span style={{ color: "var(--pn-text-3)" }}>Game</span>
+                      <span className="font-semibold text-[var(--pn-text)]">{cartGame}</span>
                     </div>
                   )}
                 </div>
@@ -377,15 +377,15 @@ export default function StockerRequestForm() {
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleSubmit} disabled={submitMut.isPending}
                   className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "#3BA7FF" }}>
+                  style={{ background: "var(--pn-action)" }}>
                   {submitMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Submit Request
                 </motion.button>
                 <button onClick={() => setCart([])}
                   className="w-full py-2 mt-2 rounded-xl text-xs flex items-center justify-center gap-1 transition-colors"
-                  style={{ color: "rgba(255,255,255,0.25)" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#f87171"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)"}>
+                  style={{ color: "var(--pn-text-3)" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--pn-critical-text)"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--pn-text-3)"}>
                   <X className="w-3 h-3" /> Clear cart
                 </button>
               </>

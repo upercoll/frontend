@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar,
+  ResponsiveContainer, ReferenceLine,
 } from "recharts";
+import { TrendingUp } from "lucide-react";
 import { adminApi } from "../api";
+import { Segmented, EmptyState, Skeleton } from "./kit";
 
 interface TooltipProps {
   active?: boolean;
@@ -12,14 +14,17 @@ interface TooltipProps {
   label?: string;
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps) {
+function ChartTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0a1628] border border-white/10 rounded-lg p-3 shadow-xl">
-      <p className="text-slate-400 text-xs mb-2">{label}</p>
+    <div style={{
+      background: "var(--pn-surface)", border: "1px solid var(--pn-border)",
+      borderRadius: 8, padding: "8px 10px", boxShadow: "var(--pn-shadow-pop)",
+    }}>
+      <p style={{ fontSize: 11, color: "var(--pn-text-3)", marginBottom: 4 }}>{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-white text-sm font-medium">
-          {p.name === "revenue" ? `$${p.value.toFixed(2)}` : `${p.value} orders`}
+        <p key={i} style={{ fontSize: 13, fontWeight: 600, color: "var(--pn-text)" }}>
+          {p.name === "revenue" ? `$${p.value.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : `${p.value} orders`}
         </p>
       ))}
     </div>
@@ -30,76 +35,90 @@ export default function RevenueChart() {
   const [period, setPeriod] = useState<"monthly" | "daily">("monthly");
   const [year] = useState(new Date().getFullYear());
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["panel-revenue-chart", period, year],
     queryFn: () => adminApi.analytics.revenue(period, year),
   });
 
   const chart = data?.data.chart || [];
+  const total = chart.reduce((s: number, p: any) => s + (p.revenue || 0), 0);
 
   return (
-    <div className="bg-[#0d1f3c] border border-white/5 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-white font-semibold">Revenue Overview</h3>
-          <p className="text-slate-400 text-xs mt-0.5">
+    <>
+      <div className="pn-cardhead">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+             style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-action)" }}>
+          <TrendingUp className="w-3.5 h-3.5" strokeWidth={2.2} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate">Revenue</h3>
+          <p className="truncate">
             {period === "monthly" ? `Jan – Dec ${year}` : "Last 30 days"}
+            {total > 0 && <> · ${total.toLocaleString("en-US", { maximumFractionDigits: 0 })} total</>}
           </p>
         </div>
-        <div className="flex gap-2">
-          {(["monthly", "daily"] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                period === p ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              {p === "monthly" ? "Monthly" : "30 Days"}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          value={period}
+          onChange={setPeriod}
+          options={[
+            { label: "Monthly", value: "monthly" as const },
+            { label: "30 days", value: "daily" as const },
+          ]}
+        />
       </div>
 
-      {isLoading ? (
-        <div className="h-64 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={260}>
-          <AreaChart data={chart} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id="revGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
-            <XAxis
-              dataKey={period === "monthly" ? "month" : "label"}
-              tick={{ fill: "#64748b", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: "#64748b", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
-              dataKey="revenue"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              fill="url(#revGradient)"
-              dot={false}
-              activeDot={{ r: 4, fill: "#3b82f6" }}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      )}
-    </div>
+      <div className="pn-cardbody">
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-[240px] w-full" />
+          </div>
+        ) : isError || chart.length === 0 ? (
+          <EmptyState
+            icon={TrendingUp}
+            title="No revenue data yet"
+            body="Revenue will be charted here once orders start coming in."
+          />
+        ) : (
+          <ResponsiveContainer width="100%" height={248}>
+            <AreaChart data={chart} margin={{ top: 4, right: 4, bottom: 0, left: -14 }}>
+              <defs>
+                <linearGradient id="pnRevFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--pn-action)" stopOpacity="0.16" />
+                  <stop offset="100%" stopColor="var(--pn-action)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="var(--pn-divider)" strokeDasharray="2 4" vertical={false} />
+              <XAxis
+                dataKey={period === "monthly" ? "month" : "label"}
+                tick={{ fill: "var(--pn-text-3)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                minTickGap={18}
+              />
+              <YAxis
+                tick={{ fill: "var(--pn-text-3)", fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                width={54}
+                tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1)}k` : v}`}
+              />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: "var(--pn-border-strong)" }} />
+              <ReferenceLine y={0} stroke="var(--pn-border)" />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="var(--pn-action)"
+                strokeWidth={2}
+                fill="url(#pnRevFill)"
+                dot={false}
+                activeDot={{ r: 4, fill: "var(--pn-action)", stroke: "var(--pn-surface)", strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    </>
   );
 }

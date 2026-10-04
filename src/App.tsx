@@ -4,11 +4,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { SiteModeProvider } from "@/context/SiteModeContext";
 import CartDrawer from "@/components/CartDrawer";
 import Navbar from "@/components/Navbar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
+import AnnouncementPopup from "@/components/AnnouncementPopup";
 import WelcomeModal from "@/components/WelcomeModal";
 import WelcomeGiftModal from "@/components/WelcomeGiftModal";
 import Home from "@/pages/Home";
@@ -59,6 +61,9 @@ import Monitor from "@/admin/pages/Monitor";
 import SiteContent from "@/admin/pages/SiteContent";
 import ProofOfDelivery from "@/admin/pages/ProofOfDelivery";
 import AutoBotLogs from "@/admin/pages/AutoBotLogs";
+import Announcements from "@/admin/pages/Announcements";
+import ControlCenter from "@/admin/pages/ControlCenter";
+
 import AdminProfilePage from "@/admin/pages/Profile";
 
 import DeliveryTeam from "@/admin/pages/delivery/DeliveryTeam";
@@ -66,6 +71,7 @@ import DeliveryMemberDetail from "@/admin/pages/delivery/DeliveryMemberDetail";
 
 import Promos from "@/admin/pages/Promos";
 import Settings from "@/admin/pages/Settings";
+import SiteModes from "@/admin/pages/SiteModes";
 import RoleView from "@/admin/pages/RoleView";
 import OpenChats from "@/admin/pages/OpenChats";
 
@@ -197,6 +203,8 @@ function StorefrontRouter() {
       <AuthModal />
       <WelcomeModal />
       <WelcomeGiftModal />
+      {/* Site-wide announcement popup — owner-authored, shown on site load. */}
+      <AnnouncementPopup />
       {!isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && <MobileBottomNav />}
       <DiscordFloat />
     </>
@@ -263,6 +271,12 @@ function AdminRouter() {
       <Route path="/admin/auto-logs">
         <AdminLayout><AutoBotLogs /></AdminLayout>
       </Route>
+      <Route path="/admin/announcements">
+        <AdminLayout><Announcements /></AdminLayout>
+      </Route>
+      <Route path="/admin/control">
+        <AdminLayout><ControlCenter /></AdminLayout>
+      </Route>
       <Route path="/admin/delivery-team/:id">
         <AdminLayout><DeliveryMemberDetail /></AdminLayout>
       </Route>
@@ -274,6 +288,9 @@ function AdminRouter() {
       </Route>
       <Route path="/admin/settings">
         <AdminLayout><Settings /></AdminLayout>
+      </Route>
+      <Route path="/admin/site-modes">
+        <AdminLayout><SiteModes /></AdminLayout>
       </Route>
       <Route path="/admin/role-view">
         <AdminLayout><RoleView /></AdminLayout>
@@ -440,18 +457,20 @@ function RootRouter() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AdminAuthProvider>
-          <AdminSocketProvider>
-            <WouterRouter>
-              <RootRouter />
-            </WouterRouter>
-            <Toaster />
-          </AdminSocketProvider>
-        </AdminAuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <SiteModeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AdminAuthProvider>
+            <AdminSocketProvider>
+              <WouterRouter>
+                <RootRouter />
+              </WouterRouter>
+              <Toaster />
+            </AdminSocketProvider>
+          </AdminAuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </SiteModeProvider>
   );
 }
 

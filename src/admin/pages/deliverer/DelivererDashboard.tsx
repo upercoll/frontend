@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { TrendingUp, DollarSign, Package, Clock, Truck, ChevronRight, Receipt, Gamepad2 } from "lucide-react";
+import { useReducedMotion, motion } from "framer-motion";
+import {
+  Banknote, TrendingUp, Package, Gamepad2, ChevronRight,
+  Receipt, Truck, CircleCheck, Send,
+} from "lucide-react";
 import { Link } from "wouter";
 import { delivererGet } from "@/pages/DelivererLayout";
+import {
+  PageHeader, Card, CardHeader, MetricTile, Badge,
+  EmptyState, MetricSkeleton, ListRow, Skeleton,
+} from "../../components/kit";
 
 function fmt(n: number) { return `$${n.toFixed(2)}`; }
+
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (s < 60) return "just now";
@@ -14,6 +22,7 @@ function timeAgo(iso: string) {
 }
 
 export default function DelivererDashboard() {
+  const reduce = useReducedMotion();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [payoutsData, setPayoutsData] = useState<any>(null);
@@ -35,160 +44,168 @@ export default function DelivererDashboard() {
     ? d.assignments
     : (d?.games || []).map((game: string) => ({ game, commissionRate: d?.commissionRate ?? 20 }));
 
-  const stats = [
-    { label: "Unpaid Revenue",   value: fmt(d?.totalRevenue ?? 0),    icon: DollarSign, color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.15)" },
-    { label: "Unpaid Commission",value: fmt(d?.totalCommission ?? 0),  icon: TrendingUp, color: "#a78bfa", bg: "rgba(167,139,250,0.08)",  border: "rgba(167,139,250,0.15)" },
-    { label: "Total Delivered",  value: d?.totalDelivered ?? 0,        icon: Package,    color: "#7dd3fc", bg: "rgba(125,211,252,0.08)",  border: "rgba(125,211,252,0.15)" },
-  ];
+  const paidTotal = payouts.reduce((s, p) => s + (p.amount || 0), 0);
+  const avgCommission = records.length
+    ? records.reduce((s, r) => s + (r.commission || 0), 0) / records.length
+    : null;
 
-  if (loading) {
-    return (
-      <div className="space-y-5 max-w-4xl mx-auto animate-pulse">
-        <div className="h-8 w-48 rounded-xl bg-white/5" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-2xl bg-white/5 border border-white/5" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const rise = reduce ? {} : {
+    initial: { opacity: 0, y: 6 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.3, delay: 0.05 },
+  };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h2 className="text-xl font-bold text-white">Welcome back, {d?.name || "Deliverer"} 👋</h2>
-        <p className="text-sm mt-0.5 text-white/40">Here's your delivery summary</p>
-      </div>
+    <div className="p-6 space-y-5 max-w-[1100px] mx-auto">
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {stats.map((s, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-            className="rounded-2xl p-4 flex flex-col gap-3"
-            style={{ background: s.bg, border: `1px solid ${s.border}` }}>
-            <s.icon className="w-4 h-4" style={{ color: s.color }} />
-            <div>
-              <p className="text-white font-bold text-xl">{s.value}</p>
-              <p className="text-white/40 text-xs mt-0.5">{s.label}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <PageHeader
+        title={`Welcome back, ${d?.name || "Deliverer"}`}
+        description="Your delivery summary, updated live."
+      >
+        <Link href="/deliverer/queue">
+          <span className="pn-btn pn-btn--primary">
+            <Send className="w-3.5 h-3.5" strokeWidth={2.2} />
+            Open queue
+          </span>
+        </Link>
+      </PageHeader>
 
-      {/* Assigned games & commission rates */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}>
-        <div className="flex items-center gap-2 mb-3">
-          <Gamepad2 className="w-4 h-4" style={{ color: "#fbbf24" }} />
-          <p className="text-white/70 text-xs font-semibold">Your Assigned Games & Commission Rates</p>
-        </div>
-        {assignments.length === 0 ? (
-          <p className="text-white/30 text-xs">
-            No specific game assignments — you're set to handle all games at {d?.commissionRate ?? 20}% commission.
-          </p>
+      {/* ── KPIs ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {loading ? (
+          <MetricSkeleton count={3} />
         ) : (
-          <div className="flex flex-wrap gap-2">
-            {assignments.map((a) => (
-              <span key={a.game} className="text-xs px-3 py-1.5 rounded-xl font-medium"
-                style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)" }}>
-                {a.game} · {a.commissionRate}%
-              </span>
-            ))}
-          </div>
+          <>
+            <MetricTile label="Unpaid revenue" value={fmt(d?.totalRevenue ?? 0)} hint="earned, not yet settled" icon={Banknote} />
+            <MetricTile label="Unpaid commission" value={fmt(d?.totalCommission ?? 0)} hint="yours to be paid" icon={TrendingUp} />
+            <MetricTile label="Total delivered" value={(d?.totalDelivered ?? 0).toLocaleString()} hint="all time" icon={Package} />
+          </>
         )}
       </div>
 
-      {d?.lastPayoutAt && (
-        <p className="text-white/30 text-xs">
-          Last payout: {new Date(d.lastPayoutAt).toLocaleDateString()} · Lifetime revenue: {fmt(d.lifetimeRevenue ?? 0)} · Lifetime commission: {fmt(d.lifetimeCommission ?? 0)}
-        </p>
-      )}
-
-      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="text-white font-semibold text-sm">Recent Deliveries</h3>
-          <Link href="/deliverer/history">
-            <span className="text-sky-400 text-xs cursor-pointer hover:underline flex items-center gap-1">View all <ChevronRight className="w-3 h-3" /></span>
-          </Link>
-        </div>
-        {records.length === 0 ? (
-          <div className="py-12 text-center text-white/30 text-sm">No deliveries yet</div>
-        ) : (
-          <div className="divide-y divide-white/5">
-            {records.slice(0, 8).map((r, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(14,165,233,0.15)" }}>
-                  <Truck className="w-4 h-4 text-sky-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{r.robloxUsername || "Unknown"}</p>
-                  <p className="text-white/30 text-xs">{r.game || "—"} · {r.items?.length ?? 0} item{r.items?.length !== 1 ? "s" : ""} · {r.commissionRate}% of {fmt(r.orderTotal || 0)}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-emerald-400 text-sm font-semibold">{fmt(r.commission)}</p>
-                  <p className="text-white/25 text-xs">{timeAgo(r.deliveredAt)}</p>
-                  {r.paidOut
-                    ? <span className="text-[9px] px-1.5 py-0.5 rounded-full inline-block mt-0.5" style={{ background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>Paid</span>
-                    : <span className="text-[9px] px-1.5 py-0.5 rounded-full inline-block mt-0.5" style={{ background: "rgba(14,165,233,0.1)", color: "#7dd3fc" }}>Unpaid</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-white/30" /> Payout History
-          </h3>
-          {payouts.length > 0 && (
-            <span className="text-white/30 text-xs">Total paid: {fmt(payouts.reduce((sum, p) => sum + (p.amount || 0), 0))}</span>
+      {/* ── Secondary strip ── */}
+      <Card>
+        <CardHeader title="Snapshot" subtitle="Lifetime + recent performance" icon={CircleCheck} />
+        <div>
+          <ListRow icon={TrendingUp} title="Lifetime revenue" value={fmt(d?.lifetimeRevenue ?? 0)} />
+          <ListRow icon={Banknote} title="Lifetime commission" value={fmt(d?.lifetimeCommission ?? 0)} />
+          <ListRow
+            icon={Receipt}
+            title="Last payout"
+            value={d?.lastPayoutAt ? new Date(d.lastPayoutAt).toLocaleDateString() : "Never"}
+          />
+          {avgCommission !== null && (
+            <ListRow icon={TrendingUp} title="Avg. commission per delivery" value={fmt(avgCommission)} />
           )}
         </div>
-        {payouts.length === 0 ? (
-          <div className="py-10 text-center text-white/30 text-sm">No payouts yet</div>
-        ) : (
-          <div className="divide-y divide-white/5">
-            {payouts.slice(0, 6).map((p, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(74,222,128,0.12)" }}>
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium">{fmt(p.amount)}</p>
-                  <p className="text-white/30 text-xs">{p.deliveryCount} deliver{p.deliveryCount === 1 ? "y" : "ies"} covered</p>
-                </div>
-                <p className="text-white/25 text-xs flex-shrink-0">{new Date(p.createdAt).toLocaleDateString()}</p>
-              </div>
-            ))}
-          </div>
-        )}
+      </Card>
+
+      {/* ── Assigned games ── */}
+      <Card>
+        <CardHeader
+          title="Assigned games & rates"
+          subtitle="Commission paid on each title"
+          icon={Gamepad2}
+        />
+        <div className="pn-cardbody">
+          {assignments.length === 0 ? (
+            <p className="text-[13px]" style={{ color: "var(--pn-text-3)" }}>
+              No specific game assignments — you're set to handle all games at {d?.commissionRate ?? 20}% commission.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {assignments.map(a => (
+                <Badge key={a.game} tone="warning">{a.game} · {a.commissionRate}%</Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* ── Recent deliveries ── */}
+        <Card>
+          <CardHeader
+            title="Recent deliveries"
+            subtitle={`${records.length} most recent`}
+            icon={Truck}
+            action={
+              <Link href="/deliverer/history">
+                <span className="pn-btn pn-btn--plain">View all <ChevronRight className="w-3.5 h-3.5" /></span>
+              </Link>
+            }
+          />
+          {loading ? (
+            <div className="pn-cardbody space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
+          ) : records.length === 0 ? (
+            <EmptyState icon={Truck} title="No deliveries yet" body="Completed deliveries will appear here with their commission." />
+          ) : (
+            <div>
+              {records.slice(0, 8).map((r, i) => (
+                <motion.div key={i} {...(reduce ? {} : rise)}>
+                  <ListRow
+                    icon={Truck}
+                    tone="var(--pn-action)"
+                    title={r.robloxUsername || "Unknown"}
+                    meta={`${r.game || "—"} · ${r.items?.length ?? 0} item${r.items?.length !== 1 ? "s" : ""} · ${r.commissionRate}% of ${fmt(r.orderTotal || 0)}`}
+                    value={<span style={{ color: "var(--pn-success-fg)" }}>{fmt(r.commission)}</span>}
+                    right={
+                      <span className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <Badge tone={r.paidOut ? "success" : "info"}>{r.paidOut ? "Paid" : "Unpaid"}</Badge>
+                        <span className="pn-row__meta">{timeAgo(r.deliveredAt)}</span>
+                      </span>
+                    }
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* ── Payout history ── */}
+        <Card>
+          <CardHeader
+            title="Payout history"
+            subtitle={payouts.length ? `Total paid ${fmt(paidTotal)}` : "None yet"}
+            icon={Receipt}
+          />
+          {loading ? (
+            <div className="pn-cardbody space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-2/3" /></div>
+          ) : payouts.length === 0 ? (
+            <EmptyState icon={Receipt} title="No payouts yet" body="Payouts show up here once the admin settles a period." />
+          ) : (
+            <div>
+              {payouts.slice(0, 6).map((p, i) => (
+                <ListRow
+                  key={i}
+                  icon={Receipt}
+                  tone="var(--pn-success-fg)"
+                  title={fmt(p.amount)}
+                  meta={`${p.deliveryCount} deliver${p.deliveryCount === 1 ? "y" : "ies"} covered`}
+                  value={<span className="pn-row__meta">{new Date(p.createdAt).toLocaleDateString()}</span>}
+                />
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
 
       <Link href="/deliverer/queue">
-        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
-          className="flex items-center justify-between rounded-2xl px-5 py-4 cursor-pointer"
-          style={{ background: "rgba(59,167,255,0.15)", border: "1px solid rgba(14,165,233,0.2)" }}>
+        <div className="pn-card flex items-center justify-between px-5 py-4 cursor-pointer transition-colors"
+             style={{ borderColor: "var(--pn-action-border)", background: "var(--pn-action-tint)" }}>
           <div className="flex items-center gap-3">
-            <MessageSquareIcon />
+            <span className="pn-row__icon" style={{ background: "var(--pn-surface)", borderColor: "var(--pn-action-border)", color: "var(--pn-action)" }}>
+              <Package className="w-4 h-4" />
+            </span>
             <div>
-              <p className="text-white font-semibold text-sm">Go to Claim Queue</p>
-              <p className="text-white/40 text-xs">Pick up and deliver pending chats</p>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--pn-text)" }}>Go to claim queue</p>
+              <p className="text-xs" style={{ color: "var(--pn-text-2)" }}>Pick up and deliver pending chats</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-sky-400" />
-        </motion.div>
+          <ChevronRight className="w-5 h-5" style={{ color: "var(--pn-action)" }} />
+        </div>
       </Link>
-    </div>
-  );
-}
 
-function MessageSquareIcon() {
-  return (
-    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(14,165,233,0.2)" }}>
-      <Package className="w-5 h-5 text-sky-400" />
     </div>
   );
 }

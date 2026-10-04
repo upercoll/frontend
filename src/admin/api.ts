@@ -2,6 +2,7 @@ const BASE = import.meta.env.VITE_API_URL || "";
 const PANEL = `${BASE}/api/panel`;
 const COLLAB_BASE = `${BASE}/api/collab`;
 const STOCKER_BASE = `${BASE}/api/stocker`;
+const ANNOUNCE_BASE = `${BASE}/api/announcements`;
 
 function getToken(): string | null {
   return localStorage.getItem("panel_token");
@@ -47,6 +48,25 @@ async function collabReq<T>(method: string, path: string, body?: unknown): Promi
   if (!res.ok) throw new Error(data.message || "Request failed");
   return data;
 }
+
+async function announceReq<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const res = await fetch(`${ANNOUNCE_BASE}${path}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Request failed");
+  return data;
+}
+
+const aget = <T>(path: string) => announceReq<T>("GET", path);
+const apost = <T>(path: string, body?: unknown) => announceReq<T>("POST", path, body);
+const apatch = <T>(path: string, body?: unknown) => announceReq<T>("PATCH", path, body);
+const adel = <T>(path: string) => announceReq<T>("DELETE", path);
 
 const cget = <T>(path: string) => collabReq<T>("GET", path);
 const cpost = <T>(path: string, body?: unknown) => collabReq<T>("POST", path, body);
@@ -146,7 +166,7 @@ export const adminApi = {
       patch<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/status`, { status, notes }),
     fulfill: (id: string, data: { trackingNumber?: string; carrier?: string; notes?: string }) =>
       post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/fulfill`, data),
-    refund: (id: string, data: { amount?: number; reason?: string }) =>
+    refund: (id: string, data: { amount?: number; reason?: string; restockItems?: boolean }) =>
       post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/refund`, data),
     addTimeline: (id: string, data: { action: string; details?: string }) =>
       post<{ success: boolean; data: { order: import("./types").Order } }>(`/orders/${id}/timeline`, data),
@@ -198,6 +218,29 @@ export const adminApi = {
       del(`/categories/${id}/subcategories/${subId}`),
   },
 
+  announcements: {
+    listAll: (status?: "published" | "drafts") =>
+      aget<{ success: boolean; data: { announcements: Announcement[] } }>(`/admin${status ? `?status=${status}` : ""}`),
+    create: (body: Partial<Announcement>) =>
+      apost<{ success: boolean; data: { announcement: Announcement } }>("/admin", body),
+    update: (id: string, body: Partial<Announcement>) =>
+      apatch<{ success: boolean; data: { announcement: Announcement } }>(`/admin/${id}`, body),
+    remove: (id: string) => adel<{ success: boolean; message: string }>(`/admin/${id}`),
+
+    broadcasts: () =>
+      aget<{ success: boolean; data: { broadcasts: EmailBroadcast[] } }>("/broadcasts"),
+    audienceCount: (audience: string) =>
+      aget<{ success: boolean; data: { audience: string; count: number } }>(
+        `/broadcasts/audience-count?audience=${audience}`
+      ),
+    sendBroadcast: (body: {
+      subject: string; body: string; audience: string;
+      promoCode?: string; ctaLabel?: string; ctaUrl?: string;
+    }) => apost<{ success: boolean; data: { broadcast: EmailBroadcast; queued: number } }>("/broadcasts", body),
+    cancelBroadcast: (id: string) =>
+      apost<{ success: boolean; data: { broadcast: EmailBroadcast } }>(`/broadcasts/${id}/cancel`),
+  },
+
   siteContent: {
     getAll: () => get<{ success: boolean; data: import("./types").SiteContentItem[] }>("/site-content"),
     getSection: (section: string) => get<{ success: boolean; data: import("./types").SiteContentItem[] }>(`/site-content/section/${section}`),
@@ -229,7 +272,11 @@ export const adminApi = {
   },
 
   agentStats: {
-    getAll: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary[] } }>("/agent-stats"),
+    getAll: (params?: { game?: string; online?: string }) => {
+      const clean = Object.fromEntries(Object.entries(params || {}).filter(([, v]) => v));
+      const q = Object.keys(clean).length ? `?${new URLSearchParams(clean).toString()}` : "";
+      return get<{ success: boolean; data: { agents: import("./types").AgentStatsSummary[] } }>(`/agent-stats${q}`);
+    },
     getMe: () => get<{ success: boolean; data: { stats: import("./types").AgentStatsSummary } }>("/agent-stats/me"),
     getDetail: (id: string) => get<{ success: boolean; data: any }>(`/agent-stats/${id}`),
   },
@@ -244,6 +291,12 @@ export const adminApi = {
   settings: {
     get: () => get<{ success: boolean; data: { settings: any } }>("/settings"),
     update: (data: any) => patch<{ success: boolean; data: { settings: any } }>("/settings", data),
+  },
+
+  siteModes: {
+    get: () => get<{ success: boolean; data: { halloween: boolean } }>("/site-modes"),
+    update: (data: { halloween: boolean }) =>
+      patch<{ success: boolean; data: { halloween: boolean } }>("/site-modes", data),
   },
 
   upload: {
@@ -387,8 +440,10 @@ export const adminApi = {
       cdel(`/${id}/products/${cpId}`),
     getCollaboratorPayouts: (id: string) =>
       cget<any>(`/${id}/payouts`),
-    markPaid: (id: string) =>
-      cpost<any>(`/${id}/payouts/mark-paid`, {}),
+    getPayoutDetail: (id: string, payoutId: string) =>
+      cget<any>(`/${id}/payouts/${payoutId}`),
+    markPaid: (id: string, data?: { amount?: number; notes?: string }) =>
+      cpost<any>(`/${id}/payouts/mark-paid`, data || {}),
     listAllPayouts: () =>
       cget<any>("/payouts"),
   },

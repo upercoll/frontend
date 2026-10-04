@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, User, Info, Lock } from "lucide-react";
+import { ThreadPanel, ThreadBadge, ThreadMeta } from "./ChatThread";
+import { playMessageSound } from "../lib/sounds";
+import type { ThreadMessage } from "./ChatThread";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import type { ClaimSession, ClaimMessage } from "../types";
-import { cn } from "@/lib/utils";
 
 interface ChatWindowProps {
   session: ClaimSession;
@@ -16,24 +17,6 @@ const GENERIC_ITEM_NAMES = ["general claim", "claim chat"];
 function cleanItemName(raw?: string): string {
   if (!raw || GENERIC_ITEM_NAMES.includes(raw.trim().toLowerCase())) return "";
   return raw.trim();
-}
-
-function playPing() {
-  try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.value = 1100;
-    gain.gain.setValueAtTime(0.2, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.15);
-  } catch {}
 }
 
 export default function ChatWindow({ session, onUpdate, onSessionClaimed }: ChatWindowProps) {
@@ -100,7 +83,7 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     const handleNewMsg = (data: ClaimMessage & { roomId: string }) => {
       if (data.roomId && data.roomId !== session.roomId) return;
       addMessage(data);
-      if (data.sender === "customer") playPing();
+      if (data.sender === "customer") playMessageSound();
     };
     const handleMsgAck = (data: ClaimMessage & { roomId: string }) => addMessage(data);
     const handleTyping = ({ roomId }: { roomId?: string; senderName?: string }) => {
@@ -192,146 +175,84 @@ export default function ChatWindow({ session, onUpdate, onSessionClaimed }: Chat
     ended:   "Ended",
     closed:  "Closed",
   };
-  const statusColor: Record<string, string> = {
-    pending: "bg-yellow-400/10 text-yellow-400",
-    active:  "bg-emerald-400/10 text-emerald-400",
-    claimed: "bg-blue-400/10 text-blue-400",
-    ended:   "bg-slate-400/10 text-slate-400",
-    closed:  "bg-purple-400/10 text-purple-400",
+  const statusPill: Record<string, { bg: string; fg: string }> = {
+    pending: { bg: "var(--pn-warning-bg)",    fg: "var(--pn-warning-fg)" },
+    active:  { bg: "var(--pn-success-bg)",    fg: "var(--pn-success-fg)" },
+    claimed: { bg: "var(--pn-action-tint)",   fg: "var(--pn-action)" },
+    ended:   { bg: "var(--pn-surface-2)",    fg: "var(--pn-text-3)" },
+    closed:  { bg: "var(--pn-surface-2)",    fg: "var(--pn-text-2)" },
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a1628] rounded-xl border border-white/5 overflow-hidden">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-white/5 bg-[#0d1f3c] flex items-center gap-3 flex-shrink-0">
-        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-blue-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-medium truncate">{session.robloxUsername}</p>
-          <p className="text-slate-500 text-xs truncate">
-            {session.contactEmail}
-            {session.game && ` · ${session.game}`}
-            {cleanItemName(session.itemName) && ` · ${cleanItemName(session.itemName)}`}
-          </p>
-        </div>
-        <div className={cn("text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0", statusColor[sessionStatus] || statusColor.pending)}>
-          {statusLabel[sessionStatus] || sessionStatus}
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3">
-        {sessionStatus === "pending" && (
-          <div className="text-center py-4">
-            <p className="text-yellow-400/70 text-xs bg-yellow-400/5 border border-yellow-400/10 rounded-xl px-4 py-3">
+    <div className="flex flex-col h-full min-h-0 rounded-xl border overflow-hidden"
+         style={{ background: "var(--pn-surface)", borderColor: "var(--pn-border)" }}>
+      <ThreadPanel
+        messages={messages as unknown as ThreadMessage[]}
+        draft={text}
+        onDraftChange={(v) => setText(v)}
+        onSend={sendMessage}
+        sendLabel="Send Reply"
+        placeholder={sessionStatus === "pending" ? "Type to claim this chat..." : "Type a message..."}
+        readOnly={isReadOnly}
+        notices={[
+          sessionStatus === "pending" && (
+            <p
+              style={{
+                margin: 0,
+                width: "100%",
+                textAlign: "center",
+                fontSize: 12,
+                padding: "10px 14px",
+                borderRadius: 10,
+                background: "var(--pn-warning-bg)",
+                border: "1px solid var(--pn-warning-line)",
+                color: "var(--pn-warning-fg)",
+              }}
+            >
               Type a message to claim this chat and start helping the customer.
             </p>
-          </div>
-        )}
-
-        {sessionStatus === "closed" && (
-          <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs text-purple-300/70 bg-purple-500/5 border border-purple-500/10">
-            <Lock className="w-3 h-3 flex-shrink-0" />
-            This chat is closed — read-only view
-          </div>
-        )}
-
-        <AnimatePresence initial={false}>
-          {messages.map((msg, i) => (
-            <motion.div
-              key={msg._id || i}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              className={cn(
-                "flex",
-                msg.sender === "agent"  ? "justify-end" :
-                msg.sender === "system" ? "justify-center" :
-                "justify-start"
-              )}
+          ),
+          sessionStatus === "closed" && (
+            <p
+              style={{
+                margin: 0,
+                width: "100%",
+                textAlign: "center",
+                fontSize: 12,
+                padding: "10px 14px",
+                borderRadius: 10,
+                background: "var(--pn-action-tint)",
+                border: "1px solid var(--pn-action-border)",
+                color: "var(--pn-action)",
+              }}
             >
-              {msg.sender === "system" ? (
-                <div className="flex items-center gap-2 text-slate-500 text-xs bg-white/3 border border-white/5 px-3 py-1.5 rounded-full">
-                  <Info className="w-3 h-3 flex-shrink-0" />
-                  {msg.text}
-                </div>
-              ) : (
-                <div className={cn(
-                  "max-w-[80%] sm:max-w-sm flex flex-col gap-1",
-                  msg.sender === "agent" ? "items-end" : "items-start"
-                )}>
-                  <p className={cn("text-[10px]", msg.sender === "agent" ? "text-slate-500 text-right" : "text-slate-500")}>
-                    {msg.senderName}
-                  </p>
-                  <div className={cn(
-                    "px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words",
-                    msg.sender === "agent"
-                      ? "bg-blue-600 text-white rounded-br-sm"
-                      : "bg-[#0d1f3c] text-slate-200 border border-white/5 rounded-bl-sm"
-                  )}>
-                    {msg.text}
-                  </div>
-                  <p className="text-slate-600 text-[10px]">
-                    {new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(msg.timestamp))}
-                  </p>
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-
-        {isTyping && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 items-center">
-            <div className="flex gap-1 bg-[#0d1f3c] border border-white/5 px-3 py-2 rounded-2xl rounded-bl-sm">
-              {[0, 1, 2].map(i => (
-                <motion.div
-                  key={i}
-                  animate={{ y: [0, -4, 0] }}
-                  transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.2 }}
-                  className="w-1.5 h-1.5 rounded-full bg-slate-500"
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Input */}
-      {!isReadOnly ? (
-        <div className="p-2.5 md:p-3 border-t border-white/5 flex-shrink-0">
-          <div className="flex gap-2 items-end">
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              placeholder={sessionStatus === "pending" ? "Type to claim this chat..." : "Type a message..."}
-              rows={1}
-              className="flex-1 bg-[#0d1f3c] border border-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:border-blue-500/50 transition-colors"
-              style={{ minHeight: 40, maxHeight: 120 }}
-            />
-            <motion.button
-              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              onClick={sendMessage}
-              disabled={!text.trim()}
-              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
-            >
-              <Send className="w-4 h-4 text-white" />
-            </motion.button>
-          </div>
-        </div>
-      ) : (
-        <div className="p-3 border-t border-white/5 text-center flex-shrink-0">
-          <p className="text-slate-500 text-xs flex items-center justify-center gap-1.5">
-            {sessionStatus === "closed"
-              ? <><Lock className="w-3 h-3 text-purple-400/50" /> Chat closed</>
-              : "This session has ended"}
-          </p>
-        </div>
-      )}
+              This chat is closed — read-only view
+            </p>
+          ),
+        ].filter(Boolean) as React.ReactNode[]}
+        readOnlyNote={
+          sessionStatus === "closed"
+            ? <>This chat is closed — read-only view</>
+            : "This session has ended"
+        }
+        meta={
+          <>
+            <ThreadBadge label={statusLabel[sessionStatus] || sessionStatus} {...statusPill[sessionStatus]} />
+            <ThreadMeta>{session.robloxUsername}</ThreadMeta>
+            <ThreadMeta>{session.contactEmail}</ThreadMeta>
+            {session.game && <ThreadMeta>{session.game}</ThreadMeta>}
+            {cleanItemName(session.itemName) && <ThreadMeta>{cleanItemName(session.itemName)}</ThreadMeta>}
+            {session.orderRef && <ThreadMeta>{session.orderRef}</ThreadMeta>}
+            {session.assignedAgent?.name && (
+              <ThreadMeta>
+                <span style={{ color: "var(--pn-action)" }}>
+                  Assigned: {session.assignedAgent.name}
+                </span>
+              </ThreadMeta>
+            )}
+          </>
+        }
+      />
     </div>
   );
 }

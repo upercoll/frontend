@@ -5,7 +5,7 @@ import { Link, useRoute } from "wouter";
 import { adminApi } from "../api";
 import {
   ChevronLeft, Loader2, CheckCircle, Video, DollarSign,
-  Eye, ExternalLink, Clock, AlertCircle, Hash,
+  Eye, ExternalLink, Clock, AlertCircle, Hash, Heart,
 } from "lucide-react";
 
 function fmtNum(n: number) {
@@ -24,14 +24,15 @@ function fmtDateTime(d?: string | null) {
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  in_review: { bg: "#FEF9C3", text: "#854D0E",  border: "#FDE047" },
-  reviewed:  { bg: "#EFF6FF", text: "#1D4ED8",  border: "#93C5FD" },
-  accepted:  { bg: "#ECFDF5", text: "#065F46",  border: "#6EE7B7" },
-  paid:      { bg: "#F3F4F6", text: "#374151",  border: "#D1D5DB" },
+  in_review: { bg: "var(--pn-warning-bg)", text: "var(--pn-warning-fg)",  border: "var(--pn-warning-line)" },
+  reviewed:  { bg: "var(--pn-action-tint)", text: "var(--pn-info-fg)",  border: "var(--pn-action-border)" },
+  accepted:  { bg: "var(--pn-success-bg)", text: "var(--pn-success-fg)",  border: "var(--pn-success-line)" },
+  paid:      { bg: "var(--pn-surface-2)", text: "var(--pn-text)",  border: "var(--pn-border-strong)" },
 };
 const STATUS_LABELS: Record<string, string> = {
   in_review: "In Review", reviewed: "Reviewed", accepted: "Accepted", paid: "Paid",
 };
+import { PageHeader, MetricTile } from "../components/kit";
 
 function YouTubeIcon({ className }: { className?: string }) {
   return (
@@ -110,7 +111,7 @@ export default function SocialsTrackerDetail() {
     return (
       <div className="p-6 space-y-3 max-w-[1200px] mx-auto">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-20 rounded-xl animate-pulse" style={{ background: "#F7F8FC" }} />
+          <div key={i} className="h-20 rounded-xl animate-pulse" style={{ background: "var(--pn-surface-2)" }} />
         ))}
       </div>
     );
@@ -121,70 +122,61 @@ export default function SocialsTrackerDetail() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/admin/socials/creators">
-          <button className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+          <button className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
             <ChevronLeft className="w-4 h-4" />
           </button>
         </Link>
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{creator?.name || "Creator"}</h2>
-          <p className="text-sm text-slate-500">{creator?.email}</p>
-        </div>
+        <PageHeader title={creator?.name || "Creator"} description={creator?.email} icon={Video} />
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Videos", value: allSubmissions.length, icon: Video, color: "#6366f1" },
-          { label: "Total Views", value: fmtNum(totalViews), icon: Eye, color: "#60a5fa" },
-          { label: "In Review", value: inReviewCount, icon: Clock, color: "#d97706" },
-          { label: "Total Paid Out", value: `$${totalPaid.toFixed(2)}`, icon: DollarSign, color: "#059669" },
+          { label: "Total Videos", value: allSubmissions.length, icon: Video, color: "var(--pn-action)" },
+          { label: "Total Views", value: fmtNum(totalViews), icon: Eye, color: "var(--pn-action)" },
+          { label: "In Review", value: inReviewCount, icon: Clock, color: "var(--pn-warning-fg)" },
+          { label: "Total Paid Out", value: `$${totalPaid.toFixed(2)}`, icon: DollarSign, color: "var(--pn-success-fg)" },
         ].map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-4" style={{ border: "1px solid #E9EBF5" }}>
-            <div className="flex items-center gap-2 mb-2">
-              <s.icon className="w-4 h-4" style={{ color: s.color }} />
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{s.label}</p>
-            </div>
-            <p className="text-xl font-bold" style={{ color: "#1e1b4b" }}>{s.value}</p>
-          </div>
+          <MetricTile key={i} label={s.label} value={s.value} icon={s.icon} />
         ))}
       </div>
 
       {/* Mark as Paid banner */}
       {pendingPayout > 0 && (
-        <div className="bg-white rounded-xl p-5 flex items-center justify-between" style={{ border: "1px solid #E9EBF5" }}>
+        <div className="bg-[var(--pn-surface)] rounded-xl p-5 flex items-center justify-between" style={{ border: "1px solid var(--pn-border)" }}>
           <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Pending Payout</p>
-            <p className="text-3xl font-bold mt-1" style={{ color: "#059669" }}>${pendingPayout.toFixed(2)} USD</p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs font-semibold text-[var(--pn-text-3)] uppercase tracking-wide">Pending Payout</p>
+            <p className="text-3xl font-bold mt-1" style={{ color: "var(--pn-success-fg)" }}>${pendingPayout.toFixed(2)} USD</p>
+            <p className="text-xs text-[var(--pn-text-3)] mt-1">
               {acceptedSubmissions.length} accepted video{acceptedSubmissions.length !== 1 ? "s" : ""} pending payment
             </p>
           </div>
           <div>
-            {markErr && <p className="text-sm text-red-600 mb-2">{markErr}</p>}
+            {markErr && <p className="text-sm text-[var(--pn-critical-text)] mb-2">{markErr}</p>}
             <button onClick={() => setConfirmOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
-              style={{ background: "#059669" }}>
+              style={{ background: "var(--pn-success-fg)" }}>
               <CheckCircle className="w-4 h-4" /> Mark as Paid
             </button>
           </div>
         </div>
       )}
 
-      <div className="bg-white rounded-xl p-4 flex flex-wrap items-center gap-3" style={{ border: "1px solid #E9EBF5" }}>
-        <div className="flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Default creator rate</p><p className="text-sm font-bold mt-1" style={{ color: "#1e1b4b" }}>{creator?.socialRateType === "per_video" ? "$" : "$"}{creator?.socialRate || 0}{creator?.socialRateType === "per_video" ? " per video" : " per 1K views"}</p></div>
-        {editingRate ? <><select value={rateType} onChange={e => setRateType(e.target.value as any)} className="rounded-lg p-2 text-xs border"><option value="per_1k">Per 1K views</option><option value="per_video">Per video</option></select><input value={rate} onChange={e => setRate(e.target.value)} type="number" className="w-24 rounded-lg p-2 text-xs border" placeholder="Rate"/><button onClick={saveCreatorRate} className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-bold">Save</button></> : <button onClick={() => { setRateType(creator?.socialRateType || "per_1k"); setRate(String(creator?.socialRate || "")); setEditingRate(true); }} className="px-3 py-2 rounded-lg text-xs font-bold" style={{ background: "#EEF2FF", color: "#4f46e5" }}>Change default rate</button>}
+      <div className="bg-[var(--pn-surface)] rounded-xl p-4 flex flex-wrap items-center gap-3" style={{ border: "1px solid var(--pn-border)" }}>
+        <div className="flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Default creator rate</p><p className="text-sm font-bold mt-1" style={{ color: "var(--pn-text)" }}>{creator?.socialRateType === "per_video" ? "$" : "$"}{creator?.socialRate || 0}{creator?.socialRateType === "per_video" ? " per video" : " per 1K views"}</p></div>
+        {editingRate ? <><select value={rateType} onChange={e => setRateType(e.target.value as any)} className="rounded-lg p-2 text-xs border"><option value="per_1k">Per 1K views</option><option value="per_video">Per video</option></select><input value={rate} onChange={e => setRate(e.target.value)} type="number" className="w-24 rounded-lg p-2 text-xs border" placeholder="Rate"/><button onClick={saveCreatorRate} className="px-3 py-2 rounded-lg bg-[var(--pn-primary)] text-white text-xs font-bold">Save</button></> : <button onClick={() => { setRateType(creator?.socialRateType || "per_1k"); setRate(String(creator?.socialRate || "")); setEditingRate(true); }} className="px-3 py-2 rounded-lg text-xs font-bold" style={{ background: "var(--pn-action-tint)", color: "var(--pn-action)" }}>Change default rate</button>}
       </div>
 
       {pendingPayout <= 0 && (
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <p className="text-sm text-slate-500">No pending payout — all accepted videos have been paid or none are accepted yet.</p>
+        <div className="bg-[var(--pn-surface)] rounded-xl p-5" style={{ border: "1px solid var(--pn-border)" }}>
+          <p className="text-sm text-[var(--pn-text-2)]">No pending payout — all accepted videos have been paid or none are accepted yet.</p>
         </div>
       )}
 
       {/* Video grid/table */}
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>
+      <div className="bg-[var(--pn-surface)] rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+          <h3 className="font-bold text-sm" style={{ color: "var(--pn-text)" }}>
             Videos ({filtered.length}{statusFilter ? ` filtered` : " total"})
           </h3>
           <div className="flex gap-1">
@@ -198,8 +190,8 @@ export default function SocialsTrackerDetail() {
               <button key={t.value} onClick={() => setStatusFilter(t.value)}
                 className="px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap"
                 style={statusFilter === t.value
-                  ? { background: "#1e1b4b", color: "#fff" }
-                  : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
+                  ? { background: "var(--pn-primary)", color: "#fff" }
+                  : { background: "var(--pn-surface-2)", color: "var(--pn-text-2)", border: "1px solid var(--pn-border)" }}>
                 {t.label}
               </button>
             ))}
@@ -207,7 +199,7 @@ export default function SocialsTrackerDetail() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
+          <div className="p-12 text-center text-[var(--pn-text-3)]">
             <Video className="w-8 h-8 mx-auto mb-2 opacity-30" />
             <p>No videos in this category.</p>
           </div>
@@ -221,16 +213,16 @@ export default function SocialsTrackerDetail() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="rounded-xl overflow-hidden"
-                  style={{ border: "1px solid #E9EBF5", background: "#fff" }}>
+                  style={{ border: "1px solid var(--pn-border)", background: "#fff" }}>
                   {/* Thumbnail */}
-                  <div className="relative w-full h-40 overflow-hidden" style={{ background: "#F7F8FC" }}>
+                  <div className="relative w-full h-40 overflow-hidden" style={{ background: "var(--pn-surface-2)" }}>
                     {s.thumbnail ? (
                       <img src={s.thumbnail} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         {s.platform === "youtube"
-                          ? <YouTubeIcon className="w-12 h-12 text-red-400" />
-                          : <TikTokIcon className="w-12 h-12 text-slate-400" />}
+                          ? <YouTubeIcon className="w-12 h-12 text-[var(--pn-critical-text)]" />
+                          : <TikTokIcon className="w-12 h-12 text-[var(--pn-text-3)]" />}
                       </div>
                     )}
                     {/* Platform badge */}
@@ -254,47 +246,47 @@ export default function SocialsTrackerDetail() {
 
                   {/* Info */}
                   <div className="p-3 space-y-2">
-                    <p className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: "#1e1b4b" }}>
+                    <p className="font-semibold text-sm leading-snug line-clamp-2" style={{ color: "var(--pn-text)" }}>
                       {s.title || "Untitled"}
                     </p>
-                    <p className="text-xs text-slate-400">{s.channelName}</p>
+                    <p className="text-xs text-[var(--pn-text-3)]">{s.channelName}</p>
 
                     {/* Stats row */}
                     <div className="flex items-center gap-3">
                       {s.views > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                        <div className="flex items-center gap-1 text-xs text-[var(--pn-text-2)]">
                           <Eye className="w-3 h-3" /> {fmtNum(s.views)}
                         </div>
                       )}
                       {s.likes > 0 && (
-                        <div className="text-xs text-slate-500">♥ {fmtNum(s.likes)}</div>
+                        <div className="text-xs text-[var(--pn-text-2)] flex items-center gap-1"><Heart className="w-3 h-3" style={{ color: "var(--pn-critical-text)" }} />{fmtNum(s.likes)}</div>
                       )}
-                      <span className="text-xs text-slate-400 ml-auto">{fmtDate(s.createdAt)}</span>
+                      <span className="text-xs text-[var(--pn-text-3)] ml-auto">{fmtDate(s.createdAt)}</span>
                     </div>
 
                     {/* Payout info */}
                     {s.offeredAmount != null && (
-                      <div className="pt-2" style={{ borderTop: "1px solid #F3F4F6" }}>
+                      <div className="pt-2" style={{ borderTop: "1px solid var(--pn-border)" }}>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-xs text-slate-400">Offered</p>
-                            <p className="text-base font-bold" style={{ color: "#059669" }}>${s.offeredAmount.toFixed(2)}</p>
+                            <p className="text-xs text-[var(--pn-text-3)]">Offered</p>
+                            <p className="text-base font-bold" style={{ color: "var(--pn-success-fg)" }}>${s.offeredAmount.toFixed(2)}</p>
                           </div>
                           {s.rateType === "per_view" && s.ratePerView != null && (
                             <div className="text-right">
-                              <p className="text-xs text-slate-400">Per view</p>
-                              <p className="text-xs font-semibold text-slate-600">${s.ratePerView}</p>
+                              <p className="text-xs text-[var(--pn-text-3)]">Per view</p>
+                              <p className="text-xs font-semibold text-[var(--pn-text-2)]">${s.ratePerView}</p>
                             </div>
                           )}
                         </div>
                         {s.paidAt && (
-                          <p className="text-[10px] text-slate-400 mt-1">Paid {fmtDateTime(s.paidAt)}</p>
+                          <p className="text-[10px] text-[var(--pn-text-3)] mt-1">Paid {fmtDateTime(s.paidAt)}</p>
                         )}
                       </div>
                     )}
 
                     <a href={s.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-600 transition-colors">
+                      className="inline-flex items-center gap-1 text-[10px] text-[var(--pn-action)] hover:text-[var(--pn-action)] transition-colors">
                       <ExternalLink className="w-2.5 h-2.5" /> View video
                     </a>
                   </div>
@@ -306,38 +298,38 @@ export default function SocialsTrackerDetail() {
       </div>
 
       {/* Payout history */}
-      <div className="bg-white rounded-xl overflow-hidden" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-sm" style={{ color: "#1e1b4b" }}>Payout History</h3>
+      <div className="bg-[var(--pn-surface)] rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+          <h3 className="font-bold text-sm" style={{ color: "var(--pn-text)" }}>Payout History</h3>
         </div>
         {payouts.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
+          <div className="p-12 text-center text-[var(--pn-text-3)]">
             <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-30" />
             <p>No payouts have been made yet.</p>
           </div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">#</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Videos Paid</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Paid By</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Date</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Amount</th>
+              <tr style={{ background: "var(--pn-surface-2)", borderBottom: "1px solid var(--pn-border)" }}>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">#</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Videos Paid</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Paid By</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Date</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Amount</th>
               </tr>
             </thead>
             <tbody>
               {payouts.map((p: any, idx: number) => (
                 <tr key={p._id}
-                  style={{ borderBottom: "1px solid #F3F4F6" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
+                  style={{ borderBottom: "1px solid var(--pn-border)" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--pn-surface-2)"}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
-                  <td className="px-5 py-3.5 text-sm font-medium text-slate-500">#{payouts.length - idx}</td>
-                  <td className="px-5 py-3.5 text-sm text-slate-600">{p.submissionCount} video{p.submissionCount !== 1 ? "s" : ""}</td>
-                  <td className="px-5 py-3.5 text-sm text-slate-500">{p.paidBy || "—"}</td>
-                  <td className="px-5 py-3.5 text-sm text-slate-500">{fmtDateTime(p.paidAt)}</td>
+                  <td className="px-5 py-3.5 text-sm font-medium text-[var(--pn-text-2)]">#{payouts.length - idx}</td>
+                  <td className="px-5 py-3.5 text-sm text-[var(--pn-text-2)]">{p.submissionCount} video{p.submissionCount !== 1 ? "s" : ""}</td>
+                  <td className="px-5 py-3.5 text-sm text-[var(--pn-text-2)]">{p.paidBy || "—"}</td>
+                  <td className="px-5 py-3.5 text-sm text-[var(--pn-text-2)]">{fmtDateTime(p.paidAt)}</td>
                   <td className="px-5 py-3.5">
-                    <span className="text-sm font-bold" style={{ color: "#1e1b4b" }}>${p.amount.toFixed(2)} USD</span>
+                    <span className="text-sm font-bold" style={{ color: "var(--pn-text)" }}>${p.amount.toFixed(2)} USD</span>
                   </td>
                 </tr>
               ))}
@@ -353,56 +345,56 @@ export default function SocialsTrackerDetail() {
             className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
             onClick={() => setConfirmOpen(false)}>
             <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
-              className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6"
-              style={{ border: "1px solid #E9EBF5" }}
+              className="pn-modal w-full max-w-md p-6"
+              style={{ border: "1px solid var(--pn-border)" }}
               onClick={e => e.stopPropagation()}>
-              <h3 className="font-bold text-base mb-2" style={{ color: "#1e1b4b" }}>Confirm Payout</h3>
-              <p className="text-sm text-slate-500 mb-4">
+              <h3 className="font-bold text-base mb-2" style={{ color: "var(--pn-text)" }}>Confirm Payout</h3>
+              <p className="text-sm text-[var(--pn-text-2)] mb-4">
                 Pay <strong>{creator?.name}</strong> for accepted videos. Enter a partial amount to pay less than the full balance, or leave blank to pay all.
               </p>
 
               {/* Partial amount input */}
-              <div className="mb-4 rounded-xl p-4" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5">
-                  Amount to Pay (USD) <span className="font-normal text-slate-400">— leave blank to pay full ${pendingPayout.toFixed(2)}</span>
+              <div className="mb-4 rounded-xl p-4" style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)" }}>
+                <label className="block text-xs font-semibold text-[var(--pn-text-2)] mb-1.5">
+                  Amount to Pay (USD) <span className="font-normal text-[var(--pn-text-3)]">— leave blank to pay full ${pendingPayout.toFixed(2)}</span>
                 </label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-400">$</span>
+                  <span className="text-sm font-semibold text-[var(--pn-text-3)]">$</span>
                   <input
                     type="number" min="0.01" step="0.01" max={pendingPayout}
                     value={partialAmount}
                     onChange={e => setPartialAmount(e.target.value)}
                     placeholder={pendingPayout.toFixed(2)}
                     className="flex-1 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    style={{ background: "#fff", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                    style={{ background: "#fff", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
                   />
                 </div>
                 {isPartial && (
-                  <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                  <p className="text-xs text-[var(--pn-warning-fg)] mt-1.5 flex items-center gap-1">
                     <Hash className="w-3 h-3" />
                     Partial payout: ${partialAmountNum.toFixed(2)} of ${pendingPayout.toFixed(2)} owed. The remainder stays pending automatically.
                   </p>
                 )}
-                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full mt-3 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid #E9EBF5" }}><option value="">Payment method (optional)</option>{(creator?.paymentMethods?.length ? creator.paymentMethods : ["paypal", "cashapp", "bank", "crypto", "other"]).map((m: string) => <option key={m} value={m}>{m}</option>)}</select>
-                {creator?.requiresPaymentProof && <input value={proofUrl} onChange={e => setProofUrl(e.target.value)} placeholder="Payment proof screenshot URL" className="w-full mt-2 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid #E9EBF5" }} />}
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full mt-3 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid var(--pn-border)" }}><option value="">Payment method (optional)</option>{(creator?.paymentMethods?.length ? creator.paymentMethods : ["paypal", "cashapp", "bank", "crypto", "other"]).map((m: string) => <option key={m} value={m}>{m}</option>)}</select>
+                {creator?.requiresPaymentProof && <input value={proofUrl} onChange={e => setProofUrl(e.target.value)} placeholder="Payment proof screenshot URL" className="w-full mt-2 rounded-lg px-3 py-2 text-sm" style={{ background: "#fff", border: "1px solid var(--pn-border)" }} />}
               </div>
 
               {/* List accepted submissions */}
-              <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid #E9EBF5" }}>
+              <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid var(--pn-border)" }}>
                 {acceptedSubmissions.map((s: any) => (
-                  <div key={s._id} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid #F3F4F6" }}>
-                    <p className="text-xs font-medium text-slate-700 truncate max-w-[220px]">{s.title || s.url}</p>
-                    <span className="text-xs font-bold text-emerald-600 flex-shrink-0">${(s.offeredAmount || 0).toFixed(2)}</span>
+                  <div key={s._id} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+                    <p className="text-xs font-medium text-[var(--pn-text)] truncate max-w-[220px]">{s.title || s.url}</p>
+                    <span className="text-xs font-bold text-[var(--pn-success-fg)] flex-shrink-0">${(s.offeredAmount || 0).toFixed(2)}</span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "#F9FAFB" }}>
-                  <p className="text-xs font-bold text-slate-600">Total owed</p>
-                  <span className="text-sm font-bold" style={{ color: "#059669" }}>${pendingPayout.toFixed(2)}</span>
+                <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "var(--pn-surface-2)" }}>
+                  <p className="text-xs font-bold text-[var(--pn-text-2)]">Total owed</p>
+                  <span className="text-sm font-bold" style={{ color: "var(--pn-success-fg)" }}>${pendingPayout.toFixed(2)}</span>
                 </div>
               </div>
 
               {markErr && (
-                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 mb-4">
+                <div className="flex items-center gap-2 text-sm text-[var(--pn-critical-text)] bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-lg px-4 py-3 mb-4">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" /> {markErr}
                 </div>
               )}
@@ -410,12 +402,12 @@ export default function SocialsTrackerDetail() {
               <div className="flex gap-3">
                 <button onClick={() => { setConfirmOpen(false); setPartialAmount(""); }}
                   className="flex-1 py-2.5 rounded-lg text-sm font-medium"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                  style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                   Cancel
                 </button>
                 <button onClick={handleMarkPaid} disabled={marking || (partialAmountNum > 0 && partialAmountNum > pendingPayout)}
                   className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "#059669" }}>
+                  style={{ background: "var(--pn-success-fg)" }}>
                   {marking ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                   {isPartial ? `Pay $${partialAmountNum.toFixed(2)}` : `Pay $${pendingPayout.toFixed(2)}`}
                 </button>

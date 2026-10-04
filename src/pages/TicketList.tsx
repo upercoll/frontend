@@ -21,6 +21,14 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Closed",
 };
 
+const STATUS_HINT: Record<string, string> = {
+  open: "Open — waiting for an agent",
+  in_progress: "Being reviewed",
+  waiting: "Needs something from you",
+  resolved: "Marked solved",
+  closed: "Closed",
+};
+
 const PRIORITY_COLOR: Record<string, string> = {
   low: "#3BA7FF",
   medium: "#FFC53D",
@@ -60,7 +68,9 @@ interface Ticket {
   lastReplyAt: string;
   createdAt: string;
   unreadCustomer: number;
-  messages: TicketMessage[];
+  // List payloads intentionally omit the message bodies — this field is left
+  // undefined (reading its .length used to crash the whole page).
+  messages?: TicketMessage[];
 }
 
 function relativeTime(dateStr: string): string {
@@ -95,10 +105,12 @@ function Badge({ label, color }: { label: string; color: string }) {
 }
 
 function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
+  // The list endpoint strips message bodies, so derive a useful subtitle from
+  // status instead of touching ticket.messages (which is undefined here).
   const preview =
-    ticket.messages.length > 0
-      ? ticket.messages[ticket.messages.length - 1].message
-      : "No messages yet";
+    ticket.unreadCustomer > 0
+      ? "You have a new reply on this ticket"
+      : STATUS_HINT[ticket.status] || "No updates on this ticket yet";
 
   return (
     <motion.div
@@ -173,9 +185,7 @@ function TicketCard({ ticket, index }: { ticket: Ticket; index: number }) {
             className="flex items-center justify-between text-xs"
             style={{ color: "#637784" }}
           >
-            <span>
-              {ticket.messages.length} message{ticket.messages.length !== 1 ? "s" : ""}
-            </span>
+            <span>{STATUS_LABEL[ticket.status] || ticket.status}</span>
             <span>{relativeTime(ticket.lastReplyAt || ticket.createdAt)}</span>
           </div>
         </motion.div>

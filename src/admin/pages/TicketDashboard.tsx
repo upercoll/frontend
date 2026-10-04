@@ -3,8 +3,15 @@ import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminAuth } from "@/admin/context/AdminAuthContext";
+import { MetricTile, PageHeader, Segmented } from "../components/kit";
+import { MessageSquare } from "lucide-react";
+import { ThreadPanel, ThreadBadge, ThreadMeta } from "../components/ChatThread";
+import type { ThreadMessage } from "../components/ChatThread";
 
-const API = import.meta.env.VITE_BACKEND_URL || "";
+
+// Same fallback as admin/api.ts — if a deployment only sets VITE_BACKEND_URL the
+// dashboard used to build relative URLs and silently fetch nothing.
+const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || "";
 
 function getToken() {
   return localStorage.getItem("panel_token");
@@ -51,18 +58,18 @@ interface TicketStats {
 }
 
 const STATUS_COLORS: Record<TicketStatus, { bg: string; text: string }> = {
-  open: { bg: "rgba(59,167,255,0.15)", text: "#3BA7FF" },
-  in_progress: { bg: "rgba(249,115,22,0.15)", text: "#f97316" },
-  waiting: { bg: "rgba(255,197,61,0.15)", text: "#FFC53D" },
-  resolved: { bg: "rgba(34,197,94,0.15)", text: "#22C55E" },
-  closed: { bg: "rgba(99,119,132,0.15)", text: "#637784" },
+  open: { bg: "var(--pn-action-tint)", text: "var(--pn-action)" },
+  in_progress: { bg: "rgba(249,115,22,0.15)", text: "#c2410c" },
+  waiting: { bg: "var(--pn-warning-bg)", text: "#b78103" },
+  resolved: { bg: "rgba(34,197,94,0.15)", text: "var(--pn-success-fg)" },
+  closed: { bg: "rgba(99,119,132,0.15)", text: "var(--pn-text-3)" },
 };
 
 const PRIORITY_COLORS: Record<TicketPriority, { bg: string; text: string }> = {
-  low: { bg: "rgba(99,119,132,0.15)", text: "#637784" },
-  medium: { bg: "rgba(59,167,255,0.15)", text: "#3BA7FF" },
-  high: { bg: "rgba(249,115,22,0.15)", text: "#f97316" },
-  urgent: { bg: "rgba(239,68,68,0.15)", text: "#ef4444" },
+  low: { bg: "rgba(99,119,132,0.15)", text: "var(--pn-text-3)" },
+  medium: { bg: "var(--pn-action-tint)", text: "var(--pn-action)" },
+  high: { bg: "rgba(249,115,22,0.15)", text: "#c2410c" },
+  urgent: { bg: "var(--pn-critical-bg)", text: "var(--pn-critical-text)" },
 };
 
 function timeAgo(dateStr?: string) {
@@ -102,33 +109,15 @@ function StatCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: [0.19, 1, 0.22, 1] }}
-      style={{
-        background: "#1C2A34",
-        border: "1px solid #2C414E",
-        borderRadius: 12,
-        padding: 16,
-        flex: "1 1 0",
-        minWidth: 140,
-      }}
+      transition={{ duration: 0.35, delay, ease: [0.19, 1, 0.22, 1] }}
+      className="flex-1 min-w-[150px]"
     >
-      <div
-        style={{
-          fontSize: 12,
-          fontWeight: 500,
-          color: "#9BAEBB",
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          marginBottom: 8,
-        }}
-      >
-        {label}
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>
-        {value}
-      </div>
+      <MetricTile
+        label={label}
+        value={<span style={{ color }}>{value}</span>}
+      />
     </motion.div>
   );
 }
@@ -185,12 +174,12 @@ function SelectDropdown({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        background: "#0C141B",
-        border: "1px solid #2C414E",
+        background: "var(--pn-surface)",
+        border: "1px solid var(--pn-border)",
         borderRadius: 8,
         padding: "7px 10px",
         fontSize: 13,
-        color: "#F4F8FB",
+        color: "var(--pn-text)",
         cursor: "pointer",
         outline: "none",
       }}
@@ -217,15 +206,17 @@ function TicketSidePanel({
   const [replyText, setReplyText] = useState("");
   const [resolutionText, setResolutionText] = useState("");
 
-  const { data: ticket, isLoading } = useQuery<Ticket>({
+  const { data: ticket, isLoading, isError } = useQuery<Ticket>({
     queryKey: ["ticket", ticketId],
     queryFn: async () => {
       const res = await fetch(`${API}/api/panel/tickets/${ticketId}`, {
         headers: authHeaders(),
       });
-      const json = await res.json();
-      return json.data.ticket;
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.message || `Failed to load ticket (${res.status})`);
+      return json.data;
     },
+    retry: 1,
   });
 
   const replyMutation = useMutation({
@@ -323,7 +314,7 @@ function TicketSidePanel({
     },
   });
 
-  if (isLoading || !ticket) {
+  if (isLoading || isError || !ticket) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -336,15 +327,28 @@ function TicketSidePanel({
           bottom: 0,
           width: 520,
           maxWidth: "100vw",
-          background: "#18242D",
-          borderLeft: "1px solid #2C414E",
+          background: "var(--pn-surface)",
+          borderLeft: "1px solid var(--pn-border)",
           zIndex: 1000,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexDirection: "column",
+          gap: 12,
+          padding: 24,
+          textAlign: "center",
         }}
       >
-        <div style={{ color: "#637784", fontSize: 14 }}>Loading ticket...</div>
+        <div style={{ color: isError ? "var(--pn-critical-text)" : "var(--pn-text-3)", fontSize: 14 }}>
+          {isError ? "Couldn't load this ticket." : "Loading ticket..."}
+        </div>
+        {isError && (
+          <button onClick={onClose} style={{
+            padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+            background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)",
+            color: "var(--pn-text-2)", cursor: "pointer",
+          }}>Close</button>
+        )}
       </motion.div>
     );
   }
@@ -355,9 +359,9 @@ function TicketSidePanel({
   const actionBtnBase: React.CSSProperties = {
     padding: "7px 14px",
     borderRadius: 8,
-    border: "1px solid #2C414E",
-    background: "#22333F",
-    color: "#F4F8FB",
+    border: "1px solid var(--pn-border)",
+    background: "var(--pn-surface)",
+    color: "var(--pn-text)",
     fontSize: 13,
     fontWeight: 500,
     cursor: "pointer",
@@ -391,8 +395,8 @@ function TicketSidePanel({
           bottom: 0,
           width: 520,
           maxWidth: "100vw",
-          background: "#18242D",
-          borderLeft: "1px solid #2C414E",
+          background: "var(--pn-surface)",
+          borderLeft: "1px solid var(--pn-border)",
           zIndex: 1000,
           display: "flex",
           flexDirection: "column",
@@ -402,7 +406,7 @@ function TicketSidePanel({
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid #2C414E",
+            borderBottom: "1px solid var(--pn-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -410,10 +414,10 @@ function TicketSidePanel({
           }}
         >
           <div>
-            <div style={{ fontSize: 12, color: "#637784", marginBottom: 2 }}>
+            <div style={{ fontSize: 12, color: "var(--pn-text-3)", marginBottom: 2 }}>
               {truncate(ticket.ticketId, 16)}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#F4F8FB" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--pn-text)" }}>
               {ticket.subject}
             </div>
           </div>
@@ -422,7 +426,7 @@ function TicketSidePanel({
             style={{
               background: "none",
               border: "none",
-              color: "#9BAEBB",
+              color: "var(--pn-text-3)",
               fontSize: 20,
               cursor: "pointer",
               padding: 4,
@@ -433,166 +437,151 @@ function TicketSidePanel({
           </button>
         </div>
 
+        {/* Ticket actions */}
         <div
           style={{
-            padding: "12px 20px",
-            borderBottom: "1px solid #2C414E",
+            padding: "10px 20px",
+            borderBottom: "1px solid var(--pn-border)",
             display: "flex",
-            gap: 8,
             flexWrap: "wrap",
+            gap: 6,
+            alignItems: "center",
             flexShrink: 0,
           }}
         >
-          <Badge
-            value={ticket.status.replace("_", " ")}
-            colors={sc}
-          />
-          <Badge value={ticket.priority} colors={pc} />
-          <span
-            style={{
-              fontSize: 12,
-              color: "#9BAEBB",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            {ticket.category}
-          </span>
-          <span
-            style={{
-              fontSize: 12,
-              color: "#9BAEBB",
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            {ticket.customerEmail}
-          </span>
-          {ticket.assignedAgent && (
-            <span
-              style={{
-                fontSize: 12,
-                color: "#3BA7FF",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
-              Assigned: {ticket.assignedAgent}
-            </span>
-          )}
-        </div>
-
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
-        >
-          {ticket.messages.map((msg, i) => {
-            const isAgent =
-              msg.senderRole === "agent" || msg.senderRole === "admin";
-            return (
-              <motion.div
-                key={msg.id || i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                style={{
-                  alignSelf: isAgent ? "flex-end" : "flex-start",
-                  maxWidth: "85%",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#637784",
-                    marginBottom: 4,
-                    textAlign: isAgent ? "right" : "left",
-                  }}
-                >
-                  {msg.sender} &middot; {timeAgo(msg.createdAt)}
-                </div>
-                <div
-                  style={{
-                    background: isAgent ? "#22333F" : "#1C2A34",
-                    border: "1px solid #2C414E",
-                    borderRadius: 10,
-                    padding: "10px 14px",
-                    fontSize: 14,
-                    lineHeight: 1.55,
-                    color: "#F4F8FB",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {msg.text}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        <div
-          style={{
-            padding: 16,
-            borderTop: "1px solid #2C414E",
-            flexShrink: 0,
-          }}
-        >
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Type a reply..."
-            rows={3}
-            style={{
-              width: "100%",
-              background: "#0C141B",
-              border: "1px solid #2C414E",
-              borderRadius: 10,
-              padding: "10px 14px",
-              fontSize: 14,
-              color: "#F4F8FB",
-              resize: "vertical",
-              outline: "none",
-              fontFamily: "inherit",
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: 8,
-            }}
-          >
+          {(["open", "in_progress", "waiting", "resolved", "closed"] as TicketStatus[]).map((st) => (
             <button
-              onClick={() => {
-                if (replyText.trim()) replyMutation.mutate(replyText.trim());
-              }}
-              disabled={!replyText.trim() || replyMutation.isPending}
+              key={st}
+              onClick={() => statusMutation.mutate(st)}
+              disabled={statusMutation.isPending || ticket.status === st}
               style={{
                 ...actionBtnBase,
-                background: "#3BA7FF",
+                fontSize: 12,
+                textTransform: "capitalize",
+                background: ticket.status === st ? "var(--pn-action-tint)" : "var(--pn-surface)",
+                border: `1px solid ${ticket.status === st ? "var(--pn-action-border)" : "var(--pn-border)"}`,
+                color: ticket.status === st ? "var(--pn-action)" : "var(--pn-text-2)",
+                opacity: ticket.status === st ? 1 : 0.85,
+              }}
+            >
+              {st.replace("_", " ")}
+            </button>
+          ))}
+
+          <span style={{ width: 10 }} />
+
+          {/* Assign to me — the assign endpoint needs an agentId */}
+          <button
+            onClick={() => user?.id && assignMutation.mutate(String(user.id))}
+            disabled={!user?.id || assignMutation.isPending || ticket.assignedAgent === (user?.name || user?.email)}
+            title="Assign this ticket to yourself"
+            style={{
+              ...actionBtnBase,
+              fontSize: 12,
+              background: "var(--pn-surface)",
+              color: "var(--pn-text-2)",
+              opacity: !user?.id ? 0.5 : 1,
+            }}
+          >
+            {assignMutation.isPending ? "Assigning..." : "Assign to me"}
+          </button>
+
+          {(["low", "medium", "high", "urgent"] as TicketPriority[]).map((pr) => (
+            <button
+              key={pr}
+              onClick={() => priorityMutation.mutate(pr)}
+              disabled={priorityMutation.isPending || ticket.priority === pr}
+              style={{
+                ...actionBtnBase,
+                fontSize: 12,
+                textTransform: "capitalize",
+                background: ticket.priority === pr ? PRIORITY_COLORS[pr].bg : "var(--pn-surface)",
+                border: `1px solid var(--pn-border)`,
+                color: ticket.priority === pr ? PRIORITY_COLORS[pr].text : "var(--pn-text-2)",
+              }}
+            >
+              {pr}
+            </button>
+          ))}
+        </div>
+
+        {/* Resolution / assign strip */}
+        {ticket.status !== "closed" && (
+          <div
+            style={{
+              padding: "10px 20px",
+              borderBottom: "1px solid var(--pn-border)",
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <input
+              value={resolutionText}
+              onChange={(e) => setResolutionText(e.target.value)}
+              placeholder="Resolution note (optional)"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                background: "var(--pn-surface)",
+                border: "1px solid var(--pn-border)",
+                borderRadius: 8,
+                padding: "7px 12px",
+                fontSize: 13,
+                color: "var(--pn-text)",
+                outline: "none",
+              }}
+            />
+            <button
+              onClick={() => resolveMutation.mutate(resolutionText.trim() || "Resolved")}
+              disabled={resolveMutation.isPending}
+              style={{
+                ...actionBtnBase,
+                background: "var(--pn-action)",
                 border: "none",
                 color: "#fff",
                 fontWeight: 600,
-                opacity:
-                  !replyText.trim() || replyMutation.isPending ? 0.5 : 1,
-                cursor:
-                  !replyText.trim() || replyMutation.isPending
-                    ? "not-allowed"
-                    : "pointer",
+                opacity: resolveMutation.isPending ? 0.5 : 1,
               }}
             >
-              {replyMutation.isPending ? "Sending..." : "Send Reply"}
+              {resolveMutation.isPending ? "Resolving..." : "Resolve"}
             </button>
           </div>
-        </div>
+        )}
+
+        <ThreadPanel
+          className="flex-1"
+          messages={ticket.messages as unknown as ThreadMessage[]}
+          draft={replyText}
+          onDraftChange={setReplyText}
+          onSend={() => {
+            if (replyText.trim()) replyMutation.mutate(replyText.trim());
+          }}
+          sending={replyMutation.isPending}
+          sendLabel="Send Reply"
+          placeholder="Type a reply..."
+          isStaff={(m) => m.senderRole === "agent" || m.senderRole === "admin"}
+          meta={
+            <>
+              <ThreadBadge
+                label={ticket.status.replace("_", " ")}
+                bg={sc.bg}
+                fg={sc.text}
+              />
+              <ThreadBadge label={ticket.priority} bg={pc.bg} fg={pc.text} />
+              <ThreadMeta>{ticket.category}</ThreadMeta>
+              <ThreadMeta>{ticket.customerEmail}</ThreadMeta>
+              {ticket.assignedAgent && (
+                <ThreadMeta>
+                  <span style={{ color: "var(--pn-action)" }}>
+                    Assigned: {ticket.assignedAgent}
+                  </span>
+                </ThreadMeta>
+              )}
+            </>
+          }
+        />
       </motion.div>
     </>
   );
@@ -616,9 +605,9 @@ export default function TicketDashboard() {
     },
   });
 
-  const { data: ticketsData, isLoading: ticketsLoading } = useQuery<{
-    tickets: Ticket[];
-  }>({
+  const { data: ticketsData, isLoading: ticketsLoading } = useQuery<
+    Ticket[] | { tickets?: Ticket[]; total?: number }
+  >({
     queryKey: ["tickets", activeFilter],
     queryFn: async () => {
       const url =
@@ -626,46 +615,25 @@ export default function TicketDashboard() {
           ? `${API}/api/panel/tickets/queue`
           : `${API}/api/panel/tickets/queue?status=${activeFilter}`;
       const res = await fetch(url, { headers: authHeaders() });
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) throw new Error(json?.message || `Failed to load tickets (${res.status})`);
       return json.data;
     },
   });
 
-  const tickets = ticketsData?.tickets || [];
+  const tickets: Ticket[] = Array.isArray(ticketsData)
+    ? ticketsData
+    : ticketsData?.tickets || [];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#131C23", padding: 24 }}>
+    <div style={{ minHeight: "100vh", background: "var(--pn-bg)", padding: 24 }}>
       <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        {/* Page header */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 24,
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                fontSize: 24,
-                fontWeight: 700,
-                color: "#F4F8FB",
-                margin: 0,
-              }}
-            >
-              Ticket Dashboard
-            </h1>
-            <p
-              style={{ fontSize: 14, color: "#9BAEBB", margin: "4px 0 0" }}
-            >
-              Manage and respond to support tickets
-            </p>
-          </div>
-        </motion.div>
+        <PageHeader
+          icon={MessageSquare}
+          title="Ticket Dashboard"
+          description="Manage and respond to support tickets"
+          className="mb-6"
+        />
 
         {/* Stats row */}
         <div
@@ -679,70 +647,42 @@ export default function TicketDashboard() {
           <StatCard
             label="Open"
             value={stats?.open ?? 0}
-            color="#3BA7FF"
+            color="var(--pn-action)"
             delay={0}
           />
           <StatCard
             label="In Progress"
             value={stats?.inProgress ?? 0}
-            color="#f97316"
+            color="#c2410c"
             delay={0.05}
           />
           <StatCard
             label="Waiting"
             value={stats?.waiting ?? 0}
-            color="#FFC53D"
+            color="#b78103"
             delay={0.1}
           />
           <StatCard
             label="Resolved"
             value={stats?.resolved ?? 0}
-            color="#22C55E"
+            color="var(--pn-success-fg)"
             delay={0.15}
           />
           <StatCard
             label="Closed"
             value={stats?.closed ?? 0}
-            color="#637784"
+            color="var(--pn-text-3)"
             delay={0.2}
           />
         </div>
 
-        {/* Filter tabs */}
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            marginBottom: 20,
-            flexWrap: "wrap",
-          }}
-        >
-          {FILTER_TABS.map((tab) => {
-            const isActive = activeFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFilter(tab.key)}
-                style={{
-                  padding: "7px 16px",
-                  borderRadius: 999,
-                  border: "1px solid",
-                  borderColor: isActive ? "#3BA7FF" : "#2C414E",
-                  background: isActive
-                    ? "rgba(59,167,255,0.15)"
-                    : "transparent",
-                  color: isActive ? "#3BA7FF" : "#9BAEBB",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <Segmented
+          value={activeFilter}
+          onChange={(v) => setActiveFilter(v)}
+          options={FILTER_TABS.map((t) => ({ value: t.key, label: t.label }))}
+          className="mb-5"
+        />
+
 
         {/* Ticket table */}
         <motion.div
@@ -750,8 +690,8 @@ export default function TicketDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.25, ease: [0.19, 1, 0.22, 1] }}
           style={{
-            background: "#1C2A34",
-            border: "1px solid #2C414E",
+            background: "var(--pn-surface)",
+            border: "1px solid var(--pn-border)",
             borderRadius: 12,
             overflow: "hidden",
           }}
@@ -764,8 +704,8 @@ export default function TicketDashboard() {
                 "100px 1fr 160px 120px 90px 120px 100px 100px",
               gap: 12,
               padding: "12px 20px",
-              borderBottom: "1px solid #2C414E",
-              background: "#22333F",
+              borderBottom: "1px solid var(--pn-border)",
+              background: "var(--pn-surface)",
             }}
           >
             {[
@@ -783,7 +723,7 @@ export default function TicketDashboard() {
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: "#637784",
+                  color: "var(--pn-text-3)",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
                 }}
@@ -799,7 +739,7 @@ export default function TicketDashboard() {
               style={{
                 padding: 40,
                 textAlign: "center",
-                color: "#637784",
+                color: "var(--pn-text-3)",
                 fontSize: 14,
               }}
             >
@@ -810,7 +750,7 @@ export default function TicketDashboard() {
               style={{
                 padding: 40,
                 textAlign: "center",
-                color: "#637784",
+                color: "var(--pn-text-3)",
                 fontSize: 14,
               }}
             >
@@ -833,13 +773,13 @@ export default function TicketDashboard() {
                       "100px 1fr 160px 120px 90px 120px 100px 100px",
                     gap: 12,
                     padding: "12px 20px",
-                    borderBottom: "1px solid #2C414E",
+                    borderBottom: "1px solid var(--pn-border)",
                     cursor: "pointer",
                     transition: "background 0.12s",
                     alignItems: "center",
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#22333F")
+                    (e.currentTarget.style.background = "var(--pn-surface)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = "transparent")
@@ -848,7 +788,7 @@ export default function TicketDashboard() {
                   <div
                     style={{
                       fontSize: 12,
-                      color: "#9BAEBB",
+                      color: "var(--pn-text-3)",
                       fontFamily: "monospace",
                     }}
                   >
@@ -857,7 +797,7 @@ export default function TicketDashboard() {
                   <div
                     style={{
                       fontSize: 14,
-                      color: "#F4F8FB",
+                      color: "var(--pn-text)",
                       fontWeight: 500,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -869,7 +809,7 @@ export default function TicketDashboard() {
                   <div
                     style={{
                       fontSize: 13,
-                      color: "#9BAEBB",
+                      color: "var(--pn-text-3)",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -877,7 +817,7 @@ export default function TicketDashboard() {
                   >
                     {ticket.customerEmail}
                   </div>
-                  <div style={{ fontSize: 13, color: "#9BAEBB" }}>
+                  <div style={{ fontSize: 13, color: "var(--pn-text-3)" }}>
                     {ticket.category}
                   </div>
                   <div>
@@ -886,7 +826,7 @@ export default function TicketDashboard() {
                   <div
                     style={{
                       fontSize: 13,
-                      color: ticket.assignedAgent ? "#3BA7FF" : "#637784",
+                      color: ticket.assignedAgent ? "var(--pn-action)" : "var(--pn-text-3)",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -894,7 +834,7 @@ export default function TicketDashboard() {
                   >
                     {ticket.assignedAgent || "Unassigned"}
                   </div>
-                  <div style={{ fontSize: 12, color: "#637784" }}>
+                  <div style={{ fontSize: 12, color: "var(--pn-text-3)" }}>
                     {timeAgo(ticket.lastReplyTime)}
                   </div>
                   <div>

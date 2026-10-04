@@ -605,8 +605,8 @@ export default function SupportChat() {
     setEditSaving(true);
 
     const body = editMode === "roblox"
-      ? { robloxUsername: editValue.trim() }
-      : { contactEmail: editValue.trim() };
+      ? { robloxUsername: editValue.trim(), currentEmail: contactEmail }
+      : { contactEmail: editValue.trim(), currentEmail: contactEmail };
 
     try {
       const res = await fetch(`${BACKEND}/api/claims/${roomId}/user-info`, {

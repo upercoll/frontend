@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ShoppingCart, Star, Gamepad2, MessageCircle, Gift,
@@ -14,6 +14,7 @@ import { CATEGORY_ICONS } from "@/components/SiteIcons";
 import AnimatedGrid from "@/components/AnimatedGrid";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
+import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -378,39 +379,6 @@ function ParticleField({ count = 22, light = false }: { count?: number; light?: 
   );
 }
 
-
-/* ── Marquee ticker ─────────────────────────────────────────── */
-const TICKER_ITEMS = [
-  "Instant Delivery", "Secure Payments", "10+ Games Supported",
-  "4.9 Rating", "2,000+ Orders Delivered", "24/7 Live Support",
-  "New Stock Added Daily", "Verified Sellers", "Fast & Trusted",
-];
-
-function MarqueeTicker() {
-  // 4 copies so the -25% scroll = exactly one full set → seamless infinite loop
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
-  return (
-    <div className="relative overflow-hidden py-3" style={{ background: HC.bg, borderTop: `1px solid ${HC.border}`, borderBottom: `1px solid ${HC.border}` }}>
-      <div className="absolute inset-y-0 left-0 w-16 z-10 pointer-events-none" style={{ background: `linear-gradient(to right,${HC.bg},transparent)` }} />
-      <div className="absolute inset-y-0 right-0 w-16 z-10 pointer-events-none" style={{ background: `linear-gradient(to left,${HC.bg},transparent)` }} />
-      <div
-        className="flex items-center gap-8 whitespace-nowrap"
-        style={{
-          width: "max-content",
-          animation: "rbTicker 32s linear infinite",
-        }}
-      >
-        {items.map((item, i) => (
-          <span key={i} className="text-xs font-semibold flex items-center gap-2" style={{ color: HC.textSecondary }}>
-            {item}
-            <span className="w-1 h-1 rounded-full inline-block ml-2" style={{ background: HC.border }} />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 const fallbackReviews = [
   { initials: "D", name: "Dawn Hughes", country: "United States", days: "76 days ago", stars: 5, text: "Cheap: the prices were much cheaper than other adopt me stores. Easy: it's idiot proof, all you do is join and it gives you your items instantly. Good service: every time I had an issue they responded really quickly." },
   { initials: "M", name: "Max Rivera",  country: "United Kingdom", days: "14 days ago", stars: 5, text: "Super fast delivery! Got my Blade Ball items within minutes. The support team was also really helpful when I had questions about my order." },
@@ -423,14 +391,13 @@ const avatarColors = ["#EA580C", "#15803D", "#2563EB"];
 export default function Home() {
   const [reviewIndex,  setReviewIndex]  = useState(0);
   const [reviews,      setReviews]      = useState(fallbackReviews);
-  const [avgRating,    setAvgRating]    = useState<number | null>(null);
+  const stats = usePublicStats();
   const [games,        setGames]        = useState<ShopGame[]>([]);
   const [gamesLoading, setGamesLoading] = useState(true);
   const [featuredYouTubers, setFeaturedYouTubers] = useState<FeaturedYouTuber[]>([]);
   const [searchQuery,  setSearchQuery]  = useState("");
   const [, navigate] = useLocation();
 
-  const shopRef = useRef<HTMLElement>(null);
   /* section animation */
 
   /* fetch games for shop grid (retry — the backend can be slow to wake up) */
@@ -472,7 +439,6 @@ export default function Home() {
             text: r.comment,
           })));
         }
-        if (data?.data?.averageRating) setAvgRating(data.data.averageRating);
       })
       .catch(() => {});
   }, []);
@@ -483,21 +449,10 @@ export default function Home() {
     return () => clearInterval(id);
   }, [reviews.length]);
 
-  /* listen for navbar Shop link event */
-  useEffect(() => {
-    const handler = () => shopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    window.addEventListener("rbstars:open-shop", handler);
-    return () => window.removeEventListener("rbstars:open-shop", handler);
-  }, []);
-
-  /* section animation */
-
   const filteredGames = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return q ? games.filter(g => g.name.toLowerCase().includes(q)) : games;
   }, [games, searchQuery]);
-
-  const rating = avgRating ?? 4.9;
 
   return (
     <main style={{ background: HC.bg, overflowX: "hidden" }}>
@@ -773,9 +728,15 @@ export default function Home() {
         <div className="relative z-10 px-6 sm:px-10 lg:px-16">
           <div className="mb-10">
             <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: HC.textPrimary, letterSpacing: "-0.025em" }}>
-              Trusted By{" "}
-              <span style={{ color: HC.accent }}>2,000+</span>{" "}
-              Customers
+              {stats ? (
+                <>
+                  Trusted By{" "}
+                  <span style={{ color: HC.accent }}>{formatCount(stats.customers)}</span>{" "}
+                  {stats.customers === 1 ? "Customer" : "Customers"}
+                </>
+              ) : (
+                <>Trusted By Our <span style={{ color: HC.accent }}>Customers</span></>
+              )}
             </h2>
           </div>
           <motion.div
@@ -787,7 +748,7 @@ export default function Home() {
           >
             {/* Left — mascot */}
             <div className="flex-shrink-0 flex flex-col items-center text-center">
-              <div className="w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
+              <div className="w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0 flex items-center justify-center">
                 <img src="/review-mascot.png" alt="" className="w-full h-full object-contain" />
               </div>
               <h3 className="font-display text-lg sm:text-xl font-extrabold mt-3" style={{ color: HC.textPrimary, letterSpacing: "-0.02em" }}>
@@ -795,7 +756,9 @@ export default function Home() {
                 <span style={{ color: HC.accent }}>Real Reviews</span>
               </h3>
               <p className="text-xs mt-1.5 max-w-[200px]" style={{ color: HC.textSecondary }}>
-                Thousands of happy customers trust RBstars.
+                {stats && stats.reviews > 0
+                  ? `${formatCount(stats.reviews)} verified reviews from real buyers.`
+                  : "Verified reviews from real buyers."}
               </p>
             </div>
 

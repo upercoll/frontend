@@ -91,7 +91,7 @@ export default function ImageUpload({
 
   return (
     <div className={cn("space-y-2", className)}>
-      {label && <p className={cn("text-sm font-medium", light ? "text-slate-600" : "text-slate-300")}>{label}</p>}
+      {label && <p className={cn("text-sm font-medium", light ? "text-[var(--pn-text-2)]" : "text-[var(--pn-text-3)]")}>{label}</p>}
 
       <div
         onClick={() => !uploading && inputRef.current?.click()}
@@ -101,26 +101,26 @@ export default function ImageUpload({
         className={cn(
           "border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all",
           light
-            ? dragOver ? "border-indigo-400 bg-indigo-50" : "border-slate-200 hover:border-indigo-300 bg-slate-50"
-            : dragOver ? "border-blue-500 bg-blue-500/5" : "border-white/10 hover:border-white/20 bg-white/2",
+            ? dragOver ? "border-indigo-400 bg-indigo-50" : "border-[var(--pn-border)] hover:border-indigo-300 bg-[var(--pn-surface-2)]"
+            : dragOver ? "border-[var(--pn-action-border)] bg-[var(--pn-action-tint)]" : "border-[var(--pn-border)] hover:border-[var(--pn-border)] bg-[var(--pn-surface-2)]",
           uploading && "pointer-events-none opacity-50"
         )}
       >
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className={cn("w-6 h-6 animate-spin", light ? "text-indigo-500" : "text-blue-400")} />
-            <p className={cn("text-sm", light ? "text-slate-500" : "text-slate-400")}>Uploading...</p>
+            <Loader2 className={cn("w-6 h-6 animate-spin", light ? "text-[var(--pn-action)]" : "text-[var(--pn-action)]")} />
+            <p className={cn("text-sm", light ? "text-[var(--pn-text-2)]" : "text-[var(--pn-text-3)]")}>Uploading...</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
-            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", light ? "bg-indigo-50" : "bg-blue-500/10")}>
-              <Upload className={cn("w-4 h-4", light ? "text-indigo-500" : "text-blue-400")} />
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", light ? "bg-indigo-50" : "bg-[var(--pn-action-tint)]")}>
+              <Upload className={cn("w-4 h-4", light ? "text-[var(--pn-action)]" : "text-[var(--pn-action)]")} />
             </div>
             <div>
-              <p className={cn("text-sm font-medium", light ? "text-slate-600" : "text-slate-300")}>
+              <p className={cn("text-sm font-medium", light ? "text-[var(--pn-text-2)]" : "text-[var(--pn-text-3)]")}>
                 Drop {multiple ? "images" : "an image"} here, or click to browse
               </p>
-              <p className={cn("text-xs mt-0.5", light ? "text-slate-400" : "text-slate-500")}>PNG, JPG, WebP up to 10MB{multiple ? ` (max ${maxFiles})` : ""}</p>
+              <p className={cn("text-xs mt-0.5", light ? "text-[var(--pn-text-3)]" : "text-[var(--pn-text-2)]")}>PNG, JPG, WebP up to 10MB{multiple ? ` (max ${maxFiles})` : ""}</p>
             </div>
           </div>
         )}
@@ -130,8 +130,8 @@ export default function ImageUpload({
         <div className={cn(
           "flex items-start gap-2 text-xs px-3 py-2 rounded-lg",
           light
-            ? "bg-red-50 border border-red-200 text-red-600"
-            : "bg-red-500/10 border border-red-500/20 text-red-400"
+            ? "bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] text-[var(--pn-critical-text)]"
+            : "bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] text-[var(--pn-critical-text)]"
         )}>
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>{uploadError}</span>
@@ -160,15 +160,15 @@ export default function ImageUpload({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="relative group aspect-square rounded-lg overflow-hidden border border-white/10"
+                className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--pn-border)]"
               >
                 <img src={url} className="w-full h-full object-cover" alt={`Upload ${i + 1}`} />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 pn-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); removeImage(url); }}
-                    className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center"
+                    className="w-8 h-8 rounded-full bg-[var(--pn-critical)] flex items-center justify-center"
                   >
-                    <X className="w-4 h-4 text-white" />
+                    <X className="w-4 h-4 text-[var(--pn-text)]" />
                   </button>
                 </div>
               </motion.div>

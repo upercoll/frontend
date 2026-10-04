@@ -67,6 +67,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       setState((s) => ({ ...s, loading: false, user: null, profile: null }));
       return;
     }
+
     try {
       const res = await adminApi.auth.me();
       setState({

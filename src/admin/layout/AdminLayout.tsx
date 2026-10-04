@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "./Sidebar";
@@ -7,6 +7,7 @@ import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
 import ClaimQueuePopup from "../components/ClaimQueuePopup";
 import LoadingScreen from "../components/LoadingScreen";
+import "../panel.css";
 
 const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
@@ -24,6 +25,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/proof-of-delivery": "Proof of Delivery",
   "/admin/open-chats": "Open Chats",
   "/admin/settings": "Settings",
+  "/admin/site-modes": "Site Modes",
   "/admin/analytics": "Analytics",
   "/admin/customers": "Customers",
   "/admin/tutorials": "Tutorials",
@@ -43,7 +45,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/panel/tickets": "Support Tickets",
 };
 
-const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view", "/admin/collaboration"];
+const OWNER_ONLY_ROUTES = ["/admin/settings", "/admin/customers", "/admin/role-view", "/admin/collaboration", "/admin/site-modes"];
 
 const ROUTE_PERMISSIONS: { prefix: string; permission: string }[] = [
   { prefix: "/admin/dashboard",        permission: "view_analytics" },
@@ -115,49 +117,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const title = PAGE_TITLES[location] || location.split("/").pop()?.replace(/-/g, " ")?.replace(/\b\w/g, (c) => c.toUpperCase()) || "Panel";
 
-  const particles = useMemo(() =>
-    Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      left: 5 + (i * 4.7 + (i % 3) * 9.1) % 90,
-      top:  3 + (i * 7.3 + (i % 5) * 11.7) % 94,
-      size: 2 + (i % 4) * 1.2,
-      dur:  7 + (i % 6) * 1.6,
-      delay: -(i * 0.65),
-      op: 0.06 + (i % 5) * 0.03,
-    })), []
-  );
-
   if (loading) return <LoadingScreen />;
   if (!user) return null;
 
   return (
-    <div
-      className="flex h-screen overflow-hidden relative"
-      style={{ background: "#131C23" }}
-    >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {particles.map(p => (
-          <div
-            key={p.id}
-            className="rb-particle"
-            style={{
-              left: `${p.left}%`,
-              top: `${p.top}%`,
-              width: `${p.size}px`,
-              height: `${p.size}px`,
-              background: `rgba(139,92,246,${p.op})`,
-              animationDuration: `${p.dur}s`,
-              animationDelay: `${p.delay}s`,
-              ["--p-op" as string]: p.op,
-            }}
-          />
-        ))}
-        <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: "rgba(59,167,255,0.07)" }} />
-        <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full pointer-events-none"
-          style={{ background: "rgba(92,184,255,0.06)" }} />
-      </div>
-
+    <div className="pn-shell flex h-screen overflow-hidden relative">
       <div className="hidden lg:flex relative z-10">
         <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(p => !p)} />
       </div>

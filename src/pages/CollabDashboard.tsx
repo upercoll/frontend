@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Package, LogOut, ShoppingBag, DollarSign, Loader2 } from "lucide-react";
 
-const BASE = import.meta.env.VITE_API_URL || "";
+const BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
 
 async function apiGet(path: string, token: string) {
   const res = await fetch(`${BASE}/api/collab${path}`, {
@@ -83,12 +83,8 @@ export default function CollabDashboard() {
         <header className="flex items-center justify-between px-6 h-16 flex-shrink-0"
           style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(59,167,255,0.35)" }}>
-              <span className="text-white font-bold text-sm">R</span>
-            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"><img src="/rb-logo.png" alt="RBstars" className="w-full h-full object-contain" /></div>
             <div>
-              <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
               <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(167,139,250,0.7)" }}>Collaborator Portal</p>
             </div>
           </div>

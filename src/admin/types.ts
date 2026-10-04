@@ -113,6 +113,8 @@ export interface Product {
   images?: string[];
   gradient?: { from: string; to: string };
   features?: string[];
+  notice?: { text: string; required: boolean };
+  variations?: { name: string; options: string[] }[];
   stock: number;
   onHand: number;
   outOfStock: boolean;
@@ -145,7 +147,7 @@ export interface Order {
     unitPrice: number;
     totalPrice: number;
   }[];
-  pricing: { subtotal: number; discount: number; discountPercent?: number; promoCode?: string; total: number };
+  pricing: { subtotal: number; discount: number; discountPercent?: number; promoCode?: string; tax?: number; taxLabel?: string; total: number };
   payment: { method: string; status: string; paidAt?: string; failureReason?: string };
   delivery: { status: string; deliveredAt?: string; trackingNumber?: string; carrier?: string; notes?: string };
   status: string;
@@ -385,6 +387,65 @@ export interface SocialPayout {
   createdAt: string;
 }
 
+export type AnnouncementTheme = "blue" | "pink" | "green" | "yellow" | "red" | "ink" | "violet";
+
+export interface Announcement {
+  _id?: string;
+  id?: string;
+  title: string;
+  body: string;
+  imageUrl?: string | null;
+  theme: AnnouncementTheme;
+  badge?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  showAsModal: boolean;
+  dismissible: boolean;
+  priority: number;
+  published: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  promoCode?: string | null;
+  views?: number;
+  isLive?: boolean;
+  createdByEmail?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type BroadcastAudience = "all" | "verified" | "buyers" | "non_buyers";
+
+export interface EmailBroadcast {
+  _id?: string;
+  id?: string;
+  subject: string;
+  body: string;
+  audience: BroadcastAudience;
+  promoCode?: string | null;
+  status: "queued" | "sending" | "sent" | "failed" | "cancelled";
+  recipients: number;
+  sent: number;
+  failed: number;
+  cancelled?: boolean;
+  lastError?: string | null;
+  sentByEmail?: string;
+  createdAt?: string;
+}
+
+export interface Tutorial {
+  _id: string;
+  game: string;
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  gradient?: { from: string; to: string };
+  sortOrder?: number;
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const ALL_PERMISSIONS: { key: string; label: string; description: string; group: string }[] = [
   { key: "view_analytics", label: "View Analytics", description: "Access the analytics dashboard", group: "Analytics" },
 
@@ -429,4 +490,42 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
 
   { key: "view_socials", label: "View Socials", description: "View video submissions and creator stats", group: "Socials" },
   { key: "manage_socials", label: "Manage Socials", description: "Set rates, review videos, and mark payouts as paid", group: "Socials" },
+
+  { key: "view_tickets", label: "View Tickets", description: "See the support ticket queue", group: "Support" },
+  { key: "manage_tickets", label: "Manage Tickets", description: "Assign, retag, and reprioritize tickets", group: "Support" },
+  { key: "ticket_agent", label: "Ticket Agent", description: "Reply to and resolve customer tickets", group: "Support" },
+
+  // Canonical (combined) keys — the backend enum allows these and hasPermission
+  // falls back to them for the legacy view_*/edit_* keys above.
+  { key: "manage_products", label: "Full Product Control", description: "All product permissions at once", group: "Products" },
+  { key: "manage_orders", label: "Full Order Control", description: "All order permissions at once", group: "Orders" },
+  { key: "manage_games", label: "Full Game Control", description: "All game permissions at once", group: "Games" },
+  { key: "manage_claims", label: "Full Claims Control", description: "All claim session permissions at once", group: "Claims" },
+  { key: "manage_team", label: "Full Team Control", description: "All team permissions at once", group: "Team" },
+
+  // ── Customers ──────────────────────────────────────────────────────────
+  { key: "view_customers", label: "View Customers", description: "See the customer list and individual profiles", group: "Customers" },
+  { key: "manage_customers", label: "Edit Customers", description: "Change customer details, notes and status", group: "Customers" },
+  { key: "delete_customers", label: "Delete Customers", description: "Permanently remove customer records", group: "Customers" },
+
+  // ── Site configuration ─────────────────────────────────────────────────
+  { key: "view_settings", label: "View Settings", description: "Read the site settings", group: "Site" },
+  { key: "manage_settings", label: "Edit Settings", description: "Change site-wide settings and reset site content", group: "Site" },
+  { key: "view_site_modes", label: "View Site Modes", description: "Read seasonal modes such as Halloween", group: "Site" },
+  { key: "manage_site_modes", label: "Edit Site Modes", description: "Turn seasonal site modes on or off", group: "Site" },
+
+  // ── Commissions ────────────────────────────────────────────────────────
+  { key: "view_commissions", label: "View Commissions", description: "See team and stocker commission reports", group: "Commissions" },
+  { key: "manage_commissions", label: "Edit Commissions", description: "Set team member commission rates", group: "Commissions" },
+
+  // ── Additional write gates ─────────────────────────────────────────────
+  { key: "manage_pod", label: "Edit Proof Notes", description: "Add internal notes to proof-of-delivery records", group: "Claims" },
+  { key: "delete_claims", label: "Delete Claims", description: "Permanently delete claim sessions and bulk-clear history", group: "Claims" },
+  { key: "delete_deliverers", label: "Delete Deliverers", description: "Disable and remove delivery team accounts", group: "Team" },
+  { key: "delete_stockers", label: "Delete Stockers", description: "Disable and remove stocker accounts", group: "Stock" },
+
+  // ── Announcements & marketing email ────────────────────────────────────
+  { key: "view_announcements", label: "View Announcements", description: "Read site announcements and popup settings", group: "Announcements" },
+  { key: "manage_announcements", label: "Edit Announcements", description: "Create, edit and publish the customer popup", group: "Announcements" },
+  { key: "send_broadcasts", label: "Send Broadcast Emails", description: "Email every registered customer at once", group: "Announcements" },
 ];

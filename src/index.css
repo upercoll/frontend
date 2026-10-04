@@ -482,3 +482,16 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 3px rgba(59,167,255,0.15);
   cursor: pointer;
 }
+
+/* ── Announcement popup ──────────────────────────────────────────── */
+/* Split layout: stacked on phones (art panel is content-height), then
+   side-by-side from 720px up with a 38/62 split. Flex ratios live here rather
+   than inline so they can change per breakpoint. */
+.announce-split { flex-direction: column; }
+.announce-split > :first-child { flex: 0 0 auto; }
+.announce-split > :last-child { flex: 1 1 auto; }
+@media (min-width: 720px) {
+  .announce-split { flex-direction: row; }
+  .announce-split > :first-child { flex: 1 1 38%; }
+  .announce-split > :last-child { flex: 1 1 62%; }
+}

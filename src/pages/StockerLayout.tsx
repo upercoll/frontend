@@ -2,7 +2,7 @@ import { useLocation, Link } from "wouter";
 import { useState, useEffect } from "react";
 import { LogOut, Archive, ClipboardList, LayoutDashboard, DollarSign } from "lucide-react";
 
-const BASE = import.meta.env.VITE_API_URL || "";
+const BASE = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
 
 function getToken() { return localStorage.getItem("stocker_token") || ""; }
 
@@ -52,12 +52,8 @@ export default function StockerLayout({ children }: { children: React.ReactNode 
           style={{ background: "rgba(6, 9, 28, 0.82)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(92,184,255,0.12)" }}>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                style={{ background: "#3BA7FF", boxShadow: "0 0 16px rgba(59,167,255,0.35)" }}>
-                <span className="text-white font-bold text-sm">R</span>
-              </div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center"><img src="/rb-logo.png" alt="RBstars" className="w-full h-full object-contain" /></div>
               <div>
-                <span className="text-white font-bold text-sm tracking-tight">RBstars</span>
                 <p className="text-[10px] tracking-widest uppercase" style={{ color: "rgba(167,139,250,0.7)" }}>Stocker Portal</p>
               </div>
             </div>

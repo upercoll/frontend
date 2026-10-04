@@ -69,8 +69,11 @@ export default function Navbar({ dark = false }: NavbarProps) {
     if (totalItems > prev) {
       setCartBounce(true);
       const t = setTimeout(() => setCartBounce(false), 600);
+      prevTotalRef[0] = totalItems;
       return () => clearTimeout(t);
     }
+    // Always advance the baseline — otherwise a decrease after an increase
+    // compared against a stale count and bounced the cart on item removal.
     prevTotalRef[0] = totalItems;
   }, [totalItems]);
 
@@ -121,15 +124,12 @@ export default function Navbar({ dark = false }: NavbarProps) {
     }, 480);
   }
 
-  /* Smooth scroll helpers for desktop nav links */
-  function scrollToShop() {
-    const el = document.getElementById("shop-games");
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      navigate("/");
-      window.dispatchEvent(new Event("rbstars:open-shop"));
-    }
+  /* Shop Now goes straight to the shop page. It used to look for a
+     #shop-games anchor that exists nowhere and then fire an event into a ref
+     that was never attached, so the button did literally nothing. */
+  function goToShop() {
+    setMenuOpen(false);
+    navigate("/browse");
   }
 
   function scrollToHowItWorks() {
@@ -175,12 +175,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
               {/* Logo */}
               <Link href="/" data-testid="link-logo">
                 <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-2 cursor-pointer select-none">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center shadow-lg" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-                    <Star size={16} fill="#3BA7FF" color="#3BA7FF" />
-                  </div>
-                  <span className="text-xl font-bold tracking-tight transition-colors duration-300" style={{ color: lightMode ? "#131C23" : "white" }}>
-                    RB<span style={{ color: lightMode ? "#3BA7FF" : "#3BA7FF" }}>stars</span>
-                  </span>
+                  <img src="/rb-logo.png" alt="RBstars" className="w-11 h-11 object-contain" />
                 </motion.div>
               </Link>
 
@@ -400,10 +395,9 @@ export default function Navbar({ dark = false }: NavbarProps) {
                         <div className="h-px mb-1" style={{ background: "rgba(59,167,255,0.1)" }} />
                         <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile"
                           onClick={() => { setProfileOpen(false); navigate("/profile"); }} />
-                        {user.isAdmin && (
-                          <ProfileDropdownItem icon={<ShieldCheck size={14} />} label="Admin Panel"
-                            onClick={() => { setProfileOpen(false); navigate("/admin"); }} />
-                        )}
+                        {/* Customers never have an admin panel — the old
+                            user.isAdmin check referenced a field that doesn't
+                            exist on CustomerUser, so this was dead code. */}
                         <div className="h-px my-1" style={{ background: "rgba(59,167,255,0.1)" }} />
                         <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out"
                           onClick={() => { logout(); setProfileOpen(false); }} danger />
@@ -431,7 +425,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: "0 8px 28px rgba(79,70,229,0.5)" }}
                 whileTap={{ scale: 0.96 }}
-                onClick={scrollToShop}
+                onClick={goToShop}
                 className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white"
                 style={{ background: "#3BA7FF" }}
               >
@@ -493,12 +487,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
             <div className="flex items-center justify-between px-5 pt-12 pb-6 flex-shrink-0">
               <Link href="/" onClick={() => setMenuOpen(false)}>
                 <div className="flex items-center gap-2 cursor-pointer">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#1C2A34" }}>
-                    <Star size={16} fill="white" color="white" />
-                  </div>
-                  <span className="text-xl font-bold text-white">
-                    RB<span style={{ color: "#3BA7FF" }}>stars</span>
-                  </span>
+                  <img src="/rb-logo.png" alt="RBstars" className="w-11 h-11 object-contain" />
                 </div>
               </Link>
               <motion.button
@@ -515,13 +504,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
             <div className="px-5 mb-6 flex flex-col gap-3 flex-shrink-0">
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                onClick={() => {
-                  setMenuOpen(false);
-                  setTimeout(() => {
-                    const el = document.getElementById("shop-games");
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }, 350);
-                }}
+                onClick={goToShop}
                 className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
                 style={{ background: "#3BA7FF" }}
               >

@@ -1,74 +1,58 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, BarChart3, Zap, Target, Percent, Activity } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  Banknote, ShoppingBag, ReceiptText, Target, Globe,
+  TrendingUp, Trophy, Gamepad2, Layers, Activity,
+} from "lucide-react";
 import { adminApi } from "../api";
+import {
+  PageHeader, Card, CardHeader, MetricTile, Badge, Segmented,
+  EmptyState, MetricSkeleton,
+} from "../components/kit";
 
 const PERIODS = [
   { label: "Today", value: "today" },
-  { label: "This Week", value: "week" },
-  { label: "This Month", value: "month" },
-  { label: "This Year", value: "year" },
-  { label: "All Time", value: "all" },
+  { label: "This week", value: "week" },
+  { label: "This month", value: "month" },
+  { label: "This year", value: "year" },
+  { label: "All time", value: "all" },
 ];
 
-function StatCard({ icon: Icon, label, value, growth, prefix = "", color = "#4f46e5" }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: number | string;
-  growth?: number;
-  prefix?: string;
-  color?: string;
-}) {
-  const isPositive = (growth || 0) >= 0;
-  return (
-    <div className="bg-white rounded-xl p-5 transition-shadow hover:shadow-md" style={{ border: "1px solid #E9EBF5" }}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}15` }}>
-          <Icon className="w-5 h-5" style={{ color }} />
-        </div>
-        {growth !== undefined && (
-          <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${isPositive ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
-            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-            {Math.abs(growth).toFixed(1)}%
-          </div>
-        )}
-      </div>
-      <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>{prefix}{typeof value === "number" ? value.toLocaleString("en-US", { maximumFractionDigits: 2 }) : value}</p>
-      <p className="text-sm text-slate-400 mt-1">{label}</p>
-    </div>
-  );
-}
+const BAR_COLORS = [
+  "var(--pn-action)", "var(--pn-success-fg)", "var(--pn-warning-fg)",
+  "var(--pn-critical)", "var(--pn-info-fg)", "var(--pn-border-strong)",
+];
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Unpaid", partially_refunded: "Partial refund",
+};
 
 export default function Analytics() {
+  const reduce = useReducedMotion();
   const [period, setPeriod] = useState("month");
   const [chartPeriod, setChartPeriod] = useState<"monthly" | "daily">("monthly");
 
-  const { data: summaryData } = useQuery({
+  const { data: summaryData, isLoading: summaryLoading } = useQuery({
     queryKey: ["analytics-summary", period],
     queryFn: () => adminApi.analytics.salesSummary(period),
   });
-
   const { data: conversionData } = useQuery({
     queryKey: ["analytics-conversion"],
     queryFn: adminApi.analytics.conversion,
   });
-
   const { data: chartData } = useQuery({
     queryKey: ["analytics-chart", chartPeriod],
     queryFn: () => adminApi.analytics.revenue(chartPeriod),
   });
-
   const { data: byGameData } = useQuery({
     queryKey: ["analytics-by-game"],
     queryFn: adminApi.analytics.byGame,
   });
-
   const { data: topProductsData } = useQuery({
     queryKey: ["analytics-top-products"],
     queryFn: adminApi.analytics.topProducts,
   });
-
   const { data: trafficData } = useQuery({
     queryKey: ["analytics-traffic"],
     queryFn: adminApi.analytics.traffic,
@@ -82,279 +66,292 @@ export default function Analytics() {
   const trafficChart = trafficData?.data?.chart || [];
   const trafficSummary = trafficData?.data?.summary;
   const maxTrafficValue = Math.max(...trafficChart.map((d: any) => Math.max(d.newCustomers, d.orderAttempts)), 1);
-
   const maxRevenue = Math.max(...chart.map((c: any) => c.revenue), 1);
   const totalGameRevenue = byGame.reduce((sum: number, g: any) => sum + g.revenue, 0);
 
+  const statusBreakdown = summary?.statusBreakdown as Record<string, number> | undefined;
+
   return (
-    <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Analytics</h2>
-          <p className="text-sm text-slate-500 mt-0.5">Sales performance and business insights</p>
-        </div>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => setPeriod(p.value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={period === p.value
-                ? { background: "#1e1b4b", color: "#fff" }
-                : { color: "#6b7280" }}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+    <div className="p-6 space-y-5 max-w-[1400px] mx-auto">
+
+      <PageHeader
+        title="Analytics"
+        description="Sales performance and business insights"
+        eyebrow="Insights"
+      >
+        <Segmented options={PERIODS} value={period} onChange={setPeriod} />
+      </PageHeader>
+
+      {/* ── KPI row ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        {summaryLoading ? <MetricSkeleton count={4} /> : (
+          <>
+            <MetricTile label="Revenue" value={`$${(summary?.revenue || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`}
+                        delta={summary?.revenueGrowth} hint="vs previous period" icon={Banknote} />
+            <MetricTile label="Orders" value={(summary?.orders || 0).toLocaleString()}
+                        delta={summary?.ordersGrowth} hint="vs previous period" icon={ShoppingBag} />
+            <MetricTile label="Avg. order value" value={`$${(summary?.avgOrderValue || 0).toFixed(2)}`} hint="revenue ÷ orders" icon={ReceiptText} />
+            <MetricTile label="Conversion rate" value={`${conversion?.conversionRate || 0}%`} hint="checkout completion" icon={Target} />
+          </>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={DollarSign} label="Revenue" value={summary?.revenue || 0}
-          growth={summary?.revenueGrowth} prefix="$" color="#3BA7FF"
-        />
-        <StatCard
-          icon={ShoppingBag} label="Orders" value={summary?.orders || 0}
-          growth={summary?.ordersGrowth} color="#0ea5e9"
-        />
-        <StatCard
-          icon={BarChart3} label="Avg. Order Value" value={summary?.avgOrderValue || 0}
-          prefix="$" color="#8b5cf6"
-        />
-        <StatCard
-          icon={Target} label="Conversion Rate" value={`${conversion?.conversionRate || 0}%`}
-          color="#10b981"
-        />
-      </div>
-
+      {/* ── Checkout funnel ── */}
       {conversion && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Total Checkouts</p>
-            <p className="text-2xl font-bold" style={{ color: "#1e1b4b" }}>{conversion.totalOrders.toLocaleString()}</p>
+        <Card>
+          <CardHeader title="Checkout funnel" subtitle="Every order attempt, end to end" icon={TrendingUp} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4" style={{ background: "var(--pn-surface-2)" }}>
+            <MetricTile label="Total checkouts" value={conversion.totalOrders.toLocaleString()} icon={ShoppingBag} />
+            <MetricTile label="Successful payments" value={conversion.paidOrders.toLocaleString()} icon={Banknote} />
+            <MetricTile label="Abandonment rate" value={`${conversion.abandonmentRate}%`} icon={Target}
+                        hint={conversion.abandonmentRate > 30 ? "worth investigating" : "healthy"} />
           </div>
-          <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Successful Payments</p>
-            <p className="text-2xl font-bold text-emerald-600">{conversion.paidOrders.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Abandonment Rate</p>
-            <p className="text-2xl font-bold text-red-500">{conversion.abandonmentRate}%</p>
-          </div>
-        </div>
+        </Card>
       )}
 
-      {summary?.statusBreakdown && (
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Order Status Breakdown</h3>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries(summary.statusBreakdown).map(([status, count]) => (
-              <div key={status} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-                <span className="text-sm font-semibold capitalize" style={{ color: "#1e1b4b" }}>{status === "pending" ? "Unpaid" : status}</span>
-                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700">{String(count)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-bold" style={{ color: "#1e1b4b" }}>Revenue Chart</h3>
-          <div className="flex gap-1 p-1 rounded-lg" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5" }}>
-            {(["monthly", "daily"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setChartPeriod(p)}
-                className="px-3 py-1 rounded-md text-xs font-semibold transition-all capitalize"
-                style={chartPeriod === p ? { background: "#1e1b4b", color: "#fff" } : { color: "#6b7280" }}
-              >
-                {p === "monthly" ? "Monthly" : "Daily (30d)"}
-              </button>
-            ))}
-          </div>
-        </div>
-        {chart.length === 0 ? (
-          <div className="h-40 flex items-center justify-center text-slate-300">No data</div>
-        ) : (
-          <div className="flex items-end gap-1 h-40">
-            {chart.map((point: any, i: number) => {
-              const height = maxRevenue > 0 ? (point.revenue / maxRevenue) * 100 : 0;
+      {/* ── Status breakdown ── */}
+      {statusBreakdown && (
+        <Card>
+          <CardHeader title="Order status" subtitle={`Breakdown for the selected period`} icon={Layers} />
+          <div className="pn-cardbody flex flex-wrap gap-2">
+            {Object.entries(statusBreakdown).map(([status, count]) => {
+              const tone = status === "completed" ? "success"
+                : status === "cancelled" ? "critical"
+                : status === "pending" ? "warning"
+                : status === "refunded" ? "neutral" : "action";
               return (
-                <motion.div
-                  key={i}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${height}%` }}
-                  transition={{ delay: i * 0.02, duration: 0.4 }}
-                  className="flex-1 rounded-t-sm relative group cursor-pointer"
-                  style={{ background: "#3BA7FF", minHeight: point.revenue > 0 ? 2 : 0 }}
-                >
-                  {point.revenue > 0 && (
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
-                      ${point.revenue.toFixed(0)}
-                    </div>
-                  )}
-                </motion.div>
+                <Badge key={status} tone={tone} dot>
+                  {STATUS_LABEL[status] || status} · {Number(count).toLocaleString()}
+                </Badge>
               );
             })}
           </div>
-        )}
-        <div className="flex justify-between mt-2">
-          {chart.filter((_: any, i: number) => chartPeriod === "monthly" || i % 7 === 0).map((point: any, i: number) => (
-            <span key={i} className="text-[9px] text-slate-300">
-              {point.month || point.label}
-            </span>
-          ))}
-        </div>
-      </div>
+        </Card>
+      )}
 
-      {/* ── Site Traffic ── */}
-      {trafficSummary && (
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#f0fdf4" }}>
-                <Activity className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold" style={{ color: "#1e1b4b" }}>Site Traffic (Last 30 Days)</h3>
-                <p className="text-xs text-slate-400">New customer signups &amp; order activity</p>
-              </div>
-            </div>
-            <div className="flex gap-4 text-right">
-              <div>
-                <p className="text-lg font-bold text-emerald-600">{trafficSummary.newCustomers30d.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-400">New Customers</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold" style={{ color: "#4f46e5" }}>{trafficSummary.orderAttempts30d.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-400">Order Attempts</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold" style={{ color: "#1e1b4b" }}>{trafficSummary.totalCustomers.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-400">Total Customers</p>
-              </div>
-            </div>
-          </div>
-          {trafficChart.length === 0 ? (
-            <div className="h-32 flex items-center justify-center text-slate-300">No data</div>
+      {/* ── Revenue chart ── */}
+      <Card>
+        <CardHeader
+          title="Revenue"
+          subtitle={chartPeriod === "monthly" ? "By month" : "Last 30 days"}
+          icon={TrendingUp}
+          action={
+            <Segmented
+              value={chartPeriod}
+              onChange={setChartPeriod}
+              options={[
+                { label: "Monthly", value: "monthly" as const },
+                { label: "Daily (30d)", value: "daily" as const },
+              ]}
+            />
+          }
+        />
+        <div className="pn-cardbody">
+          {chart.length === 0 ? (
+            <EmptyState icon={TrendingUp} title="No revenue data yet" body="Bars appear once orders start landing in this period." />
           ) : (
             <>
-              <div className="flex items-end gap-0.5 h-32 mb-2">
-                {trafficChart.map((point: any, i: number) => {
-                  const customerH = maxTrafficValue > 0 ? (point.newCustomers / maxTrafficValue) * 100 : 0;
-                  const orderH = maxTrafficValue > 0 ? (point.orderAttempts / maxTrafficValue) * 100 : 0;
+              <div className="flex items-end gap-1 h-40">
+                {chart.map((point: any, i: number) => {
+                  const height = maxRevenue > 0 ? (point.revenue / maxRevenue) * 100 : 0;
                   return (
-                    <div key={i} className="flex-1 flex items-end gap-px relative group">
-                      <motion.div
-                        initial={{ height: 0 }} animate={{ height: `${orderH}%` }}
-                        transition={{ delay: i * 0.01, duration: 0.3 }}
-                        className="flex-1 rounded-t-sm"
-                        style={{ background: "#e0e7ff", minHeight: point.orderAttempts > 0 ? 1 : 0 }}
-                      />
-                      <motion.div
-                        initial={{ height: 0 }} animate={{ height: `${customerH}%` }}
-                        transition={{ delay: i * 0.01, duration: 0.3 }}
-                        className="flex-1 rounded-t-sm"
-                        style={{ background: "#34d399", minHeight: point.newCustomers > 0 ? 1 : 0 }}
-                      />
-                      {(point.newCustomers > 0 || point.orderAttempts > 0) && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-[#1e1b4b] text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg pointer-events-none">
-                          <div>{point.label}</div>
-                          <div className="text-emerald-300">+{point.newCustomers} customers</div>
-                          <div className="text-indigo-300">{point.orderAttempts} orders</div>
+                    <motion.div
+                      key={i}
+                      initial={reduce ? false : { height: 0 }}
+                      animate={{ height: `${height}%` }}
+                      transition={{ delay: reduce ? 0 : i * 0.02, duration: 0.4 }}
+                      className="flex-1 rounded-t-sm relative group cursor-pointer"
+                      style={{ background: "var(--pn-action)", minHeight: point.revenue > 0 ? 2 : 0 }}
+                    >
+                      {point.revenue > 0 && (
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block text-white text-[10px] rounded px-2 py-1 whitespace-nowrap z-10"
+                             style={{ background: "var(--pn-text)", boxShadow: "var(--pn-shadow-pop)" }}>
+                          ${point.revenue.toFixed(0)}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
-              <div className="flex justify-between">
-                {trafficChart.filter((_: any, i: number) => i % 7 === 0).map((point: any, i: number) => (
-                  <span key={i} className="text-[9px] text-slate-300">{point.label}</span>
+              <div className="flex justify-between mt-2">
+                {chart.filter((_: any, i: number) => chartPeriod === "monthly" || i % 7 === 0).map((point: any, i: number) => (
+                  <span key={i} className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>
+                    {point.month || point.label}
+                  </span>
                 ))}
-              </div>
-              <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-2 rounded-sm" style={{ background: "#34d399" }} />
-                  <span className="text-[11px] text-slate-500">New Customers</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-2 rounded-sm" style={{ background: "#e0e7ff" }} />
-                  <span className="text-[11px] text-slate-500">Order Attempts</span>
-                </div>
               </div>
             </>
           )}
         </div>
+      </Card>
+
+      {/* ── Site traffic ── */}
+      {trafficSummary && (
+        <Card>
+          <CardHeader
+            title="Site traffic (last 30 days)"
+            subtitle="New customer signups & order activity"
+            icon={Globe}
+            action={
+              <span className="flex items-center gap-5 text-right">
+                {[
+                  { v: trafficSummary.newCustomers30d, l: "New customers", c: "var(--pn-success-fg)" },
+                  { v: trafficSummary.orderAttempts30d, l: "Order attempts", c: "var(--pn-action)" },
+                  { v: trafficSummary.totalCustomers, l: "Total customers", c: "var(--pn-text)" },
+                ].map(s => (
+                  <span key={s.l} className="leading-tight">
+                    <b className="block text-[15px] font-semibold" style={{ color: s.c }}>{s.v.toLocaleString()}</b>
+                    <span className="text-[10.5px]" style={{ color: "var(--pn-text-3)" }}>{s.l}</span>
+                  </span>
+                ))}
+              </span>
+            }
+          />
+          <div className="pn-cardbody">
+            {trafficChart.length === 0 ? (
+              <EmptyState icon={Globe} title="No traffic data yet" body="Daily signups and order attempts will chart here." />
+            ) : (
+              <>
+                <div className="flex items-end gap-0.5 h-32 mb-2">
+                  {trafficChart.map((point: any, i: number) => {
+                    const customerH = maxTrafficValue > 0 ? (point.newCustomers / maxTrafficValue) * 100 : 0;
+                    const orderH = maxTrafficValue > 0 ? (point.orderAttempts / maxTrafficValue) * 100 : 0;
+                    return (
+                      <div key={i} className="flex-1 flex items-end gap-px relative group">
+                        <motion.div
+                          initial={reduce ? false : { height: 0 }}
+                          animate={{ height: `${orderH}%` }}
+                          transition={{ delay: reduce ? 0 : i * 0.01, duration: 0.3 }}
+                          className="flex-1 rounded-t-sm"
+                          style={{ background: "var(--pn-action-tint)", minHeight: point.orderAttempts > 0 ? 1 : 0 }}
+                        />
+                        <motion.div
+                          initial={reduce ? false : { height: 0 }}
+                          animate={{ height: `${customerH}%` }}
+                          transition={{ delay: reduce ? 0 : i * 0.01, duration: 0.3 }}
+                          className="flex-1 rounded-t-sm"
+                          style={{ background: "var(--pn-success-fg)", minHeight: point.newCustomers > 0 ? 1 : 0 }}
+                        />
+                        {(point.newCustomers > 0 || point.orderAttempts > 0) && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block text-white text-[10px] rounded px-2 py-1.5 whitespace-nowrap z-10 pointer-events-none"
+                               style={{ background: "var(--pn-text)", boxShadow: "var(--pn-shadow-pop)" }}>
+                            <div className="font-semibold">{point.label}</div>
+                            <div style={{ color: "#7ff1bb" }}>+{point.newCustomers} customers</div>
+                            <div style={{ color: "#99c7ff" }}>{point.orderAttempts} orders</div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between">
+                  {trafficChart.filter((_: any, i: number) => i % 7 === 0).map((point: any, i: number) => (
+                    <span key={i} className="text-[10px]" style={{ color: "var(--pn-text-3)" }}>{point.label}</span>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: "1px solid var(--pn-divider)" }}>
+                  <span className="flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--pn-text-2)" }}>
+                    <span className="w-3 h-2 rounded-sm" style={{ background: "var(--pn-success-fg)" }} /> New customers
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[11.5px]" style={{ color: "var(--pn-text-2)" }}>
+                    <span className="w-3 h-2 rounded-sm" style={{ background: "var(--pn-action-tint)" }} /> Order attempts
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
       )}
 
+      {/* ── Breakdowns ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Revenue by Game</h3>
-          {byGame.length === 0 ? (
-            <p className="text-slate-300 text-sm">No data</p>
-          ) : (
-            <div className="space-y-3">
-              {byGame.map((g: any, i: number) => {
-                const pct = totalGameRevenue > 0 ? (g.revenue / totalGameRevenue) * 100 : 0;
-                const colors = ["#4f46e5", "#0ea5e9", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444"];
-                const col = colors[i % colors.length];
-                return (
-                  <div key={g._id || i}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium" style={{ color: "#374151" }}>{g._id || "Unknown"}</span>
-                      <span className="text-sm font-semibold" style={{ color: "#1e1b4b" }}>${g.revenue.toFixed(2)}</span>
+        <Card>
+          <CardHeader title="Revenue by game" subtitle="Share of total revenue" icon={Gamepad2} />
+          <div className="pn-cardbody">
+            {byGame.length === 0 ? (
+              <EmptyState icon={Gamepad2} title="No game revenue yet" body="Revenue splits out per title once orders complete." />
+            ) : (
+              <div className="space-y-4">
+                {byGame.map((g: any, i: number) => {
+                  const pct = totalGameRevenue > 0 ? (g.revenue / totalGameRevenue) * 100 : 0;
+                  return (
+                    <div key={g._id || i}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[13px] font-medium flex items-center gap-2" style={{ color: "var(--pn-text)" }}>
+                          <span className="w-2 h-2 rounded-full" style={{ background: BAR_COLORS[i % BAR_COLORS.length] }} />
+                          {g._id || "Unknown"}
+                        </span>
+                        <span className="text-[13px] font-semibold" style={{ color: "var(--pn-text)" }}>
+                          ${g.revenue.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--pn-surface-2)" }}>
+                        <motion.div
+                          initial={reduce ? false : { width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6, delay: reduce ? 0 : i * 0.08, ease: [0.19, 1, 0.22, 1] }}
+                          className="h-full rounded-full"
+                          style={{ background: BAR_COLORS[i % BAR_COLORS.length] }}
+                        />
+                      </div>
+                      <p className="text-[11px] mt-1" style={{ color: "var(--pn-text-3)" }}>
+                        {g.orders} orders · {pct.toFixed(1)}%
+                      </p>
                     </div>
-                    <div className="h-2 bg-[#F7F8FC] rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.6, delay: i * 0.1 }}
-                        className="h-full rounded-full"
-                        style={{ background: col }}
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{g.orders} orders · {pct.toFixed(1)}%</p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
 
-        <div className="bg-white rounded-xl p-5" style={{ border: "1px solid #E9EBF5" }}>
-          <h3 className="text-sm font-bold mb-4" style={{ color: "#1e1b4b" }}>Top Products</h3>
-          {topProducts.length === 0 ? (
-            <p className="text-slate-300 text-sm">No data</p>
-          ) : (
-            <div className="space-y-3">
-              {topProducts.slice(0, 8).map((p: any, i: number) => (
-                <div key={p._id || i} className="flex items-center gap-3">
-                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                    style={{ background: i === 0 ? "#f59e0b" : i === 1 ? "#9ca3af" : i === 2 ? "#92400e" : "#E9EBF5", color: i < 3 ? "#fff" : "#6b7280" }}>
-                    {i + 1}
-                  </span>
-                  <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
-                    style={{ background: p.gradient ? `linear-gradient(135deg,${p.gradient.from},${p.gradient.to})` : "#E9EBF5" }}>
-                    {p.imageUrl
-                      ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-[10px] font-bold" style={{ color: "#6b7280" }}>{(p.name || "?")[0]}</span>
-                        </div>}
+        <Card>
+          <CardHeader title="Top products" subtitle="Best sellers by revenue" icon={Trophy} />
+          <div className="pn-cardbody">
+            {topProducts.length === 0 ? (
+              <EmptyState icon={Trophy} title="No product data yet" body="Best sellers rank up here once they sell." />
+            ) : (
+              <div className="space-y-3">
+                {topProducts.slice(0, 8).map((p: any, i: number) => (
+                  <div key={p._id || i} className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                          style={{
+                            background: i < 3 ? "var(--pn-primary)" : "var(--pn-surface-2)",
+                            color: i < 3 ? "#fff" : "var(--pn-text-2)",
+                          }}>
+                      {i + 1}
+                    </span>
+                    <span className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
+                          style={{
+                            background: p.gradient
+                              ? `linear-gradient(135deg,${p.gradient.from},${p.gradient.to})`
+                              : "var(--pn-surface-2)",
+                            border: "1px solid var(--pn-border)",
+                          }}>
+                      {p.imageUrl
+                        ? <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+                        : <span className="text-[11px] font-bold" style={{ color: "var(--pn-text-2)" }}>{(p.name || "?")[0]}</span>}
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-[13px] font-medium truncate" style={{ color: "var(--pn-text)" }}>{p.name}</span>
+                      <span className="block text-xs truncate" style={{ color: "var(--pn-text-3)" }}>{p.game} · {p.totalSold} sold</span>
+                    </span>
+                    <span className="text-[13px] font-semibold" style={{ color: "var(--pn-success-fg)" }}>
+                      ${p.revenue.toFixed(2)}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "#1e1b4b" }}>{p.name}</p>
-                    <p className="text-xs text-slate-400">{p.game} · {p.totalSold} sold</p>
-                  </div>
-                  <span className="text-sm font-semibold text-emerald-600">${p.revenue.toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
+
+      {!summaryLoading && !summary && (
+        <Card>
+          <EmptyState icon={Activity} title="No analytics yet" body="Pick a different period, or wait for your first orders." />
+        </Card>
+      )}
     </div>
   );
 }

@@ -648,12 +648,64 @@ export default function Checkout() {
           setPromo({ code: card.code, type: card.type, value: card.value });
         }
       } catch {}
+      return; // gift card wins; a saved win stays saved for next order
+    }
+    // Auto-apply the latest spin/level win — validated server-side first, so
+    // an expired or already-used code never shows a fake discount.
+    const won = localStorage.getItem("rbstars_won_promo");
+    if (won && !promo) {
+      try {
+        const w = JSON.parse(won);
+        if (w?.code) {
+          fetch(`${BACKEND_URL}/api/promo/validate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: w.code }),
+          })
+            .then((r) => {
+              if (r.status >= 400 && r.status < 500) {
+                localStorage.removeItem("rbstars_won_promo"); // expired or used up
+                return null;
+              }
+              return r.json();
+            })
+            .then((res) => {
+              const d = res?.data;
+              if (d?.code && d?.discountType) {
+                setPromo({ code: d.code, type: d.discountType, value: d.discountValue });
+              }
+            })
+            .catch(() => {}); // offline — keep it and retry next visit
+        }
+      } catch {}
     }
   }, []);
   const discount = promo
     ? promo.type === "percent" ? totalPrice * (promo.value / 100) : Math.min(promo.value, totalPrice)
     : 0;
-  const finalTotal = Math.max(0, totalPrice - discount);
+
+  // Sales tax is charged on the discounted amount, matching the backend's
+  // buildPricing() exactly. This is DISPLAY ONLY — the Stripe amount always
+  // comes from the server, so a tampered response cannot change what's charged.
+  const [tax, setTax] = useState<{ enabled: boolean; rate: number; label: string }>({
+    enabled: false, rate: 0, label: "Sales Tax",
+  });
+  useEffect(() => {
+    let alive = true;
+    fetch(`${BACKEND_URL}/api/settings/tax`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((json) => {
+        if (alive && json?.data) setTax(json.data);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const taxableAmount = Math.max(0, totalPrice - discount);
+  const taxAmount = tax.enabled && tax.rate > 0
+    ? Math.round(taxableAmount * (tax.rate / 100) * 100) / 100
+    : 0;
+  const finalTotal = Math.round((taxableAmount + taxAmount) * 100) / 100;
 
   const [email, setEmail] = useState(user?.email || "");
 
@@ -695,6 +747,9 @@ export default function Checkout() {
   const itemsRef = useRef(items);
   const userRef = useRef(user);
   const finalTotalRef = useRef(finalTotal);
+  // One-shot submit guard, shared by both payment paths — a Pay-button double
+  // click OR a double ECE confirm used to create two PaymentIntents/Orders.
+  const submittingRef = useRef(false);
   useEffect(() => { promoRef.current = promo; }, [promo]);
   useEffect(() => { emailRef.current = email; }, [email]);
   useEffect(() => { itemsRef.current = items; }, [items]);
@@ -740,6 +795,8 @@ export default function Checkout() {
     });
 
     ece.on("confirm", async (event: any) => {
+      if (submittingRef.current) return;
+      submittingRef.current = true;
       const currentEmail = emailRef.current || event.billingDetails?.email || "";
       const currentUser = userRef.current;
       const currentItems = itemsRef.current;
@@ -766,7 +823,8 @@ export default function Checkout() {
           orderRef: orderNumber,
           email: customerInfo.email,
           game: currentItems[0]?.game || null,
-          items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
+          total: finalTotalRef.current,
+          items: currentItems.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, price: i.price, gradient: i.gradient })),
         };
         try {
           localStorage.setItem("rbstars_last_order", JSON.stringify(orderData));
@@ -797,6 +855,8 @@ export default function Checkout() {
         navigate("/order-success");
       } catch (err) {
         setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
+      } finally {
+        submittingRef.current = false;
       }
     });
 
@@ -869,16 +929,26 @@ export default function Checkout() {
   }
 
   async function doProcessPayment() {
+    // Guard BEFORE any await — a second click in the burst window used to
+    // create a second PaymentIntent.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+
+    // Read through the ref: this callback may have been created before the
+    // register-through-checkout login finished, which used to fall back to the
+    // typed email as the Roblox username on first checkout.
+    const currentUser = userRef.current;
     const customerInfo = {
-      email: user?.email || email,
-      robloxUsername: user?.robloxUsername || email,
+      email: currentUser?.email || emailRef.current,
+      robloxUsername: currentUser?.robloxUsername || emailRef.current,
     };
     const cartPayload = items.map((i) => ({ id: i.id, quantity: i.quantity }));
 
+    // Disable the button before the 320ms burst, not after it.
+    setLoading(true);
     setBurst(true);
     await new Promise((r) => setTimeout(r, 320));
     setBurst(false);
-    setLoading(true);
 
     try {
       if (!STRIPE_KEY) throw new Error("Stripe is not configured. Please contact support.");
@@ -935,7 +1005,8 @@ export default function Checkout() {
         orderRef: orderNumber,
         email: customerInfo.email,
         game: items[0]?.game || null,
-        items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, gradient: i.gradient })),
+        total: finalTotalRef.current,
+        items: items.map(i => ({ id: i.id, name: i.name, quantity: i.quantity, price: i.price, gradient: i.gradient })),
       };
       try {
         localStorage.setItem("rbstars_last_order", JSON.stringify(orderData));
@@ -950,6 +1021,7 @@ export default function Checkout() {
     } catch (err) {
       setErrors({ payment: err instanceof Error ? err.message : "Payment failed. Please try again." });
     } finally {
+      submittingRef.current = false;
       setLoading(false);
     }
   }
@@ -1001,12 +1073,7 @@ export default function Checkout() {
 
           {/* Center logo */}
           <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center" style={{ background: "#3BA7FF", boxShadow: "0 2px 10px rgba(59,167,255,0.4)" }}>
-              <Star size={18} fill="white" color="white" />
-            </div>
-            <span className="font-extrabold tracking-tight text-white" style={{ fontSize: 22, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
-              RB<span style={{ color: "#3BA7FF" }}>stars</span>
-            </span>
+            <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
           </button>
         </div>
 
@@ -1218,6 +1285,18 @@ export default function Checkout() {
               <div className="mb-6">
                 <PromoInput applied={promo} onApply={setPromo} onRemove={() => setPromo(null)} />
               </div>
+
+              {/* Tax */}
+              {taxAmount > 0 && (
+                <div className="flex items-center justify-between py-2.5">
+                  <span className="text-sm font-semibold" style={{ color: "#9BAEBB" }}>
+                    {tax.label} ({tax.rate}%)
+                  </span>
+                  <span className="text-sm font-bold" style={{ color: "#9BAEBB" }}>
+                    ${taxAmount.toFixed(2)}
+                  </span>
+                </div>
+              )}
 
               {/* Total */}
               <div className="flex items-center justify-between py-5" style={{ borderTop: "1px solid #2C414E" }}>

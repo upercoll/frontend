@@ -1,268 +1,304 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  DollarSign, ShoppingBag, Users, Package,
-  MessageSquare, Activity, TrendingUp, ArrowRight,
-  BarChart3, Zap,
+  Banknote, ShoppingBag, Inbox, Radio, Wallet, Users, Boxes,
+  ReceiptText, TrendingUp, ArrowUpRight, CircleCheck, Timer,
+  Headset, Target, Layers,
 } from "lucide-react";
 import { Link } from "wouter";
 import { adminApi } from "../api";
 import RevenueChart from "../components/RevenueChart";
+import {
+  PageHeader, Card, CardHeader, CardBody, MetricTile, Badge,
+  ListRow, EmptyState, MetricSkeleton, RowSkeleton, Skeleton,
+} from "../components/kit";
 import type { Order } from "../types";
 
-const GLASS = {
-  background: "rgba(255,255,255,0.04)",
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 16,
-  boxShadow: "0 4px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)",
-} as React.CSSProperties;
-
-const GLASS_ACCENT = (color: string) => ({
-  background: `${color}18`,
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
-  border: `1px solid ${color}30`,
-  borderRadius: 16,
-  boxShadow: `0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)`,
-} as React.CSSProperties);
-
-function SectionHeading({ icon: Icon, title, action }: { icon: React.ComponentType<{ className?: string }>; title: string; action?: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 mb-5">
-      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.2)" }}>
-        <Icon className="w-3.5 h-3.5" style={{ color: "#a5b4fc" }} />
-      </div>
-      <h2 className="font-bold text-sm uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{title}</h2>
-      <div className="flex-1 h-px" style={{ background: "rgba(59,167,255,0.2)" }} />
-      {action}
-    </div>
-  );
-}
-
-const STATUS_DISPLAY: Record<string, string> = {
-  pending: "Unpaid", paid: "Paid", delivering: "Delivering",
-  completed: "Completed", cancelled: "Cancelled", refunded: "Refunded",
-  partially_refunded: "Partial Refund",
-};
-const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  pending:            { bg: "rgba(245,158,11,0.12)", text: "#fbbf24", dot: "#f59e0b" },
-  paid:               { bg: "rgba(99,102,241,0.12)", text: "#a5b4fc", dot: "#6366f1" },
-  delivering:         { bg: "rgba(139,92,246,0.12)", text: "#c4b5fd", dot: "#8b5cf6" },
-  completed:          { bg: "rgba(16,185,129,0.12)", text: "#6ee7b7", dot: "#10b981" },
-  cancelled:          { bg: "rgba(239,68,68,0.12)",  text: "#fca5a5", dot: "#ef4444" },
-  refunded:           { bg: "rgba(255,255,255,0.06)", text: "rgba(255,255,255,0.5)", dot: "rgba(255,255,255,0.3)" },
-  partially_refunded: { bg: "rgba(249,115,22,0.12)", text: "#fdba74", dot: "#f97316" },
+const STATUS_META: Record<string, { label: string; tone: "success" | "warning" | "action" | "critical" | "neutral" }> = {
+  pending:            { label: "Unpaid",            tone: "warning" },
+  paid:               { label: "Paid",              tone: "action" },
+  delivering:         { label: "Delivering",        tone: "action" },
+  completed:          { label: "Completed",         tone: "success" },
+  cancelled:          { label: "Cancelled",         tone: "critical" },
+  refunded:           { label: "Refunded",          tone: "neutral" },
+  partially_refunded: { label: "Partial refund",    tone: "warning" },
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const s = STATUS_COLORS[status] || STATUS_COLORS.refunded;
-  return (
-    <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-semibold"
-      style={{ background: s.bg, color: s.text }}>
-      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.dot }} />
-      {STATUS_DISPLAY[status] || status}
-    </span>
-  );
+  const m = STATUS_META[status] || { label: status, tone: "neutral" as const };
+  return <Badge tone={m.tone} dot>{m.label}</Badge>;
 }
 
-const STAT_CONFIGS = [
-  { key: "totalRevenue",    label: "Total Revenue",   icon: DollarSign,    color: "#10b981", format: (v: number) => `$${v.toFixed(2)}` },
-  { key: "revenueThisMonth", label: "This Month",     icon: TrendingUp,    color: "#6366f1", format: (v: number) => `$${v.toFixed(2)}` },
-  { key: "ordersToday",     label: "Orders Today",    icon: ShoppingBag,   color: "#8b5cf6", format: (v: number) => String(v) },
-  { key: "totalOrders",     label: "Total Orders",    icon: Zap,           color: "#f59e0b", format: (v: number) => String(v) },
-  { key: "pendingClaims",   label: "Pending Claims",  icon: MessageSquare, color: "#f97316", format: (v: number) => String(v) },
-  { key: "onlineAgents",    label: "Online Agents",   icon: Activity,      color: "#22d3ee", format: (v: number) => String(v) },
-  { key: "totalProducts",   label: "Products",        icon: Package,       color: "#ec4899", format: (v: number) => String(v) },
-  { key: "totalCustomers",  label: "Customers",       icon: Users,         color: "#a78bfa", format: (v: number) => String(v) },
-];
+const STATUS_ORDER = ["completed", "paid", "delivering", "pending", "cancelled", "refunded", "partially_refunded"];
 
 export default function Dashboard() {
+  const reduce = useReducedMotion();
+
   const { data, isLoading } = useQuery({
     queryKey: ["panel-dashboard"],
     queryFn: adminApi.analytics.dashboard,
     refetchInterval: 30000,
   });
 
+  const { data: summaryData } = useQuery({
+    queryKey: ["analytics-summary", "all"],
+    queryFn: () => adminApi.analytics.salesSummary("all"),
+    refetchInterval: 60000,
+  });
+
   const stats = data?.data.stats;
   const recentOrders = data?.data.recentOrders || [];
+  const summary = summaryData?.data;
+  const breakdown = summary?.statusBreakdown as Record<string, number> | undefined;
+
+  const statusBars = useMemo(() => {
+    if (!breakdown) return [];
+    const entries = STATUS_ORDER.filter(k => breakdown[k] !== undefined)
+      .map(k => ({ key: k, ...STATUS_META[k], count: breakdown[k] }));
+    const extras = Object.entries(breakdown)
+      .filter(([k]) => !STATUS_ORDER.includes(k))
+      .map(([k, count]) => ({ key: k, label: k, tone: "neutral" as const, count }));
+    const all = [...entries, ...extras];
+    const total = all.reduce((s, e) => s + e.count, 0) || 1;
+    return all.map(e => ({ ...e, pct: (e.count / total) * 100 }));
+  }, [breakdown]);
+
+  const fmtMoney = (v: number) => `$${v.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  const num = (v: number | undefined) => (v ?? 0).toLocaleString("en-US");
+
+  // Completion rate must be measured over ORDERS. The old expression subtracted
+// pending CLAIM SESSIONS from total orders — two unrelated counters — so a brand
+// new store (0 orders, 0 claims) reported 0% and any store with open claims
+// reported nonsense.
+  const breakdownOrderTotal = breakdown
+    ? Object.values(breakdown).reduce((sum, n) => sum + (Number(n) || 0), 0)
+    : 0;
+  const breakdownCompleted = breakdown
+    ? (breakdown.completed || 0) + (breakdown.partially_refunded || 0) + (breakdown.refunded || 0)
+    : 0;
+  const completionRate =
+    breakdownOrderTotal > 0 ? Math.round((breakdownCompleted / breakdownOrderTotal) * 100) : null;
 
   return (
-    <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
+    <div className="p-6 space-y-5 max-w-[1440px] mx-auto">
 
-      {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "rgba(139,92,246,0.7)" }}>
-            Admin Panel
-          </p>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Dashboard</h1>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl"
-          style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>Live data</span>
-        </div>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description={new Date().toLocaleDateString("en-US", {
+          weekday: "long", year: "numeric", month: "long", day: "numeric",
+        })}
+        eyebrow="RBstars"
+      >
+        <Badge tone="success" dot>Live</Badge>
+        <Link href="/admin/analytics">
+          <span className="pn-btn pn-btn--secondary">
+            <TrendingUp className="w-3.5 h-3.5" strokeWidth={2.2} />
+            Analytics
+          </span>
+        </Link>
+      </PageHeader>
 
-      {/* Stat Cards */}
-      <div>
-        <SectionHeading icon={BarChart3} title="Overview" />
+      {/* ── Headline metrics ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-28 rounded-2xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }} />
-            ))}
-          </div>
+          <MetricSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {STAT_CONFIGS.map((cfg, i) => {
-              const raw = stats?.[cfg.key as keyof typeof stats] as number | undefined;
-              const val = raw !== undefined ? cfg.format(raw) : "—";
-              return (
-                <motion.div
-                  key={cfg.key}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="p-4 rounded-2xl flex flex-col gap-3 group"
-                  style={GLASS_ACCENT(cfg.color)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ background: `${cfg.color}20`, border: `1px solid ${cfg.color}30` }}>
-                      <cfg.icon className="w-4 h-4" style={{ color: cfg.color }} />
-                    </div>
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}` }} />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-extrabold text-white tracking-tight">{val}</p>
-                    <p className="text-xs mt-0.5 font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>{cfg.label}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+          <>
+            <MetricTile
+              label="Revenue this month"
+              value={fmtMoney(stats?.revenueThisMonth || 0)}
+              delta={stats?.revenueGrowth}
+              hint="vs last month"
+              icon={Banknote}
+            />
+            <MetricTile
+              label="Orders today"
+              value={num(stats?.ordersToday)}
+              hint={`${num(stats?.ordersThisMonth)} this month`}
+              icon={ShoppingBag}
+            />
+            <MetricTile
+              label="Awaiting claim"
+              value={num(stats?.pendingClaims)}
+              deltaInvert
+              hint="open claim sessions"
+              icon={Inbox}
+            />
+            <MetricTile
+              label="Agents online"
+              value={num(stats?.onlineAgents)}
+              hint="live right now"
+              icon={Radio}
+            />
+          </>
         )}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 rounded-2xl overflow-hidden" style={GLASS}>
-          <div className="px-5 pt-5 pb-2">
-            <SectionHeading icon={TrendingUp} title="Revenue" />
-          </div>
-          <div className="px-4 pb-4">
-            <RevenueChart />
-          </div>
-        </div>
+      {/* ── Chart + quick stats ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <Card className="xl:col-span-2">
+          <RevenueChart />
+        </Card>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="p-5 rounded-2xl"
-          style={GLASS}
-        >
-          <SectionHeading icon={Activity} title="Quick Stats" />
-          <div className="space-y-3">
-            {[
-              { label: "Completion Rate", value: stats?.totalOrders ? `${Math.round(((stats.totalOrders - (stats.pendingClaims || 0)) / stats.totalOrders) * 100)}%` : "—", color: "#10b981" },
-              { label: "Avg Order Value", value: stats?.totalOrders ? `$${((stats.totalRevenue || 0) / stats.totalOrders).toFixed(2)}` : "—", color: "#6366f1" },
-              { label: "Monthly Orders", value: String(stats?.ordersThisMonth || 0), color: "#8b5cf6" },
-              { label: "Revenue Growth", value: `${stats?.revenueGrowth?.toFixed(1) || 0}%`, color: (stats?.revenueGrowth || 0) >= 0 ? "#10b981" : "#ef4444" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color, boxShadow: `0 0 6px ${item.color}` }} />
-                  <p className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>{item.label}</p>
-                </div>
-                <p className="text-sm font-bold" style={{ color: item.color }}>{item.value}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+        <Card>
+          <CardHeader title="Business snapshot" subtitle="Across all time" icon={Layers} />
+          {isLoading ? (
+            <CardBody className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></CardBody>
+          ) : (
+            <div>
+              <ListRow
+                icon={Wallet} title="Total revenue" value={fmtMoney(stats?.totalRevenue || 0)}
+              />
+              <ListRow
+                icon={ReceiptText} title="Total orders" value={num(stats?.totalOrders)}
+              />
+              <ListRow
+                icon={Users} title="Customers" value={num(stats?.totalCustomers)}
+              />
+              <ListRow
+                icon={Boxes} title="Products" value={num(stats?.totalProducts)}
+              />
+              <ListRow
+                icon={Target}
+                title="Completion rate"
+                value={completionRate === null ? "—" : `${completionRate}%`}
+                right={completionRate !== null && <Badge tone={completionRate >= 90 ? "success" : completionRate >= 70 ? "warning" : "critical"}>{completionRate >= 90 ? "Healthy" : completionRate >= 70 ? "Watch" : "Low"}</Badge>}
+              />
+              <ListRow
+                icon={TrendingUp}
+                title="Avg. order value"
+                value={stats?.totalOrders ? fmtMoney((stats.totalRevenue || 0) / stats.totalOrders) : "—"}
+              />
+            </div>
+          )}
+        </Card>
       </div>
 
-      {/* Recent Orders */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-        className="rounded-2xl overflow-hidden"
-        style={GLASS}
-      >
-        <div className="px-6 pt-5 pb-1">
-          <SectionHeading
-            icon={ShoppingBag}
-            title="Recent Orders"
-            action={
-              <Link href="/admin/orders">
-                <span className="flex items-center gap-1 text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity" style={{ color: "#a5b4fc" }}>
-                  View all <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </Link>
-            }
-          />
-        </div>
-
+      {/* ── Order status distribution ── */}
+      <Card>
+        <CardHeader
+          title="Order status"
+          subtitle={summary ? `${num(summary.orders)} orders across all time` : "All time"}
+          icon={Layers}
+        />
         {isLoading ? (
-          <div className="p-6 pt-0 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
-            ))}
-          </div>
-        ) : recentOrders.length === 0 ? (
-          <div className="p-10 text-center text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No orders yet</div>
+          <CardBody><Skeleton className="h-5 w-full" /><Skeleton className="h-3 w-1/2 mt-3" /></CardBody>
+        ) : !statusBars.length ? (
+          <CardBody>
+            <p className="text-sm" style={{ color: "var(--pn-text-3)" }}>
+              No orders yet — the status breakdown appears once your first order lands.
+            </p>
+          </CardBody>
         ) : (
-          <div className="overflow-x-auto px-2 pb-4">
+          <CardBody>
+            <div className="flex h-2.5 w-full overflow-hidden rounded-full" style={{ background: "var(--pn-surface-2)" }}>
+              {statusBars.map(s => (
+                <motion.div
+                  key={s.key}
+                  initial={reduce ? false : { width: 0 }}
+                  animate={{ width: `${s.pct}%` }}
+                  transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
+                  style={{
+                    background: {
+                      success: "var(--pn-success-fg)", warning: "var(--pn-warning-fg)",
+                      action: "var(--pn-action)", critical: "var(--pn-critical)",
+                      neutral: "var(--pn-border-strong)",
+                    }[s.tone],
+                  }}
+                  title={`${s.label}: ${s.count}`}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4">
+              {statusBars.map(s => (
+                <span key={s.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--pn-text-2)" }}>
+                  <span className="w-2 h-2 rounded-full" style={{
+                    background: {
+                      success: "var(--pn-success-fg)", warning: "var(--pn-warning-fg)",
+                      action: "var(--pn-action)", critical: "var(--pn-critical)",
+                      neutral: "var(--pn-border-strong)",
+                    }[s.tone],
+                  }} />
+                  {s.label}
+                  <b style={{ color: "var(--pn-text)" }}>{s.count.toLocaleString()}</b>
+                  <span style={{ color: "var(--pn-text-3)" }}>{s.pct.toFixed(0)}%</span>
+                </span>
+              ))}
+            </div>
+          </CardBody>
+        )}
+      </Card>
+
+      {/* ── Recent orders (spreadsheet) ── */}
+      <Card>
+        <CardHeader
+          title="Recent orders"
+          subtitle="Newest first"
+          icon={ShoppingBag}
+          action={
+            <Link href="/admin/orders">
+              <span className="pn-btn pn-btn--plain">
+                View all <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.2} />
+              </span>
+            </Link>
+          }
+        />
+        {isLoading ? (
+          <RowSkeleton count={5} />
+        ) : recentOrders.length === 0 ? (
+          <EmptyState
+            icon={ShoppingBag}
+            title="No orders yet"
+            body="Orders will show up here as soon as customers start checking out."
+          />
+        ) : (
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr>
-                  {["Order", "Customer", "Items", "Total", "Status", "Date"].map((h, i) => (
-                    <th key={h} className={`text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest ${i >= 2 && i !== 3 && i !== 4 ? "hidden md:table-cell" : ""} ${i === 5 ? "hidden lg:table-cell" : ""}`}
-                      style={{ color: "rgba(255,255,255,0.25)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      {h}
-                    </th>
-                  ))}
+                  <th>Order</th>
+                  <th>Customer</th>
+                  <th className="hidden md:table-cell">Items</th>
+                  <th className="text-right">Total</th>
+                  <th>Status</th>
+                  <th className="hidden lg:table-cell">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {recentOrders.map((order: Order, i: number) => (
                   <motion.tr
                     key={order._id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="group transition-colors"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLTableRowElement).style.background = "rgba(255,255,255,0.02)"}
-                    onMouseLeave={e => (e.currentTarget as HTMLTableRowElement).style.background = "transparent"}
+                    initial={reduce ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: reduce ? 0 : i * 0.03, duration: 0.25 }}
                   >
-                    <td className="px-4 py-3.5">
+                    <td>
                       <Link href={`/admin/orders/${order._id}`}>
-                        <span className="text-sm font-mono font-semibold cursor-pointer hover:opacity-80 transition-opacity" style={{ color: "#a5b4fc" }}>
+                        <a className="text-[13px] font-medium" style={{ color: "var(--pn-action)" }}>
                           {order.orderNumber}
-                        </span>
+                        </a>
                       </Link>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <p className="text-sm font-medium text-white">{order.customer.robloxUsername}</p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{order.customer.email}</p>
+                    <td>
+                      <p className="text-[13px] font-medium" style={{ color: "var(--pn-text)" }}>
+                        {order.customer.robloxUsername}
+                      </p>
+                      <p className="text-xs" style={{ color: "var(--pn-text-3)" }}>{order.customer.email}</p>
                     </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell">
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{order.items?.length || 0} item(s)</p>
+                    <td className="hidden md:table-cell">
+                      <span className="text-xs" style={{ color: "var(--pn-text-2)" }}>
+                        {order.items?.length || 0} item{(order.items?.length || 0) === 1 ? "" : "s"}
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-sm font-bold text-white">${(order.pricing?.total || 0).toFixed(2)}</span>
+                    <td className="text-right">
+                      <span className="text-[13px] font-semibold" style={{ color: "var(--pn-text)" }}>
+                        ${(order.pricing?.total || 0).toFixed(2)}
+                      </span>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-4 py-3.5 hidden lg:table-cell">
-                      <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <td><StatusBadge status={order.status} /></td>
+                    <td className="hidden lg:table-cell">
+                      <span className="text-xs" style={{ color: "var(--pn-text-3)" }}>
                         {new Date(order.createdAt).toLocaleDateString()}
                       </span>
                     </td>
@@ -272,7 +308,58 @@ export default function Dashboard() {
             </table>
           </div>
         )}
-      </motion.div>
+      </Card>
+
+      {/* ── Store health ── */}
+      <Card>
+        <CardHeader title="Store health" subtitle="Signals worth a glance today" icon={CircleCheck} />
+        <div className="grid grid-cols-1 sm:grid-cols-3"
+             style={{ background: "var(--pn-divider)", gap: 1 }}>
+          {[
+            {
+              icon: CircleCheck, tone: "success" as const,
+              title: completionRate === null ? "No orders yet" : `${completionRate}% completion`,
+              body: completionRate === null
+                ? "Complete your first sale to unlock this signal."
+                : "Claim sessions that finished without getting stuck.",
+            },
+            {
+              icon: Headset, tone: (stats?.onlineAgents || 0) > 0 ? ("success" as const) : ("warning" as const),
+              title: `${num(stats?.onlineAgents)} agents online`,
+              body: (stats?.onlineAgents || 0) > 0
+                ? "Someone is on duty to handle claims."
+                : "No agents online — claims will queue up.",
+            },
+            {
+              icon: Timer, tone: (stats?.pendingClaims || 0) > 5 ? ("warning" as const) : ("neutral" as const),
+              title: `${num(stats?.pendingClaims)} open claims`,
+              body: (stats?.pendingClaims || 0) > 5
+                ? "Backlog is building — worth checking the queue."
+                : "Queue is under control.",
+            },
+          ].map((s, i) => (
+            <div key={i} className="flex items-start gap-3 p-4"
+                 style={{ background: "var(--pn-surface)" }}>
+              <span className="pn-row__icon shrink-0" style={{
+                color: s.tone === "success" ? "var(--pn-success-fg)"
+                     : s.tone === "warning" ? "var(--pn-warning-fg)"
+                     : "var(--pn-text-3)",
+                background: s.tone === "success" ? "var(--pn-success-bg)"
+                         : s.tone === "warning" ? "var(--pn-warning-bg)"
+                         : "var(--pn-surface-2)",
+                borderColor: "transparent",
+              }}>
+                <s.icon className="w-4 h-4" strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold" style={{ color: "var(--pn-text)" }}>{s.title}</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--pn-text-3)", lineHeight: 1.5 }}>{s.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Plus, Shield, Users, Trash2, Edit2, X, Loader2, Check, Gamepad2 } from 
 import { adminApi } from "../api";
 import PermissionGrid from "../components/PermissionGrid";
 import type { AdminRole } from "../types";
+import { PageHeader, EmptyState } from "../components/kit";
 
 type ModalMode = "create" | "edit" | null;
 
@@ -83,32 +84,25 @@ export default function Roles() {
 
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-white font-semibold text-lg">Roles & Permissions</h2>
-          <p className="text-slate-400 text-sm mt-0.5">Create roles and define what each team member can access</p>
-        </div>
+      <PageHeader title="Roles & Permissions" description="Create roles and define what each team member can access">
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           onClick={openCreate}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+          className="flex items-center gap-2 bg-[var(--pn-primary)] hover:bg-[var(--pn-primary-hover)] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Role
         </motion.button>
-      </div>
+      </PageHeader>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-40 bg-[#0d1f3c] rounded-xl border border-white/5 animate-pulse" />
+            <div key={i} className="h-40 bg-[var(--pn-surface)] rounded-xl border border-[var(--pn-border)] animate-pulse" />
           ))}
         </div>
       ) : roles.length === 0 ? (
-        <div className="text-center py-16 text-slate-500">
-          <Shield className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No roles yet. Create one to get started.</p>
-        </div>
+        <EmptyState icon={Shield} title="No roles yet. Create one to get started." />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {roles.map((role: AdminRole, i: number) => (
@@ -117,38 +111,38 @@ export default function Roles() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-[#0d1f3c] border border-white/5 rounded-xl p-5 hover:border-white/10 transition-colors group"
+              className="bg-[var(--pn-surface)] border border-[var(--pn-border)] rounded-xl p-5 hover:border-[var(--pn-border)] transition-colors group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${role.color}20`, border: `1px solid ${role.color}30` }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `color-mix(in srgb, ${role.color} 14%, transparent)`, border: `1px solid color-mix(in srgb, ${role.color} 26%, transparent)` }}>
                     <Shield className="w-5 h-5" style={{ color: role.color }} />
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold text-sm">{role.name}</h3>
-                    {role.description && <p className="text-slate-500 text-xs mt-0.5">{role.description}</p>}
+                    <h3 className="text-[var(--pn-text)] font-semibold text-sm">{role.name}</h3>
+                    {role.description && <p className="text-[var(--pn-text-2)] text-xs mt-0.5">{role.description}</p>}
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => openEdit(role)} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+                  <button onClick={() => openEdit(role)} className="w-8 h-8 rounded-lg bg-[var(--pn-surface-2)] hover:bg-[var(--pn-surface-2)] flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text)] transition-colors">
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => setDeleteConfirm(role._id)} className="w-8 h-8 rounded-lg bg-red-500/5 hover:bg-red-500/15 flex items-center justify-center text-red-400 transition-colors">
+                  <button onClick={() => setDeleteConfirm(role._id)} className="w-8 h-8 rounded-lg bg-[var(--pn-critical-bg)] hover:bg-[var(--pn-critical-bg)] flex items-center justify-center text-[var(--pn-critical-text)] transition-colors">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
               <div className="flex items-center gap-4 mb-3 flex-wrap">
-                <div className="flex items-center gap-1.5 text-slate-400 text-xs">
+                <div className="flex items-center gap-1.5 text-[var(--pn-text-3)] text-xs">
                   <Users className="w-3.5 h-3.5" />
                   {role.memberCount || 0} member{role.memberCount !== 1 ? "s" : ""}
                 </div>
-                <div className="text-slate-400 text-xs">
+                <div className="text-[var(--pn-text-3)] text-xs">
                   {role.permissions.length} permission{role.permissions.length !== 1 ? "s" : ""}
                 </div>
                 {role.permissions.includes("claim_agent") && role.claimGames && role.claimGames.length > 0 && (
-                  <div className="flex items-center gap-1 text-xs text-blue-400">
+                  <div className="flex items-center gap-1 text-xs text-[var(--pn-action)]">
                     <Gamepad2 className="w-3 h-3" />
                     {role.claimGames.length} game{role.claimGames.length !== 1 ? "s" : ""}
                   </div>
@@ -157,12 +151,12 @@ export default function Roles() {
 
               <div className="flex flex-wrap gap-1">
                 {role.permissions.slice(0, 4).map((p) => (
-                  <span key={p} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400">
+                  <span key={p} className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--pn-surface-2)] text-[var(--pn-text-2)]">
                     {p.replace(/_/g, " ")}
                   </span>
                 ))}
                 {role.permissions.length > 4 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-500">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--pn-surface-2)] text-[var(--pn-text-2)]">
                     +{role.permissions.length - 4} more
                   </span>
                 )}
@@ -175,16 +169,16 @@ export default function Roles() {
       <AnimatePresence>
         {modal.mode && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-start justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 pn-scrim z-50 flex items-start justify-center p-4 overflow-y-auto"
             onClick={closeModal}>
             <motion.div
               initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl w-full max-w-2xl my-8 overflow-hidden"
+              className="bg-[var(--pn-surface)] border border-[var(--pn-border)] rounded-xl w-full max-w-2xl my-8 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-                <h3 className="text-white font-semibold">{modal.mode === "create" ? "Create Role" : "Edit Role"}</h3>
-                <button onClick={closeModal} className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--pn-border)]">
+                <h3 className="text-[var(--pn-text)] font-semibold">{modal.mode === "create" ? "Create Role" : "Edit Role"}</h3>
+                <button onClick={closeModal} className="w-8 h-8 rounded-lg bg-[var(--pn-surface-2)] flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text)] transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -192,32 +186,32 @@ export default function Roles() {
               <form onSubmit={handleSubmit} className="p-6 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Role Name *</label>
+                    <label className="text-[var(--pn-text-3)] text-sm font-medium block mb-1.5">Role Name *</label>
                     <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Claim Agent"
-                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                      className="w-full bg-[var(--pn-surface)] border border-[var(--pn-border)] text-[var(--pn-text)] placeholder-[var(--pn-text-3)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--pn-action-border)]" />
                   </div>
                   <div>
-                    <label className="text-slate-300 text-sm font-medium block mb-1.5">Description</label>
+                    <label className="text-[var(--pn-text-3)] text-sm font-medium block mb-1.5">Description</label>
                     <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description"
-                      className="w-full bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/50" />
+                      className="w-full bg-[var(--pn-surface)] border border-[var(--pn-border)] text-[var(--pn-text)] placeholder-[var(--pn-text-3)] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[var(--pn-action-border)]" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-2">Role Color</label>
+                  <label className="text-[var(--pn-text-3)] text-sm font-medium block mb-2">Role Color</label>
                   <div className="flex gap-2 flex-wrap">
                     {COLORS.map((c) => (
                       <button key={c} type="button" onClick={() => setColor(c)}
                         className="w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                         style={{ background: c }}>
-                        {color === c && <Check className="w-4 h-4 text-white" />}
+                        {color === c && <Check className="w-4 h-4 text-[var(--pn-text)]" />}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-slate-300 text-sm font-medium block mb-3">Permissions</label>
+                  <label className="text-[var(--pn-text-3)] text-sm font-medium block mb-3">Permissions</label>
                   <PermissionGrid selected={permissions} onChange={(perms) => {
                     setPermissions(perms);
                     if (!perms.includes("claim_agent")) setClaimGames([]);
@@ -226,10 +220,10 @@ export default function Roles() {
 
                 {isClaimAgent && (
                   <div>
-                    <label className="text-slate-300 text-sm font-medium flex items-center gap-2 mb-2">
-                      <Gamepad2 className="w-4 h-4 text-blue-400" />
+                    <label className="text-[var(--pn-text-3)] text-sm font-medium flex items-center gap-2 mb-2">
+                      <Gamepad2 className="w-4 h-4 text-[var(--pn-action)]" />
                       Game Assignments
-                      <span className="text-xs text-slate-500 font-normal">— members with this role will only handle chats for these games</span>
+                      <span className="text-xs text-[var(--pn-text-2)] font-normal">— members with this role will only handle chats for these games</span>
                     </label>
                     <div className="flex gap-2 mb-2">
                       <input
@@ -237,19 +231,19 @@ export default function Roles() {
                         onChange={(e) => setGameInput(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGame(); } }}
                         placeholder="e.g. Blox Fruits"
-                        className="flex-1 bg-[#0a1628] border border-white/10 text-white placeholder-slate-600 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/50"
+                        className="flex-1 bg-[var(--pn-surface)] border border-[var(--pn-border)] text-[var(--pn-text)] placeholder-[var(--pn-text-3)] rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-[var(--pn-action-border)]"
                       />
                       <button type="button" onClick={addGame}
-                        className="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-xl text-sm transition-colors border border-blue-500/20">
+                        className="px-3 py-2 bg-[var(--pn-action-tint)] hover:bg-[var(--pn-action-tint)] text-[var(--pn-action)] rounded-xl text-sm transition-colors border border-[var(--pn-action-border)]">
                         Add
                       </button>
                     </div>
                     {claimGames.length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         {claimGames.map((g) => (
-                          <span key={g} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                          <span key={g} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[var(--pn-action-tint)] text-[var(--pn-action)] border border-[var(--pn-action-border)]">
                             {g}
-                            <button type="button" onClick={() => removeGame(g)} className="hover:text-red-400 transition-colors">
+                            <button type="button" onClick={() => removeGame(g)} className="hover:text-[var(--pn-critical-text)] transition-colors">
                               <X className="w-2.5 h-2.5" />
                             </button>
                           </span>
@@ -257,20 +251,20 @@ export default function Roles() {
                       </div>
                     )}
                     {claimGames.length === 0 && (
-                      <p className="text-xs text-slate-500">No games assigned — members can handle all games</p>
+                      <p className="text-xs text-[var(--pn-text-2)]">No games assigned — members can handle all games</p>
                     )}
                   </div>
                 )}
 
-                {error && <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</div>}
+                {error && <div className="text-[var(--pn-critical-text)] text-sm bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-xl px-4 py-3">{error}</div>}
 
                 <div className="flex gap-3 pt-2">
-                  <button type="button" onClick={closeModal} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl text-sm font-medium transition-colors">
+                  <button type="button" onClick={closeModal} className="flex-1 bg-[var(--pn-surface-2)] hover:bg-[var(--pn-surface-2)] text-[var(--pn-text-2)] py-3 rounded-xl text-sm font-medium transition-colors">
                     Cancel
                   </button>
                   <motion.button type="submit" disabled={createMut.isPending || updateMut.isPending}
                     whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
+                    className="flex-1 bg-[var(--pn-primary)] hover:bg-[var(--pn-primary-hover)] text-white py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 transition-colors">
                     {(createMut.isPending || updateMut.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
                     {modal.mode === "create" ? "Create Role" : "Save Changes"}
                   </motion.button>
@@ -282,18 +276,18 @@ export default function Roles() {
 
         {deleteConfirm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 pn-scrim z-50 flex items-center justify-center p-4"
             onClick={() => setDeleteConfirm(null)}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-              className="bg-[#0d1f3c] border border-white/10 rounded-2xl p-6 w-full max-w-sm"
+              className="bg-[var(--pn-surface)] border border-[var(--pn-border)] rounded-xl p-6 w-full max-w-sm"
               onClick={(e) => e.stopPropagation()}>
-              <Trash2 className="w-10 h-10 text-red-400 mx-auto mb-3" />
-              <h3 className="text-white font-semibold text-center mb-1">Delete Role?</h3>
-              <p className="text-slate-400 text-sm text-center mb-5">This cannot be undone. All members with this role must be reassigned first.</p>
+              <Trash2 className="w-10 h-10 text-[var(--pn-critical-text)] mx-auto mb-3" />
+              <h3 className="text-[var(--pn-text)] font-semibold text-center mb-1">Delete Role?</h3>
+              <p className="text-[var(--pn-text-3)] text-sm text-center mb-5">This cannot be undone. All members with this role must be reassigned first.</p>
               <div className="flex gap-3">
-                <button onClick={() => setDeleteConfirm(null)} className="flex-1 bg-white/5 text-slate-300 py-2.5 rounded-xl text-sm font-medium">Cancel</button>
+                <button onClick={() => setDeleteConfirm(null)} className="flex-1 bg-[var(--pn-surface-2)] text-[var(--pn-text-2)] py-2.5 rounded-xl text-sm font-medium">Cancel</button>
                 <button onClick={() => deleteMut.mutate(deleteConfirm)} disabled={deleteMut.isPending}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="flex-1 bg-[var(--pn-critical)] hover:bg-[var(--pn-critical-text)] text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2">
                   {deleteMut.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Delete
                 </button>

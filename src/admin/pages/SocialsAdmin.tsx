@@ -31,11 +31,12 @@ const STATUS_TABS = [
 ];
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  in_review: { bg: "#FEF9C3", text: "#854D0E",  border: "#FDE047" },
-  reviewed:  { bg: "#EFF6FF", text: "#1D4ED8",  border: "#93C5FD" },
-  accepted:  { bg: "#ECFDF5", text: "#065F46",  border: "#6EE7B7" },
-  paid:      { bg: "#F3F4F6", text: "#374151",  border: "#D1D5DB" },
+  in_review: { bg: "var(--pn-warning-bg)", text: "var(--pn-warning-fg)",  border: "var(--pn-warning-line)" },
+  reviewed:  { bg: "var(--pn-action-tint)", text: "var(--pn-info-fg)",  border: "var(--pn-action-border)" },
+  accepted:  { bg: "var(--pn-success-bg)", text: "var(--pn-success-fg)",  border: "var(--pn-success-line)" },
+  paid:      { bg: "var(--pn-surface-2)", text: "var(--pn-text)",  border: "var(--pn-border-strong)" },
 };
+import { PageHeader } from "../components/kit";
 const STATUS_LABELS: Record<string, string> = {
   in_review: "In Review", reviewed: "Reviewed", accepted: "Accepted", paid: "Paid",
 };
@@ -105,45 +106,45 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
       className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
       onClick={onClose}>
       <motion.div initial={{ scale: 0.96, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 16 }}
-        className="bg-white rounded-2xl w-full max-w-md shadow-2xl"
-        style={{ border: "1px solid #E9EBF5" }}
+        className="pn-modal w-full max-w-md"
+        style={{ border: "1px solid var(--pn-border)" }}
         onClick={e => e.stopPropagation()}>
 
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid #F3F4F6" }}>
-          <h3 className="font-bold text-base" style={{ color: "#1e1b4b" }}>Set Rate</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600" style={{ background: "#F7F8FC" }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--pn-border)" }}>
+          <h3 className="font-bold text-base" style={{ color: "var(--pn-text)" }}>Set Rate</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--pn-text-3)] hover:text-[var(--pn-text-2)]" style={{ background: "var(--pn-surface-2)" }}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="px-6 pt-4 flex gap-3">
-          <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: "#F7F8FC" }}>
+          <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: "var(--pn-surface-2)" }}>
             {sub.thumbnail
               ? <img src={sub.thumbnail} alt="" className="w-full h-full object-cover" />
               : <div className="w-full h-full flex items-center justify-center">
-                  {sub.platform === "youtube" ? <YouTubeIcon className="w-5 h-5 text-red-500" /> : <TikTokIcon className="w-5 h-5 text-slate-700" />}
+                  {sub.platform === "youtube" ? <YouTubeIcon className="w-5 h-5 text-[var(--pn-critical-text)]" /> : <TikTokIcon className="w-5 h-5 text-[var(--pn-text)]" />}
                 </div>}
           </div>
           <div className="min-w-0">
-            <p className="font-semibold text-sm truncate" style={{ color: "#1e1b4b" }}>{sub.title || "Untitled"}</p>
-            <p className="text-xs text-slate-400">{sub.channelName}</p>
-            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
-              <span>👁 {fmtNum(sub.views)}</span>
-              {sub.likes > 0 && <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(sub.likes)}</span>}
+            <p className="font-semibold text-sm truncate" style={{ color: "var(--pn-text)" }}>{sub.title || "Untitled"}</p>
+            <p className="text-xs text-[var(--pn-text-3)]">{sub.channelName}</p>
+            <div className="flex items-center gap-3 mt-1 text-xs text-[var(--pn-text-2)]">
+              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{fmtNum(sub.views)}</span>
+              {sub.likes > 0 && <span className="flex items-center gap-0.5"><Heart className="w-3 h-3 text-[var(--pn-critical-text)]" />{fmtNum(sub.likes)}</span>}
             </div>
           </div>
         </div>
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold mb-2 text-slate-500">Rate Type</label>
+            <label className="block text-xs font-semibold mb-2 text-[var(--pn-text-2)]">Rate Type</label>
             <div className="flex gap-2">
               {(["per_1k", "per_video"] as const).map((rt) => (
                 <button key={rt} onClick={() => setForm(f => ({ ...f, rateType: rt }))}
                   className="flex-1 py-2.5 rounded-lg text-xs font-semibold transition-all"
                   style={form.rateType === rt
-                    ? { background: "#1e1b4b", color: "#fff" }
-                    : { background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+                    ? { background: "var(--pn-primary)", color: "#fff" }
+                    : { background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
                   {rt === "per_1k" ? "Rate Per 1K Views" : "Fixed Per Video"}
                 </button>
               ))}
@@ -153,63 +154,63 @@ function RateModal({ sub, onClose }: { sub: any; onClose: () => void }) {
           {form.rateType === "per_1k" ? (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Rate per 1,000 Views ($)</label>
+                <label className="block text-xs font-semibold mb-1.5 text-[var(--pn-text-2)]">Rate per 1,000 Views ($)</label>
                 <input
                   type="number" step="0.000001" min="0"
                   value={form.ratePerView}
                   onChange={e => setForm(f => ({ ...f, ratePerView: e.target.value }))}
                   placeholder="e.g. 0.001"
                   className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                  style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
                 />
               </div>
               {computedAmount && (
-                <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
-                  <span className="text-xs font-semibold text-slate-500">Auto-calculated total</span>
-                  <span className="text-base font-bold text-emerald-700">${computedAmount}</span>
+                <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "var(--pn-success-bg)", border: "1px solid var(--pn-success-line)" }}>
+                  <span className="text-xs font-semibold text-[var(--pn-text-2)]">Auto-calculated total</span>
+                  <span className="text-base font-bold text-[var(--pn-success-fg)]">${computedAmount}</span>
                 </div>
               )}
             </div>
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-slate-500">Fixed Amount Offered ($)</label>
+                <label className="block text-xs font-semibold mb-1.5 text-[var(--pn-text-2)]">Fixed Amount Offered ($)</label>
                 <input
                   type="number" step="0.01" min="0"
                   value={form.offeredAmount}
                   onChange={e => setForm(f => ({ ...f, offeredAmount: e.target.value }))}
                   placeholder="e.g. 50.00"
                   className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+                  style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
                 />
               </div>
               {computedRPV && views > 0 && (
-                <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "#F0F9FF", border: "1px solid #BAE6FD" }}>
-                  <span className="text-xs font-semibold text-slate-500">Implied rate per view</span>
-                  <span className="text-sm font-bold text-sky-700">${computedRPV}/view</span>
+                <div className="rounded-lg px-4 py-3 flex items-center justify-between" style={{ background: "var(--pn-action-tint)", border: "1px solid var(--pn-action-border)" }}>
+                  <span className="text-xs font-semibold text-[var(--pn-text-2)]">Implied rate per view</span>
+                  <span className="text-sm font-bold text-[var(--pn-action)]">${computedRPV}/view</span>
                 </div>
               )}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold mb-1.5 text-slate-500">Note to Creator (optional)</label>
+            <label className="block text-xs font-semibold mb-1.5 text-[var(--pn-text-2)]">Note to Creator (optional)</label>
             <input
               value={form.adminNote}
               onChange={e => setForm(f => ({ ...f, adminNote: e.target.value }))}
               placeholder="e.g. Great video, thanks!"
               className="w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
-              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#1e1b4b" }}
+              style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}
             />
           </div>
 
-          {err && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{err}</div>}
+          {err && <div className="text-sm text-[var(--pn-critical-text)] bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-lg px-4 py-3 flex items-center gap-2"><AlertCircle className="w-4 h-4 flex-shrink-0" />{err}</div>}
 
           <div className="flex gap-3 pt-1">
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>Cancel</button>
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-medium" style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>Cancel</button>
             <button onClick={handleSave} disabled={saving}
               className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-              style={{ background: "#059669" }}>
+              style={{ background: "var(--pn-success-fg)" }}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
               Submit Rate
             </button>
@@ -240,11 +241,11 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 pn-scrim z-50 flex items-center justify-center p-4"
       onClick={onClose}>
       <motion.div initial={{ scale: 0.96, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 20 }}
-        className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden"
-        style={{ border: "1px solid #E9EBF5" }}
+        className="pn-modal w-full max-w-lg overflow-hidden"
+        style={{ border: "1px solid var(--pn-border)" }}
         onClick={e => e.stopPropagation()}>
 
         {/* Thumbnail header */}
@@ -253,7 +254,7 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
             ? <img src={sub.thumbnail} alt="" className="w-full h-full object-cover opacity-90" />
             : <div className="w-full h-full flex items-center justify-center">
                 {sub.platform === "youtube"
-                  ? <YouTubeIcon className="w-16 h-16 text-red-500 opacity-60" />
+                  ? <YouTubeIcon className="w-16 h-16 text-[var(--pn-critical-text)] opacity-60" />
                   : <TikTokIcon className="w-16 h-16 text-white opacity-60" />}
               </div>}
           <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)" }} />
@@ -284,26 +285,26 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
         {/* Analytics grid */}
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl p-3" style={{ background: "#F0F9FF", border: "1px solid #BAE6FD" }}>
+            <div className="rounded-xl p-3" style={{ background: "var(--pn-action-tint)", border: "1px solid var(--pn-action-border)" }}>
               <div className="flex items-center gap-1.5 mb-1">
-                <Eye className="w-3.5 h-3.5 text-sky-500" />
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-600">Views</p>
+                <Eye className="w-3.5 h-3.5 text-[var(--pn-action)]" />
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pn-action)]">Views</p>
               </div>
-              <p className="text-2xl font-bold" style={{ color: "#0c4a6e" }}>{fmtNum(sub.views)}</p>
-              {sub.views > 0 && <p className="text-[10px] text-sky-500 mt-0.5">{sub.views.toLocaleString()} total</p>}
+              <p className="text-2xl font-bold" style={{ color: "var(--pn-info-fg)" }}>{fmtNum(sub.views)}</p>
+              {sub.views > 0 && <p className="text-[10px] text-[var(--pn-action)] mt-0.5">{sub.views.toLocaleString()} total</p>}
             </div>
-            <div className="rounded-xl p-3" style={{ background: "#FFF1F2", border: "1px solid #FECDD3" }}>
+            <div className="rounded-xl p-3" style={{ background: "var(--pn-critical-bg)", border: "1px solid var(--pn-critical-line)" }}>
               <div className="flex items-center gap-1.5 mb-1">
-                <TrendingUp className="w-3.5 h-3.5 text-rose-400" />
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-500">Likes</p>
+                <TrendingUp className="w-3.5 h-3.5 text-[var(--pn-critical-text)]" />
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pn-critical-text)]">Likes</p>
               </div>
-              <p className="text-2xl font-bold" style={{ color: "#881337" }}>{sub.likes > 0 ? fmtNum(sub.likes) : "—"}</p>
-              {sub.likes > 0 && <p className="text-[10px] text-rose-400 mt-0.5">{sub.likes.toLocaleString()} total</p>}
+              <p className="text-2xl font-bold" style={{ color: "var(--pn-critical-fg)" }}>{sub.likes > 0 ? fmtNum(sub.likes) : "—"}</p>
+              {sub.likes > 0 && <p className="text-[10px] text-[var(--pn-critical-text)] mt-0.5">{sub.likes.toLocaleString()} total</p>}
             </div>
           </div>
 
           {/* Meta info */}
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #F3F4F6" }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--pn-border)" }}>
             {[
               { icon: User, label: "Creator", value: sub.collaborator?.name || "—" },
               { icon: Calendar, label: "Submitted", value: fmtDate(sub.createdAt) },
@@ -311,31 +312,31 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
               sub.paidAt && { icon: Hash, label: "Paid", value: fmtDateTime(sub.paidAt) },
               sub.reviewedBy && { icon: User, label: "Reviewed by", value: sub.reviewedBy },
             ].filter(Boolean).map((row: any, i) => (
-              <div key={i} className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: i < 4 ? "1px solid #F3F4F6" : "none" }}>
-                <row.icon className="w-3.5 h-3.5 flex-shrink-0 text-slate-400" />
-                <span className="text-xs font-semibold text-slate-400 w-24 flex-shrink-0">{row.label}</span>
-                <span className="text-xs font-medium text-slate-700 truncate">{row.value}</span>
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5" style={{ borderBottom: i < 4 ? "1px solid var(--pn-border)" : "none" }}>
+                <row.icon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--pn-text-3)]" />
+                <span className="text-xs font-semibold text-[var(--pn-text-3)] w-24 flex-shrink-0">{row.label}</span>
+                <span className="text-xs font-medium text-[var(--pn-text)] truncate">{row.value}</span>
               </div>
             ))}
           </div>
 
           {/* Payout info */}
           {sub.offeredAmount != null && (
-            <div className="rounded-xl p-4" style={{ background: "#F0FDF4", border: "1px solid #BBF7D0" }}>
+            <div className="rounded-xl p-4" style={{ background: "var(--pn-success-bg)", border: "1px solid var(--pn-success-line)" }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Offered Amount</p>
-                  <p className="text-2xl font-bold text-emerald-700 mt-0.5">${sub.offeredAmount.toFixed(2)}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pn-success-fg)]">Offered Amount</p>
+                  <p className="text-2xl font-bold text-[var(--pn-success-fg)] mt-0.5">${sub.offeredAmount.toFixed(2)}</p>
                 </div>
                 {sub.rateType === "per_view" && sub.ratePerView != null && (
                   <div className="text-right">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600">Rate / View</p>
-                    <p className="text-sm font-bold text-emerald-700 mt-0.5">${sub.ratePerView}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--pn-success-fg)]">Rate / View</p>
+                    <p className="text-sm font-bold text-[var(--pn-success-fg)] mt-0.5">${sub.ratePerView}</p>
                   </div>
                 )}
               </div>
               {sub.adminNote && (
-                <p className="text-xs text-emerald-700 mt-2 pt-2" style={{ borderTop: "1px solid #BBF7D0" }}>
+                <p className="text-xs text-[var(--pn-success-fg)] mt-2 pt-2" style={{ borderTop: "1px solid var(--pn-success-line)" }}>
                   Note: {sub.adminNote}
                 </p>
               )}
@@ -344,7 +345,7 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
 
           {/* Refresh error */}
           {refreshErr && (
-            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-center gap-2">
+            <div className="text-xs text-[var(--pn-critical-text)] bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] rounded-lg px-3 py-2 flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />{refreshErr}
             </div>
           )}
@@ -353,7 +354,7 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
           <div className="flex gap-2 pt-1 flex-wrap">
             <a href={sub.url} target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors"
-              style={{ background: "#F7F8FC", border: "1px solid #E9EBF5", color: "#374151" }}>
+              style={{ background: "var(--pn-surface-2)", border: "1px solid var(--pn-border)", color: "var(--pn-text)" }}>
               <ExternalLink className="w-3.5 h-3.5" /> Open Video
             </a>
             {sub.status !== "paid" && (
@@ -361,15 +362,15 @@ function AnalyticsModal({ sub, onClose, onSetRate, onRefreshed }: { sub: any; on
                 onClick={() => { setRefreshErr(""); refreshMutation.mutate(); }}
                 disabled={refreshMutation.isPending}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-                style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+                style={{ background: "var(--pn-action-tint)", border: "1px solid var(--pn-action-border)", color: "var(--pn-info-fg)" }}>
                 <RefreshCw className={`w-3.5 h-3.5 ${refreshMutation.isPending ? "animate-spin" : ""}`} />
                 {refreshMutation.isPending ? "Refreshing…" : "Refresh Views"}
               </button>
             )}
             {sub.status !== "paid" && (
               <button onClick={() => { onClose(); onSetRate(); }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white ml-auto"
-                style={{ background: sub.offeredAmount ? "#4f46e5" : "#1e1b4b" }}>
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[var(--pn-text)] ml-auto"
+                style={{ background: sub.offeredAmount ? "var(--pn-action)" : "var(--pn-primary)" }}>
                 <BarChart2 className="w-3.5 h-3.5" />
                 {sub.offeredAmount ? "Edit Rate" : "Set Rate"}
               </button>
@@ -410,20 +411,16 @@ export default function SocialsAdmin() {
 
   return (
     <div className="p-6 space-y-5 max-w-[1200px] mx-auto">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold" style={{ color: "#1e1b4b" }}>Video Submissions</h2>
-          <p className="text-sm text-slate-500 mt-0.5">{total} total submissions · click any row to view analytics</p>
-        </div>
+      <PageHeader title="Video Submissions" description={`${total} total submissions · click any row to view analytics`} icon={Video}>
         <button
           onClick={handleRefreshAll}
           disabled={refreshingAll || isLoading || submissions.length === 0}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex-shrink-0"
-          style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", color: "#0369a1" }}>
+          style={{ background: "var(--pn-action-tint)", border: "1px solid var(--pn-action-border)", color: "var(--pn-info-fg)" }}>
           <RefreshCw className={`w-4 h-4 ${refreshingAll ? "animate-spin" : ""}`} />
           {refreshingAll ? "Refreshing…" : "Refresh All Views"}
         </button>
-      </div>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
@@ -432,8 +429,8 @@ export default function SocialsAdmin() {
             <button key={t.value} onClick={() => setStatusFilter(t.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap"
               style={statusFilter === t.value
-                ? { background: "#1e1b4b", color: "#fff" }
-                : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
+                ? { background: "var(--pn-primary)", color: "#fff" }
+                : { background: "var(--pn-surface-2)", color: "var(--pn-text-2)", border: "1px solid var(--pn-border)" }}>
               {t.label}
             </button>
           ))}
@@ -447,8 +444,8 @@ export default function SocialsAdmin() {
             <button key={p.value} onClick={() => setPlatformFilter(p.value)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
               style={platformFilter === p.value
-                ? { background: "#1e1b4b", color: "#fff" }
-                : { background: "#F7F8FC", color: "#6b7280", border: "1px solid #E9EBF5" }}>
+                ? { background: "var(--pn-primary)", color: "#fff" }
+                : { background: "var(--pn-surface-2)", color: "var(--pn-text-2)", border: "1px solid var(--pn-border)" }}>
               {p.value === "youtube" && <YouTubeIcon className="w-3 h-3" />}
               {p.value === "tiktok" && <TikTokIcon className="w-3 h-3" />}
               {p.label}
@@ -457,27 +454,27 @@ export default function SocialsAdmin() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl overflow-x-auto" style={{ border: "1px solid #E9EBF5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      <div className="bg-[var(--pn-surface)] rounded-xl overflow-x-auto" style={{ border: "1px solid var(--pn-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         {isLoading ? (
           <div className="p-5 space-y-2.5">
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: "#F7F8FC" }} />)}
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-lg animate-pulse" style={{ background: "var(--pn-surface-2)" }} />)}
           </div>
         ) : submissions.length === 0 ? (
-          <div className="p-16 text-center text-slate-400">
+          <div className="p-16 text-center text-[var(--pn-text-3)]">
             <Video className="w-10 h-10 mx-auto mb-3 opacity-30" />
             <p>No submissions found.</p>
           </div>
         ) : (
           <table className="w-full">
             <thead>
-              <tr style={{ background: "#F9FAFB", borderBottom: "1px solid #F3F4F6" }}>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Video</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Creator</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Platform</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden md:table-cell">Views</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Offered</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 hidden lg:table-cell">Submitted</th>
+              <tr style={{ background: "var(--pn-surface-2)", borderBottom: "1px solid var(--pn-border)" }}>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Video</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden lg:table-cell">Creator</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden md:table-cell">Platform</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden md:table-cell">Views</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Status</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)]">Offered</th>
+                <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--pn-text-3)] hidden lg:table-cell">Submitted</th>
                 <th className="px-5 py-3 w-28"></th>
               </tr>
             </thead>
@@ -487,45 +484,45 @@ export default function SocialsAdmin() {
                 return (
                   <tr key={s._id}
                     className="cursor-pointer transition-colors"
-                    style={{ borderBottom: "1px solid #F3F4F6" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#F9FAFB"}
+                    style={{ borderBottom: "1px solid var(--pn-border)" }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--pn-surface-2)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                     onClick={() => setSelectedSub(s)}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 relative" style={{ background: "#F7F8FC", minWidth: 80 }}>
+                        <div className="w-20 h-14 rounded-lg overflow-hidden flex-shrink-0 relative" style={{ background: "var(--pn-surface-2)", minWidth: 80 }}>
                           {s.thumbnail
                             ? <img src={s.thumbnail} alt="" className="w-full h-full object-cover" />
                             : <div className="w-full h-full flex items-center justify-center">
-                                {s.platform === "youtube" ? <YouTubeIcon className="w-5 h-5 text-red-500" /> : <TikTokIcon className="w-5 h-5 text-slate-700" />}
+                                {s.platform === "youtube" ? <YouTubeIcon className="w-5 h-5 text-[var(--pn-critical-text)]" /> : <TikTokIcon className="w-5 h-5 text-[var(--pn-text)]" />}
                               </div>}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate max-w-[200px]" style={{ color: "#1e1b4b" }}>{s.title || "Untitled"}</p>
-                          <p className="text-xs text-slate-400 truncate">{s.channelName}</p>
-                          <span className="inline-flex items-center gap-1 text-[10px] text-indigo-400 mt-0.5">
+                          <p className="text-sm font-semibold truncate max-w-[200px]" style={{ color: "var(--pn-text)" }}>{s.title || "Untitled"}</p>
+                          <p className="text-xs text-[var(--pn-text-3)] truncate">{s.channelName}</p>
+                          <span className="inline-flex items-center gap-1 text-[10px] text-[var(--pn-action)] mt-0.5">
                             <Eye className="w-2.5 h-2.5" /> Click to view analytics
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 hidden lg:table-cell">
-                      <p className="text-sm font-medium" style={{ color: "#1e1b4b" }}>{s.collaborator?.name || "—"}</p>
-                      <p className="text-xs text-slate-400">{s.collaborator?.email}</p>
+                      <p className="text-sm font-medium" style={{ color: "var(--pn-text)" }}>{s.collaborator?.name || "—"}</p>
+                      <p className="text-xs text-[var(--pn-text-3)]">{s.collaborator?.email}</p>
                     </td>
                     <td className="px-5 py-3.5 hidden md:table-cell">
                       <div className="flex items-center gap-1.5">
                         {s.platform === "youtube"
-                          ? <><YouTubeIcon className="w-4 h-4 text-red-500" /><span className="text-xs font-medium text-slate-600">YouTube</span></>
-                          : <><TikTokIcon className="w-4 h-4 text-slate-700" /><span className="text-xs font-medium text-slate-600">TikTok</span></>}
+                          ? <><YouTubeIcon className="w-4 h-4 text-[var(--pn-critical-text)]" /><span className="text-xs font-medium text-[var(--pn-text-2)]">YouTube</span></>
+                          : <><TikTokIcon className="w-4 h-4 text-[var(--pn-text)]" /><span className="text-xs font-medium text-[var(--pn-text-2)]">TikTok</span></>}
                       </div>
                     </td>
                     <td className="px-5 py-3.5 hidden md:table-cell">
-                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: "#1e1b4b" }}>
-                        <Eye className="w-3.5 h-3.5 text-slate-400" />
+                      <div className="flex items-center gap-1 text-sm font-medium" style={{ color: "var(--pn-text)" }}>
+                        <Eye className="w-3.5 h-3.5 text-[var(--pn-text-3)]" />
                         {fmtNum(s.views)}
                       </div>
-                      {s.likes > 0 && <p className="text-xs text-slate-400 flex items-center gap-0.5"><Heart className="w-3 h-3 text-rose-400" />{fmtNum(s.likes)}</p>}
+                      {s.likes > 0 && <p className="text-xs text-[var(--pn-text-3)] flex items-center gap-0.5"><Heart className="w-3 h-3 text-[var(--pn-critical-text)]" />{fmtNum(s.likes)}</p>}
                     </td>
                     <td className="px-5 py-3.5">
                       <span className="text-xs px-2.5 py-1 rounded-full font-semibold border"
@@ -535,15 +532,15 @@ export default function SocialsAdmin() {
                     </td>
                     <td className="px-5 py-3.5">
                       {s.offeredAmount != null
-                        ? <span className="text-sm font-bold" style={{ color: "#059669" }}>${s.offeredAmount.toFixed(2)}</span>
-                        : <span className="text-xs text-slate-400">—</span>}
+                        ? <span className="text-sm font-bold" style={{ color: "var(--pn-success-fg)" }}>${s.offeredAmount.toFixed(2)}</span>
+                        : <span className="text-xs text-[var(--pn-text-3)]">—</span>}
                     </td>
-                    <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{fmtDate(s.createdAt)}</td>
+                    <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-[var(--pn-text-3)]">{fmtDate(s.createdAt)}</td>
                     <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
                       {s.status !== "paid" && (
                         <button onClick={() => setRatingModal(s)}
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                          style={{ background: s.offeredAmount ? "#EEF2FF" : "#1e1b4b", color: s.offeredAmount ? "#4f46e5" : "#fff" }}>
+                          style={{ background: s.offeredAmount ? "var(--pn-action-tint)" : "var(--pn-primary)", color: s.offeredAmount ? "var(--pn-action)" : "#fff" }}>
                           {s.offeredAmount ? "Edit Rate" : "Set Rate"}
                         </button>
                       )}

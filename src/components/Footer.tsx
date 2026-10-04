@@ -100,9 +100,17 @@ const socials = [
 const links = ["Terms of Service", "Privacy Policy", "Contact", "Help Center"];
 
 export default function Footer() {
+
   return (
-    <footer style={{ background: "#131C23", borderTop: "1px solid #2C414E" }}>
-      <div className="px-6 sm:px-10 lg:px-16 py-14 max-w-7xl mx-auto">
+    <footer
+      style={{
+        background: "#131C23",
+        borderTop: "1px solid #2C414E",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <div className="relative px-6 sm:px-10 lg:px-16 py-14 max-w-7xl mx-auto">
 
         {/* Top row: logo+socials left, links right */}
         <div className="flex flex-col sm:flex-row justify-between gap-12 mb-12">

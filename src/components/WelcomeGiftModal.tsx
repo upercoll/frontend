@@ -90,17 +90,11 @@ export default function WelcomeGiftModal() {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
                 style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative z-10 mb-6">
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
-                  style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 8px 24px rgba(59,167,255,0.3)" }}>
-                  <Star size={36} fill="white" color="white" />
-                </div>
+                transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative z-10 mb-2">
+                <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain" />
               </motion.div>
               <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }} className="relative z-10">
-                <h1 className="text-3xl font-black tracking-tight mb-2" style={{ color: "#F4F8FB" }}>
-                  RB<span style={{ color: "#3BA7FF" }}>stars</span>
-                </h1>
                 <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: "#637784" }}>
                   A welcome gift just for you — enjoy 10% off your first purchase!
                 </p>

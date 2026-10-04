@@ -186,7 +186,9 @@ export default function TicketThread() {
       const res = await fetch(`${BACKEND}/api/tickets/${ticketId}?email=${encodeURIComponent(email)}`);
       const json = await res.json();
       if (!json.success) throw new Error("Failed to load ticket");
-      return json.data.ticket as Ticket;
+      // The controller returns the ticket object directly under data — it is
+      // NOT nested at data.ticket (reading data.ticket left this page blank forever).
+      return json.data as Ticket;
     },
     enabled: !!ticketId && !!email,
     refetchInterval: 15000,

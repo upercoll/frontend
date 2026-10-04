@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Package, MessageSquare, ArrowLeft, Star, Bot, Zap, Shield, Truck, Gift } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
+import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -35,9 +36,11 @@ function loadOrder(): LastOrder | null {
 export default function PaymentSuccess() {
   const [, navigate] = useLocation();
   const { clearCart } = useCart();
+  const stats = usePublicStats();
   const [order, setOrder] = useState<LastOrder | null>(() => loadOrder());
   const [claimOpened, setClaimOpened] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [paymentFailed, setPaymentFailed] = useState(false);
   const isAutoOnlyGame = order?.game === "grow-a-garden-2";
   const [delivered, setDelivered] = useState<boolean>(() => {
     try {
@@ -65,7 +68,11 @@ export default function PaymentSuccess() {
     const paymentIntentId = params.get("payment_intent");
     const redirectStatus = params.get("redirect_status");
     if (paymentIntentId) {
-      if (redirectStatus === "succeeded") {
+      if (redirectStatus === "failed") {
+        // The redirect came back with a failed payment — the page used to
+        // still render the congratulatory "order placed" UI.
+        setPaymentFailed(true);
+      } else if (redirectStatus === "succeeded") {
         setVerifying(true);
         fetch(`${BACKEND_URL}/api/payments/confirm`, {
           method: "POST",
@@ -104,12 +111,7 @@ export default function PaymentSuccess() {
         <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
         <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
         <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center" style={{ background: "#3BA7FF", boxShadow: "0 2px 10px rgba(59,167,255,0.4)" }}>
-            <Star size={18} fill="white" color="white" />
-          </div>
-          <span className="font-extrabold tracking-tight text-white" style={{ fontSize: 22, textShadow: "0 2px 12px rgba(0,0,0,0.8)" }}>
-            RB<span style={{ color: "#3BA7FF" }}>stars</span>
-          </span>
+          <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
         </button>
       </div>
 
@@ -151,6 +153,10 @@ export default function PaymentSuccess() {
               {verifying ? (
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
                   className="w-10 h-10 rounded-full border-4 border-white border-t-transparent" />
+              ) : paymentFailed ? (
+                <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "#2b1717", border: "1px solid #8e2b2b" }}>
+                  <span style={{ fontSize: 34, lineHeight: 1, color: "#ef4444" }}>✕</span>
+                </div>
               ) : (
                 <img src="/success-check.png" alt="" className="w-full h-full object-cover" style={{ filter: "drop-shadow(0 4px 20px rgba(34,197,94,0.4))" }} />
               )}
@@ -165,7 +171,9 @@ export default function PaymentSuccess() {
 
           <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
             className="text-base mb-4" style={{ color: "#9BAEBB" }}>
-            Your payment was successful and your order is being processed.
+            {paymentFailed
+              ? "Your payment could not be completed. No charge was made — please try again."
+              : "Your payment was successful and your order is being processed."}
           </motion.p>
 
           {order?.orderRef && (
@@ -339,7 +347,14 @@ export default function PaymentSuccess() {
           <div className="rounded-2xl p-5" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
             <div className="grid grid-cols-3 gap-4 text-center">
               {[
-                { icon: <Star size={18} fill="#3BA7FF" color="#3BA7FF" />, label: "5-Star Rated", sub: "Trusted by 10K+ buyers" },
+                {
+                  icon: <Star size={18} fill="#3BA7FF" color="#3BA7FF" />,
+                  // Real rating from real reviews — never claim a score we don't have.
+                  label: stats && stats.rating > 0 ? `${stats.rating}★ Rated` : "Top Rated",
+                  sub: stats && stats.reviews > 0
+                    ? `${formatCount(stats.reviews)} reviews`
+                    : "Verified reviews",
+                },
                 { icon: <Truck size={18} color="#22C55E" />, label: "Instant Delivery", sub: "Items in minutes" },
                 { icon: <Shield size={18} color="#3BA7FF" />, label: "100% Safe", sub: "Secure payments" },
               ].map((b, i) => (
