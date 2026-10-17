@@ -5,6 +5,34 @@ import { Save, RotateCcw, Edit2, Check, X, Loader2, PenSquare, ChevronDown, Chev
 import { adminApi } from "../api";
 import type { SiteContentItem } from "../types";
 import { PageHeader, EmptyState } from "../components/kit";
+import ImageUpload from "../components/ImageUpload";
+
+/* The promo banner renders fluid-width at a fixed 188px tall (176px on
+   mobile), so its artwork has to be wide. Rather than ship a badly cropped
+   banner, reject anything outside this range before it uploads. */
+const BANNER_HINT =
+  "Recommended 1600 × 320 px (5:1). The banner renders full-width at 188 px tall and crops to cover, so keep text and the subject centred. Minimum 1000 × 200 px.";
+
+const readDims = (file: File) =>
+  new Promise<{ w: number; h: number } | null>((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve({ w: img.naturalWidth, h: img.naturalHeight }); };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+
+async function validateBannerImage(file: File): Promise<string | null> {
+  if (!file.type.startsWith("image/")) return "That file isn't an image.";
+  const d = await readDims(file);
+  if (!d) return "Couldn't read that image — try a PNG, JPG or WebP.";
+  if (d.w < 1000 || d.h < 200) return `Too small (${d.w} × ${d.h} px). Minimum is 1000 × 200 px.`;
+  const ratio = d.w / d.h;
+  if (ratio < 3 || ratio > 9) {
+    return `Wrong shape (${d.w} × ${d.h} px is ${ratio.toFixed(2)}:1). The banner is wide — aim for 5:1, e.g. 1600 × 320 px.`;
+  }
+  return null;
+}
 
 interface EditState {
   key: string;
@@ -121,6 +149,45 @@ export default function SiteContent() {
       );
     }
 
+    if (item.type === "image") {
+      // Banner slot: uploads straight to R2 and stores the URL as this value.
+      // A blank value falls back to the built-in gradient + game art on the site.
+      const isBanner = item.key.startsWith("banner_");
+      return (
+        <div className="space-y-2">
+          <ImageUpload
+            label=""
+            value={String(currentValue ?? "")}
+            folder="rbstars/banners"
+            hint={isBanner ? BANNER_HINT : undefined}
+            validate={isBanner ? validateBannerImage : undefined}
+            onChange={(url) => {
+              if (!edit) startEdit(item);
+              setEditing((prev) => ({ ...prev, [item.key]: { ...prev[item.key], key: item.key, value: url, original: item.value } }));
+            }}
+          />
+          {isBanner && (
+            <p className="text-xs text-[var(--pn-text-3)] leading-relaxed">
+              Leave empty to keep the default banner art. Files under 1000 × 200 px, or a
+              ratio outside 3:1–9:1, are rejected so the banner never crops badly.
+            </p>
+          )}
+          {edit && (
+            <div className="flex gap-2">
+              <button onClick={() => saveEdit(item.key)} disabled={saving === item.key}
+                className="flex items-center gap-1 px-2.5 py-1 bg-[var(--pn-primary)] text-white rounded-lg text-xs">
+                {saving === item.key ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                Save
+              </button>
+              <button onClick={() => cancelEdit(item.key)} className="px-2.5 py-1 bg-[var(--pn-surface-2)] text-[var(--pn-text-2)] rounded-lg text-xs">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-2">
         {edit ? (
@@ -179,7 +246,9 @@ export default function SiteContent() {
     hero: "Hero Section",
     navigation: "Navigation",
     features: "Features Section",
+    banners: "Promo Banners",
     footer: "Footer",
+    loader: "Loading Screen",
     seo: "SEO & Meta",
   };
 

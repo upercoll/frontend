@@ -10,6 +10,11 @@ interface ImageUploadProps {
   maxFiles?: number;
   folder?: string;
   label?: string;
+  /** small line under the label, e.g. the exact size the image renders at */
+  hint?: string;
+  /** return an error string (or a promise of one) to reject a file before it
+      is uploaded — used to enforce the exact size a slot renders at */
+  validate?: (file: File) => string | null | Promise<string | null>;
   className?: string;
   light?: boolean;
 }
@@ -21,6 +26,8 @@ export default function ImageUpload({
   maxFiles = 10,
   folder = "rbstars/uploads",
   label = "Upload Image",
+  hint,
+  validate,
   className,
   light = false,
 }: ImageUploadProps) {
@@ -37,6 +44,11 @@ export default function ImageUpload({
     setUploading(true);
     setUploadError(null);
     try {
+      if (validate) {
+        const results = await Promise.all(files.map((f) => validate(f)));
+        const bad = results.find(Boolean);
+        if (bad) { setUploadError(bad); return; }
+      }
       if (multiple) {
         const form = new FormData();
         files.forEach((f) => form.append("files", f));
@@ -70,7 +82,7 @@ export default function ImageUpload({
     } finally {
       setUploading(false);
     }
-  }, [value, onChange, multiple, maxFiles, folder, apiUrl, token]);
+  }, [value, onChange, multiple, maxFiles, folder, apiUrl, token, validate]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -92,6 +104,7 @@ export default function ImageUpload({
   return (
     <div className={cn("space-y-2", className)}>
       {label && <p className={cn("text-sm font-medium", light ? "text-[var(--pn-text-2)]" : "text-[var(--pn-text-3)]")}>{label}</p>}
+      {hint && <p className="text-xs text-[var(--pn-text-3)] leading-relaxed -mt-1">{hint}</p>}
 
       <div
         onClick={() => !uploading && inputRef.current?.click()}

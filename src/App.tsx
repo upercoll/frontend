@@ -7,7 +7,6 @@ import { AuthProvider } from "@/context/AuthContext";
 import { SiteModeProvider } from "@/context/SiteModeContext";
 import CartDrawer from "@/components/CartDrawer";
 import Navbar from "@/components/Navbar";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import Footer from "@/components/Footer";
 import AuthModal from "@/components/AuthModal";
 import AnnouncementPopup from "@/components/AnnouncementPopup";
@@ -141,9 +140,13 @@ function StorefrontRouter() {
   const isClaimChat = location === "/claim-chat";
   const isProfile = location === "/profile";
 
+  const isHome = location === "/";
+  const isBrowse = location === "/browse";
+  const isTickets = location.startsWith("/tickets");
+
   return (
     <>
-      {!isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && <Navbar dark={isGamePage || isProductPage} />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && <Navbar />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
@@ -159,16 +162,16 @@ function StorefrontRouter() {
         <Route path="/profile" component={ProfilePage} />
         <Route component={NotFound} />
       </Switch>
-      {!isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && <Footer />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && <Footer />}
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
       <WelcomeGiftModal />
       {/* Site-wide announcement popup — owner-authored, shown on site load. */}
       <AnnouncementPopup />
-      {/* Bottom nav hidden on product pages: they ship their own sticky Buy bar,
-          which would otherwise be painted underneath this nav (z-40 vs z-50). */}
-      {!isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProductPage && <MobileBottomNav />}
+      {/* No bottom navigation — the client blueprint is explicit that all
+          navigation lives in the sticky top bar, with cart/profile always
+          reachable on mobile and everything else behind the menu. */}
     </>
   );
 }

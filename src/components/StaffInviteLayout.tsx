@@ -25,7 +25,7 @@ export default function StaffInviteLayout({ portalName, description, step, child
             <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.3 }} />
           </div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(47,140,255,0.15), transparent 70%)" }} />
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative z-10 mb-2">
             <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain" />
@@ -52,7 +52,7 @@ export default function StaffInviteLayout({ portalName, description, step, child
 
             {/* Header */}
             <div className="mb-6 text-center sm:text-left">
-              <img src="/staff-avatar.webp" alt="" className="w-16 h-16 mx-auto sm:mx-0 mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(59,167,255,0.3))" }} />
+              <img src="/staff-avatar.webp" alt="" className="w-16 h-16 mx-auto sm:mx-0 mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(47,140,255,0.3))" }} />
               <h2 className="text-2xl font-extrabold mb-1" style={{ color: "#F4F8FB" }}>{portalName}</h2>
               <p className="text-sm" style={{ color: "#637784" }}>{step}</p>
             </div>

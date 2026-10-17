@@ -3,15 +3,15 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X, UserPlus, ShoppingBag, Check, LogIn } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/context/AuthContext";
-
+import { P } from "@/lib/storefront";
 const STORAGE_KEY = "rbstars_welcome_seen";
 
 // Flat dot texture — pattern instead of a gradient wash.
 const DOT_PATTERN =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='rgba(255,255,255,0.32)'/%3E%3C/svg%3E\")";
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26' viewBox='0 0 26 26'%3E%3Ccircle cx='2' cy='2' r='1.4' fill='rgba(27,127,227,0.20)'/%3E%3C/svg%3E\")";
 
 const PERKS = [
-  { icon: <Check size={13} strokeWidth={3.5} />, text: "Instant auto-delivery" },
+  { icon: <Check size={13} strokeWidth={3.5} />, text: "Auto-delivery to your mailbox" },
   { icon: <Check size={13} strokeWidth={3.5} />, text: "Live order alerts" },
   { icon: <Check size={13} strokeWidth={3.5} />, text: "Secure checkout" },
 ];
@@ -81,8 +81,8 @@ export default function WelcomeModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reduce ? 0 : 0.22 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-          style={{ background: "rgba(8,12,18,0.82)", backdropFilter: "blur(6px)" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto p-4"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}
           onClick={(e) => { if (e.target === e.currentTarget) dismiss(); }}
           role="dialog"
           aria-modal="true"
@@ -94,23 +94,23 @@ export default function WelcomeModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.97 }}
             transition={spring}
-            className="relative w-full max-w-[720px] rounded-[26px] overflow-hidden shadow-2xl flex flex-col sm:flex-row"
-            style={{ background: "#131C23", border: "1.5px solid #2C414E" }}
+            className="relative my-auto w-full max-w-[720px] max-h-[92dvh] rounded-2xl overflow-hidden flex flex-col sm:flex-row"
+            style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}
           >
             {/* ── Close ── */}
             <button
               onClick={dismiss}
               aria-label="Close welcome dialog"
               className="absolute top-3.5 right-3.5 z-30 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-150 hover:rotate-90"
-              style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#9BAEBB" }}
+              style={{ background: P.band, border: `1px solid ${P.border}`, color: P.faint }}
             >
               <X size={15} />
             </button>
 
-            {/* ── LEFT: flat blue art panel ── */}
+            {/* ── LEFT: flat stage panel + the greeting figure ── */}
             <div
               className="hidden sm:flex w-[44%] flex-shrink-0 flex-col justify-between p-7 relative overflow-hidden"
-              style={{ background: "#3BA7FF" }}
+              style={{ background: P.stage }}
             >
               <div
                 className="absolute inset-0 pointer-events-none"
@@ -121,7 +121,7 @@ export default function WelcomeModal() {
               <motion.div
                 {...rise(0.05)}
                 className="relative z-10 w-[74px] h-[74px] rounded-[20px] flex items-center justify-center"
-                style={{ background: "#131C23", transform: "rotate(-7deg)" }}
+                style={{ background: P.card, border: `1px solid ${P.border}`, transform: "rotate(-7deg)" }}
               >
                 <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 object-contain" />
               </motion.div>
@@ -130,14 +130,14 @@ export default function WelcomeModal() {
                 <motion.h3
                   {...rise(0.12)}
                   className="font-display text-[42px] leading-[0.92] font-extrabold tracking-tight"
-                  style={{ color: "#FFFFFF" }}
+                  style={{ color: P.text }}
                 >
                   Welcome
                   <br />
                   <span
                     style={{
                       color: "transparent",
-                      WebkitTextStroke: "2px #FFFFFF",
+                      WebkitTextStroke: `2px ${P.accentDeep}`,
                     }}
                   >
                     aboard.
@@ -150,15 +150,15 @@ export default function WelcomeModal() {
                       key={p.text}
                       {...rise(0.2 + i * 0.07)}
                       className="flex items-center gap-2 w-fit rounded-full pl-1.5 pr-3.5 py-1.5"
-                      style={{ background: "rgba(19,28,35,0.18)" }}
+                      style={{ background: P.card, border: `1px solid ${P.border}` }}
                     >
                       <span
                         className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ background: "#131C23", color: "#3BA7FF" }}
+                        style={{ background: P.accentTint, color: P.accentDeep }}
                       >
                         {p.icon}
                       </span>
-                      <span className="text-[12px] font-bold" style={{ color: "#FFFFFF" }}>
+                      <span className="text-[12px] font-bold" style={{ color: P.text }}>
                         {p.text}
                       </span>
                     </motion.div>
@@ -166,17 +166,17 @@ export default function WelcomeModal() {
                 </div>
               </div>
 
-              {/* Flat ink bar — anchoring edge, no glow */}
-              <div className="absolute bottom-0 left-0 right-0 h-1.5" style={{ background: "#131C23" }} />
+              {/* Flat accent bar — anchoring edge, no glow */}
+              <div className="absolute bottom-0 left-0 right-0 h-1.5" style={{ background: P.accent }} />
             </div>
 
             {/* ── RIGHT: content + actions ── */}
-            <div className="flex-1 p-7 sm:p-8 flex flex-col justify-center">
+            <div className="flex-1 p-7 sm:p-8 flex flex-col justify-center overflow-y-auto">
               {/* Mobile logo */}
               <motion.div {...rise(0.05)} className="sm:hidden mb-4">
                 <div
                   className="w-14 h-14 rounded-[16px] flex items-center justify-center"
-                  style={{ background: "#3BA7FF" }}
+                  style={{ background: P.stage, border: `1px solid ${P.border}` }}
                 >
                   <img src="/rb-logo.png" alt="RBstars" className="w-9 h-9 object-contain" />
                 </div>
@@ -184,8 +184,8 @@ export default function WelcomeModal() {
 
               <motion.p
                 {...rise(0.1)}
-                className="text-[10px] font-bold tracking-[0.22em] uppercase mb-2"
-                style={{ color: "#3BA7FF" }}
+                className="text-[10px] font-black uppercase tracking-widest mb-2"
+                style={{ color: P.accentDeep }}
               >
                 New here?
               </motion.p>
@@ -193,12 +193,12 @@ export default function WelcomeModal() {
               <motion.h2
                 {...rise(0.15)}
                 className="font-display text-[28px] sm:text-[32px] leading-[1.05] font-extrabold mb-2"
-                style={{ color: "#F4F8FB" }}
+                style={{ color: P.text }}
               >
                 Welcome to RBstars
               </motion.h2>
 
-              <motion.p {...rise(0.2)} className="text-sm leading-relaxed mb-6" style={{ color: "#9BAEBB" }}>
+              <motion.p {...rise(0.2)} className="text-sm leading-relaxed mb-6" style={{ color: P.muted }}>
                 Create an account to track orders and get live delivery alerts — or
                 jump straight into the catalog.
               </motion.p>
@@ -209,8 +209,8 @@ export default function WelcomeModal() {
                   whileHover={reduce ? undefined : { y: -2 }}
                   whileTap={reduce ? undefined : { scale: 0.98 }}
                   onClick={handleSignUp}
-                  className="group flex items-center justify-between w-full rounded-2xl px-5 py-4 font-bold text-sm"
-                  style={{ background: "#3BA7FF", color: "#fff", boxShadow: "0 4px 0 0 #2980b9" }}
+                  className="group flex items-center justify-between w-full rounded-2xl px-5 py-4 font-black text-sm"
+                  style={{ background: P.accentDeep, color: "#fff", boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}
                 >
                   <span className="flex items-center gap-2.5">
                     <UserPlus size={17} />
@@ -226,14 +226,14 @@ export default function WelcomeModal() {
                   whileHover={reduce ? undefined : { y: -2 }}
                   whileTap={reduce ? undefined : { scale: 0.98 }}
                   onClick={handleShop}
-                  className="group flex items-center justify-between w-full rounded-2xl px-5 py-4 font-bold text-sm"
-                  style={{ background: "#1C2A34", border: "1.5px solid #2C414E", color: "#F4F8FB" }}
+                  className="group flex items-center justify-between w-full rounded-2xl px-5 py-4 font-black text-sm"
+                  style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.3)", color: P.accentDeep }}
                 >
                   <span className="flex items-center gap-2.5">
-                    <ShoppingBag size={17} color="#3BA7FF" />
+                    <ShoppingBag size={17} color={P.accentDeep} />
                     Browse the shop
                   </span>
-                  <span className="text-xs font-semibold" style={{ color: "#637784" }}>
+                  <span className="text-xs font-semibold" style={{ color: P.faint }}>
                     No account
                   </span>
                 </motion.button>
@@ -243,7 +243,7 @@ export default function WelcomeModal() {
                 {...rise(0.38)}
                 onClick={handleSignIn}
                 className="mt-4 mx-auto flex items-center gap-1.5 text-xs font-semibold transition-colors"
-                style={{ color: "#637784" }}
+                style={{ color: P.faint }}
               >
                 <LogIn size={13} />
                 Already have an account? Sign in

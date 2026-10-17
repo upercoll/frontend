@@ -97,7 +97,7 @@ export default function DelivererInviteAccept() {
           {error && <p className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>}
           <motion.button onClick={sendCode} disabled={loading}
             className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
+            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(47,140,255,0.3)" }}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
             Send Verification Code
           </motion.button>
@@ -132,7 +132,7 @@ export default function DelivererInviteAccept() {
           {error && <p className="text-sm text-center" style={{ color: "#ef4444" }}>{error}</p>}
           <motion.button type="submit" disabled={loading}
             className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
+            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(47,140,255,0.3)" }}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             Activate Account
           </motion.button>

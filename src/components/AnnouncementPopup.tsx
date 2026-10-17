@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Check, ArrowRight, Megaphone } from "lucide-react";
+import { P } from "@/lib/storefront";
+import { RBstar } from "@/components/Art";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 const DISMISS_KEY = "rbstars_dismissed_announcements";
@@ -16,7 +18,7 @@ const THEMES: Record<Theme, { bg: string; onBg: string; soft: string; onSoft: st
   blue:   { bg: "#005bd3", onBg: "#ffffff", soft: "#e8f0fe", onSoft: "#00429a" },
   pink:   { bg: "#d6336c", onBg: "#ffffff", soft: "#fdeaf1", onSoft: "#a11f4c" },
   green:  { bg: "#0f7b4f", onBg: "#ffffff", soft: "#e3f6ec", onSoft: "#0a5738" },
-  yellow: { bg: "#b45309", onBg: "#ffffff", soft: "#fdf1e0", onSoft: "#7c3c06" },
+  yellow: { bg: "#f59e0b", onBg: "#ffffff", soft: "#fdf1e0", onSoft: "#7c3c06" },
   red:    { bg: "#b42318", onBg: "#ffffff", soft: "#fdecea", onSoft: "#7d160e" },
   ink:    { bg: "#303030", onBg: "#ffffff", soft: "#eeeeee", onSoft: "#1f1f1f" },
   violet: { bg: "#5b3fd1", onBg: "#ffffff", soft: "#eeeafc", onSoft: "#3d2591" },
@@ -173,7 +175,7 @@ export default function AnnouncementPopup() {
             exit={{ opacity: 0, y: 14, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
             onClick={(e) => e.stopPropagation()}
-            className="announce-split"
+            className="announce-split rounded-2xl"
             style={{
               position: "relative",
               width: "100%",
@@ -182,10 +184,9 @@ export default function AnnouncementPopup() {
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
-              background: "#131C23",
-              border: "1px solid rgba(255,255,255,0.14)",
-              borderRadius: 22,
-              boxShadow: "0 30px 80px -18px rgba(0,0,0,0.7)",
+              background: P.card,
+              border: `1px solid ${P.border}`,
+              boxShadow: P.shadow,
             }}
           >
             {/* ══ Split: art panel (left) ══════════════════════════ */}
@@ -197,12 +198,15 @@ export default function AnnouncementPopup() {
                 overflow: "hidden",
               }}
             >
-              {/* flat decorative shapes — brand's tilted-square motif */}
+              {/* flat decorative shapes — brand's tilted-square motif.
+                  The two corner circles read as blobs on the white storefront,
+                  so only the tilted square (the real brand motif) stays. */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.12, duration: 0.5 }}
                 style={{
+                  display: "none",
                   position: "absolute", top: -46, left: -34, width: 150, height: 150,
                   borderRadius: "50%", background: "rgba(255,255,255,0.10)",
                 }}
@@ -212,6 +216,7 @@ export default function AnnouncementPopup() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.18, duration: 0.5 }}
                 style={{
+                  display: "none",
                   position: "absolute", bottom: -30, right: -18, width: 116, height: 116,
                   borderRadius: "50%", background: "rgba(255,255,255,0.08)",
                 }}
@@ -287,14 +292,32 @@ export default function AnnouncementPopup() {
                     position: "absolute", top: 14, right: 14,
                     width: 30, height: 30, borderRadius: 8,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    color: "rgba(255,255,255,0.7)", cursor: "pointer",
+                    background: P.band,
+                    border: `1px solid ${P.border}`,
+                    color: P.faint, cursor: "pointer",
                   }}
                 >
                   <X size={15} />
                 </button>
               )}
+
+              {/* Notice header — eyebrow line + the brand mark, used once.
+                  This is a pinned notice, not an alarm: gold star, blue label. */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12, duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
+                className="flex items-center gap-3"
+                style={{ paddingRight: current.dismissible ? 40 : 0, marginBottom: 12 }}
+              >
+                <RBstar size={40} color={P.star} />
+                <span
+                  className="text-[11px] font-black uppercase tracking-widest"
+                  style={{ color: P.accentDeep }}
+                >
+                  Announcement
+                </span>
+              </motion.div>
 
               <motion.h2
                 initial={{ opacity: 0, y: 12 }}
@@ -303,7 +326,7 @@ export default function AnnouncementPopup() {
                 style={{
                   margin: 0,
                   paddingRight: current.dismissible ? 34 : 0,
-                  color: "#F4F8FB",
+                  color: P.text,
                   fontSize: "clamp(20px, 3.1vw, 27px)",
                   lineHeight: 1.18,
                   fontWeight: 800,
@@ -319,7 +342,7 @@ export default function AnnouncementPopup() {
                 transition={{ delay: 0.24, duration: 0.4 }}
                 style={{
                   marginTop: 12,
-                  color: "#9BAEBB",
+                  color: P.muted,
                   fontSize: 14,
                   lineHeight: 1.65,
                   whiteSpace: "pre-wrap",
@@ -344,8 +367,8 @@ export default function AnnouncementPopup() {
                     }}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
-                      background: theme.soft, color: theme.onSoft,
-                      border: `1px dashed ${theme.bg}`,
+                      background: P.accentTint, color: P.accentDeep,
+                      border: "1px dashed rgba(47,140,255,0.45)",
                       fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
                       fontWeight: 800, fontSize: 15, letterSpacing: "0.1em",
                       padding: "9px 14px", borderRadius: 9, cursor: "pointer",
@@ -354,7 +377,7 @@ export default function AnnouncementPopup() {
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                     {current.promoCode}
                   </button>
-                  <span style={{ color: "#637784", fontSize: 11 }}>
+                  <span style={{ color: P.muted, fontSize: 11 }}>
                     {copied ? "Copied — use it at checkout" : "Tap to copy code at checkout"}
                   </span>
                 </motion.div>
@@ -376,10 +399,11 @@ export default function AnnouncementPopup() {
                     onClick={goCta}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: 8,
-                      background: theme.bg, color: "#ffffff",
-                      border: "none", borderRadius: 10,
+                      background: P.accentDeep, color: "#ffffff",
+                      border: "none", borderRadius: 12,
                       fontSize: 14, fontWeight: 800,
                       padding: "12px 20px", cursor: "pointer",
+                      boxShadow: "0 6px 16px rgba(10,110,255,.35)",
                     }}
                   >
                     {current.ctaLabel || "Take a look"}
@@ -390,9 +414,9 @@ export default function AnnouncementPopup() {
                   <button
                     onClick={close}
                     style={{
-                      background: "transparent", color: "#9BAEBB",
-                      border: "1px solid rgba(255,255,255,0.14)",
-                      borderRadius: 10, fontSize: 13, fontWeight: 600,
+                      background: P.accentTint, color: P.accentDeep,
+                      border: "1px solid rgba(47,140,255,0.3)",
+                      borderRadius: 12, fontSize: 13, fontWeight: 700,
                       padding: "12px 18px", cursor: "pointer",
                     }}
                   >

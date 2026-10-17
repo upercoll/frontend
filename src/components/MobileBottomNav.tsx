@@ -42,7 +42,7 @@ export default function MobileBottomNav() {
         style={{
           background: "rgba(10,8,40,0.92)",
           backdropFilter: "blur(18px)",
-          borderTop: "1px solid rgba(59,167,255,0.13)",
+          borderTop: "1px solid rgba(47,140,255,0.13)",
         }}
       >
         <div className="flex items-center justify-around px-2" style={{ paddingBottom: "env(safe-area-inset-bottom, 4px)" }}>
@@ -75,14 +75,14 @@ export default function MobileBottomNav() {
                 )}
 
                 <motion.div
-                  animate={{ color: isActive ? "#5CB8FF" : "rgba(59,167,255,0.5)" }}
+                  animate={{ color: isActive ? "#5CB8FF" : "rgba(47,140,255,0.5)" }}
                   transition={{ duration: 0.18 }}
                 >
                   <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
                 </motion.div>
 
                 <motion.span
-                  animate={{ color: isActive ? "#5CB8FF" : "rgba(59,167,255,0.45)" }}
+                  animate={{ color: isActive ? "#5CB8FF" : "rgba(47,140,255,0.45)" }}
                   transition={{ duration: 0.18 }}
                   className="text-[10px] font-semibold leading-none"
                 >

@@ -6,6 +6,9 @@ import {
   CheckCheck, Package, Star, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { P } from "@/lib/storefront";
+import { TopNav } from "./Home";
+import { RBstar, MailboxGlyph, DeliveryScene } from "@/components/Art";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 const AUTO_ONLY_GAME = "grow-a-garden-2";
@@ -52,16 +55,17 @@ function Field({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>{label}</label>
-      <div className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all"
-        style={{ background: "#0C141B", border: `1.5px solid ${error ? "rgba(248,113,113,0.5)" : focused ? "#3BA7FF" : "#2C414E"}` }}>
-        {icon && <span style={{ color: focused ? "#3BA7FF" : "#637784", flexShrink: 0 }}>{icon}</span>}
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.muted }}>{label}</label>
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-shadow focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
+        style={{ background: P.card, border: `1.5px solid ${error ? "rgba(245,158,11,0.55)" : focused ? P.accentDeep : P.borderStrong}` }}>
+        {icon && <span style={{ color: focused ? P.accentDeep : P.faint, flexShrink: 0 }}>{icon}</span>}
         <input type={type} value={value} placeholder={placeholder}
           onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0" />
+          className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0 placeholder:text-[#8a97ba]"
+          style={{ color: P.text }} />
       </div>
-      {error && <p className="text-[11px]" style={{ color: "#f87171" }}>{error}</p>}
+      {error && <p className="text-[11px]" style={{ color: P.warn }}>{error}</p>}
     </div>
   );
 }
@@ -69,11 +73,12 @@ function Field({
 function StepDot({ active, done }: { active: boolean; done: boolean }) {
   return (
     <div className="w-2 h-2 rounded-full transition-all"
-      style={{ background: done ? "#22C55E" : active ? "#3BA7FF" : "#2C414E", boxShadow: active ? "0 0 8px rgba(59,167,255,0.5)" : "none" }} />
+      style={{ background: done ? P.good : active ? P.accentDeep : P.borderStrong, boxShadow: active ? `0 0 0 3px ${P.accentTint}` : "none" }} />
   );
 }
 
 function HeroPanel({ step }: { step: Step }) {
+  const [, navigate] = useLocation();
   const stepText: Record<Step, string> = {
     username: "Enter your Roblox username and we'll handle the rest — fast, safe, fully automated.",
     instructions: "Follow these quick steps. Our bot does all the heavy lifting.",
@@ -81,31 +86,24 @@ function HeroPanel({ step }: { step: Step }) {
     delivered: "Your items are in your inventory. Enjoy!",
   };
   return (
-    <div className="relative flex flex-col items-center justify-center text-center p-8 overflow-hidden" style={{ background: "#0D1520" }}>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[15%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.4 }} />
-        <div className="absolute top-[25%] right-[20%] w-1.5 h-1.5 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[45%] left-[10%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[60%] right-[12%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.35 }} />
-        <div className="absolute top-[80%] left-[25%] w-1.5 h-1.5 rounded-full" style={{ background: "#5CB8FF", opacity: 0.2 }} />
-        <div className="absolute top-[15%] left-[50%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[70%] right-[35%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[35%] left-[35%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.4 }} />
-        <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.3 }} />
-        <div className="absolute top-[90%] left-[60%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.35 }} />
-      </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
+    /* The persistent side panel: the page's alternating band — flat navy,
+       and the copy is the only thing in it. */
+    <div className="relative flex flex-col items-center justify-center text-center p-10 overflow-hidden"
+      style={{ background: P.band, borderRight: `1px solid ${P.border}` }}>
+      <button onClick={() => navigate("/")} aria-label="RBstars home"
+        className="relative z-10 mb-6 select-none">
+        <img src="/rb-logo.png" alt="RBstars" className="w-20 h-20 rounded-full object-cover" />
+      </button>
       <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }} className="relative z-10">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "#3BA7FF" }}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: P.accentDeep }}>
           Auto Delivery
         </p>
-        <p className="text-sm leading-relaxed max-w-[240px] mx-auto" style={{ color: "#637784" }}>
+        <p className="text-[15px] leading-relaxed max-w-[260px] mx-auto" style={{ color: P.muted }}>
           {stepText[step]}
         </p>
       </motion.div>
-      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "#3BA7FF" }} />
+      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: P.accent }} />
     </div>
   );
 }
@@ -202,41 +200,25 @@ export default function AutoDelivery() {
 
   if (!isGAG2) {
     return (
-      <div className="min-h-screen" style={{ background: "#131C23" }}>
-        <div className="w-full relative overflow-hidden sm:h-[73px] h-[60px]" style={{ borderBottom: "1px solid #2C414E", background: "#0F1920" }}>
-          <img src="/item-star.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-gem.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-crystals.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-controller.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-            <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
-          </button>
-          <button
-            onClick={() => (window.history.length > 1 ? window.history.back() : navigate("/"))}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-xl select-none md:hidden"
-            style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#F4F8FB" }}
-            aria-label="Go back"
-          >
-            <ArrowLeft size={17} />
-          </button>
-        </div>
+      <div className="min-h-screen rglow">
+      <TopNav onHome={() => navigate("/")} />
         <div className="flex items-center justify-center px-4 py-20">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="w-full max-w-md rounded-2xl p-8 text-center space-y-4"
-            style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+            style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}>
+            {/* Wrong-game state: attention, not alarm — amber says "do this
+                instead", which is what the Claim Chat instruction needs. */}
             <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center"
-              style={{ background: "rgba(251,191,36,0.15)", border: "1px solid #fbbf24" }}>
-              <AlertTriangle size={24} color="#fbbf24" />
+              style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)" }}>
+              <AlertTriangle size={24} color={P.warn} />
             </div>
-            <p className="text-lg font-extrabold" style={{ color: "#F4F8FB" }}>Auto Delivery Only for Grow A Garden 2</p>
-            <p className="text-sm" style={{ color: "#637784" }}>
+            <p className="text-lg font-extrabold" style={{ color: P.text }}>Auto Delivery Only for Grow A Garden 2</p>
+            <p className="text-sm" style={{ color: P.muted }}>
               This order is for a different game. Please use the Claim Chat to connect with a delivery agent.
             </p>
             <button onClick={() => navigate("/")}
               className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-              style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9" }}>
+              style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}>
               <ArrowLeft size={15} /> Back to Store
             </button>
           </motion.div>
@@ -246,31 +228,11 @@ export default function AutoDelivery() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      {/* Topbar */}
-      <div className="w-full relative overflow-hidden sm:h-[73px] h-[60px]" style={{ borderBottom: "1px solid #2C414E", background: "#0F1920" }}>
-        <img src="/item-star.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-gem.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-crystals.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-controller.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-          <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
-        </button>
-        {/* Back arrow — mobile only (desktop has the split hero + nav) */}
-        <button
-          onClick={() => (window.history.length > 1 ? window.history.back() : navigate("/"))}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-xl select-none md:hidden"
-          style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#F4F8FB" }}
-          aria-label="Go back"
-        >
-          <ArrowLeft size={17} />
-        </button>
-      </div>
+    <div className="min-h-screen rglow">
+      <TopNav onHome={() => navigate("/")} />
 
       {/* Main split layout */}
-      <div className="flex flex-col md:flex-row min-h-[calc(100vh-73px)]">
+      <div className="flex flex-col md:flex-row min-h-screen">
         {/* Left hero panel — desktop only */}
         <div className="hidden md:flex w-[380px] flex-shrink-0">
           <HeroPanel step={step} />
@@ -287,16 +249,16 @@ export default function AutoDelivery() {
               <img src="/rb-logo.png" alt="RBstars" className="w-10 h-10 object-contain" />
             </div>
 
-            {/* Step header */}
+            {/* Step header — the mascot is gone; each state now carries the
+                delivery graphic that actually belongs to it, down in the card. */}
             <div className="mb-5 text-center">
-              <img src="/bot-mascot.webp" alt="" className="w-40 h-40 mx-auto mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(59,167,255,0.3))" }} />
-              <h2 className="text-2xl font-extrabold mb-1" style={{ color: "#F4F8FB" }}>
+              <h2 className="text-2xl font-extrabold mb-1" style={{ color: P.text }}>
                 {step === "username" && "Confirm Your Details"}
                 {step === "instructions" && "How It Works"}
                 {step === "delivering" && "Delivering Your Items"}
                 {step === "delivered" && "Items Delivered!"}
               </h2>
-              <p className="text-sm" style={{ color: "#637784" }}>
+              <p className="text-sm" style={{ color: P.muted }}>
                 {step === "username" && "The bot delivers to this exact Roblox account"}
                 {step === "instructions" && "Follow these steps — the bot handles the rest"}
                 {step === "delivering" && "Stay inside the game, this usually takes 1-3 minutes"}
@@ -304,56 +266,60 @@ export default function AutoDelivery() {
               </p>
             </div>
 
-            {/* Stepper */}
-            <div className="flex items-center gap-2 mb-5">
+            {/* Stepper — wraps on narrow screens; connectors shrink on
+                mobile so the four steps fit a 320px phone in one or two rows */}
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-3 mb-5">
               {["Details", "Instructions", "Delivering", "Done"].map((label, i) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className="flex flex-col items-center gap-1">
                     <StepDot active={progressIdx === i} done={progressIdx > i} />
                     <span className="text-[9px] font-bold uppercase tracking-wider"
-                      style={{ color: progressIdx >= i ? "#3BA7FF" : "#475569" }}>{label}</span>
+                      style={{ color: progressIdx >= i ? P.accentDeep : P.faint }}>{label}</span>
                   </div>
-                  {i < 3 && <div className="w-8 h-px" style={{ background: progressIdx > i ? "#22C55E" : "#2C414E" }} />}
+                  {i < 3 && <div className="w-2 sm:w-8 h-px" style={{ background: progressIdx > i ? P.good : P.border }} />}
                 </div>
               ))}
             </div>
 
             {/* Container card */}
-            <div className="rounded-2xl p-6" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+            <div className="rounded-2xl p-5 sm:p-6" style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}>
               {/* Step content */}
               <div>
               <AnimatePresence mode="wait">
                 {step === "username" && (
                   <motion.div key="username" className="space-y-4"
                     initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
+                    {/* Head of the flow: packed → travels → your mailbox. One
+                        graphic for this state, and it is the promise itself. */}
+                    <DeliveryScene className="w-full max-w-[280px] h-auto mx-auto block" />
                     <Field label="Roblox Username" placeholder="Your in-game username" value={robloxUser}
                       onChange={setRobloxUser} icon={<Gamepad2 size={15} />} error={formErrors.robloxUser} />
                     <Field label="Contact Email" placeholder="For order notifications" value={contactEmail}
                       onChange={setContactEmail} icon={<Mail size={15} />} type="email" error={formErrors.contactEmail} />
                     {order?.items?.length ? (
-                      <div className="rounded-xl p-3.5" style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
-                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "#3BA7FF" }}>
+                      <div className="rounded-xl p-3.5" style={{ background: P.band, border: `1px solid ${P.border}` }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: P.accentDeep }}>
                           <Package size={10} className="inline mr-1" />Your Items
                         </p>
                         {order.items.map((it, idx) => (
                           <div key={idx} className="flex items-center gap-2.5 py-1">
                             {it.image ? (
                               <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
-                                style={{ background: "#1C2A34", border: "1.5px solid #F4F8FB" }}>
+                                style={{ background: P.stage, border: `1.5px solid ${P.borderStrong}` }}>
                                 <img src={it.image} alt="" className="w-6 h-6 object-contain" />
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-lg flex-shrink-0" style={{ background: it.gradient?.[0] || "#2C414E" }} />
+                              <div className="w-8 h-8 rounded-lg flex-shrink-0" style={{ background: it.gradient?.[0] || P.borderStrong }} />
                             )}
-                            <p className="text-[12px] font-semibold" style={{ color: "#F4F8FB" }}>
+                            <p className="text-[12px] font-semibold" style={{ color: P.text }}>
                               {it.name}{it.quantity > 1 ? ` x${it.quantity}` : ""}
                             </p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                        <p className="text-[11px] leading-relaxed" style={{ color: "#fbbf24" }}>
+                      <div className="rounded-xl p-3" style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)" }}>
+                        <p className="text-[11px] leading-relaxed" style={{ color: P.warn }}>
                           <AlertTriangle size={10} className="inline mr-1" />
                           No recent order found. Your items will be resolved from your paid order.
                         </p>
@@ -361,12 +327,12 @@ export default function AutoDelivery() {
                     )}
                     <button onClick={handleContinueFromUsername}
                       className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9" }}>
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}>
                       Confirm & Continue <ArrowRight size={15} />
                     </button>
                     <button onClick={() => navigate("/")}
                       className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "#0C141B", border: "1px solid #2C414E", color: "#9BAEBB" }}>
+                      style={{ background: P.card, border: `1px solid ${P.borderStrong}`, color: P.muted }}>
                       <ArrowLeft size={13} /> Back to Store
                     </button>
                   </motion.div>
@@ -375,29 +341,35 @@ export default function AutoDelivery() {
                 {step === "instructions" && (
                   <motion.div key="instructions" className="space-y-3"
                     initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
-                    <div className="space-y-2.5">
+                    {/* The how-it-works band: a P.band inset so it alternates
+                        against the white card instead of darkening it. */}
+                    <div className="space-y-2.5 rounded-2xl p-3"
+                      style={{ background: P.band, border: `1px solid ${P.border}` }}>
                       {DELIVERY_INSTRUCTIONS.map((line, i) => (
                         <div key={i} className="flex items-start gap-3 rounded-xl p-3"
-                          style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
+                          style={{ background: P.card, border: `1px solid ${P.border}` }}>
                           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                            style={{ background: "#3BA7FF", boxShadow: "0 2px 0 0 #2980b9" }}>
+                            style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}>
                             <span className="text-[10px] font-extrabold text-white">{i + 1}</span>
                           </div>
-                          <p className="text-[12px] leading-relaxed flex-1" style={{ color: "#F4F8FB" }}>{line}</p>
+                          <p className="text-[12px] leading-relaxed flex-1" style={{ color: P.text }}>{line}</p>
                         </div>
                       ))}
                     </div>
                     {createError && (
-                      <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{createError}</p>
+                      /* Retryable failure → amber, not scolding red. The
+                         Start Delivery button directly below is the retry. */
+                      <p className="text-[11px] text-center rounded-xl px-3 py-2.5 font-semibold"
+                        style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)", color: P.warn }}>{createError}</p>
                     )}
                     <button onClick={handleCreateSession} disabled={creating}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "#22C55E", boxShadow: "0 4px 0 0 #15803d", opacity: creating ? 0.7 : 1 }}>
-                      {creating ? <><Loader2 size={16} className="animate-spin" />Starting Bot...</> : "Start Delivery"}
+                      className="w-full py-3.5 rounded-xl font-extrabold flex items-center justify-center gap-2"
+                      style={{ background: "linear-gradient(180deg,#0a84ff,#0a50d6)", color: "#fff", boxShadow: "0 8px 22px rgba(10,110,255,.4)", opacity: creating ? 0.7 : 1 }}>
+                      {creating ? <><RBstar size={16} color="#fff" />Starting Bot...</> : "Start Delivery"}
                     </button>
                     <button onClick={() => setStep("username")}
                       className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "#0C141B", border: "1px solid #2C414E", color: "#9BAEBB" }}>
+                      style={{ background: P.card, border: `1px solid ${P.borderStrong}`, color: P.muted }}>
                       <ArrowLeft size={13} /> Back
                     </button>
                   </motion.div>
@@ -406,41 +378,47 @@ export default function AutoDelivery() {
                 {step === "delivering" && (
                   <motion.div key="delivering" className="py-8 text-center space-y-5"
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    {/* Waiting state: the mailbox with its gold flag up — the
+                        subject of this whole page — flat in an accent tint,
+                        no glow. */}
                     <motion.div animate={{ scale: [1, 1.08, 1] }}
                       transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut" }}
                       className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                      style={{ background: "#22C55E", boxShadow: "0 0 40px rgba(34,197,94,0.4)" }}>
-                      <Bot size={28} color="white" />
+                      style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.3)" }}>
+                      <MailboxGlyph size={36} />
                     </motion.div>
                     <div>
-                      <p className="text-lg font-extrabold mb-1" style={{ color: "#F4F8FB" }}>Bot Delivering Your Items...</p>
-                      <p className="text-[11px]" style={{ color: "#637784" }}>Stay inside the game. Usually takes 1-3 minutes.</p>
+                      <p className="text-lg font-extrabold mb-1" style={{ color: P.text }}>Bot Delivering Your Items...</p>
+                      <p className="text-[11px]" style={{ color: P.muted }}>Stay inside the game. Usually takes 1-3 minutes.</p>
                     </div>
                     <div className="flex items-center justify-center gap-2">
-                      <motion.div animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        className="w-4 h-4 rounded-full border-2"
-                        style={{ borderColor: "#22C55E", borderTopColor: "transparent" }} />
-                      <span className="text-xs font-semibold" style={{ color: "#22C55E" }}>
+                      {/* Brand pulse instead of a spinner — the honest status
+                          copy below it is what actually tells you anything. */}
+                      <motion.div animate={{ scale: [1, 1.16, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}
+                        className="flex items-center justify-center flex-shrink-0">
+                        <RBstar size={16} color={P.accentDeep} />
+                      </motion.div>
+                      <span className="text-xs font-semibold" style={{ color: P.accentDeep }}>
                         {session?.items?.length
                           ? `Delivering ${session.items.map(i => `${i.name}${i.quantity > 1 ? ` x${i.quantity}` : ""}`).join(", ")}`
                           : "Waiting for delivery..."}
                       </span>
                     </div>
                     {session?.items?.length ? (
-                      <div className="rounded-xl p-3.5 text-left" style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
+                      <div className="rounded-xl p-3.5 text-left" style={{ background: P.band, border: `1px solid ${P.border}` }}>
                         {session.items.map((it, idx) => (
                           <div key={idx} className="flex items-center gap-2.5 py-1.5">
                             <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                              style={{ background: "rgba(59,167,255,0.15)" }}>
-                              <Package size={11} color="#3BA7FF" />
+                              style={{ background: P.accentTint }}>
+                              <Package size={11} color={P.accentDeep} />
                             </div>
-                            <p className="text-[11px] font-semibold flex-1" style={{ color: "#F4F8FB" }}>
+                            <p className="text-[11px] font-semibold flex-1" style={{ color: P.text }}>
                               {it.name}{it.quantity > 1 ? ` x${it.quantity}` : ""}
                             </p>
                             {it.category && (
                               <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                                style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>{it.category}</span>
+                                style={{ background: P.card, border: `1px solid ${P.borderStrong}`, color: P.muted }}>{it.category}</span>
                             )}
                           </div>
                         ))}
@@ -448,7 +426,7 @@ export default function AutoDelivery() {
                     ) : null}
                     <button onClick={() => setRetryKey(k => k + 1)}
                       className="mx-auto flex items-center gap-1.5 py-2 px-4 rounded-xl text-[11px] font-semibold"
-                      style={{ background: "#0C141B", border: "1px solid #2C414E", color: "#9BAEBB" }}>
+                      style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.3)", color: P.accentDeep }}>
                       <RefreshCw size={12} /> Check Status
                     </button>
                   </motion.div>
@@ -457,22 +435,24 @@ export default function AutoDelivery() {
                 {step === "delivered" && (
                   <motion.div key="delivered" className="py-8 text-center space-y-5"
                     initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
+                    {/* Payoff: calm and flat — mint tint, brand star, no glow
+                        and no confetti. The promise already happened. */}
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.1 }}
                       className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center"
-                      style={{ background: "#22C55E", boxShadow: "0 0 40px rgba(34,197,94,0.5)" }}>
-                      <CheckCheck size={28} color="white" />
+                      style={{ background: P.goodTint, border: "1px solid rgba(95,224,142,0.45)" }}>
+                      <RBstar size={28} color={P.star} />
                     </motion.div>
                     <div>
-                      <p className="text-xl font-extrabold mb-1" style={{ color: "#F4F8FB" }}>Items Delivered!</p>
-                      <p className="text-[12px]" style={{ color: "#22C55E" }}>Check your Roblox inventory.</p>
+                      <p className="text-xl font-extrabold mb-1" style={{ color: P.text }}>Items Delivered!</p>
+                      <p className="text-[12px]" style={{ color: P.good }}>Check your Roblox inventory.</p>
                     </div>
                     {session?.items?.length ? (
-                      <div className="rounded-xl p-3.5 text-left" style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
+                      <div className="rounded-xl p-3.5 text-left" style={{ background: P.band, border: `1px solid ${P.border}` }}>
                         {session.items.map((it, idx) => (
                           <div key={idx} className="flex items-center gap-2.5 py-1.5">
-                            <Check size={11} color="#22C55E" className="flex-shrink-0" />
-                            <p className="text-[12px] font-semibold flex-1" style={{ color: "#F4F8FB" }}>
+                            <Check size={11} color={P.good} className="flex-shrink-0" />
+                            <p className="text-[12px] font-semibold flex-1" style={{ color: P.text }}>
                               {it.name}{it.quantity > 1 ? ` x${it.quantity}` : ""}
                             </p>
                           </div>
@@ -481,7 +461,7 @@ export default function AutoDelivery() {
                     ) : null}
                     <button onClick={() => navigate("/")}
                       className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9" }}>
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}>
                       Back to Store
                     </button>
                   </motion.div>
@@ -490,7 +470,7 @@ export default function AutoDelivery() {
             </div>
             </div>
 
-            <p className="text-center text-[10px] mt-4" style={{ color: "#475569" }}>
+            <p className="text-center text-[10px] mt-4" style={{ color: P.faint }}>
               Once delivered, this order is marked complete and cannot be delivered again.
             </p>
           </motion.div>

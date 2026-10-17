@@ -164,7 +164,7 @@ export default function CollabSocials() {
     <div className="min-h-screen" style={{ background: "#131C23" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full"
-          style={{ background: "radial-gradient(ellipse, rgba(59,167,255,0.07) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(ellipse, rgba(47,140,255,0.07) 0%, transparent 70%)" }} />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] rounded-full"
           style={{ background: "radial-gradient(ellipse, rgba(92,184,255,0.06) 0%, transparent 70%)" }} />
       </div>
@@ -191,7 +191,7 @@ export default function CollabSocials() {
                   <a key={label} href={href}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
                     style={active
-                      ? { background: "rgba(59,167,255,0.25)", color: "#93c5fd", border: "1px solid rgba(59,167,255,0.3)" }
+                      ? { background: "rgba(47,140,255,0.25)", color: "#93c5fd", border: "1px solid rgba(47,140,255,0.3)" }
                       : { color: "rgba(255,255,255,0.4)", border: "1px solid transparent" }}>
                     {label}
                   </a>
@@ -285,7 +285,7 @@ export default function CollabSocials() {
                 />
                 <button onClick={handlePreview} disabled={previewing || !url.trim()}
                   className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
-                  style={{ background: "rgba(59,167,255,0.25)", border: "1px solid rgba(59,167,255,0.4)", color: "#93c5fd" }}>
+                  style={{ background: "rgba(47,140,255,0.25)", border: "1px solid rgba(47,140,255,0.4)", color: "#93c5fd" }}>
                   {previewing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                   {previewing ? "Fetching…" : "Preview"}
                 </button>

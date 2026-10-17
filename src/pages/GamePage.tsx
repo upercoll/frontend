@@ -1,190 +1,171 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Flame, Sword, Target, Heart, PawPrint, Package, Leaf, Sprout, Wrench,
-  Apple, Gem, Star, ArrowLeft, Tag, ChevronDown, Search,
-  ShoppingCart, Check, AlertTriangle, SlidersHorizontal, Minus, Plus,
+  Apple, Gem, Star,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { TopNav, SiteFooter } from "./Home";
+import { RBstar } from "@/components/Art";
+import ProductCard from "@/components/ProductCard";
+import PageLoader from "@/components/PageLoader";
 import { useCart } from "@/context/CartContext";
-import Footer from "@/components/Footer";
+import { fetchPublicContent, visibleBanners } from "@/lib/publicContent";
+import type { PublicContent } from "@/lib/publicContent";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
-
-interface Product {
-  id: string; name: string; price: number; originalPrice?: number;
-  outOfStock?: boolean; stock?: number; gradient: [string, string]; imageUrl?: string;
-  categoryId?: string; featured?: boolean; bestSeller?: boolean;
-}
-interface Tab { id: string; label: string; icon: LucideIcon; }
-interface ApiCategory { _id: string; name: string; slug: string; icon?: string; game: string; }
-interface ApiGame { _id: string; name: string; gradient: { from: string; to: string }; imageUrl?: string; bgImageUrl?: string; slug: string; }
+const S = "/scene/";
 
 const iconMap: Record<string, LucideIcon> = {
   flame: Flame, sword: Sword, target: Target, heart: Heart,
   pawprint: PawPrint, package: Package, leaf: Leaf, sprout: Sprout,
   wrench: Wrench, apple: Apple, gem: Gem, star: Star,
 };
-function getIcon(name?: string): LucideIcon {
-  return (name && iconMap[name.toLowerCase()]) || Package;
+const getIcon = (name?: string): LucideIcon => (name && iconMap[name.toLowerCase()]) || Package;
+
+/* ── Data shapes ───────────────────────────────────────────────────────── */
+interface Product {
+  id: string; name: string; price: number; originalPrice?: number;
+  outOfStock?: boolean; stock?: number; imageUrl?: string; categoryId?: string;
+  featured?: boolean; bestSeller?: boolean; gradient?: [string, string];
 }
+interface ApiCategory { _id: string; name: string; slug: string; icon?: string; game: string; }
+interface ApiGame { _id: string; name: string; slug: string; gradient?: { from: string; to: string }; imageUrl?: string; bgImageUrl?: string; }
 
-const CATEGORY_COLORS = ["#3BA7FF", "#F97316", "#22C55E", "#EC4899", "#EAB308", "#8B5CF6", "#06B6D4", "#EF4444"];
+/* Card accent per category — colours the little bar + hover glow. */
+const ACCENTS = ["#8b5cf6", "#2f8cff", "#22c55e", "#ec4899", "#f59e0b", "#06b6d4", "#ef4444", "#3fd08a"];
+const accentFor = (key?: string) => {
+  if (!key) return ACCENTS[0];
+  let h = 0; for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 9973;
+  return ACCENTS[h % ACCENTS.length];
+};
 
-function PriceSlider({ min, max, value, onChange }: { min: number; max: number; value: [number, number]; onChange: (v: [number, number]) => void }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [dragging, setDragging] = useState<"min" | "max" | null>(null);
+const SORTS = [["pop", "Popularity"], ["lo", "Price: low to high"], ["hi", "Price: high to low"], ["name", "Name A-Z"]] as const;
+type Sort = (typeof SORTS)[number][0];
 
-  const getPercent = useCallback((val: number) => ((val - min) / (max - min)) * 100, [min, max]);
+/* ── Inline icon helper ────────────────────────────────────────────────── */
+const PATHS: Record<string, string> = {
+  chev: '<path d="M6 9l6 6 6-6"/>', left: '<path d="M15 6l-6 6 6 6"/>', right: '<path d="M9 6l6 6-6 6"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>', search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  filter: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  star: '<path d="M12 3l2.6 5.6 6 .7-4.4 4.1 1.2 6L12 16.5 6.6 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  check: '<path d="M5 12l4 4 10-10"/>',
+};
+function Ic({ n, s = 20, className }: { n: string; s?: number; className?: string }) {
+  return <svg className={className} width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: PATHS[n] }} />;
+}
+const Spark = ({ s }: { s: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c.7 6.5 3.5 9.3 12 12-8.5 2.7-11.3 5.5-12 12-.7-6.5-3.5-9.3-12-12 8.5-2.7 11.3-5.5 12-12z" /></svg>
+);
 
-  const valFromX = useCallback((clientX: number) => {
-    const el = trackRef.current;
-    if (!el) return min;
-    const rect = el.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return min + pct * (max - min);
-  }, [min, max]);
+/* Per-slide gradient, kept for slides that have no uploaded image. */
+const SLIDE_BG = [
+  "linear-gradient(100deg,#0a2f8f,#1a56d6 50%,#0a2f8f)",
+  "linear-gradient(100deg,#2a1d8f,#5a3be0 50%,#2a1d8f)",
+  "linear-gradient(100deg,#0a5a78,#1a8fb8 50%,#0a5a78)",
+];
+const SPARKS: [number, number, number][] = [[268, 14, 18], [520, 22, 14], [900, 18, 16], [1080, 54, 12], [820, 122, 22], [120, 128, 20], [1120, 146, 15], [430, 132, 14]];
+
+/* ── Promo banner (auto-rotate, pause on hover) ──────────────────────────
+   Slides are owned in Admin → Site Content → Promo Banners: each one has a
+   visibility toggle, its own image, a headline, a button label and a link.
+   With no image set the slide keeps the gradient + game art it always had. */
+function Banner({ navigate }: { navigate: (u: string) => void }) {
+  const [content, setContent] = useState<PublicContent | null>(null);
+  const [slide, setSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
-    if (!dragging) return;
-    function onMove(e: PointerEvent) {
-      const v = valFromX(e.clientX);
-      if (dragging === "min") onChange([Math.min(v, value[1] - 0.01), value[1]]);
-      else onChange([value[0], Math.max(v, value[0] + 0.01)]);
-    }
-    function onUp() { setDragging(null); }
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", onUp);
-    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-  }, [dragging, valFromX, value, onChange]);
+    let alive = true;
+    fetchPublicContent().then(c => { if (alive) setContent(c); });
+    return () => { alive = false; };
+  }, []);
 
-  const leftPct = getPercent(value[0]);
-  const rightPct = getPercent(value[1]);
+  const slides = visibleBanners(content);
 
-  return (
-    <div ref={trackRef} className="relative h-6 px-1">
-      <div className="absolute top-1/2 -translate-y-1/2 left-1 right-1 h-1.5 rounded-full" style={{ background: "#2C414E" }} />
-      <div className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full"
-        style={{ background: "#3BA7FF", left: `calc(${leftPct}% - 10px)`, right: `calc(${100 - rightPct}% - 10px)` }} />
-      <div onPointerDown={e => { e.preventDefault(); setDragging("min"); }}
-        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full z-10 touch-none"
-        style={{ left: `calc(${leftPct}% - 1px)`, background: "white", border: "3px solid #3BA7FF", boxShadow: "0 0 6px rgba(59,167,255,0.4)", cursor: "grab" }} />
-      <div onPointerDown={e => { e.preventDefault(); setDragging("max"); }}
-        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full z-10 touch-none"
-        style={{ left: `calc(${rightPct}% + 1px)`, background: "white", border: "3px solid #3BA7FF", boxShadow: "0 0 6px rgba(59,167,255,0.4)", cursor: "grab" }} />
-    </div>
-  );
-}
+  useEffect(() => {
+    if (paused || slides.length < 2) return;
+    const t = setInterval(() => setSlide(s => (s + 1) % slides.length), 5000);
+    return () => clearInterval(t);
+  }, [paused, slides.length]);
 
-function ProductCard({ product, index, gameInfo, navigate, onAdd, qty }: {
-  product: Product; index: number; gameInfo: ApiGame | null;
-  navigate: (url: string) => void; onAdd: (p: Product) => void; qty: number;
-}) {
-  const { updateQty, removeItem } = useCart();
-  // stock of -1 means "unlimited" on the backend — clamp ONLY when a real,
-  // finite cap was set. The old `product.stock ?? 99` treated -1 as the cap and
-  // disabled the Add to Cart button for every product with unlimited stock.
-  const maxStock = product.stock != null && product.stock >= 0 ? product.stock : 999;
-  const atMax = qty >= maxStock;
-  const savings = product.originalPrice && !product.outOfStock
-    ? Math.round((product.originalPrice - product.price) / product.originalPrice * 100) : null;
+  if (!open || slides.length === 0) return null;
+  const go = (n: number) => setSlide((n + slides.length) % slides.length);
 
-  function handleMinus(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (qty <= 1) removeItem(product.id);
-    else updateQty(product.id, qty - 1);
-  }
-  function handlePlus(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (qty < maxStock) updateQty(product.id, qty + 1);
-  }
-  function handleAdd(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (qty < maxStock) onAdd(product);
-  }
+  /* internal paths reuse the client router; absolute URLs open in a new tab */
+  const goCta = (raw: string) => {
+    const to = (raw || "").trim();
+    if (!to) return;
+    if (/^https?:\/\//i.test(to) || to.startsWith("//")) window.open(to, "_blank", "noopener");
+    else navigate(to);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(0,0,0,0.3)" }}
-      onClick={() => navigate(`/product/${product.id}`)}
-      className="rounded-xl overflow-hidden cursor-pointer flex flex-col"
-      style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-      <div className="flex justify-center pt-2">
-        <div className="w-8 h-[3px] rounded-full" style={{ background: "#364152" }} />
-      </div>
-      <div className="relative h-[140px] sm:h-[160px] flex items-center justify-center overflow-hidden px-4 pb-2">
-        {gameInfo?.bgImageUrl ? (
-          <>
-            <img src={gameInfo.bgImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="relative z-10 w-[70%] h-[80%] object-contain drop-shadow-lg" />
-            ) : <Package size={36} color="#637784" />}
-          </>
-        ) : product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-4" />
-        ) : <Package size={36} color="#637784" />}
-        {product.outOfStock ? (
-          <div className="absolute top-2 left-2 z-10 text-[9px] font-bold px-2 py-0.5 rounded-md"
-            style={{ background: "rgba(0,0,0,0.6)", color: "#9BAEBB", border: "1px solid rgba(255,255,255,0.1)" }}>Out of Stock</div>
-        ) : savings ? (
-          <div className="absolute top-2 left-2 z-10 flex items-center gap-0.5 text-[9px] font-bold px-2 py-0.5 rounded-md"
-            style={{ background: "#DC2626", color: "white" }}><Tag size={8} />-{savings}%</div>
-        ) : null}
-      </div>
-      <div className="p-3 pt-0 flex flex-col items-center text-center">
-        <p className="text-sm font-bold leading-tight line-clamp-2 mb-2" style={{ color: "#F4F8FB" }}>{product.name}</p>
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className="text-sm font-extrabold" style={{ color: "#22C55E" }}>${product.price.toFixed(2)}</span>
-          {product.originalPrice && <span className="text-[11px] line-through" style={{ color: "#637784" }}>${product.originalPrice.toFixed(2)}</span>}
+    <section className="mk-banner" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {slides.map((s, k) => (
+        <div key={k} className={"mk-slide" + (s.image ? " has-img" : "") + (k === slide ? " on" : "")} style={{ background: SLIDE_BG[k % SLIDE_BG.length] }}>
+          {s.image
+            ? <img className="mk-slide-img" src={s.image} alt="" />
+            : <>
+                {SPARKS.map(([x, y, z], i) => <span key={i} className="mk-spark" style={{ left: x, top: y }}><Spark s={z} /></span>)}
+                <img className="mk-art" src={`${S}island_new.png`} alt="" style={{ left: 28, top: 16, width: 150, filter: "drop-shadow(0 14px 16px rgba(0,0,0,.35))" }} />
+                <img className="mk-art" src={`${S}island_r.png`} alt="" style={{ right: 34, top: 24, width: 132, filter: "drop-shadow(0 14px 16px rgba(0,0,0,.35))" }} />
+                <img className="mk-art" src={`${S}coin.png`} alt="" style={{ right: 210, bottom: 18, width: 52 }} />
+                <img className="mk-art" src={`${S}gem_g.png`} alt="" style={{ left: 190, bottom: 16, width: 48 }} />
+              </>}
+          {s.title && <h2>{s.title}</h2>}
+          {s.cta && <button className="mk-cta" type="button" onClick={() => goCta(s.url || "/browse")}>{s.cta}</button>}
         </div>
-        {!product.outOfStock ? (
-          qty > 0 ? (
-            <div className="w-full">
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                className="flex items-center rounded-lg overflow-hidden w-full"
-                style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-                <motion.button whileTap={{ scale: 0.85 }} onClick={handleMinus}
-                  className="w-10 h-9 flex items-center justify-center flex-shrink-0" style={{ color: "#637784" }}>
-                  <Minus size={15} strokeWidth={2.5} />
-                </motion.button>
-                <div className="flex-1 flex items-center justify-center">
-                  <motion.span key={qty} initial={{ scale: 1.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                    className="text-sm font-extrabold" style={{ color: "#9BAEBB" }}>{qty}</motion.span>
-                </div>
-                <motion.button whileTap={atMax ? {} : { scale: 0.85 }} onClick={handlePlus}
-                  className="h-9 w-10 flex items-center justify-center flex-shrink-0 rounded-r-lg"
-                  style={{ background: atMax ? "#2C414E" : "#3BA7FF", color: "white", boxShadow: atMax ? "none" : "0 3px 0 0 #2980b9", cursor: atMax ? "not-allowed" : "pointer" }}>
-                  <Plus size={15} strokeWidth={2.5} />
-                </motion.button>
-              </motion.div>
-              <p className="text-center mt-1.5 text-[9px] font-medium" style={{ color: atMax ? "#F97316" : "#637784" }}>
-                {atMax ? "Max stock" : `${maxStock - qty} left`}
-              </p>
-            </div>
-          ) : (
-            <motion.button whileTap={{ scale: 0.92 }} onClick={handleAdd}
-              className="w-full py-2 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1.5"
-              style={{ background: "rgba(59,167,255,0.12)", color: "#3BA7FF", border: "1px solid rgba(59,167,255,0.25)" }}>
-              <ShoppingCart size={12} /> Add to Cart
-            </motion.button>
-          )
-        ) : (
-          <div className="w-full py-2 rounded-lg text-[11px] font-bold text-center"
-            style={{ background: "rgba(255,255,255,0.04)", color: "#637784", border: "1px solid #2C414E" }}>Out of Stock</div>
-        )}
-      </div>
-    </motion.div>
+      ))}
+      {slides.length > 1 && (
+        <>
+          <button className="mk-bn l" aria-label="Previous" onClick={() => go(slide - 1)}><Ic n="left" s={18} /></button>
+          <button className="mk-bn r" aria-label="Next" onClick={() => go(slide + 1)}><Ic n="right" s={18} /></button>
+          <div className="mk-dots">{slides.map((_, k) => <i key={k} className={k === slide ? "on" : ""} onClick={() => go(k)} />)}</div>
+        </>
+      )}
+      <button className="mk-x" aria-label="Close banner" onClick={() => setOpen(false)}><Ic n="x" s={16} /></button>
+    </section>
   );
 }
 
+/* ── Item card ─────────────────────────────────────────────────────────── */
+/* Thin adapter so the three grid call sites keep their exact signature.
+   The card itself is the shared reference-based design in
+   components/ProductCard.tsx, which now also serves the home grid. */
+function Card({ p, idx, accent, catName, navigate, onAdd }: {
+  p: Product; idx: number; accent: string; catName: string; navigate: (u: string) => void; onAdd: (p: Product) => void;
+}) {
+  return (
+    <ProductCard
+      index={idx}
+      onNavigate={(id) => navigate(`/product/${id}`)}
+      onAdd={() => onAdd(p)}
+      product={{
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        originalPrice: p.originalPrice,
+        imageUrl: p.imageUrl,
+        bestSeller: p.bestSeller,
+        outOfStock: p.outOfStock,
+        /* card reads these off the product, not as component props —
+           passing them at the top level compiles but is silently dropped */
+        accent,
+        category: catName,
+      }}
+    />
+  );
+}
+
+/* ── Page ──────────────────────────────────────────────────────────────── */
 export default function GamePage() {
   const { slug } = useParams<{ slug: string }>();
   const [, navigate] = useLocation();
-  const { totalItems, openCart, addItem, items: cartRawItems } = useCart();
+  const { addItem } = useCart();
 
   const [gameInfo, setGameInfo] = useState<ApiGame | null>(null);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -192,26 +173,21 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc" | "name">("featured");
+  // UI state
+  const [cat, setCat] = useState<string>("");          // "" = all
+  const [q, setQ] = useState("");
+  const [sort, setSort] = useState<Sort>("pop");
+  const [maxP, setMaxP] = useState(0);                 // 0 = no cap (set on load)
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-
-  const cartItems = useMemo(() => {
-    const map: Record<string, number> = {};
-    cartRawItems.forEach(item => { map[item.id] = item.quantity; });
-    return map;
-  }, [cartRawItems]);
+  const [onSale, setOnSale] = useState(false);
+  const [menu, setMenu] = useState<"" | "sort" | "filter">("");
+  const root = useRef<HTMLDivElement>(null);
 
   const gameName = gameInfo?.name || (slug ? slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "Game");
-  const gameGradient = gameInfo?.gradient.from || "#3BA7FF";
 
   useEffect(() => {
     if (!slug) return;
-    setLoading(true);
-    setLoadError(null);
+    setLoading(true); setLoadError(null);
     async function attempt(round: number) {
       try {
         const [gameRes, catsRes, prodsRes] = await Promise.all([
@@ -222,330 +198,282 @@ export default function GamePage() {
         const ok = gameRes.success && catsRes.success && prodsRes.success;
         if (!ok && round < 3) { setTimeout(() => attempt(round + 1), 800 * round); return; }
         if (gameRes.success && gameRes.data?.game) setGameInfo(gameRes.data.game);
-        else setGameInfo({ _id: slug, name: gameName, gradient: { from: "#3BA7FF", to: "#131C23" }, slug });
-        const fetchedCats = catsRes.data || [];
-        setCategories(fetchedCats);
+        else setGameInfo({ _id: slug, name: gameName, slug });
+        setCategories(catsRes.data || []);
         setLoadError(ok ? null : "Could not load the store. Refresh to retry.");
-        const fetchedProducts = (prodsRes.data || []).map((p: Record<string, unknown>) => ({
+        const fetched: Product[] = (prodsRes.data || []).map((p: Record<string, unknown>) => ({
           id: p._id as string, name: p.name as string, price: p.price as number,
           originalPrice: p.originalPrice as number | undefined,
           stock: p.stock as number | undefined,
-          // Respect the explicit outOfStock flag as well — the admin can toggle
-          // it independently of the numeric stock count.
           outOfStock: p.outOfStock === true || (p.stock as number) === 0,
-          gradient: [(p.gradient as { from: string; to: string })?.from || "#3BA7FF", (p.gradient as { from: string; to: string })?.to || "#131C23"] as [string, string],
           imageUrl: p.imageUrl as string | undefined,
           categoryId: typeof p.category === "object" && p.category !== null ? (p.category as { _id: string })._id : p.category as string,
           featured: p.featured as boolean, bestSeller: p.bestSeller as boolean,
         }));
-        setProducts(fetchedProducts);
+        setProducts(fetched);
+        const max = fetched.filter(x => !x.outOfStock).reduce((m, x) => Math.max(m, x.price), 0) || 10;
+        setMaxP(Math.ceil(max));
       } finally { setLoading(false); }
     }
     attempt(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  const tabs: Tab[] = useMemo(() => [
-    { id: "all", label: "All Items", icon: Package },
-    { id: "best-sellers", label: "Best Sellers", icon: Flame },
-    ...categories.map((cat, i) => ({ id: cat._id, label: cat.name, icon: getIcon(cat.icon) })),
-  ], [categories]);
-
-  const tabProducts: Product[] = useMemo(() => {
-    if (activeTab === "all") return products;
-    if (activeTab === "best-sellers") { const bs = products.filter(p => p.featured || p.bestSeller); return bs.length > 0 ? bs : products.slice(0, 12); }
-    return products.filter(p => p.categoryId === activeTab);
-  }, [products, activeTab]);
-
-  const filteredProducts = useMemo(() => {
-    let list = searchQuery ? tabProducts.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : tabProducts;
-    if (inStockOnly) list = list.filter(p => !p.outOfStock);
-    list = list.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    if (sortBy === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
-    else if (sortBy === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
-    else if (sortBy === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
-    return list;
-  }, [tabProducts, searchQuery, inStockOnly, sortBy, priceRange]);
-
-  const categoryCounts = useMemo(() => {
-    let base = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    if (inStockOnly) base = base.filter(p => !p.outOfStock);
-    const counts: Record<string, number> = { all: base.length, "best-sellers": base.filter(p => p.featured || p.bestSeller).length || base.length };
-    categories.forEach(c => { counts[c._id] = base.filter(p => p.categoryId === c._id).length; });
-    return counts;
-  }, [products, categories, priceRange, inStockOnly]);
-
-  const activeTabObj = tabs.find(t => t.id === activeTab) || tabs[0];
-  const activeTabCount = categoryCounts[activeTab] || 0;
-
-  const inStockPrices = products.filter(p => !p.outOfStock).map(p => p.price);
-  const priceMin = useMemo(() => inStockPrices.length ? Math.min(...inStockPrices) : 0, [products]);
-  const priceMax = useMemo(() => inStockPrices.length ? Math.max(...inStockPrices) : 0, [products]);
-
+  // close popovers on outside click
   useEffect(() => {
-    if (products.length > 0) setPriceRange([priceMin, priceMax]);
-  }, [products, priceMin, priceMax]);
+    const close = (e: MouseEvent) => { if (!root.current?.querySelector(".mk-bar")?.contains(e.target as Node)) setMenu(""); };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, []);
 
-  function handleAddToCart(product: Product) {
-    if (product.outOfStock) return;
-    addItem({ id: product.id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: product.gradient, image: product.imageUrl, game: slug, bgImageUrl: gameInfo?.bgImageUrl });
+  const catName = useMemo(() => {
+    const m: Record<string, string> = {};
+    categories.forEach(c => { m[c._id] = c.name; });
+    return m;
+  }, [categories]);
+
+  const filterCount = (inStockOnly ? 1 : 0) + (onSale ? 1 : 0) + (maxP < (Math.ceil(products.reduce((m, x) => Math.max(m, x.price), 0) || 10)) ? 1 : 0);
+
+  const list = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const priceCap = maxP;
+    const out = products.filter(p =>
+      (!cat || p.categoryId === cat) &&
+      (!needle || p.name.toLowerCase().includes(needle)) &&
+      (!inStockOnly || !p.outOfStock) &&
+      (!onSale || (p.originalPrice && p.originalPrice > p.price)) &&
+      p.price <= priceCap);
+    out.sort((a, b) =>
+      sort === "lo" ? a.price - b.price :
+      sort === "hi" ? b.price - a.price :
+      sort === "name" ? a.name.localeCompare(b.name) :
+      (Number(!!b.bestSeller) - Number(!!a.bestSeller)) || (Number(!!b.featured) - Number(!!a.featured)) || b.name.localeCompare(a.name));
+    return out;
+  }, [products, cat, q, sort, inStockOnly, onSale, maxP]);
+
+  const clearFilters = () => { setInStockOnly(false); setOnSale(false); setMaxP(Math.ceil(products.reduce((m, x) => Math.max(m, x.price), 0) || 10)); };
+
+  function handleAdd(p: Product) {
+    if (p.outOfStock) return;
+    addItem({ id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice, gradient: p.gradient || ["#0a84ff", "#121a2e"], image: p.imageUrl, game: slug, bgImageUrl: gameInfo?.bgImageUrl });
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#131C23", paddingTop: "100px" }}>
-        <div className="flex flex-col items-center gap-4">
-          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="w-10 h-10 rounded-full border-2 border-t-transparent"
-            style={{ borderColor: "#3BA7FF", borderTopColor: "transparent" }} />
-          <p className="text-sm font-medium" style={{ color: "#3BA7FF" }}>Loading {gameName}...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader label={gameName} />;
   }
 
-  const currentTabLabel = activeTabObj.label;
-  const currentTabIcon = activeTabObj.icon;
+  const priceCeil = Math.ceil(products.reduce((m, x) => Math.max(m, x.price), 0) || 10);
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      <div style={{ height: "100px" }} />
-      <div className="flex">
+    <div ref={root} className="mk-page">
+      <style>{mkCSS}</style>
+      <TopNav onHome={() => navigate("/")} />
 
-        {/* Sidebar — hidden on mobile */}
-        <aside className="hidden lg:block w-[260px] flex-shrink-0 overflow-y-auto" style={{ borderRight: "1px solid #2C414E", background: "rgba(19,28,35,0.6)" }}>
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-5">
-              <SlidersHorizontal size={16} color="#3BA7FF" />
-              <span className="text-base font-bold" style={{ color: "#F4F8FB" }}>Filters</span>
-              <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-lg"
-                style={{ background: "#3BA7FF", color: "white" }}>
-                {products.length}
-              </span>
-            </div>
+      <div className="mk-wrap">
+        <Banner navigate={navigate} />
 
-            {/* Categories */}
-            <div className="mb-6">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#637784" }}>Categories</p>
-              <div className="flex flex-col gap-1">
-                {tabs.map(tab => {
-                  const Icon = tab.icon;
-                  const active = activeTab === tab.id;
-                  const count = categoryCounts[tab.id] || 0;
-                  return (
-                    <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-sm transition-all"
-                      style={{ color: active ? "#F4F8FB" : "#9BAEBB", fontWeight: active ? 600 : 400 }}>
-                      <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{ background: active ? "#3BA7FF" : "transparent", border: active ? "none" : "1.5px solid #364152" }}>
-                        {active && <Check size={10} color="white" strokeWidth={3} />}
-                      </div>
-                      <Icon size={14} strokeWidth={1.6} />
-                      <span className="flex-1 truncate">{tab.label}</span>
-                      <span className="text-[10px]" style={{ color: "#637784" }}>{count}</span>
-                    </button>
-                  );
-                })}
+        {/* Category chips */}
+        <div className="mk-chips">
+          <button className={"mk-chip" + (cat === "" ? " on" : "")} onClick={() => setCat("")}>All Items</button>
+          {categories.map(c => (
+            <button key={c._id} className={"mk-chip" + (cat === c._id ? " on" : "")} onClick={() => setCat(cat === c._id ? "" : c._id)}>{c.name}</button>
+          ))}
+        </div>
+
+        {/* Filter / search / sort bar */}
+        <div className="mk-bar">
+          <div style={{ position: "relative" }} className={menu === "filter" ? "mk-open" : ""}>
+            <button className="mk-fb" aria-label="Filters" onClick={() => setMenu(menu === "filter" ? "" : "filter")}>
+              <Ic n="filter" s={22} />{filterCount > 0 && <b>{filterCount}</b>}
+            </button>
+            <div className="mk-menu mk-pop">
+              <h4>AVAILABILITY</h4>
+              <label className={inStockOnly ? "on" : ""} onClick={e => { e.preventDefault(); setInStockOnly(v => !v); }}>
+                <input type="checkbox" checked={inStockOnly} readOnly /><i />In stock only
+              </label>
+              <label className={onSale ? "on" : ""} onClick={e => { e.preventDefault(); setOnSale(v => !v); }}>
+                <input type="checkbox" checked={onSale} readOnly /><i />On sale
+              </label>
+              <h4 style={{ marginTop: 10 }}>MAX PRICE</h4>
+              <div className="rg">
+                <input type="range" min={1} max={priceCeil} step={0.5} value={maxP} onChange={e => setMaxP(+e.target.value)} />
+                <span>${maxP.toFixed(2)}</span>
               </div>
-            </div>
-
-            {/* Availability */}
-            <div className="mb-6">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#637784" }}>Availability</p>
-              <button onClick={() => setInStockOnly(v => !v)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm w-full text-left"
-                style={{ color: inStockOnly ? "#F4F8FB" : "#9BAEBB" }}>
-                <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                  style={{ background: inStockOnly ? "#3BA7FF" : "transparent", border: inStockOnly ? "none" : "1.5px solid #364152" }}>
-                  {inStockOnly && <Check size={10} color="white" strokeWidth={3} />}
-                </div>
-                <span>In Stock Only</span>
-              </button>
-            </div>
-
-            {/* Price range slider */}
-            <div className="mb-4">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#637784" }}>Price</p>
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 px-3 py-2 rounded-xl" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-                  <span className="block text-[10px] mb-0.5" style={{ color: "#637784" }}>From</span>
-                  <span className="text-sm font-bold" style={{ color: "#F4F8FB" }}>${priceRange[0].toFixed(2)}</span>
-                </div>
-                <div className="flex-1 px-3 py-2 rounded-xl" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-                  <span className="block text-[10px] mb-0.5" style={{ color: "#637784" }}>To</span>
-                  <span className="text-sm font-bold" style={{ color: "#F4F8FB" }}>${priceRange[1].toFixed(2)}</span>
-                </div>
-              </div>
-              {priceMax > priceMin && (
-                <PriceSlider min={priceMin} max={priceMax} value={priceRange} onChange={setPriceRange} />
-              )}
-            </div>
-          </div>
-        </aside>
-
-        {/* Main content */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
-          {/* Tabs row + search + sort */}
-          <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3 flex-wrap" style={{ borderBottom: "1px solid #2C414E" }}>
-            {/* Mobile category scroll — full-width row of its own so the
-                search box below can't squeeze (and cut off) the filters. */}
-            <div className="flex items-center gap-2 overflow-x-auto lg:hidden w-full" style={{ scrollbarWidth: "none" }}>
-              {tabs.map(tab => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.id;
-                return (
-                  <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all"
-                    style={{
-                      background: active ? "#3BA7FF" : "#1C2A34",
-                      color: active ? "white" : "#9BAEBB",
-                      border: `1px solid ${active ? "#3BA7FF" : "#2C414E"}`,
-                    }}>
-                    <Icon size={12} />
-                    {tab.label}
-                    <span className="opacity-60">{categoryCounts[tab.id] || 0}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Desktop tabs — every tab the same width (flex-1), so the row
-                stays even instead of tracking label letter-count. */}
-            <div className="hidden lg:flex items-center gap-2 flex-1 min-w-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-              {tabs.map(tab => {
-                const active = activeTab === tab.id;
-                return (
-                  <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearchQuery(""); }}
-                    className="flex-1 min-w-[96px] justify-center flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all"
-                    style={{
-                      background: active ? "#3BA7FF" : "#1C2A34",
-                      color: active ? "white" : "#9BAEBB",
-                      border: `1px solid ${active ? "#3BA7FF" : "#2C414E"}`,
-                    }}>
-                    {tab.label}
-                    <span className="text-[10px] opacity-60">{categoryCounts[tab.id] || 0}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Search */}
-            <div className="flex items-center gap-2 px-3 h-9 rounded-xl flex-1 min-w-[140px] sm:min-w-[180px]"
-              style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-              <Search size={14} color="#637784" />
-              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search items"
-                className="flex-1 bg-transparent outline-none text-sm min-w-0" style={{ color: "#F4F8FB" }} />
-            </div>
-
-            {/* Sort dropdown */}
-            <div className="relative flex-shrink-0">
-              <button onClick={() => setSortOpen(v => !v)}
-                className="flex items-center gap-2 px-3.5 h-9 rounded-xl text-sm font-medium"
-                style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#9BAEBB" }}>
-                {sortBy === "featured" ? "Default" : sortBy === "price-asc" ? "Price ↑" : sortBy === "price-desc" ? "Price ↓" : "Name A-Z"}
-                <ChevronDown size={14} />
-              </button>
-              <AnimatePresence>
-                {sortOpen && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                    className="absolute right-0 top-full mt-1 z-50 py-1 rounded-xl min-w-[140px]"
-                    style={{ background: "#1C2A34", border: "1px solid #2C414E", boxShadow: "0 12px 40px rgba(0,0,0,0.4)" }}>
-                    {[["featured", "Default"], ["price-asc", "Price ↑"], ["price-desc", "Price ↓"], ["name", "Name A-Z"]].map(([val, label]) => (
-                      <button key={val} onClick={() => { setSortBy(val as typeof sortBy); setSortOpen(false); }}
-                        className="w-full text-left px-3.5 py-2 text-sm font-medium transition-colors"
-                        style={{ color: sortBy === val ? "#3BA7FF" : "#9BAEBB", background: sortBy === val ? "rgba(59,167,255,0.08)" : "transparent" }}>
-                        {label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <button className="clr" onClick={clearFilters}>Clear filters</button>
             </div>
           </div>
 
-          {/* Error banner */}
-          {loadError && (
-            <div className="mx-4 sm:mx-6 lg:mx-8 mt-4 rounded-xl p-3 flex items-center justify-between gap-3"
-              style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)" }}>
-              <p className="text-xs" style={{ color: "#fcd34d" }}>
-                <AlertTriangle size={12} className="inline mr-1" />{loadError}
-              </p>
-              <button onClick={() => window.location.reload()}
-                className="text-xs font-bold px-3 py-1.5 rounded-lg flex-shrink-0"
-                style={{ background: "rgba(251,191,36,0.15)", color: "#fcd34d" }}>Retry</button>
-            </div>
-          )}
+          <label className="mk-search"><Ic n="search" s={22} />
+            <input value={q} onChange={e => setQ(e.target.value)} placeholder="Quick search" autoComplete="off" />
+            {q && <button className="mk-clr" aria-label="Clear" onClick={() => setQ("")}><Ic n="x" s={16} /></button>}
+          </label>
 
-          {/* Products grid */}
-          <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
-            {filteredProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <Package size={48} color="#2C414E" className="mb-4" />
-                <p className="text-base font-bold mb-2" style={{ color: "#F4F8FB" }}>No products found</p>
-                <p className="text-sm" style={{ color: "#637784" }}>
-                  {searchQuery ? `No items found for "${searchQuery}"` : "Products will appear here once added."}
-                </p>
-              </div>
-            ) : activeTab === "all" && !searchQuery ? (
-              /* Grouped by category */
-              (() => {
-                const bs = filteredProducts.filter(p => p.featured || p.bestSeller);
-                return (
-                  <>
-                    {/* Best Sellers section */}
-                    {bs.length > 0 && (
-                      <div className="mb-8">
-                        <div className="flex items-center gap-2.5 mb-4">
-                          <Flame size={18} color="#F4F8FB" />
-                          <h2 className="text-base font-bold" style={{ color: "#F4F8FB" }}>Best Sellers</h2>
-                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                            style={{ background: "rgba(255,255,255,0.06)", color: "#9BAEBB" }}>{bs.length}</span>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                          {bs.map((product, i) => <ProductCard key={product.id} product={product} index={i} gameInfo={gameInfo} navigate={navigate} onAdd={handleAddToCart} qty={cartItems[product.id] || 0} />)}
-                        </div>
-                      </div>
-                    )}
-                    {/* Per category sections */}
-                    {categories.map((cat) => {
-                      const catProducts = filteredProducts.filter(p => p.categoryId === cat._id);
-                      if (catProducts.length === 0) return null;
-                      const CatIcon = getIcon(cat.icon);
-                      return (
-                        <div key={cat._id} className="mb-8">
-                          <div className="flex items-center gap-2.5 mb-4">
-                            <CatIcon size={18} color="#F4F8FB" />
-                            <h2 className="text-base font-bold" style={{ color: "#F4F8FB" }}>{cat.name}</h2>
-                            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                              style={{ background: "rgba(255,255,255,0.06)", color: "#9BAEBB" }}>{catProducts.length}</span>
-                          </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                            {catProducts.map((product, i) => <ProductCard key={product.id} product={product} index={i} gameInfo={gameInfo} navigate={navigate} onAdd={handleAddToCart} qty={cartItems[product.id] || 0} />)}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                );
-              })()
-            ) : (
-              /* Flat grid for specific tab or search */
-              <>
-                <div className="flex items-center gap-2.5 mb-5">
-                  <currentTabIcon size={18} color="#F4F8FB" />
-                  <h2 className="text-base font-bold" style={{ color: "#F4F8FB" }}>{currentTabLabel}</h2>
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                    style={{ background: "rgba(255,255,255,0.06)", color: "#9BAEBB" }}>{filteredProducts.length}</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {filteredProducts.map((product, i) => <ProductCard key={product.id} product={product} index={i} gameInfo={gameInfo} navigate={navigate} onAdd={handleAddToCart} qty={cartItems[product.id] || 0} />)}
-                </div>
-              </>
-            )}
+          <div className={"mk-sort" + (menu === "sort" ? " open" : "")}>
+            <button className="mk-sb" onClick={() => setMenu(menu === "sort" ? "" : "sort")}>
+              <span className="st"><Ic n="star" s={20} /></span><span>{SORTS.find(s => s[0] === sort)![1]}</span><Ic n="chev" s={18} className="cv" />
+            </button>
+            <div className="mk-menu">
+              {SORTS.map(([k, label]) => (
+                <button key={k} className={sort === k ? "on" : ""} onClick={() => { setSort(k); setMenu(""); }}>{label}</button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Grid — grouped by category on "All Items", flat when a category or search is active */}
+        {list.length === 0 ? (
+          <div className="mk-empty">
+            <p>No items match your filters.</p>
+            <button className="clr" onClick={() => { clearFilters(); setQ(""); setCat(""); }}>Reset everything</button>
+          </div>
+        ) : !cat && !q.trim() ? (
+          /* Grouped by category */
+          categories.map(group => {
+            const items = list.filter(p => p.categoryId === group._id);
+            if (items.length === 0) return null;
+            const Icon = getIcon(group.icon);
+            const accent = accentFor(group._id);
+            return (
+              <section key={group._id} className="mk-group">
+                <div className="mk-gh">
+                  <span className="mk-gh-ic" style={{ background: `${accent}22`, color: accent }}>
+                    <Icon size={18} strokeWidth={2.2} />
+                  </span>
+                  <h3>{group.name}</h3>
+                  <span className="mk-gh-n">{items.length}</span>
+                  <span className="mk-gh-line" />
+                </div>
+                <div className="mk-grid">
+                  {items.map((p, i) => (
+                    <Card key={p.id} p={p} idx={i} accent={accent} catName={group.name}
+                      navigate={navigate} onAdd={handleAdd} />
+                  ))}
+                </div>
+              </section>
+            );
+          }).concat(
+            /* Any items with no matching category go in an "Uncategorized" group */
+            (() => {
+              const rest = list.filter(p => !p.categoryId || !categories.some(c => c._id === p.categoryId));
+              if (rest.length === 0) return [];
+              return [
+                <section key="__uncat" className="mk-group">
+                  <div className="mk-gh">
+                    <span className="mk-gh-ic" style={{ background: "#2f8cff22", color: "#2f8cff" }}><Package size={18} strokeWidth={2.2} /></span>
+                    <h3>More Items</h3>
+                    <span className="mk-gh-n">{rest.length}</span>
+                    <span className="mk-gh-line" />
+                  </div>
+                  <div className="mk-grid">
+                    {rest.map((p, i) => (
+                      <Card key={p.id} p={p} idx={i} accent="#2f8cff" catName="Item"
+                        navigate={navigate} onAdd={handleAdd} />
+                    ))}
+                  </div>
+                </section>,
+              ];
+            })()
+          )
+        ) : (
+          /* Flat grid for a single category or a search */
+          <div className="mk-grid">
+            {list.map((p, i) => (
+              <Card key={p.id} p={p} idx={i} accent={accentFor(p.categoryId)} catName={catName[p.categoryId || ""] || "Item"}
+                navigate={navigate} onAdd={handleAdd} />
+            ))}
+          </div>
+        )}
       </div>
-      <Footer />
+
+      <SiteFooter />
     </div>
   );
 }
+
+/* ── Styles (ported from the reference, tuned to our navy) ─────────────── */
+const mkCSS = `
+.mk-page{position:relative;min-height:100vh;color:#fff;font-family:Inter,system-ui,sans-serif;
+  background:radial-gradient(900px 600px at 0% 0%,#1a2b52,transparent 70%),radial-gradient(800px 600px at 100% 20%,#15264a,transparent 70%),#111a2b;padding:24px 20px 40px}
+.mk-page *{box-sizing:border-box}
+/* Header sits flush to the top and spans the full width (cancels the page padding) */
+.mk-page>header{margin:-24px -20px 0}
+.mk-wrap{max-width:1180px;margin:0 auto}
+
+/* banner */
+.mk-banner{position:relative;height:188px;border-radius:20px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.mk-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .5s;pointer-events:none}
+.mk-slide.on{opacity:1;pointer-events:auto}
+/* Owner-uploaded slide image (Admin → Site Content → Promo Banners). Fills the
+   banner and crops to cover so it stays sharp at any width — the banner is
+   fluid-width and a fixed 188px tall (176px on mobile). */
+.mk-slide-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none;user-select:none}
+/* scrim so the headline + button stay legible over a busy image */
+.mk-slide.has-img:before{content:"";position:absolute;inset:0;z-index:1;background:rgba(6,12,26,.34)}
+.mk-slide h2{font:800 40px/1 Montserrat,Inter,sans-serif;letter-spacing:-1.2px;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.18);margin-top:-6px;white-space:nowrap;position:relative;z-index:2}
+.mk-cta{margin-top:20px;height:48px;padding:0 30px;border-radius:99px;border:0;cursor:pointer;background:linear-gradient(180deg,#ffd75a,#f0a81c);color:#1a1a3a;font:800 17px Inter,sans-serif;box-shadow:0 5px 0 #b97a0c,0 10px 20px rgba(0,0,0,.25);transition:transform .15s,filter .2s;position:relative;z-index:2}
+.mk-cta:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.mk-art{position:absolute;pointer-events:none;user-select:none}
+.mk-spark{position:absolute;color:#ffd75a;pointer-events:none;opacity:.85}
+.mk-bn{position:absolute;top:50%;width:32px;height:32px;margin-top:-16px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;cursor:pointer;display:grid;place-items:center;z-index:3;transition:background .2s}
+.mk-bn:hover{background:rgba(255,255,255,.3)}.mk-bn.l{left:16px}.mk-bn.r{right:16px}
+.mk-x{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:9px;border:0;background:rgba(255,255,255,.18);color:#fff;cursor:pointer;display:grid;place-items:center;z-index:4}
+.mk-x:hover{background:rgba(255,255,255,.32)}
+.mk-dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:9px;z-index:3}
+.mk-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;transition:.2s}.mk-dots i.on{background:#fff;transform:scale(1.15)}
+
+/* chips */
+.mk-chips{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.mk-chip{height:40px;padding:0 20px;border-radius:12px;background:#1b2745;border:1px solid #2a3a60;color:#c9d3f0;font:500 15px Inter,sans-serif;cursor:pointer;transition:.18s}
+.mk-chip:hover{border-color:#4f86e8;color:#fff}.mk-chip.on{background:#0a5ec4;border-color:#2f8cff;color:#fff}
+
+/* bar */
+.mk-bar{display:flex;gap:16px;align-items:center;margin-top:26px;position:relative;flex-wrap:wrap}
+.mk-fb{position:relative;width:46px;height:46px;border-radius:12px;background:#1b2745;border:1px solid #2a3a60;color:#c9d3f0;cursor:pointer;display:grid;place-items:center}
+.mk-fb:hover{border-color:#4f86e8}
+.mk-fb b{position:absolute;left:-2px;top:-12px;min-width:24px;height:24px;border-radius:8px;background:#f59e0b;color:#fff;font:800 13px/24px Inter,sans-serif;text-align:center}
+.mk-search{display:flex;align-items:center;gap:10px;width:300px;height:46px;padding:0 14px;border-radius:12px;background:#1b2745;border:1px solid #2a3a60;color:#8ea0cf;transition:box-shadow .2s,border-color .2s}
+.mk-search:focus-within{border-color:#2f8cff;box-shadow:0 0 0 4px rgba(47,140,255,.2)}
+.mk-search input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:400 15px Inter,sans-serif}.mk-search input::placeholder{color:#7f8cad}
+.mk-search .mk-clr{background:none;border:0;color:#8ea0cf;cursor:pointer;display:grid;place-items:center;padding:0}
+.mk-sort{position:relative}
+.mk-sb{display:flex;align-items:center;gap:12px;width:196px;height:46px;padding:0 14px 0 8px;border-radius:12px;background:#1b2745;border:1px solid #2a3a60;color:#fff;cursor:pointer;font:500 16px Inter,sans-serif}
+.mk-sb .st{width:34px;height:34px;border-radius:9px;background:rgba(47,140,255,.18);color:#4f9bff;display:grid;place-items:center}
+.mk-sb svg.cv{margin-left:auto;color:#9fb0d8;transition:transform .2s}.mk-sort.open .cv{transform:rotate(180deg)}
+.mk-menu{position:absolute;z-index:20;top:52px;left:0;min-width:200px;padding:6px;border-radius:12px;background:#17223d;border:1px solid #2a3a60;box-shadow:0 14px 30px rgba(0,0,0,.45);display:none}
+.mk-open>.mk-menu,.mk-sort.open .mk-menu{display:block}
+.mk-menu button{display:block;width:100%;text-align:left;background:none;border:0;color:#c9d3f0;padding:10px 12px;border-radius:8px;font:500 15px Inter,sans-serif;cursor:pointer}
+.mk-menu button:hover{background:#1f2f52;color:#fff}.mk-menu button.on{color:#4f9bff}
+.mk-pop{top:54px;width:260px;padding:16px}
+.mk-pop h4{font:700 12px Inter,sans-serif;letter-spacing:.08em;color:#9fb0d8;margin:0 0 10px}
+.mk-pop label{display:flex;align-items:center;gap:10px;height:34px;font-size:15px;cursor:pointer;color:#e6ecff}
+.mk-pop label i{width:18px;height:18px;border-radius:5px;border:1.5px solid #4a5b86;display:grid;place-items:center}
+.mk-pop label.on i{background:#2f8cff;border-color:#2f8cff}.mk-pop label.on i:after{content:"";width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.mk-pop input[type=checkbox]{position:absolute;opacity:0;pointer-events:none}
+.mk-pop .rg{display:flex;align-items:center;gap:10px;margin:6px 0 14px;font-size:14px;color:#aab6d8}.mk-pop .rg input{flex:1;accent-color:#2f8cff}
+.mk-pop .clr,.mk-empty .clr{height:36px;padding:0 14px;border-radius:9px;border:1px solid #2a3a60;background:#1b2745;color:#c9d3f0;font:600 14px Inter,sans-serif;cursor:pointer;margin-top:6px}.mk-pop .clr:hover,.mk-empty .clr:hover{border-color:#4f86e8}
+
+/* grid */
+/* grid — 5 up: the new card carries a CTA, so 6 across the 1180px wrap
+   would squeeze it to 184px (the reference sits at 236px) */
+.mk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:15px;margin-top:15px;padding-bottom:20px}
+
+/* category group heading */
+.mk-group{margin-top:34px}
+.mk-group:first-of-type{margin-top:26px}
+.mk-gh{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.mk-gh-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+.mk-gh h3{font:700 20px/1 Montserrat,Inter,sans-serif;letter-spacing:-.3px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mk-gh-n{min-width:26px;height:24px;padding:0 8px;border-radius:8px;background:#1b2745;border:1px solid #2a3a60;color:#9fb0d8;font:700 13px/22px Inter,sans-serif;text-align:center;flex:none}
+.mk-gh-line{flex:1;height:1px;background:linear-gradient(90deg,#2a3a60,transparent)}
+/* Card styles live in components/ProductCard.tsx (shared with the home
+   grid) — the old inline .mk-card / .mk-bar3 / .mk-bonus / .mk-oos /
+   .mk-img / .mk-info / .mk-add rules went with it. The hover accent glow
+   and the category colour bar are recreated there via --accent. */
+.mk-empty{grid-column:1/-1;text-align:center;padding:70px 0;color:#9aa8cb;display:flex;flex-direction:column;align-items:center;gap:10px}
+.mk-empty p{font-size:16px}
+
+@media(max-width:1100px){.mk-grid{grid-template-columns:repeat(4,1fr)}.mk-slide h2{font-size:32px;white-space:normal;padding:0 72px;line-height:1.05}.mk-art{display:none}}
+@media(max-width:900px){.mk-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.mk-grid{grid-template-columns:repeat(2,1fr)}.mk-slide h2{font-size:22px;white-space:normal;padding:0 56px}.mk-cta{height:44px;font-size:15px;padding:0 22px}.mk-search{width:100%}.mk-banner{height:176px}}
+@media(prefers-reduced-motion:reduce){.mk-slide{transition:none}}
+`;

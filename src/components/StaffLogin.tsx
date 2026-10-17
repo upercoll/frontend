@@ -62,7 +62,7 @@ export default function StaffLogin({ apiPath, tokenKey, dashboardPath, portalNam
             <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.3 }} />
           </div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
+            style={{ background: "radial-gradient(circle, rgba(47,140,255,0.15), transparent 70%)" }} />
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200 }} className="relative z-10 mb-2">
             <img src="/rb-logo.png" alt="RBstars" className="block mx-auto w-24 h-24 object-contain" />
@@ -89,7 +89,7 @@ export default function StaffLogin({ apiPath, tokenKey, dashboardPath, portalNam
 
             {/* Header */}
             <div className="mb-6 text-center sm:text-left">
-              <img src="/staff-avatar.webp" alt="" className="w-16 h-16 mx-auto sm:mx-0 mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(59,167,255,0.3))" }} />
+              <img src="/staff-avatar.webp" alt="" className="w-16 h-16 mx-auto sm:mx-0 mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(47,140,255,0.3))" }} />
               <h2 className="text-2xl font-extrabold mb-1" style={{ color: "#F4F8FB" }}>{portalName}</h2>
               <p className="text-sm" style={{ color: "#637784" }}>Sign in to access your portal</p>
             </div>
@@ -133,7 +133,7 @@ export default function StaffLogin({ apiPath, tokenKey, dashboardPath, portalNam
                 <motion.button type="submit" disabled={loading}
                   whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}
                   className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                  style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
+                  style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(47,140,255,0.3)" }}>
                   {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                   Sign In
                 </motion.button>

@@ -5,6 +5,8 @@ import {
   AlertCircle, CheckCircle, ArrowLeft, Star, RefreshCw, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { RBstar } from "@/components/Art";
+import { P } from "@/lib/storefront";
 
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "";
 
@@ -28,17 +30,17 @@ function AuthInput({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1.5">
-      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#637784" }}>
+      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>
         {label}
       </label>
       <div
-        className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
+        className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200 focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
         style={{
-          background: "#1C2A34",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.5)" : focused ? "#3BA7FF" : "#2C414E"}`,
+          background: P.card,
+          border: `1px solid ${error ? "rgba(255,90,77,0.55)" : focused ? P.accentDeep : P.borderStrong}`,
         }}
       >
-        {icon && <span style={{ color: focused ? "#3BA7FF" : "#637784", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: focused ? P.accentDeep : P.faint, flexShrink: 0 }}>{icon}</span>}
         <input
           type={type}
           placeholder={placeholder}
@@ -47,7 +49,8 @@ function AuthInput({
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           autoFocus={autoFocus}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0 placeholder:text-[#8a97ba]"
+          style={{ color: P.text }}
         />
         {rightEl}
       </div>
@@ -56,7 +59,7 @@ function AuthInput({
           <motion.p
             initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="text-[11px] flex items-center gap-1"
-            style={{ color: "#f87171" }}
+            style={{ color: P.bad }}
           >
             <AlertCircle size={10} />{error}
           </motion.p>
@@ -106,11 +109,11 @@ function CodeInput({ value, onChange }: { value: string; onChange: (v: string) =
           /* min-w-0 lets these shrink below their 44px basis when the row is
              narrow — without it the default min-width:auto pins them and the
              6th box gets clipped by the modal's overflow-hidden on small phones. */
-          className="w-11 min-w-0 h-14 rounded-xl text-center text-xl font-extrabold text-white outline-none transition-all duration-200"
+          className="w-11 min-w-0 h-14 rounded-xl text-center text-xl font-extrabold outline-none transition-all duration-200 focus:ring-4 focus:ring-[#2f8cff]/25"
           style={{
-            background: "#1C2A34",
-            border: `2px solid ${value[i] ? "#3BA7FF" : "#2C414E"}`,
-            boxShadow: value[i] ? "0 0 12px rgba(59,167,255,0.2)" : "none",
+            background: P.card,
+            border: `2px solid ${value[i] ? P.accentDeep : P.borderStrong}`,
+            color: P.text,
           }}
         />
       ))}
@@ -122,25 +125,8 @@ type Step = "login" | "register" | "verify" | "edit";
 
 function HeroPanel({ step }: { step: Step }) {
   return (
-    <div className="relative flex flex-col items-center justify-center text-center p-8 overflow-hidden" style={{ background: "#0D1520" }}>
-      {/* Decorative stars */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[15%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.4 }} />
-        <div className="absolute top-[25%] right-[20%] w-1.5 h-1.5 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[45%] left-[10%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[60%] right-[12%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.35 }} />
-        <div className="absolute top-[80%] left-[25%] w-1.5 h-1.5 rounded-full" style={{ background: "#5CB8FF", opacity: 0.2 }} />
-        <div className="absolute top-[15%] left-[50%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[70%] right-[35%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[35%] left-[35%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.4 }} />
-        <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.3 }} />
-        <div className="absolute top-[90%] left-[60%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.35 }} />
-      </div>
-
-      {/* Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }} />
-
+    <div className="relative w-full flex flex-col items-center justify-center text-center p-8 overflow-hidden"
+      style={{ background: P.band, borderRight: `1px solid ${P.border}` }}>
       {/* Logo */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -158,7 +144,7 @@ function HeroPanel({ step }: { step: Step }) {
         transition={{ delay: 0.2 }}
         className="relative z-10"
       >
-        <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: "#637784" }}>
+        <p className="text-sm leading-relaxed max-w-[220px] mx-auto" style={{ color: P.muted }}>
           {step === "login"
             ? "Welcome back! Sign in to access your account and orders."
             : step === "register"
@@ -170,7 +156,7 @@ function HeroPanel({ step }: { step: Step }) {
       </motion.div>
 
       {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "#3BA7FF" }} />
+      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: P.accent }} />
     </div>
   );
 }
@@ -359,7 +345,8 @@ export default function AuthModal() {
         key="auth-backdrop"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto p-4"
-        style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}
+        /* keeps the card clear of a notch / rounded corner in landscape */
+        style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", paddingTop: "max(1rem, env(safe-area-inset-top,0px))", paddingBottom: "max(1rem, env(safe-area-inset-bottom,0px))" }}
         onClick={e => { if (e.target === e.currentTarget) closeAuthModal(); }}
       >
         <motion.div
@@ -371,11 +358,11 @@ export default function AuthModal() {
           /* my-auto (not just align-items:center) so an over-tall card stays
              reachable — centered flex children otherwise clip at the top with
              no way to scroll up to them. Identical placement when it fits. */
-          className="w-full max-w-[740px] my-auto relative overflow-hidden rounded-3xl flex flex-col sm:flex-row"
+          className="w-full max-w-[740px] my-auto relative overflow-hidden rounded-2xl flex flex-col sm:flex-row"
           style={{
-            background: "#131C23",
-            border: "1px solid #2C414E",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
+            background: P.card,
+            border: `1px solid ${P.border}`,
+            boxShadow: P.shadow,
             minHeight: "480px",
           }}
         >
@@ -389,7 +376,7 @@ export default function AuthModal() {
             {/* Close button */}
             <button onClick={closeAuthModal}
               className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-              style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#9BAEBB" }}>
+              style={{ background: P.band, border: `1px solid ${P.borderStrong}`, color: P.muted }}>
               <X size={14} />
             </button>
 
@@ -407,8 +394,8 @@ export default function AuthModal() {
                     className="space-y-4"
                   >
                     <div className="mb-1">
-                      <h2 className="text-xl font-extrabold" style={{ color: "#F4F8FB" }}>Welcome back</h2>
-                      <p className="text-xs mt-0.5" style={{ color: "#637784" }}>Sign in to your RBstars account</p>
+                      <h2 className="text-xl font-extrabold" style={{ color: P.text }}>Welcome back</h2>
+                      <p className="text-xs mt-0.5" style={{ color: P.muted }}>Sign in to your RBstars account</p>
                     </div>
 
                     <AuthInput label="Email" placeholder="you@email.com" value={email}
@@ -421,7 +408,7 @@ export default function AuthModal() {
                       error={fieldErrors.password}
                       rightEl={
                         <button type="button" onClick={() => setShowPass(s => !s)}
-                          style={{ color: "#637784" }} className="flex-shrink-0">
+                          style={{ color: P.faint }} className="flex-shrink-0 -mr-1.5 p-2 rounded-lg transition-colors hover:bg-white/5">
                           {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       }
@@ -431,7 +418,7 @@ export default function AuthModal() {
                       {error && (
                         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}>
+                          style={{ background: P.badTint, border: "1px solid rgba(255,90,77,0.35)", color: P.bad }}>
                           <AlertCircle size={14} />{error}
                         </motion.div>
                       )}
@@ -442,16 +429,16 @@ export default function AuthModal() {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleLogin}
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2 text-sm"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)", opacity: loading ? 0.7 : 1 }}>
-                      {loading ? <Loader2 size={16} className="animate-spin" /> : "Sign In"}
+                      className="w-full py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 text-sm"
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)", opacity: loading ? 0.7 : 1 }}>
+                      {loading ? <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}><RBstar size={16} color="#fff" /></motion.span> : "Sign In"}
                     </motion.button>
 
-                    <p className="text-center text-[12px]" style={{ color: "#637784" }}>
+                    <p className="text-center text-[12px]" style={{ color: P.muted }}>
                       Don't have an account?{" "}
                       <button onClick={() => { openAuthModal("register"); clearErrors(); }}
-                        className="font-bold transition-colors hover:text-white"
-                        style={{ color: "#3BA7FF" }}>
+                        className="font-bold transition-colors hover:underline"
+                        style={{ color: P.accentDeep }}>
                         Create one
                       </button>
                     </p>
@@ -465,8 +452,8 @@ export default function AuthModal() {
                     className="space-y-3"
                   >
                     <div className="mb-1">
-                      <h2 className="text-xl font-extrabold" style={{ color: "#F4F8FB" }}>Create account</h2>
-                      <p className="text-xs mt-0.5" style={{ color: "#637784" }}>Join RBstars in seconds</p>
+                      <h2 className="text-xl font-extrabold" style={{ color: P.text }}>Create account</h2>
+                      <p className="text-xs mt-0.5" style={{ color: P.muted }}>Join RBstars in seconds</p>
                     </div>
 
                     <AuthInput label="Email" placeholder="you@email.com" value={email}
@@ -477,34 +464,43 @@ export default function AuthModal() {
                       icon={<User size={15} />} error={fieldErrors.displayName} />
 
                     <div className="space-y-1.5">
-                      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#637784" }}>
+                      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>
                         Roblox Username
                       </label>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
+                        <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200 focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
                           style={{
-                            background: "#1C2A34",
-                            border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(59,167,255,0.6)" : "#2C414E"}`,
+                            background: P.card,
+                            border: `1px solid ${fieldErrors.robloxUsername ? "rgba(255,90,77,0.55)" : robloxAvatar ? "rgba(47,140,255,0.6)" : P.borderStrong}`,
                           }}>
-                          <Gamepad2 size={15} color={robloxAvatar ? "#3BA7FF" : "#637784"} className="flex-shrink-0" />
+                          <Gamepad2 size={15} color={robloxAvatar ? P.accentDeep : P.faint} className="flex-shrink-0" />
                           <input
                             type="text"
                             placeholder="YourRobloxName"
                             value={robloxUsername}
                             onChange={e => setRobloxUsername(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
+                            className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0 placeholder:text-[#8a97ba]"
+                            style={{ color: P.text }}
                           />
-                          {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#3BA7FF" }} />}
-                          {robloxAvatar && !avatarLoading && <CheckCircle size={13} color="#4ade80" className="flex-shrink-0" />}
+                          {avatarLoading && (
+                            <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} className="flex-shrink-0 -mr-1.5 p-2 rounded-lg transition-colors hover:bg-white/5">
+                              <RBstar size={13} color={P.accent} />
+                            </motion.span>
+                          )}
+                          {robloxAvatar && !avatarLoading && <CheckCircle size={13} color={P.good} className="flex-shrink-0" />}
                         </div>
                         <AnimatePresence>
                           {(robloxAvatar || avatarLoading) && (
                             <motion.div
                               initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
                               className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                              style={{ background: "#1C2A34", border: "2px solid #2C414E" }}>
+                              style={{ background: P.band, border: `1px solid ${P.borderStrong}` }}>
                               {avatarLoading
-                                ? <Loader2 size={16} className="animate-spin" style={{ color: "#3BA7FF" }} />
+                                ? (
+                                  <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}>
+                                    <RBstar size={16} color={P.accent} />
+                                  </motion.span>
+                                )
                                 : robloxAvatar && <img src={robloxAvatar} alt="avatar" className="w-full h-full object-cover" />
                               }
                             </motion.div>
@@ -512,7 +508,7 @@ export default function AuthModal() {
                         </AnimatePresence>
                       </div>
                       {fieldErrors.robloxUsername && (
-                        <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}>
+                        <p className="text-[11px] flex items-center gap-1" style={{ color: P.bad }}>
                           <AlertCircle size={10} />{fieldErrors.robloxUsername}
                         </p>
                       )}
@@ -525,7 +521,7 @@ export default function AuthModal() {
                       error={fieldErrors.password}
                       rightEl={
                         <button type="button" onClick={() => setShowPass(s => !s)}
-                          style={{ color: "#637784" }} className="flex-shrink-0">
+                          style={{ color: P.faint }} className="flex-shrink-0 -mr-1.5 p-2 rounded-lg transition-colors hover:bg-white/5">
                           {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       }
@@ -535,7 +531,7 @@ export default function AuthModal() {
                       {error && (
                         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}>
+                          style={{ background: P.badTint, border: "1px solid rgba(255,90,77,0.35)", color: P.bad }}>
                           <AlertCircle size={14} />{error}
                         </motion.div>
                       )}
@@ -546,16 +542,16 @@ export default function AuthModal() {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleRegister}
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2 text-sm"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)", opacity: loading ? 0.7 : 1 }}>
-                      {loading ? <Loader2 size={16} className="animate-spin" /> : "Create Account"}
+                      className="w-full py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 text-sm"
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)", opacity: loading ? 0.7 : 1 }}>
+                      {loading ? <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}><RBstar size={16} color="#fff" /></motion.span> : "Create Account"}
                     </motion.button>
 
-                    <p className="text-center text-[12px]" style={{ color: "#637784" }}>
+                    <p className="text-center text-[12px]" style={{ color: P.muted }}>
                       Already have an account?{" "}
                       <button onClick={() => { openAuthModal("login"); clearErrors(); }}
-                        className="font-bold transition-colors hover:text-white"
-                        style={{ color: "#3BA7FF" }}>
+                        className="font-bold transition-colors hover:underline"
+                        style={{ color: P.accentDeep }}>
                         Sign in
                       </button>
                     </p>
@@ -569,8 +565,8 @@ export default function AuthModal() {
                     className="space-y-3"
                   >
                     <div className="mb-1">
-                      <h2 className="text-xl font-extrabold" style={{ color: "#F4F8FB" }}>Edit Profile</h2>
-                      <p className="text-xs mt-0.5" style={{ color: "#637784" }}>Update your display name and Roblox username</p>
+                      <h2 className="text-xl font-extrabold" style={{ color: P.text }}>Edit Profile</h2>
+                      <p className="text-xs mt-0.5" style={{ color: P.muted }}>Update your display name and Roblox username</p>
                     </div>
 
                     <AuthInput label="Display Name" placeholder="How others see you"
@@ -578,34 +574,43 @@ export default function AuthModal() {
                       icon={<User size={15} />} error={fieldErrors.displayName} autoFocus />
 
                     <div className="space-y-1.5">
-                      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: "#637784" }}>
+                      <label className="block text-[11px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>
                         Roblox Username
                       </label>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
+                        <div className="flex-1 flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200 focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
                           style={{
-                            background: "#1C2A34",
-                            border: `1.5px solid ${fieldErrors.robloxUsername ? "rgba(248,113,113,0.5)" : robloxAvatar ? "rgba(59,167,255,0.6)" : "#2C414E"}`,
+                            background: P.card,
+                            border: `1px solid ${fieldErrors.robloxUsername ? "rgba(255,90,77,0.55)" : robloxAvatar ? "rgba(47,140,255,0.6)" : P.borderStrong}`,
                           }}>
-                          <Gamepad2 size={15} color={robloxAvatar ? "#3BA7FF" : "#637784"} className="flex-shrink-0" />
+                          <Gamepad2 size={15} color={robloxAvatar ? P.accentDeep : P.faint} className="flex-shrink-0" />
                           <input
                             type="text"
                             placeholder="YourRobloxName"
                             value={robloxUsername}
                             onChange={e => setRobloxUsername(e.target.value)}
-                            className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
+                            className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0 placeholder:text-[#8a97ba]"
+                            style={{ color: P.text }}
                           />
-                          {avatarLoading && <Loader2 size={13} className="animate-spin flex-shrink-0" style={{ color: "#3BA7FF" }} />}
-                          {robloxAvatar && !avatarLoading && <CheckCircle size={13} color="#4ade80" className="flex-shrink-0" />}
+                          {avatarLoading && (
+                            <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} className="flex-shrink-0 -mr-1.5 p-2 rounded-lg transition-colors hover:bg-white/5">
+                              <RBstar size={13} color={P.accent} />
+                            </motion.span>
+                          )}
+                          {robloxAvatar && !avatarLoading && <CheckCircle size={13} color={P.good} className="flex-shrink-0" />}
                         </div>
                         <AnimatePresence>
                           {(robloxAvatar || avatarLoading) && (
                             <motion.div
                               initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
                               className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                              style={{ background: "#1C2A34", border: "2px solid #2C414E" }}>
+                              style={{ background: P.band, border: `1px solid ${P.borderStrong}` }}>
                               {avatarLoading
-                                ? <Loader2 size={16} className="animate-spin" style={{ color: "#3BA7FF" }} />
+                                ? (
+                                  <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}>
+                                    <RBstar size={16} color={P.accent} />
+                                  </motion.span>
+                                )
                                 : robloxAvatar && <img src={robloxAvatar} alt="avatar" className="w-full h-full object-cover" />
                               }
                             </motion.div>
@@ -613,7 +618,7 @@ export default function AuthModal() {
                         </AnimatePresence>
                       </div>
                       {fieldErrors.robloxUsername && (
-                        <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}>
+                        <p className="text-[11px] flex items-center gap-1" style={{ color: P.bad }}>
                           <AlertCircle size={10} />{fieldErrors.robloxUsername}
                         </p>
                       )}
@@ -623,7 +628,7 @@ export default function AuthModal() {
                       {error && (
                         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}>
+                          style={{ background: P.badTint, border: "1px solid rgba(255,90,77,0.35)", color: P.bad }}>
                           <AlertCircle size={14} />{error}
                         </motion.div>
                       )}
@@ -634,9 +639,9 @@ export default function AuthModal() {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleEditProfile}
                       disabled={loading}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2 text-sm"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)", opacity: loading ? 0.7 : 1 }}>
-                      {loading ? <Loader2 size={16} className="animate-spin" /> : "Save Changes"}
+                      className="w-full py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 text-sm"
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)", opacity: loading ? 0.7 : 1 }}>
+                      {loading ? <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}><RBstar size={16} color="#fff" /></motion.span> : "Save Changes"}
                     </motion.button>
                   </motion.div>
                 )}
@@ -650,12 +655,12 @@ export default function AuthModal() {
                     <div className="flex items-center gap-2.5 mb-1">
                       <button onClick={() => { setStep("register"); setVerifyCode(""); clearErrors(); }}
                         className="w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#5CB8FF" }}>
+                        style={{ background: P.band, border: `1px solid ${P.borderStrong}`, color: P.accentDeep }}>
                         <ArrowLeft size={15} />
                       </button>
                       <div>
-                        <h2 className="text-xl font-extrabold" style={{ color: "#F4F8FB" }}>Verify email</h2>
-                        <p className="text-xs" style={{ color: "#637784" }}>Code sent to {email}</p>
+                        <h2 className="text-xl font-extrabold" style={{ color: P.text }}>Verify email</h2>
+                        <p className="text-xs" style={{ color: P.muted }}>Code sent to {email}</p>
                       </div>
                     </div>
 
@@ -664,8 +669,8 @@ export default function AuthModal() {
                         animate={{ scale: [1, 1.06, 1] }}
                         transition={{ repeat: Infinity, duration: 2.4 }}
                         className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center"
-                        style={{ background: "rgba(59,167,255,0.15)", border: "1.5px solid rgba(59,167,255,0.3)" }}>
-                        <ShieldCheck size={26} color="#3BA7FF" />
+                        style={{ background: P.accentTint, border: `1px solid rgba(47,140,255,0.3)` }}>
+                        <ShieldCheck size={26} color={P.accentDeep} />
                       </motion.div>
                     </div>
 
@@ -675,7 +680,7 @@ export default function AuthModal() {
                       {error && (
                         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
-                          style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}>
+                          style={{ background: P.badTint, border: "1px solid rgba(255,90,77,0.35)", color: P.bad }}>
                           <AlertCircle size={14} />{error}
                         </motion.div>
                       )}
@@ -686,28 +691,28 @@ export default function AuthModal() {
                       whileTap={{ scale: 0.98 }}
                       onClick={handleVerify}
                       disabled={loading || verifyCode.replace(/\s/g, "").length < 6}
-                      className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2 text-sm"
+                      className="w-full py-3.5 rounded-xl font-black text-white flex items-center justify-center gap-2 text-sm"
                       style={{
-                        background: "#3BA7FF",
-                        boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)",
+                        background: P.accentDeep,
+                        boxShadow: "0 6px 16px rgba(10,110,255,.35)",
                         opacity: (loading || verifyCode.replace(/\s/g, "").length < 6) ? 0.5 : 1,
                       }}>
-                      {loading ? <Loader2 size={16} className="animate-spin" /> : "Verify Email"}
+                      {loading ? <motion.span animate={{ scale: [1, 1.16, 1] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}><RBstar size={16} color="#fff" /></motion.span> : "Verify Email"}
                     </motion.button>
 
                     <div className="text-center space-y-2">
                       <button
                         onClick={handleResend}
                         disabled={resendCooldown > 0}
-                        className="text-[12px] flex items-center gap-1.5 mx-auto transition-colors"
-                        style={{ color: resendCooldown > 0 ? "#475569" : "#3BA7FF" }}>
+                        className="text-[12px] flex items-center gap-1.5 mx-auto transition-colors hover:underline"
+                        style={{ color: resendCooldown > 0 ? P.faint : P.accentDeep }}>
                         <RefreshCw size={11} />
                         {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
                       </button>
                       <button
                         onClick={() => { const cb = onSuccessCallback.current; closeAuthModal(); cb?.(); }}
-                        className="text-[12px] font-bold transition-colors hover:text-white block mx-auto"
-                        style={{ color: "#637784" }}>
+                        className="text-[12px] font-bold transition-colors hover:underline block mx-auto"
+                        style={{ color: P.muted }}>
                         Skip for now →
                       </button>
                     </div>

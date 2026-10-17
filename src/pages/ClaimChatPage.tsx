@@ -7,6 +7,9 @@ import {
   Loader2, Clock, Star, ArrowLeft, AlertTriangle, Package, ChevronRight,
   Quote, Reply, Shield,
 } from "lucide-react";
+import { P } from "@/lib/storefront";
+import { TopNav } from "./Home";
+import { RBstar, MailboxGlyph, SpeechBubble } from "@/components/Art";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -53,18 +56,18 @@ function Field({
   error?: string;
 }) {
   const [focused, setFocused] = useState(false);
-  const borderColor = error ? "rgba(248,113,113,0.5)" : focused ? "#3BA7FF" : "#2C414E";
+  const borderColor = error ? "rgba(255,90,77,0.5)" : focused ? P.accentDeep : P.borderStrong;
   return (
     <div className="space-y-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.muted }}>
         {label}
       </label>
       <div
-        className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all"
-        style={{ background: "#0C141B", border: `1.5px solid ${borderColor}` }}
+        className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
+        style={{ background: P.card, border: `1.5px solid ${borderColor}` }}
       >
         {icon && (
-          <span style={{ color: focused ? "#3BA7FF" : "#637784", flexShrink: 0 }}>{icon}</span>
+          <span style={{ color: focused ? P.accentDeep : P.faint, flexShrink: 0 }}>{icon}</span>
         )}
         <input
           type={type}
@@ -73,10 +76,11 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#475569] min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm font-medium min-w-0 placeholder:text-[#8a97ba]"
+          style={{ color: P.text }}
         />
       </div>
-      {error && <p className="text-[11px]" style={{ color: "#f87171" }}>{error}</p>}
+      {error && <p className="text-[11px]" style={{ color: P.bad }}>{error}</p>}
     </div>
   );
 }
@@ -86,8 +90,8 @@ function StepDot({ active, done }: { active: boolean; done: boolean }) {
     <div
       className="w-2 h-2 rounded-full transition-all"
       style={{
-        background: done ? "#22C55E" : active ? "#3BA7FF" : "#2C414E",
-        boxShadow: active ? "0 0 8px rgba(59,167,255,0.5)" : "none",
+        background: done ? P.good : active ? P.accentDeep : P.borderStrong,
+        boxShadow: active ? `0 0 0 3px ${P.accentTint}` : "none",
       }}
     />
   );
@@ -112,7 +116,7 @@ function PostAvatar({ sender }: { sender: string }) {
     return (
       <div
         className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl"
-        style={{ border: "2px solid #3BA7FF", boxShadow: "0 3px 0 #1a6bbf" }}
+        style={{ border: `2px solid ${P.accentDeep}`, boxShadow: P.shadow }}
       >
         <img src="/staff-avatar.webp" alt="" className="h-full w-full object-cover" />
       </div>
@@ -122,16 +126,16 @@ function PostAvatar({ sender }: { sender: string }) {
     return (
       <div
         className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
-        style={{ background: "#637784", boxShadow: "0 3px 0 #4a5d6a" }}
+        style={{ background: P.band, border: `1px solid ${P.border}` }}
       >
-        <Shield size={20} color="#fff" />
+        <Shield size={20} color={P.muted} />
       </div>
     );
   }
   return (
     <div
       className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl"
-      style={{ border: "2px solid #22C55E", boxShadow: "0 3px 0 #188c46" }}
+      style={{ border: `2px solid ${P.good}`, boxShadow: P.shadow }}
     >
       <img src="/customer-avatar.png" alt="" className="h-full w-full object-cover" />
     </div>
@@ -143,15 +147,19 @@ function PostAuthor({ msg }: { msg: Message }) {
     msg.sender === "agent" ? "Support Agent"
     : msg.sender === "system" ? "System"
     : "Customer";
-  const roleColor = "#F4F8FB";
+  // Sender names stay secondary on white; the role chip is a plain group chip
+  // (blue = a group) for the agent and a neutral band chip for the buyer.
+  const chipStyle = msg.sender === "agent"
+    ? { background: P.accentTint, color: P.accentDeep }
+    : { background: P.band, color: P.muted };
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-bold" style={{ color: "#F4F8FB" }}>
+      <span className="text-sm font-bold" style={{ color: P.muted }}>
         {msg.senderName || roleLabel}
       </span>
       <span
         className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-        style={{ background: roleColor + "20", color: roleColor }}
+        style={chipStyle}
       >
         {roleLabel}
       </span>
@@ -164,21 +172,26 @@ function Post({ msg, onQuote }: { msg: Message; onQuote?: (text: string) => void
     return (
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
         <div className="flex items-center justify-center gap-2 py-4">
-          <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+          <div className="h-px flex-1" style={{ background: P.border }} />
           <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-            style={{ background: "#18242D", color: "#637784" }}>
+            style={{ background: P.band, border: `1px solid ${P.border}`, color: P.muted }}>
             <Shield size={12} />
             {msg.text}
           </span>
-          <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+          <div className="h-px flex-1" style={{ background: P.border }} />
         </div>
       </motion.div>
     );
   }
 
+  /* Two-sided thread: the buyer's own message is the blue side (accentDeep +
+     white text), the agent's is the quiet band side with a hairline border.
+     Alignment is untouched — only the colour of each side differs. */
+  const isCustomer = msg.sender === "customer";
+  const linkColor = isCustomer ? "#ffffff" : P.accentDeep;
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <div className="py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="py-5" style={{ borderBottom: `1px solid ${P.border}` }}>
         {/* Post header */}
         <div className="mb-3 flex items-start gap-3">
           <PostAvatar sender={msg.sender} />
@@ -186,19 +199,24 @@ function Post({ msg, onQuote }: { msg: Message; onQuote?: (text: string) => void
             <div className="flex flex-wrap items-center gap-2">
               <PostAuthor msg={msg} />
             </div>
-            <span className="mt-0.5 text-xs" style={{ color: "#637784" }}>
+            <span className="mt-0.5 text-xs" style={{ color: P.faint }}>
               {relativeTime(msg.timestamp)} · {fmtFull(msg.timestamp)}
             </span>
           </div>
         </div>
 
-        {/* Post content */}
-        <div className="mb-3 text-[15px] leading-[1.7] sm:pl-15" style={{ color: "#D1D5DB" }}>
+        {/* Post content — the bubble itself */}
+        <div className="mb-3 text-[15px] leading-[1.7] pl-4 pr-4 py-3 rounded-2xl sm:pl-15"
+          style={{
+            background: isCustomer ? P.accentDeep : P.band,
+            color: isCustomer ? "#fff" : P.text,
+            border: isCustomer ? "none" : `1px solid ${P.border}`,
+          }}>
           {msg.text.split("\n").map((line, li) => {
             let html = line
               .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
               .replace(/_(.+?)_/g, "<i>$1</i>")
-              .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:#3BA7FF;font-weight:600;text-decoration:none">$1</a>')
+              .replace(/\[(.+?)\]\((.+?)\)/g, `<a href="$2" target="_blank" style="color:${linkColor};font-weight:600;text-decoration:${isCustomer ? "underline" : "none"}">$1</a>`)
               .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin-top:8px" />');
             return (
               <p key={li} className={li > 0 ? "mt-3" : ""}>
@@ -210,19 +228,19 @@ function Post({ msg, onQuote }: { msg: Message; onQuote?: (text: string) => void
 
         {/* Actions */}
         <div className="flex items-center gap-4 sm:pl-15">
-          <button className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-            style={{ color: "#637784" }}>
+          <button className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+            style={{ color: P.muted }}>
             <AlertTriangle size={13} />
             Report
           </button>
-          <button className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-            style={{ color: "#637784" }}
+          <button className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+            style={{ color: P.muted }}
             onClick={() => onQuote?.(msg.text)}>
             <Quote size={13} />
             Quote
           </button>
-          <button className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-            style={{ color: "#3BA7FF" }}
+          <button className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70"
+            style={{ color: P.accentDeep }}
             onClick={() => onQuote?.("> " + msg.text.split("\n")[0])}>
             <Reply size={13} />
             Reply
@@ -234,6 +252,7 @@ function Post({ msg, onQuote }: { msg: Message; onQuote?: (text: string) => void
 }
 
 function HeroPanel({ step }: { step: PageStep }) {
+  const [, navigate] = useLocation();
   const stepText: Record<PageStep, string> = {
     "order-select": "Select the order you'd like to claim items from.",
     "select": "Choose which item from your order you'd like to claim.",
@@ -243,41 +262,53 @@ function HeroPanel({ step }: { step: PageStep }) {
     ended: "This chat session has ended. Thank you for using RBstars!",
     claimed: "Your order is delivered! Check your Roblox inventory.",
   };
+  /* The rule under the panel echoes the state the page is actually in —
+     blue = talking/acting, amber = waiting on someone, mint = delivered. */
+  const barColor =
+    step === "waiting" ? P.warn
+    : step === "claimed" ? P.good
+    : step === "ended" ? P.muted
+    : P.accentDeep;
   return (
     <div
-      className="relative flex flex-col items-center justify-center text-center p-8 overflow-hidden"
-      style={{ background: "#0D1520" }}
+      className="relative flex flex-col items-center justify-center text-center p-8 overflow-hidden rounded-2xl"
+      style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}
     >
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[10%] left-[15%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.4 }} />
-        <div className="absolute top-[25%] right-[20%] w-1.5 h-1.5 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[45%] left-[10%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[60%] right-[12%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.35 }} />
-        <div className="absolute top-[80%] left-[25%] w-1.5 h-1.5 rounded-full" style={{ background: "#5CB8FF", opacity: 0.2 }} />
-        <div className="absolute top-[15%] left-[50%] w-1 h-1 rounded-full" style={{ background: "#3BA7FF", opacity: 0.3 }} />
-        <div className="absolute top-[70%] right-[35%] w-1 h-1 rounded-full" style={{ background: "#5CB8FF", opacity: 0.25 }} />
-        <div className="absolute top-[35%] left-[35%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.4 }} />
-        <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.3 }} />
-        <div className="absolute top-[90%] left-[60%] w-0.5 h-0.5 rounded-full" style={{ background: "white", opacity: 0.35 }} />
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute top-[10%] left-[15%] w-1 h-1 rounded-full" style={{ background: P.accent, opacity: 0.4 }} />
+        <div className="absolute top-[25%] right-[20%] w-1.5 h-1.5 rounded-full" style={{ background: P.accent, opacity: 0.3 }} />
+        <div className="absolute top-[45%] left-[10%] w-1 h-1 rounded-full" style={{ background: P.accent, opacity: 0.25 }} />
+        <div className="absolute top-[60%] right-[12%] w-1 h-1 rounded-full" style={{ background: P.accent, opacity: 0.35 }} />
+        <div className="absolute top-[80%] left-[25%] w-1.5 h-1.5 rounded-full" style={{ background: P.accent, opacity: 0.2 }} />
+        <div className="absolute top-[15%] left-[50%] w-1 h-1 rounded-full" style={{ background: P.accent, opacity: 0.3 }} />
+        <div className="absolute top-[70%] right-[35%] w-1 h-1 rounded-full" style={{ background: P.accent, opacity: 0.25 }} />
+        <div className="absolute top-[35%] left-[35%] w-0.5 h-0.5 rounded-full" style={{ background: P.accent, opacity: 0.4 }} />
+        <div className="absolute top-[55%] right-[45%] w-0.5 h-0.5 rounded-full" style={{ background: P.accent, opacity: 0.3 }} />
+        <div className="absolute top-[90%] left-[60%] w-0.5 h-0.5 rounded-full" style={{ background: P.accent, opacity: 0.35 }} />
       </div>
+      {/* The radial glow behind the copy is gone — flat navy, flat colour. */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(59,167,255,0.15), transparent 70%)" }}
+        className="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
+        aria-hidden="true"
       />
+      <button onClick={() => navigate("/")} aria-label="RBstars home"
+        className="relative z-10 mb-6 select-none">
+        <img src="/rb-logo.png" alt="RBstars" className="w-20 h-20 rounded-full object-cover" />
+      </button>
       <motion.div
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
         className="relative z-10"
       >
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "#3BA7FF" }}>
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: P.accentDeep }}>
           Claim Chat
         </p>
-        <p className="text-sm leading-relaxed max-w-[240px] mx-auto" style={{ color: "#637784" }}>
+        <p className="text-sm leading-relaxed max-w-[240px] mx-auto" style={{ color: P.muted }}>
           {stepText[step]}
         </p>
       </motion.div>
-      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "#3BA7FF" }} />
+      <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: barColor }} />
     </div>
   );
 }
@@ -518,32 +549,13 @@ export default function ClaimChatPage() {
   const progressIdx = step === "order-select" ? 0 : step === "select" ? 1 : step === "form" ? 2 : step === "waiting" ? 3 : step === "active" ? 4 : 5;
 
   return (
-    <div className="min-h-screen" style={{ background: "#131C23" }}>
-      {/* Topbar */}
-      <div className="w-full relative overflow-hidden sm:h-[73px] h-[60px]" style={{ borderBottom: "1px solid #2C414E", background: "#0F1920" }}>
-        <img src="/item-star.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-gem.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-crystals.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-controller.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-        <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-          <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
-        </button>
-        <button
-          onClick={() => (window.history.length > 1 ? window.history.back() : navigate("/"))}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-9 h-9 rounded-xl select-none md:hidden"
-          style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#F4F8FB" }}
-          aria-label="Go back"
-        >
-          <ArrowLeft size={17} />
-        </button>
-      </div>
+    <div className="min-h-screen rglow">
+      <TopNav onHome={() => navigate("/")} />
 
       {/* Main split layout */}
-      <div className="flex flex-col md:flex-row min-h-[calc(100vh-73px)]">
-        {/* Left hero panel */}
-        <div className="hidden md:flex w-[380px] flex-shrink-0">
+      <div className="flex flex-col md:flex-row min-h-screen">
+        {/* Left hero panel — a floating card, not a dark column */}
+        <div className="hidden md:flex w-[380px] flex-shrink-0 p-5">
           <HeroPanel step={step} />
         </div>
 
@@ -560,9 +572,9 @@ export default function ClaimChatPage() {
 
             {/* Step header */}
             <div className="mb-5 text-center">
-              <img src="/chat-icon.png" alt="" className="w-40 h-40 mx-auto mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 20px rgba(59,167,255,0.3))" }} />
+              <img src="/chat-icon.png" alt="" className="w-40 h-40 mx-auto mb-4 object-contain" style={{ filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.20))" }} />
 
-              <h2 className="text-2xl font-extrabold mb-1" style={{ color: "#F4F8FB" }}>
+              <h2 className="text-2xl font-black mb-1" style={{ color: P.text }}>
                 {step === "order-select" && "Select Your Order"}
                 {step === "select" && "Choose an Item"}
                 {step === "form" && "Connect with Claim Team"}
@@ -571,7 +583,7 @@ export default function ClaimChatPage() {
                 {step === "ended" && "Chat Ended"}
                 {step === "claimed" && "Order Delivered!"}
               </h2>
-              <p className="text-sm" style={{ color: "#637784" }}>
+              <p className="text-sm" style={{ color: P.muted }}>
                 {step === "order-select" && "Select the order you'd like to claim items from"}
                 {step === "select" && "Choose which item you'd like to claim"}
                 {step === "form" && (selectedItem ? `Claiming ${selectedItem.name}` : "Fill in your details and our team will join shortly")}
@@ -582,44 +594,46 @@ export default function ClaimChatPage() {
               </p>
             </div>
 
-            {/* Stepper */}
-            <div className="flex items-center gap-2 mb-5">
+            {/* Stepper — wraps on narrow screens: six labels plus five
+                connectors need ~400px, which overflowed every phone at 320–440.
+                Connectors shrink on mobile so a single row still fits ~430. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-3 mb-5">
               {["Order", "Item", "Details", "Queue", "Chat", "Done"].map((label, i) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className="flex flex-col items-center gap-1">
                     <StepDot active={progressIdx === i} done={progressIdx > i} />
                     <span className="text-[9px] font-bold uppercase tracking-wider"
-                      style={{ color: progressIdx >= i ? "#3BA7FF" : "#475569" }}>{label}</span>
+                      style={{ color: progressIdx >= i ? P.accentDeep : P.faint }}>{label}</span>
                   </div>
-                  {i < 5 && <div className="w-6 h-px" style={{ background: progressIdx > i ? "#22C55E" : "#2C414E" }} />}
+                  {i < 5 && <div className="w-2 sm:w-6 h-px" style={{ background: progressIdx > i ? P.good : P.border }} />}
                 </div>
               ))}
             </div>
 
             {/* Container card */}
-            <div className="rounded-2xl p-6" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+            <div className="rounded-2xl p-6" style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}>
               <AnimatePresence mode="wait">
                 {/* ── Order select ── */}
                 {step === "order-select" && (
                   <motion.div key="order-select" className="space-y-3"
                     initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}>
-                    <p className="text-xs font-bold" style={{ color: "#F4F8FB" }}>Which order to claim?</p>
-                    <p className="text-[10px]" style={{ color: "#637784" }}>You have multiple orders — select one below</p>
+                    <p className="text-xs font-bold" style={{ color: P.text }}>Which order to claim?</p>
+                    <p className="text-[10px]" style={{ color: P.muted }}>You have multiple orders — select one below</p>
                     {orders.map(o => (
                       <motion.button key={o.orderRef} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                         onClick={() => { setSelectedOrder(o); setContactEmail(o.email || ""); setStep("select"); }}
                         className="w-full text-left rounded-xl p-3 flex items-center gap-3"
-                        style={{ background: "#0C141B", border: "1px solid #2C414E" }}>
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#3BA7FF" }}>
+                        style={{ background: P.band, border: `1px solid ${P.border}` }}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: P.accentDeep }}>
                           <Package size={14} color="white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-semibold mb-0.5" style={{ color: "#637784" }}>Order #{o.orderRef}</p>
-                          <p className="text-[11px] font-extrabold truncate" style={{ color: "#F4F8FB" }}>
+                          <p className="text-[10px] font-semibold mb-0.5" style={{ color: P.faint }}>Order #{o.orderRef}</p>
+                          <p className="text-[11px] font-extrabold truncate" style={{ color: P.text }}>
                             {o.items?.map(i => `${i.name}${i.quantity > 1 ? ` ×${i.quantity}` : ""}`).join(", ") || "Items"}
                           </p>
                         </div>
-                        <ChevronRight size={14} color="#637784" className="flex-shrink-0" />
+                        <ChevronRight size={14} color={P.faint} className="flex-shrink-0" />
                       </motion.button>
                     ))}
                   </motion.div>
@@ -631,8 +645,8 @@ export default function ClaimChatPage() {
                     initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
                     {selectedOrder?.items?.length ? (
                       <>
-                        <p className="text-xs font-bold" style={{ color: "#F4F8FB" }}>Select item to claim</p>
-                        {selectedOrder.orderRef && <p className="text-[10px]" style={{ color: "#637784" }}>Order {selectedOrder.orderRef}</p>}
+                        <p className="text-xs font-bold" style={{ color: P.text }}>Select item to claim</p>
+                        {selectedOrder.orderRef && <p className="text-[10px]" style={{ color: P.faint }}>Order {selectedOrder.orderRef}</p>}
                         {selectedOrder.items.map(item => (
                           <motion.button key={item.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                             onClick={() => {
@@ -641,24 +655,24 @@ export default function ClaimChatPage() {
                               setStep("form");
                             }}
                             className="w-full flex items-center gap-4 p-3.5 rounded-xl text-left"
-                            style={{ background: "#0C141B", border: "1.5px solid #2C414E" }}>
+                            style={{ background: P.band, border: `1px solid ${P.border}` }}>
                             {/* Image container — cart style */}
                             <div className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                              style={{ background: "#1C2A34", border: "2px solid #F4F8FB" }}>
+                              style={{ background: P.stage, border: `2px solid ${P.border}` }}>
                               {item.image ? (
                                 <img src={item.image} alt={item.name} className="w-12 h-12 object-contain" />
                               ) : (
-                                <div className="w-12 h-12 rounded-xl" style={{ background: item.gradient?.[0] || "#3BA7FF" }} />
+                                <div className="w-12 h-12 rounded-xl" style={{ background: item.gradient?.[0] || "#2f8cff" }} />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-extrabold truncate" style={{ color: "#F4F8FB" }}>{item.name}</p>
-                              {item.quantity > 1 && <p className="text-[10px] mt-0.5" style={{ color: "#637784" }}>Qty: {item.quantity}</p>}
+                              <p className="text-[12px] font-extrabold truncate" style={{ color: P.text }}>{item.name}</p>
+                              {item.quantity > 1 && <p className="text-[10px] mt-0.5" style={{ color: P.faint }}>Qty: {item.quantity}</p>}
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg"
-                              style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
+                              style={{ background: P.card, border: `1px solid ${P.borderStrong}` }}>
                               <img src="/IMG_0732.png" alt="" className="w-3 h-3 object-contain" />
-                              <span className="text-[10px] font-extrabold" style={{ color: "#F4F8FB" }}>Claim</span>
+                              <span className="text-[10px] font-extrabold" style={{ color: P.text }}>Claim</span>
                             </div>
                           </motion.button>
                         ))}
@@ -667,20 +681,20 @@ export default function ClaimChatPage() {
                       <>
                         <div className="text-center py-6">
                           <img src="/no-order-icon.png" alt="" className="w-28 h-28 object-contain mx-auto mb-3" />
-                          <p className="text-sm font-extrabold" style={{ color: "#F4F8FB" }}>No Recent Order Found</p>
-                          <p className="text-[11px] leading-relaxed max-w-[240px] mx-auto mt-1" style={{ color: "#637784" }}>
+                          <p className="text-sm font-extrabold" style={{ color: P.text }}>No Recent Order Found</p>
+                          <p className="text-[11px] leading-relaxed max-w-[240px] mx-auto mt-1" style={{ color: P.muted }}>
                             Place an order first, then return here to claim your items.
                           </p>
                         </div>
                         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                           onClick={() => { setSelectedItem({ id: "general", name: "General Claim" }); setStep("form"); }}
-                          className="w-full py-3 rounded-xl font-bold text-sm" style={{ background: "#0C141B", border: "1px solid #2C414E", color: "#F4F8FB" }}>
+                          className="w-full py-3 rounded-xl font-bold text-sm" style={{ background: P.accentDeep, color: "#fff", boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}>
                           Open General Claim Chat
                         </motion.button>
                       </>
                     )}
                     {orders.length > 1 && (
-                      <button onClick={() => setStep("order-select")} className="text-[11px] font-semibold flex items-center gap-1" style={{ color: "#3BA7FF" }}>
+                      <button onClick={() => setStep("order-select")} className="text-[11px] font-semibold flex items-center gap-1" style={{ color: P.accentDeep }}>
                         <ArrowLeft size={12} /> Back to orders
                       </button>
                     )}
@@ -695,16 +709,28 @@ export default function ClaimChatPage() {
                     <Field label="Contact Email" placeholder="For order notifications" value={contactEmail}
                       onChange={setContactEmail} icon={<Mail size={15} />} type="email" error={formErrors.contactEmail} />
                     {formErrors.submit && (
-                      <p className="text-[11px] text-center" style={{ color: "#f87171" }}>{formErrors.submit}</p>
+                      <p className="text-[11px] text-center rounded-xl px-3 py-2.5"
+                        style={{ background: P.badTint, border: "1px solid rgba(255,90,77,0.4)", color: P.bad }}>
+                        {formErrors.submit}
+                      </p>
                     )}
                     <button onClick={handleFormSubmit} disabled={submitting}
                       className="w-full py-3.5 rounded-xl font-extrabold text-white flex items-center justify-center gap-2"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 0 0 #2980b9", opacity: submitting ? 0.7 : 1 }}>
-                      {submitting ? <><Loader2 size={16} className="animate-spin" />Connecting...</> : "Start Claim Chat"}
+                      style={{ background: P.accentDeep, boxShadow: "0 6px 16px rgba(10,110,255,.35)", opacity: submitting ? 0.7 : 1 }}>
+                      {submitting ? (
+                        <>
+                          <motion.span
+                            animate={{ scale: [1, 1.16, 1] }}
+                            transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}
+                            className="inline-flex"
+                          ><RBstar size={16} color="#fff" /></motion.span>
+                          Connecting...
+                        </>
+                      ) : "Start Claim Chat"}
                     </button>
                     <button onClick={() => navigate("/")}
                       className="w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                      style={{ background: "#0C141B", border: "1px solid #2C414E", color: "#9BAEBB" }}>
+                      style={{ background: P.card, border: `1px solid ${P.borderStrong}`, color: P.muted }}>
                       <ArrowLeft size={13} /> Back to Store
                     </button>
                   </motion.div>
@@ -720,14 +746,14 @@ export default function ClaimChatPage() {
                       }} />)}
                     </div>
                     <div className="py-6 text-center space-y-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <motion.div
-                          animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-                          className="w-4 h-4 rounded-full border-2"
-                          style={{ borderColor: "#3BA7FF", borderTopColor: "transparent" }} />
-                        <span className="text-sm font-semibold" style={{ color: "#3BA7FF" }}>Waiting for claim team...</span>
+                      {/* Waiting = amber: you're queued on someone else. Gold
+                          flag on the mailbox says "you have mail pending". */}
+                      <div className="flex flex-col items-center gap-2.5 rounded-2xl px-6 py-6"
+                        style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)" }}>
+                        <MailboxGlyph size={34} />
+                        <span className="text-sm font-black" style={{ color: P.warn }}>Waiting for claim team...</span>
                       </div>
-                      <p className="text-[11px]" style={{ color: "#637784" }}>Usually responds within 2-5 minutes</p>
+                      <p className="text-[11px]" style={{ color: P.faint }}>Usually responds within 2-5 minutes</p>
                     </div>
                   </motion.div>
                 )}
@@ -735,25 +761,38 @@ export default function ClaimChatPage() {
                 {(step === "active" || step === "ended" || step === "claimed") && (
                   <motion.div key="active" className="flex flex-col"
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    style={{ height: 420 }}>
+                    /* min()/dvh rather than a literal 420px: on a short or
+                       landscape phone the fixed pane pushed the composer
+                       below the fold and fought the on-screen keyboard */
+                    style={{ height: "max(240px, min(420px, 56dvh))" }}>
                     <div className="flex-1 overflow-y-auto p-3 space-y-2" ref={scrollRef}>
                       {messages.map((m) => <Post key={m.id} msg={m} onQuote={(text) => {
                         setReply(prev => prev ? prev + "\n\n" + text + "\n\n" : text + "\n\n");
                         setTimeout(() => textareaRef.current?.focus(), 0);
                       }} />)}
+                      {/* Empty conversation — the page's designed moment */}
+                      {messages.length === 0 && (
+                        <div className="min-h-[240px] flex flex-col items-center justify-center text-center gap-3 py-6">
+                          <SpeechBubble className="w-16 h-16" />
+                          <p className="text-sm font-black" style={{ color: P.text }}>No messages yet</p>
+                          <p className="text-[11px] leading-relaxed max-w-[240px]" style={{ color: P.muted }}>
+                            Messages exchanged in this claim chat will appear here.
+                          </p>
+                        </div>
+                      )}
                       {agentTyping && (
-                        <div className="py-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div className="py-4" style={{ borderBottom: `1px solid ${P.border}` }}>
                           <div className="flex items-start gap-3">
                             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl"
-                              style={{ border: "2px solid #3BA7FF", boxShadow: "0 3px 0 #1a6bbf" }}>
+                              style={{ border: `2px solid ${P.accentDeep}`, boxShadow: P.shadow }}>
                               <img src="/staff-avatar.webp" alt="" className="h-full w-full object-cover" />
                             </div>
                             <div className="flex items-center gap-1.5 pt-3">
                               {[0, 1, 2].map((i) => (
-                                <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background: "#3BA7FF" }}
+                                <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background: P.muted }}
                                   animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
                               ))}
-                              <span className="text-xs ml-1" style={{ color: "#637784" }}>typing...</span>
+                              <span className="text-xs ml-1" style={{ color: P.faint }}>typing...</span>
                             </div>
                           </div>
                         </div>
@@ -761,23 +800,23 @@ export default function ClaimChatPage() {
                     </div>
 
                     {(step === "ended" || step === "claimed") && (
-                      <div className="px-4 py-3 text-center flex-shrink-0" style={{ borderTop: "1px solid #2C414E" }}>
+                      <div className="px-4 py-3 text-center flex-shrink-0" style={{ borderTop: `1px solid ${P.border}` }}>
                         <div className="rounded-xl p-3"
                           style={{
-                            background: step === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(59,167,255,0.1)",
-                            border: "1px solid " + (step === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(59,167,255,0.15)")
+                            background: step === "claimed" ? P.goodTint : P.accentTint,
+                            border: "1px solid " + (step === "claimed" ? P.good : "rgba(47,140,255,0.3)")
                           }}>
                           {step === "claimed" ? (
                             <>
-                              <CheckCheck size={16} className="mx-auto mb-1" style={{ color: "#22C55E" }} />
-                              <p className="text-xs font-bold" style={{ color: "#22C55E" }}>Order Delivered!</p>
-                              <p className="text-[10px] mt-0.5" style={{ color: "#637784" }}>Check your Roblox inventory</p>
+                              <RBstar size={18} color={P.good} className="mx-auto mb-1" />
+                              <p className="text-xs font-bold" style={{ color: P.good }}>Order Delivered!</p>
+                              <p className="text-[10px] mt-0.5" style={{ color: P.muted }}>Check your Roblox inventory</p>
                             </>
                           ) : (
                             <>
-                              <Clock size={16} className="mx-auto mb-1" style={{ color: "#637784" }} />
-                              <p className="text-xs font-bold" style={{ color: "#F4F8FB" }}>Chat Ended</p>
-                              <p className="text-[10px] mt-0.5" style={{ color: "#637784" }}>Thank you for using RBstars!</p>
+                              <Clock size={16} className="mx-auto mb-1" style={{ color: P.accentDeep }} />
+                              <p className="text-xs font-bold" style={{ color: P.text }}>Chat Ended</p>
+                              <p className="text-[10px] mt-0.5" style={{ color: P.muted }}>Thank you for using RBstars!</p>
                             </>
                           )}
                         </div>
@@ -785,7 +824,7 @@ export default function ClaimChatPage() {
                     )}
 
                     {step === "active" && (
-                      <div className="p-3 pt-2 flex-shrink-0" style={{ borderTop: "1px solid #2C414E" }}>
+                      <div className="p-3 pt-2 flex-shrink-0" style={{ borderTop: `1px solid ${P.border}` }}>
                         <div className="flex gap-2">
                           <input
                             ref={textareaRef as any}
@@ -793,16 +832,16 @@ export default function ClaimChatPage() {
                             onChange={(e) => setReply(e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
                             placeholder="Type a message..."
-                            className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-[#475569] px-3 py-2.5 rounded-xl min-w-0"
-                            style={{ background: "#0C141B", border: "1.5px solid #2C414E" }}
+                            className="flex-1 outline-none text-sm px-3 py-2.5 rounded-xl min-w-0 transition-shadow focus:ring-4 focus:ring-[#2f8cff]/25 placeholder:text-[#8a97ba]"
+                            style={{ background: P.card, border: `1px solid ${P.borderStrong}`, color: P.text }}
                           />
                           <motion.button
                             whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
                             onClick={handleSend}
                             disabled={!reply.trim()}
                             className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                            style={{ background: reply.trim() ? "#3BA7FF" : "rgba(59,167,255,0.15)" }}>
-                            <Send size={14} color="white" />
+                            style={{ background: reply.trim() ? P.accentDeep : P.borderStrong }}>
+                            <Send size={14} color={reply.trim() ? "white" : P.faint} />
                           </motion.button>
                         </div>
                       </div>
@@ -812,7 +851,7 @@ export default function ClaimChatPage() {
               </AnimatePresence>
             </div>
 
-            <p className="text-center text-[10px] mt-4" style={{ color: "#475569" }}>
+            <p className="text-center text-[10px] mt-4" style={{ color: P.faint }}>
               Once delivered, this order is marked complete and cannot be claimed again.
             </p>
           </motion.div>

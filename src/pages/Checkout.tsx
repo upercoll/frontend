@@ -10,6 +10,46 @@ import {
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { RBstar, ItemTileGlyph, MailboxGlyph } from "@/components/Art";
+import { TopNav, SiteFooter } from "./Home";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CHECKOUT — dark-navy marketplace theme (same tokens as Home / shop /
+   product / cart). All logic (Stripe, promo, tax, ECE, gift cards, billing)
+   is unchanged; only the colours moved from the white storefront palette to
+   the RoGoat navy. This local `P` shadows the old import so every `P.*`
+   reference below resolves to the dark tokens.
+   ───────────────────────────────────────────────────────────────────────── */
+const P = {
+  bg: "#111a2b", band: "#151f38", stage: "#16213c", card: "#1b2745",
+  border: "#2a3a60", borderStrong: "#38497a",
+  text: "#ffffff", muted: "#a9b3d3", faint: "#8a97ba",
+  accent: "#2f8cff", accentDeep: "#0a84ff", accentTint: "rgba(47,140,255,0.16)",
+  star: "#FFC53D", starOff: "#3a4a72",
+  shadow: "0 8px 24px rgba(0,0,0,0.35)",
+  good: "#5fe08e", warn: "#f59e0b", warnTint: "rgba(245,158,11,0.14)",
+  bad: "#ff5a4d", badTint: "rgba(239,68,68,0.14)",
+  goodTint: "rgba(95,224,142,0.16)",
+  shadowSoft: "0 6px 18px rgba(10,110,255,0.35)",
+};
+
+const coCSS = `
+.co-page{position:relative;min-height:100vh;color:#fff;font-family:Inter,system-ui,sans-serif;
+  background:
+    radial-gradient(900px 620px at 0% 0%,#1a2b52,transparent 68%),
+    radial-gradient(820px 720px at 100% 18%,#15264a,transparent 70%),
+    radial-gradient(700px 600px at 82% 92%,#16233f,transparent 70%),
+    #111a2b}
+.co-page *{box-sizing:border-box}
+.co-inner{padding-bottom:24px}
+/* Stripe dropdown options render natively — give them the dark surface */
+.co-page select option{background:#1b2745;color:#fff}
+/* Custom scrollbar to match the shop/product rails */
+.co-page ::-webkit-scrollbar{width:9px;height:9px}
+.co-page ::-webkit-scrollbar-thumb{background:#2f8cff;border-radius:5px}
+.co-page ::-webkit-scrollbar-track{background:#17223d;border-radius:5px}
+@media(prefers-reduced-motion:reduce){.co-page *,.co-page *::before,.co-page *::after{animation:none!important;transition:none!important}}
+`;
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 const STRIPE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
@@ -121,7 +161,7 @@ function BrandIconRow({ activeBrand }: { activeBrand: CardBrand }) {
           {b.el(30)}
         </motion.div>
       ))}
-      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: "rgba(165,180,252,0.12)", color: "#3BA7FF" }}>
+      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: P.accentTint, color: P.accentDeep }}>
         +{EXTRA_COUNT}
       </span>
     </div>
@@ -141,26 +181,27 @@ function Input({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>{label}</label>
       <div
         className="flex items-center gap-2.5 px-3.5 py-3 rounded-xl transition-all duration-200"
         style={{
-          background: "#0C141B",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "#2C414E"}`,
-          boxShadow: focused ? `0 0 0 3px ${error ? "rgba(248,113,113,0.08)" : "rgba(59,167,255,0.12)"}` : "none",
+          background: P.card,
+          border: `1.5px solid ${error ? "rgba(255,90,77,0.5)" : focused ? P.accentDeep : P.borderStrong}`,
+          boxShadow: focused ? `0 0 0 4px ${error ? "rgba(255,90,77,0.10)" : "rgba(47,140,255,0.18)"}` : "none",
         }}
       >
-        {icon && <span style={{ color: focused ? "#3BA7FF" : "#9BAEBB", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: focused ? P.accentDeep : P.faint, flexShrink: 0 }}>{icon}</span>}
         <input
           type={type} inputMode={mode} placeholder={placeholder} value={value} maxLength={maxLen}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-          className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#637784] min-w-0"
+          className="flex-1 bg-transparent outline-none text-sm font-medium placeholder:text-[#8a97ba] min-w-0"
+          style={{ color: P.text }}
         />
         {right}
       </div>
-      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
-      {hint && !error && <p className="text-[10px] mt-0.5" style={{ color: "#637784" }}>{hint}</p>}
+      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: P.bad }}><AlertCircle size={10} />{error}</p>}
+      {hint && !error && <p className="text-[10px] mt-0.5" style={{ color: P.faint }}>{hint}</p>}
     </div>
   );
 }
@@ -174,29 +215,29 @@ function SelectInput({
   const [focused, setFocused] = useState(false);
   return (
     <div className="space-y-1">
-      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: "#F4F8FB" }}>{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>{label}</label>
       <div
         className="flex items-center gap-2.5 px-3.5 rounded-xl transition-all duration-200"
         style={{
-          background: "#0C141B",
-          border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "#2C414E"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(59,167,255,0.12)" : "none",
+          background: P.card,
+          border: `1.5px solid ${error ? "rgba(255,90,77,0.5)" : focused ? P.accentDeep : P.borderStrong}`,
+          boxShadow: focused ? "0 0 0 4px rgba(47,140,255,0.18)" : "none",
         }}
       >
-        {icon && <span style={{ color: "#9BAEBB", flexShrink: 0 }}>{icon}</span>}
+        {icon && <span style={{ color: P.faint, flexShrink: 0 }}>{icon}</span>}
         <select
           value={value} onChange={e => onChange(e.target.value)}
           onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
           className="flex-1 bg-transparent outline-none text-sm font-medium py-3 appearance-none cursor-pointer"
-          style={{ color: value ? "white" : "#637784" }}
+          style={{ color: value ? P.text : P.faint }}
         >
           {options.map(o => (
-            <option key={o.value} value={o.value} style={{ background: "#0C141B", color: "white" }}>{o.label}</option>
+            <option key={o.value} value={o.value} style={{ background: "#1b2745", color: "#ffffff" }}>{o.label}</option>
           ))}
         </select>
-        <ChevronDown size={13} style={{ color: "#637784", flexShrink: 0 }} />
+        <ChevronDown size={13} style={{ color: P.faint, flexShrink: 0 }} />
       </div>
-      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: "#f87171" }}><AlertCircle size={10} />{error}</p>}
+      {error && <p className="text-[11px] flex items-center gap-1 mt-0.5" style={{ color: P.bad }}><AlertCircle size={10} />{error}</p>}
     </div>
   );
 }
@@ -204,15 +245,17 @@ function SelectInput({
 function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; expiry: string; cardName: string; brand: CardBrand }) {
   if (!cardNum && !expiry && !cardName) return null;
 
+  /* The card face is brand artwork, not page decoration — each network's own
+     flat colour, the same hexes its icon already uses. Flat, no gradients. */
   const themes: Record<string, { bg: string }> = {
-    visa:       { bg: "linear-gradient(135deg,#0d1057 0%,#1e3a8a 45%,#3730a3 100%)" },
-    mastercard: { bg: "linear-gradient(135deg,#1c1c1e 0%,#3d0000 50%,#7c1d00 100%)" },
-    amex:       { bg: "linear-gradient(135deg,#004c87 0%,#0073b7 55%,#00a8e0 100%)" },
-    discover:   { bg: "linear-gradient(135deg,#7c2d12 0%,#c2410c 55%,#ea580c 100%)" },
-    unionpay:   { bg: "linear-gradient(135deg,#7f1d1d 0%,#1e3a8a 50%,#1e40af 100%)" },
-    maestro:    { bg: "linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%)" },
+    visa:       { bg: "#1a1f71" },
+    mastercard: { bg: "#1c1c1e" },
+    amex:       { bg: "#007bc1" },
+    discover:   { bg: "#c2410c" },
+    unionpay:   { bg: "#e41e26" },
+    maestro:    { bg: "#0a0a0a" },
   };
-  const bg = brand ? themes[brand].bg : "linear-gradient(135deg,#131C23 0%,#1C2A34 55%,#2C414E 100%)";
+  const bg = brand ? themes[brand].bg : "#1b2745";
 
   const masked = cardNum
     ? cardNum.split(" ").map((g, i) => i < 2 ? g.replace(/\d/g, "•") : g).join("  ")
@@ -224,28 +267,14 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3 }}
       className="relative mt-4 rounded-2xl overflow-hidden select-none"
-      style={{ background: bg, aspectRatio: "1.586", width: "100%" }}
+      style={{ background: bg, border: `1px solid ${P.border}`, aspectRatio: "1.586", width: "100%" }}
     >
-      {}
-      <div className="absolute inset-0 opacity-[0.05]"
-        style={{ backgroundImage: "repeating-linear-gradient(45deg,rgba(255,255,255,.8) 0px,rgba(255,255,255,.8) 1px,transparent 1px,transparent 16px)" }} />
-      {}
-      <motion.div
-        animate={{ x: ["-120%", "220%"] }}
-        transition={{ repeat: Infinity, duration: 4.5, ease: "linear", repeatDelay: 2.5 }}
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "linear-gradient(105deg,transparent 38%,rgba(255,255,255,0.14) 50%,transparent 62%)" }}
-      />
-      {}
-      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 opacity-25 rounded-full"
-        style={{ background: "radial-gradient(circle,rgba(165,180,252,0.8),transparent 70%)", filter: "blur(20px)" }} />
-
       <div className="absolute inset-0 p-5 flex flex-col justify-between">
         {}
         <div className="flex items-start justify-between">
           {}
           <div className="relative" style={{ width: 40, height: 30 }}>
-            <div className="absolute inset-0 rounded-md" style={{ background: "linear-gradient(135deg,#d4a843,#f0c84a,#c9982a)", boxShadow: "0 1px 4px rgba(0,0,0,0.4)" }} />
+            <div className="absolute inset-0 rounded-md" style={{ background: "#d4a843", boxShadow: "0 1px 4px rgba(0,0,0,0.4)" }} />
             <div className="absolute inset-0 rounded-md overflow-hidden">
               <div className="absolute w-full" style={{ top: "33%", height: "1px", background: "rgba(0,0,0,0.25)" }} />
               <div className="absolute w-full" style={{ top: "66%", height: "1px", background: "rgba(0,0,0,0.25)" }} />
@@ -279,7 +308,9 @@ function CardPreview({ cardNum, expiry, cardName, brand }: { cardNum: string; ex
         </div>
 
         {}
-        <p className="font-mono text-white tracking-[0.2em] text-[15px] font-semibold drop-shadow">
+        {/* tighter tracking on phones: the spaced-out mask was ~228px wide and
+            clipped the ~240px card art below ~360px */}
+        <p className="font-mono text-white tracking-[0.1em] text-[13px] sm:tracking-[0.2em] sm:text-[15px] font-semibold drop-shadow whitespace-nowrap">
           {masked}
         </p>
 
@@ -352,15 +383,15 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
     return (
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
         className="flex items-center justify-between px-3.5 py-3 rounded-xl"
-        style={{ background: "rgba(34,197,94,0.1)", border: "1.5px solid rgba(34,197,94,0.35)" }}>
+        style={{ background: P.card, border: `1.5px solid ${P.border}`, boxShadow: P.shadow }}>
         <div className="flex items-center gap-2">
-          <Check size={14} color="#4ade80" />
-          <span className="text-sm font-extrabold text-white">{applied.code}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80" }}>
+          <Check size={14} color={P.good} />
+          <span className="text-sm font-extrabold" style={{ color: P.text }}>{applied.code}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: P.badTint, color: P.bad }}>
             {applied.type === "percent" ? `-${applied.value}%` : `-$${applied.value}`}
           </span>
         </div>
-        <button onClick={onRemove}><X size={14} color="#637784" /></button>
+        <button onClick={onRemove}><X size={14} color={P.muted} /></button>
       </motion.div>
     );
   }
@@ -368,7 +399,7 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
   return (
     <div className="space-y-1 relative">
       <div className="relative flex items-center rounded-xl overflow-hidden transition-all duration-200"
-        style={{ background: "#0C141B", border: `1.5px solid ${focused ? "#3BA7FF" : "#2C414E"}`, boxShadow: focused ? "0 0 12px rgba(59,167,255,0.35), 0 0 0 3px rgba(59,167,255,0.12)" : "none" }}>
+        style={{ background: P.card, border: `1.5px solid ${focused ? P.accentDeep : P.borderStrong}`, boxShadow: focused ? "0 0 0 4px rgba(47,140,255,0.18)" : "none" }}>
         <input
           placeholder="Discount code or gift card"
           value={code}
@@ -376,13 +407,25 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
           onFocus={() => { setFocused(true); if (giftCards.length > 0) setShowGiftCards(true); }}
           onBlur={() => { setFocused(false); setTimeout(() => setShowGiftCards(false), 200); }}
           onKeyDown={e => e.key === "Enter" && handleApply()}
-          className="flex-1 bg-transparent outline-none text-sm font-bold text-white tracking-wide placeholder:text-[#637784] placeholder:font-bold placeholder:text-sm px-5 py-[18px]"
+          /* pr-[96px] reserves the Apply button's footprint — without it the
+             placeholder slid underneath the button below ~400px */
+          className="flex-1 min-w-0 bg-transparent outline-none text-sm font-bold tracking-wide placeholder:text-[#8a97ba] placeholder:font-bold placeholder:text-sm px-5 pr-[96px] py-[18px]"
+          style={{ color: P.text }}
         />
         <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
           onClick={handleApply} disabled={loading || !code.trim()}
-          className="absolute right-0 top-0 bottom-0 px-6 font-extrabold text-sm text-white flex items-center justify-center rounded-r-[11px] transition-colors"
-          style={{ background: loading || !code.trim() ? "rgba(59,167,255,0.15)" : "#3BA7FF" }}>
-          {loading ? <Loader2 size={14} className="animate-spin" /> : "Apply"}
+          className="absolute right-0 top-0 bottom-0 px-6 font-extrabold text-sm flex items-center justify-center rounded-r-[11px] transition-colors"
+          style={{
+            background: loading || !code.trim() ? P.band : P.accentDeep,
+            color: loading || !code.trim() ? P.faint : "#fff",
+            boxShadow: loading || !code.trim() ? "none" : "0 6px 16px rgba(10,90,220,.35)",
+          }}>
+          {loading ? (
+            <motion.span className="flex items-center" animate={{ scale: [1, 1.16, 1] }}
+              transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}>
+              <RBstar size={14} color={P.star} />
+            </motion.span>
+          ) : "Apply"}
         </motion.button>
       </div>
 
@@ -390,23 +433,23 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
       {showGiftCards && giftCards.length > 0 && (
         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
           className="absolute left-0 right-0 z-20 mt-1 rounded-xl overflow-hidden"
-          style={{ background: "#1C2A34", border: "1.5px solid #2C414E", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
-          <div className="px-3 py-2" style={{ borderBottom: "1px solid #2C414E" }}>
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#637784" }}>Available Gift Cards</p>
+          style={{ background: P.card, border: `1.5px solid ${P.border}`, boxShadow: "0 14px 36px rgba(0,0,0,0.45)" }}>
+          <div className="px-3 py-2" style={{ borderBottom: `1px solid ${P.border}`, background: P.band }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: P.faint }}>Available Gift Cards</p>
           </div>
           {giftCards.map((card: any) => (
             <button key={card.code} onClick={() => applyGiftCard(card)}
-              className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-white/5">
+              className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-[#1f2f52]">
               <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden" style={{ background: P.band, border: `1px solid ${P.border}` }}>
                 <img src="/IMG_0750.png" alt="" className="w-full h-full object-contain" />
               </div>
                 <div>
-                  <p className="text-xs font-extrabold" style={{ color: "#F4F8FB" }}>{card.code}</p>
-                  <p className="text-[10px]" style={{ color: "#637784" }}>{card.label}</p>
+                  <p className="text-xs font-extrabold" style={{ color: P.text }}>{card.code}</p>
+                  <p className="text-[10px]" style={{ color: P.faint }}>{card.label}</p>
                 </div>
               </div>
-              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: "rgba(34,197,94,0.15)", color: "#22C55E" }}>
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: P.badTint, color: P.bad }}>
                 -{card.value}%
               </span>
             </button>
@@ -414,7 +457,7 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
         </motion.div>
       )}
 
-      {err && <p className="text-[11px] flex items-center gap-1" style={{ color: "#f87171" }}><AlertCircle size={10} />{err}</p>}
+      {err && <p className="text-[11px] flex items-center gap-1" style={{ color: P.bad }}><AlertCircle size={10} />{err}</p>}
     </div>
   );
 }
@@ -431,7 +474,7 @@ function BurstParticles({ active }: { active: boolean }) {
             animate={{ opacity: 0, scale: 1, x: Math.cos((angle * Math.PI) / 180) * dist, y: Math.sin((angle * Math.PI) / 180) * dist }}
             transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.012 }}
             className="absolute top-1/2 left-1/2 rounded-full pointer-events-none"
-            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: ["#dc2626","#f97316","#ec4899","#3BA7FF","#9BAEBB","#fbbf24"][i % 6], zIndex: 200 }}
+            style={{ width: i % 3 === 0 ? 10 : 6, height: i % 3 === 0 ? 10 : 6, marginLeft: i % 3 === 0 ? -5 : -3, marginTop: i % 3 === 0 ? -5 : -3, background: [P.bad, P.star, P.accentDeep, P.good, P.faint, P.accent][i % 6], zIndex: 200 }}
           />
         );
       })}
@@ -444,7 +487,7 @@ function SuccessOverlay({ email }: { email: string }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       className="fixed inset-0 z-[200] flex items-center justify-center p-6"
-      style={{ background: "rgba(19,28,35,0.97)", backdropFilter: "blur(24px)" }}>
+      style={{ background: "rgba(255,255,255,0.97)", backdropFilter: "blur(24px)" }}>
       <motion.div
         initial={{ scale: 0.75, opacity: 0, y: 40 }} animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22, delay: 0.1 }}
@@ -457,50 +500,44 @@ function SuccessOverlay({ email }: { email: string }) {
               initial={{ scale: 0, opacity: 0.8 }} animate={{ scale: 2.5 + i * 0.6, opacity: 0 }}
               transition={{ duration: 1.3, delay: 0.2 + i * 0.15, repeat: Infinity, repeatDelay: 1.2 }}
               className="absolute w-20 h-20 rounded-full border-2"
-              style={{ borderColor: i === 0 ? "#3BA7FF" : i === 1 ? "#ec4899" : "#dc2626" }} />
+              style={{ borderColor: i === 0 ? P.accent : i === 1 ? P.star : P.bad }} />
           ))}
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 18, delay: 0.15 }}
             className="relative z-10 w-20 h-20 rounded-full flex items-center justify-center"
-            style={{ background: "#16a34a", boxShadow: "0 0 40px rgba(22,163,74,0.5)" }}>
+            style={{ background: P.good, boxShadow: "0 0 40px rgba(95,224,142,0.45)" }}>
             <Check size={38} color="white" strokeWidth={3} />
           </motion.div>
         </div>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-          <h2 className="text-3xl font-extrabold text-white mb-1">Order Confirmed!</h2>
-          <p className="text-sm mb-5" style={{ color: "#3BA7FF" }}>
-            Confirmation sent to <span className="text-white font-bold">{email || "your email"}</span>
+          <h2 className="text-3xl font-extrabold mb-1" style={{ color: P.text }}>Order Confirmed!</h2>
+          <p className="text-sm mb-5" style={{ color: P.accentDeep }}>
+            Confirmation sent to <span className="font-bold" style={{ color: P.text }}>{email || "your email"}</span>
           </p>
 
-          {}
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.65 }}
             className="rounded-2xl p-4 mb-4 text-left relative overflow-hidden"
-            style={{ background: "rgba(59,167,255,0.2)", border: "1.5px solid rgba(165,180,252,0.2)" }}
+            style={{ background: P.card, border: `1.5px solid ${P.border}`, boxShadow: P.shadow }}
           >
-            {}
-            <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-20"
-              style={{ background: "rgba(59,167,255,0.15)", filter: "blur(16px)" }} />
-
             <div className="flex items-start gap-3 relative">
-              {}
               <motion.div
-                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0px rgba(59,167,255,0)", "0 0 18px rgba(59,167,255,0.7)", "0 0 0px rgba(59,167,255,0)"] }}
+                animate={{ scale: [1, 1.12, 1], boxShadow: ["0 0 0px rgba(47,140,255,0)", "0 0 18px rgba(47,140,255,0.7)", "0 0 0px rgba(47,140,255,0)"] }}
                 transition={{ repeat: Infinity, duration: 2.2, ease: "easeInOut" }}
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "#3BA7FF" }}
+                style={{ background: P.accentDeep }}
               >
                 <MessageSquare size={18} color="white" />
               </motion.div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-extrabold text-white mb-1">Get Your Items Now</p>
-                <p className="text-xs leading-relaxed" style={{ color: "#9BAEBB" }}>
+                <p className="text-sm font-extrabold mb-1" style={{ color: P.text }}>Get Your Items Now</p>
+                <p className="text-xs leading-relaxed" style={{ color: P.muted }}>
                   Click on the{" "}
                   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md mx-0.5 font-bold"
-                    style={{ background: "rgba(59,167,255,0.35)", color: "#9BAEBB", verticalAlign: "middle" }}>
+                    style={{ background: P.accentTint, color: P.accentDeep, verticalAlign: "middle" }}>
                     <MessageSquare size={9} /> chat
                   </span>{" "}
                   icon in the corner to open live chat, provide your details and our claim team will contact you shortly!
@@ -508,12 +545,11 @@ function SuccessOverlay({ email }: { email: string }) {
               </div>
             </div>
 
-            {}
             <motion.div
               animate={{ x: [0, 4, 0], y: [0, 3, 0] }}
               transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
               className="absolute bottom-3 right-3 text-lg"
-              style={{ color: "#9BAEBB" }}
+              style={{ color: P.faint }}
             >
               ↘
             </motion.div>
@@ -521,10 +557,10 @@ function SuccessOverlay({ email }: { email: string }) {
 
           <motion.button
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 0 24px rgba(59,167,255,0.4)" }} whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/")}
-            className="w-full py-3.5 rounded-2xl font-extrabold text-white"
-            style={{ background: "rgba(59,167,255,0.2)", border: "1px solid rgba(165,180,252,0.15)" }}>
+            className="w-full py-3.5 rounded-2xl font-extrabold"
+            style={{ background: P.accentTint, color: P.accentDeep, border: "1px solid rgba(47,140,255,0.3)" }}>
             Back to Store
           </motion.button>
         </motion.div>
@@ -873,16 +909,19 @@ export default function Checkout() {
       visa: "visa", mastercard: "mastercard", amex: "amex",
       discover: "discover", unionpay: "unionpay", maestro: "maestro",
     };
+    /* PRESENTATION ONLY. Stripe's own field styling — the same font and size
+       as before, with the text colour flipped so typed card details stay
+       readable on the white inputs. Mounting, events and amounts untouched. */
     const baseStyle = {
       style: {
         base: {
-          color: "#ffffff",
+          color: "#e6ecff",
           fontFamily: '"Inter", system-ui, sans-serif',
           fontSize: "14px",
           fontSmoothing: "antialiased",
-          "::placeholder": { color: "#637784" },
+          "::placeholder": { color: "#8a97ba" },
         },
-        invalid: { color: "#ef4444" },
+        invalid: { color: "#ff5a4d" },
       },
     };
     const numEl = elements.create("cardNumber", baseStyle);
@@ -1041,42 +1080,37 @@ export default function Checkout() {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-6" style={{ background: "#131C23" }}>
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-          <Package size={34} color="#3BA7FF" />
+      <div className="co-page">
+        <style>{coCSS}</style>
+        <TopNav onHome={() => navigate("/")} />
+        <div className="min-h-[68vh] flex flex-col items-center justify-center gap-5 px-6">
+          {/* Honest empty state: the unit of commerce, with nothing in it. */}
+          <span className="w-20 h-20 rounded-3xl flex items-center justify-center"
+            style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.3)" }}>
+            <ItemTileGlyph className="w-10 h-10" />
+          </span>
+          <div className="text-center space-y-1.5">
+            <h2 className="text-xl font-black font-mont" style={{ color: P.text }}>Your cart is empty</h2>
+            <p className="text-sm" style={{ color: P.muted }}>Browse the store and add the items you want first.</p>
+          </div>
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => navigate("/")}
+            className="px-8 py-3.5 rounded-2xl font-black text-sm"
+            style={{ background: "linear-gradient(180deg,#0a84ff,#0a50d6)", color: "#fff", boxShadow: "0 6px 18px rgba(10,110,255,.35)" }}>
+            Browse Items
+          </motion.button>
         </div>
-        <h2 className="text-2xl font-extrabold text-white">Your cart is empty</h2>
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          onClick={() => navigate("/")}
-          className="px-8 py-3.5 rounded-2xl font-extrabold text-white"
-          style={{ background: "#3BA7FF" }}>
-          Browse Items
-        </motion.button>
+        <SiteFooter />
       </div>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen" style={{ background: "#131C23" }}>
-        {/* ── TOPBAR ── */}
-        <div className="w-full relative overflow-hidden sm:h-[73px] h-[60px]" style={{ borderBottom: "1px solid #2C414E", background: "#0F1920" }}>
-          {/* Right side — neat row */}
-          <img src="/item-star.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-gem.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-crystals.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, right: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
+    <div className="co-page">
+      <style>{coCSS}</style>
+      <TopNav onHome={() => navigate("/")} />
 
-          {/* Left side — neat row */}
-          <img src="/item-controller.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "2%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-sword.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "14%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-          <img src="/item-heart.png" alt="" className="absolute hidden sm:block" style={{ width: 80, height: 80, left: "26%", top: -4, filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.5))" }} />
-
-          {/* Center logo */}
-          <button onClick={() => navigate("/")} className="absolute flex items-center gap-2 sm:gap-3 select-none z-10" style={{ left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
-            <img src="/rb-logo.png" alt="RBstars" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" />
-          </button>
-        </div>
-
+      <div className="co-inner">
         {/* ── LAYOUT ── */}
         <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row">
 
@@ -1085,7 +1119,7 @@ export default function Checkout() {
 
             {/* Express Checkout */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="mb-8">
-              <p className="text-center text-sm font-semibold mb-4" style={{ color: "#637784" }}>Express checkout</p>
+              <p className="text-center text-sm font-semibold mb-4" style={{ color: P.faint }}>Express checkout</p>
               <div className="flex gap-3">
                 <motion.div initial={false}
                   animate={{ opacity: eceAvailable === true ? 1 : 0, height: eceCollapsed ? 0 : "auto" }}
@@ -1100,27 +1134,29 @@ export default function Checkout() {
 
             {/* OR Divider */}
             <div className="flex items-center gap-4 mb-8">
-              <div className="flex-1 h-px" style={{ background: "#2C414E" }} />
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#637784" }}>OR</span>
-              <div className="flex-1 h-px" style={{ background: "#2C414E" }} />
+              <div className="flex-1 h-px" style={{ background: P.border }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: P.faint }}>OR</span>
+              <div className="flex-1 h-px" style={{ background: P.border }} />
             </div>
 
             {/* Contact */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-8">
-              <h2 className="text-xl font-extrabold text-white mb-4">Contact Email <span className="text-sm font-semibold" style={{ color: "#637784" }}>(Used for Delivery)</span></h2>
+              <h2 className="text-xl font-extrabold mb-4" style={{ color: P.text }}>Contact Email <span className="text-sm font-semibold" style={{ color: P.faint }}>(Used for Delivery)</span></h2>
               <div className="relative">
-                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.email ? "rgba(239,68,68,0.5)" : "#2C414E"}` }}>
-                  <Mail size={16} style={{ color: "#9BAEBB", flexShrink: 0 }} />
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-shadow focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
+                  style={{ background: P.card, border: `1.5px solid ${errors.email ? "rgba(255,90,77,0.5)" : P.borderStrong}` }}>
+                  <Mail size={16} style={{ color: P.faint, flexShrink: 0 }} />
                   <input type="email" placeholder="you@example.com" value={email}
                     onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#4b5563] min-w-0" />
+                    className="flex-1 bg-transparent outline-none text-sm font-medium placeholder:text-[#8a97ba] min-w-0"
+                    style={{ color: P.text }} />
                 </div>
-                {errors.email && <p className="text-[11px] mt-1.5 flex items-center gap-1" style={{ color: "#f87171" }}><AlertCircle size={10} />{errors.email}</p>}
+                {errors.email && <p className="text-[11px] mt-1.5 flex items-center gap-1" style={{ color: P.bad }}><AlertCircle size={10} />{errors.email}</p>}
               </div>
               <label className="flex items-start gap-3 mt-4 cursor-pointer select-none group">
                 <input type="checkbox" defaultChecked
-                  className="mt-1 w-4 h-4 rounded accent-[#3BA7FF] cursor-pointer" />
-                <span className="text-sm leading-relaxed group-hover:text-white transition-colors" style={{ color: "#9BAEBB" }}>
+                  className="mt-1 w-4 h-4 rounded accent-[#0a84ff] cursor-pointer" />
+                <span className="text-sm leading-relaxed group-hover:text-white transition-colors" style={{ color: P.muted }}>
                   Get exclusive discounts and offers on Roblox items. Check your email to confirm your subscription!
                 </span>
               </label>
@@ -1128,55 +1164,56 @@ export default function Checkout() {
 
             {/* Payment */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-8">
-              <h2 className="text-xl font-extrabold text-white mb-1.5">Payment</h2>
-              <p className="text-sm mb-5" style={{ color: "#637784" }}>All transactions are secure and encrypted.</p>
+              <h2 className="text-xl font-extrabold mb-1.5" style={{ color: P.text }}>Payment</h2>
+              <p className="text-sm mb-5" style={{ color: P.faint }}>All transactions are secure and encrypted.</p>
 
               {/* Credit card method */}
-              <div className="rounded-2xl p-5 mb-4" style={{ background: "#1C2A34", border: "1.5px solid #2C414E", overflow: "visible" }}>
-                <div className="flex items-center gap-3.5 p-4 rounded-xl mb-4" style={{ background: "#0C141B", border: "1.5px solid #3BA7FF", boxShadow: "0 0 12px rgba(59,167,255,0.25), 0 0 0 3px rgba(59,167,255,0.08)" }}>
-                  <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0" style={{ border: "2px solid #3BA7FF", background: "#3BA7FF" }}>
+              <div className="rounded-2xl p-5 mb-4" style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow, overflow: "visible" }}>
+                <div className="flex items-center gap-3.5 p-4 rounded-xl mb-4" style={{ background: P.accentTint, border: `1.5px solid ${P.accent}` }}>
+                  <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0" style={{ border: `2px solid ${P.accentDeep}`, background: P.accentDeep }}>
                     <div className="w-2 h-2 rounded-full bg-white" />
                   </div>
-                  <span className="text-sm font-bold text-white flex-1">Credit card</span>
-                  <img src="/payment-cards.png" alt="Visa, Mastercard, American Express" className="h-8 rounded-md object-contain" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.3))" }} />
+                  <span className="text-sm font-bold flex-1" style={{ color: P.text }}>Credit card</span>
+                  <img src="/payment-cards.png" alt="Visa, Mastercard, American Express" className="h-8 shrink-0 rounded-md object-contain" style={{ filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.36))" }} />
                 </div>
 
                 {/* Card fields */}
                 <div className="space-y-3" style={{ position: "relative", zIndex: 1 }}>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Card number</label>
-                    <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cardNum ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: P.faint }}>Card number</label>
+                    <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: P.card, border: `1.5px solid ${errors.cardNum ? "rgba(255,90,77,0.5)" : P.borderStrong}`, minHeight: 48, overflow: "visible" }}>
                       <div ref={cardNumDivRef} className="flex-1 py-3" style={{ position: "relative", zIndex: 2 }} />
-                      <Lock size={14} style={{ color: "#637784", flexShrink: 0 }} />
+                      <Lock size={14} style={{ color: P.faint, flexShrink: 0 }} />
                     </div>
-                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cardNum}</p>}
+                    {errors.cardNum && <p className="text-[11px] mt-1" style={{ color: P.bad }}>{errors.cardNum}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Expiration</label>
-                      <div className="relative px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.expiry ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: P.faint }}>Expiration</label>
+                      <div className="relative px-4 rounded-xl" style={{ background: P.card, border: `1.5px solid ${errors.expiry ? "rgba(255,90,77,0.5)" : P.borderStrong}`, minHeight: 48, overflow: "visible" }}>
                         <div ref={cardExpDivRef} className="py-3" style={{ position: "relative", zIndex: 2 }} />
                       </div>
-                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.expiry}</p>}
+                      {errors.expiry && <p className="text-[11px] mt-1" style={{ color: P.bad }}>{errors.expiry}</p>}
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Security code</label>
-                      <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cvv ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48, overflow: "visible" }}>
+                      <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: P.faint }}>Security code</label>
+                      <div className="relative flex items-center gap-2 px-4 rounded-xl" style={{ background: P.card, border: `1.5px solid ${errors.cvv ? "rgba(255,90,77,0.5)" : P.borderStrong}`, minHeight: 48, overflow: "visible" }}>
                         <div ref={cardCvvDivRef} className="flex-1 py-3" style={{ position: "relative", zIndex: 2 }} />
-                        <HelpCircle size={14} style={{ color: "#637784", flexShrink: 0 }} />
+                        <HelpCircle size={14} style={{ color: P.faint, flexShrink: 0 }} />
                       </div>
-                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cvv}</p>}
+                      {errors.cvv && <p className="text-[11px] mt-1" style={{ color: P.bad }}>{errors.cvv}</p>}
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#F4F8FB" }}>Name on card</label>
-                    <div className="flex items-center gap-3 px-4 rounded-xl" style={{ background: "#0C141B", border: `1.5px solid ${errors.cardName ? "rgba(239,68,68,0.5)" : "#2C414E"}`, minHeight: 48 }}>
-                      <User size={15} style={{ color: "#9BAEBB", flexShrink: 0 }} />
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: P.faint }}>Name on card</label>
+                    <div className="flex items-center gap-3 px-4 rounded-xl" style={{ background: P.card, border: `1.5px solid ${errors.cardName ? "rgba(255,90,77,0.5)" : P.borderStrong}`, minHeight: 48 }}>
+                      <User size={15} style={{ color: P.faint, flexShrink: 0 }} />
                       <input type="text" placeholder="As it appears on your card" value={cardName}
                         onChange={(e: ChangeEvent<HTMLInputElement>) => setCardName(e.target.value)}
-                        className="flex-1 bg-transparent outline-none text-sm font-medium text-white placeholder:text-[#4b5563] min-w-0" />
+                        className="flex-1 bg-transparent outline-none text-sm font-medium placeholder:text-[#8a97ba] min-w-0"
+                        style={{ color: P.text }} />
                     </div>
-                    {errors.cardName && <p className="text-[11px] mt-1" style={{ color: "#f87171" }}>{errors.cardName}</p>}
+                    {errors.cardName && <p className="text-[11px] mt-1" style={{ color: P.bad }}>{errors.cardName}</p>}
                   </div>
                 </div>
               </div>
@@ -1186,7 +1223,7 @@ export default function Checkout() {
 
             {/* Billing Address */}
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="mb-8">
-              <h2 className="text-xl font-extrabold text-white mb-4">Billing address</h2>
+              <h2 className="text-xl font-extrabold mb-4" style={{ color: P.text }}>Billing address</h2>
 
               {/* Country selector */}
               <div className="mb-3.5">
@@ -1206,15 +1243,32 @@ export default function Checkout() {
               </div>
             </motion.div>
 
-            <div className="h-px mb-6" style={{ background: "#2C414E" }} />
+            <div className="h-px mb-6" style={{ background: P.border }} />
+
+            {/* ── Designed moment: the promise this whole store is built on.
+                One mailbox, one strip, right where the buyer decides. ── */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+              className="flex items-start gap-3.5 p-4 rounded-2xl mb-6"
+              style={{ background: "linear-gradient(100deg,rgba(47,140,255,0.12),rgba(47,140,255,0.02) 70%)", border: "1px solid rgba(47,140,255,0.28)", boxShadow: "0 0 26px rgba(47,140,255,0.10)" }}>
+              <span className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: P.card, border: `1px solid ${P.border}` }}>
+                <MailboxGlyph size={34} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-extrabold" style={{ color: P.text }}>Delivered to your Roblox account</p>
+                <p className="text-xs leading-relaxed mt-0.5" style={{ color: P.muted }}>
+                  Confirm your Roblox username when you claim — your items are delivered to your in-game mailbox.
+                </p>
+              </div>
+            </motion.div>
 
             {/* Payment Error */}
             {errors.payment && (
               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
                 className="flex items-start gap-2.5 px-4 py-3 rounded-xl mb-6"
-                style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}>
-                <AlertCircle size={15} color="#EF4444" className="flex-shrink-0 mt-0.5" />
-                <p className="text-sm leading-snug" style={{ color: "#EF4444" }}>{errors.payment}</p>
+                style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)" }}>
+                <AlertCircle size={15} color={P.warn} className="flex-shrink-0 mt-0.5" />
+                <p className="text-sm leading-snug" style={{ color: P.warn }}>{errors.payment}</p>
               </motion.div>
             )}
 
@@ -1227,15 +1281,22 @@ export default function Checkout() {
                 whileTap={!loading ? { scale: 0.97 } : {}}
                 onClick={handlePay}
                 disabled={loading}
-                className="relative w-full rounded-2xl font-extrabold text-white flex items-center justify-center gap-3 text-base"
-                style={{ background: "#3BA7FF", padding: "18px 0", boxShadow: "0 4px 0 0 #2980b9, 0 6px 16px rgba(0,0,0,0.3)" }}>
+                className="relative w-full rounded-2xl font-black flex items-center justify-center gap-3 text-base"
+                style={{ background: "linear-gradient(180deg,#0a84ff,#0a50d6)", color: "#fff", padding: "18px 0", boxShadow: "0 8px 22px rgba(10,110,255,.4)" }}>
                 {loading ? (
-                  <><Loader2 size={20} className="animate-spin" /><span>Processing Payment...</span></>
+                  <>
+                    {/* Brand mark instead of a spinner — "the payment is running" */}
+                    <motion.span className="flex items-center" animate={{ scale: [1, 1.16, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}>
+                      <RBstar size={20} color="#fff" />
+                    </motion.span>
+                    <span>Processing Payment...</span>
+                  </>
                 ) : (
                   <span>{`Pay — $${finalTotal.toFixed(2)}`}</span>
                 )}
               </motion.button>
-              <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: "#637784" }}>
+              <p className="text-center text-[11px] mt-3 flex items-center justify-center gap-1.5" style={{ color: P.faint }}>
                 <Shield size={10} /> 256-bit SSL encrypted · Powered by Stripe
               </p>
             </motion.div>
@@ -1244,7 +1305,11 @@ export default function Checkout() {
           {/* ── RIGHT COLUMN: ORDER SUMMARY ── */}
           {/* borderLeft is lg-gated: the split only starts at lg, so below it the
               column is full-width and an ungated border drew a stray hairline. */}
-          <div className="lg:w-[520px] flex-shrink-0 px-6 md:px-10 py-10 lg:py-14 lg:border-l lg:border-[#2C414E]">
+          {/* The summary reads as an inset panel beside the form, so it gets
+              the band surface and a lg-gated hairline (ungated, below lg the
+              full-width column drew a stray line). */}
+          <div className="lg:w-[520px] flex-shrink-0 px-6 md:px-10 py-10 lg:py-14 border-t border-[#2a3a60] lg:border-t-0 lg:border-l lg:border-[#2a3a60]"
+            style={{ background: P.band }}>
             <div className="lg:sticky lg:top-6">
 
               {/* Order Items */}
@@ -1254,7 +1319,7 @@ export default function Checkout() {
                     transition={{ delay: 0.05 + i * 0.04 }}
                     className="flex items-center gap-4 mb-5">
                     <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
-                      <div className="w-full h-full rounded-xl overflow-hidden" style={{ background: "#1C2A34", border: "2px solid #F4F8FB" }}>
+                      <div className="w-full h-full rounded-xl overflow-hidden" style={{ background: P.stage, border: `2px solid ${P.border}` }}>
                         {item.image ? (
                           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : item.bgImageUrl ? (
@@ -1263,22 +1328,22 @@ export default function Checkout() {
                             <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />
                           </div>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center" style={{ background: item.gradient?.[0] || "#2C414E" }}>
-                            <Box size={24} color="#637784" />
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: item.gradient?.[0] || P.border }}>
+                            <Box size={24} color={P.muted} />
                           </div>
                         )}
                       </div>
                       {item.quantity > 1 && (
                         <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full text-[11px] font-extrabold text-white flex items-center justify-center"
-                          style={{ background: "#3BA7FF", border: "2px solid #131C23" }}>
+                          style={{ background: P.accentDeep, border: `2px solid ${P.band}` }}>
                           {item.quantity}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-base font-semibold text-white truncate">{item.name}</p>
+                      <p className="text-base font-semibold truncate" style={{ color: P.text }}>{item.name}</p>
                     </div>
-                    <span className="text-base font-extrabold flex-shrink-0" style={{ color: "#F4F8FB" }}>${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="text-base font-extrabold flex-shrink-0" style={{ color: P.text }}>${(item.price * item.quantity).toFixed(2)}</span>
                   </motion.div>
                 ))}
               </div>
@@ -1291,28 +1356,29 @@ export default function Checkout() {
               {/* Tax */}
               {taxAmount > 0 && (
                 <div className="flex items-center justify-between py-2.5">
-                  <span className="text-sm font-semibold" style={{ color: "#9BAEBB" }}>
+                  <span className="text-sm font-semibold" style={{ color: P.muted }}>
                     {tax.label} ({tax.rate}%)
                   </span>
-                  <span className="text-sm font-bold" style={{ color: "#9BAEBB" }}>
+                  <span className="text-sm font-bold" style={{ color: P.text }}>
                     ${taxAmount.toFixed(2)}
                   </span>
                 </div>
               )}
 
               {/* Total */}
-              <div className="flex items-center justify-between py-5" style={{ borderTop: "1px solid #2C414E" }}>
-                <span className="text-2xl font-extrabold text-white">Total</span>
+              <div className="flex items-center justify-between py-5" style={{ borderTop: `1px solid ${P.border}` }}>
+                <span className="text-2xl font-extrabold" style={{ color: P.text }}>Total</span>
                 <div className="text-right flex items-baseline gap-1.5">
-                  <span className="text-sm font-semibold" style={{ color: "#637784" }}>USD</span>
-                  <span className="text-3xl font-extrabold" style={{ color: "#F4F8FB" }}>${finalTotal.toFixed(2)}</span>
+                  <span className="text-sm font-semibold" style={{ color: P.faint }}>USD</span>
+                  <span className="text-3xl font-extrabold" style={{ color: P.text }}>${finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 
               {/* Support / Guarantee / Delivery Banner */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="rounded-2xl overflow-hidden mt-2">
+                className="rounded-2xl overflow-hidden mt-2"
+                style={{ border: `1px solid ${P.border}` }}>
                 <img src="/banner-support.jpg" alt="Support, Guarantee, Delivery" className="w-full h-auto object-cover" />
               </motion.div>
 
@@ -1321,7 +1387,8 @@ export default function Checkout() {
 
         </div>
       </div>
-    </>
+      <SiteFooter />
+    </div>
   );
 
 }

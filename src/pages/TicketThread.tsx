@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +25,9 @@ import {
   User,
   Headphones,
 } from "lucide-react";
+import { RBstar, TicketStub } from "@/components/Art";
+import { P } from "@/lib/storefront";
+import { TopNav, SiteFooter } from "./Home";
 
 const BACKEND =
   (import.meta.env.VITE_BACKEND_URL as string) || "";
@@ -69,12 +72,23 @@ function relativeTime(iso: string) {
   return `${days}d ago`;
 }
 
+/* Status words are the backend's; only their colours are ours. One meaning
+   per colour: blue = live, amber = needs a reply, mint = done, red = closed. */
 const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: typeof Circle }> = {
-  open: { bg: "rgba(34,197,94,0.15)", text: "#22C55E", icon: CheckCircle },
-  in_progress: { bg: "rgba(59,167,255,0.15)", text: "#3BA7FF", icon: Clock },
-  waiting: { bg: "rgba(255,197,61,0.15)", text: "#FFC53D", icon: Clock },
-  resolved: { bg: "rgba(99,119,132,0.15)", text: "#637784", icon: CheckCircle },
-  closed: { bg: "rgba(99,119,132,0.15)", text: "#637784", icon: XCircle },
+  open: { bg: P.accentTint, text: P.accentDeep, icon: CheckCircle },
+  in_progress: { bg: P.accentTint, text: P.accentDeep, icon: Clock },
+  waiting: { bg: P.warnTint, text: P.warn, icon: Clock },
+  resolved: { bg: P.goodTint, text: P.good, icon: CheckCircle },
+  closed: { bg: P.badTint, text: P.bad, icon: XCircle },
+};
+
+/* The two sides of the thread. The customer (you) is filled brand blue with
+   white text; staff and system are a neutral band chip with a hairline — the
+   same distinction the message sides need, carried by the role tag. */
+const ROLE_CHIP: Record<string, { bg: string; fg: string; border?: string }> = {
+  customer: { bg: P.accentDeep, fg: "#fff" },
+  agent: { bg: P.band, fg: P.text, border: P.border },
+  system: { bg: P.band, fg: P.muted, border: P.border },
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -87,25 +101,29 @@ const CATEGORY_LABEL: Record<string, string> = {
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string }> = {
-  low: { label: "Low", color: "#637784" },
-  medium: { label: "Medium", color: "#3BA7FF" },
-  high: { label: "High", color: "#F59E0B" },
-  urgent: { label: "Urgent", color: "#ef4444" },
+  low: { label: "Low", color: P.muted },
+  medium: { label: "Medium", color: P.accentDeep },
+  high: { label: "High", color: P.warn },
+  urgent: { label: "Urgent", color: P.bad },
 };
 
 function Skeleton() {
+  /* A skeleton, not a pulse: it previews the header bar and the post rows so
+     the thread doesn't reflow when the query resolves. `P.stage` blocks. */
+  const [, navigate] = useLocation();
   return (
-    <div className="flex min-h-screen flex-col pt-[65px]" style={{ background: "#131C23" }}>
-      <div className="border-b px-6 py-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-        <div className="h-4 w-20 animate-pulse rounded" style={{ background: "#1C2A34" }} />
+    <div className="flex min-h-screen flex-col rglow">
+      <TopNav onHome={() => navigate("/")} />
+      <div className="border-b px-6 py-4" style={{ borderColor: P.border }}>
+        <div className="h-4 w-20 animate-pulse rounded" style={{ background: P.stage }} />
       </div>
       <div className="flex-1 space-y-6 p-6">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex gap-4">
-            <div className="h-12 w-12 animate-pulse rounded-xl" style={{ background: "#1C2A34" }} />
+            <div className="h-12 w-12 animate-pulse rounded-xl" style={{ background: P.stage }} />
             <div className="flex-1 space-y-3">
-              <div className="h-3 w-32 animate-pulse rounded" style={{ background: "#1C2A34" }} />
-              <div className="h-20 w-full animate-pulse rounded-xl" style={{ background: "#1C2A34" }} />
+              <div className="h-3 w-32 animate-pulse rounded" style={{ background: P.stage }} />
+              <div className="h-20 w-full animate-pulse rounded-xl" style={{ background: P.band }} />
             </div>
           </div>
         ))}
@@ -119,7 +137,7 @@ function PostAvatar({ sender }: { sender: string }) {
     return (
       <div
         className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl"
-        style={{ border: "2px solid #3BA7FF", boxShadow: "0 3px 0 #1a6bbf" }}
+        style={{ border: `2px solid ${P.borderStrong}`, boxShadow: "0 6px 18px rgba(0,0,0,0.4)" }}
       >
         <img src="/staff-avatar.webp" alt="" className="h-full w-full object-cover" />
       </div>
@@ -129,16 +147,20 @@ function PostAvatar({ sender }: { sender: string }) {
     return (
       <div
         className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"
-        style={{ background: "#637784", boxShadow: "0 3px 0 #4a5d6a" }}
+        style={{
+          background: P.band,
+          border: `1px solid ${P.border}`,
+          boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
+        }}
       >
-        <Shield size={20} color="#fff" />
+        <Shield size={20} color={P.text} />
       </div>
     );
   }
   return (
     <div
       className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl"
-      style={{ border: "2px solid #22C55E", boxShadow: "0 3px 0 #188c46" }}
+      style={{ border: `2px solid ${P.accentDeep}`, boxShadow: "0 6px 16px rgba(10,110,255,.35)" }}
     >
       <img src="/customer-avatar.png" alt="" className="h-full w-full object-cover" />
     </div>
@@ -152,16 +174,20 @@ function PostAuthor({ msg }: { msg: TicketMessage }) {
       : msg.sender === "system"
       ? "System"
       : "Customer";
-  const roleColor = "#F4F8FB";
+  const chip = ROLE_CHIP[msg.sender] || ROLE_CHIP.customer;
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-bold" style={{ color: "#F4F8FB" }}>
+      <span className="text-sm font-bold" style={{ color: P.text }}>
         {msg.senderName || roleLabel}
       </span>
       <span
         className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-        style={{ background: roleColor + "20", color: roleColor }}
+        style={{
+          background: chip.bg,
+          color: chip.fg,
+          border: chip.border ? `1px solid ${chip.border}` : undefined,
+        }}
       >
         {roleLabel}
       </span>
@@ -171,6 +197,7 @@ function PostAuthor({ msg }: { msg: TicketMessage }) {
 
 export default function TicketThread() {
   const [, params] = useRoute("/tickets/:ticketId");
+  const [, navigate] = useLocation();
   const ticketId = params?.ticketId ?? "";
   const { user } = useAuth();
   const email = user?.email || "";
@@ -324,16 +351,15 @@ export default function TicketThread() {
   if (isError || !data) {
     return (
       <div
-        className="flex min-h-screen flex-col items-center justify-center gap-4 pt-24"
-        style={{ background: "#131C23" }}
+        className="flex min-h-screen rglow flex-col items-center justify-center gap-4 pt-24"
       >
-        <p className="text-sm" style={{ color: "#9BAEBB" }}>
+        <p className="text-sm font-bold" style={{ color: P.warn }}>
           Ticket not found or failed to load.
         </p>
         <Link
           href="/tickets"
           className="text-sm font-medium transition-colors hover:underline"
-          style={{ color: "#3BA7FF" }}
+          style={{ color: P.accentDeep }}
         >
           &larr; Back to Tickets
         </Link>
@@ -348,19 +374,21 @@ export default function TicketThread() {
   const pr = PRIORITY_CONFIG[data.priority] || PRIORITY_CONFIG.medium;
 
   return (
-    <div className="min-h-screen pt-[65px]" style={{ background: "#131C23" }}>
+    <div className="min-h-screen rglow">
+      <TopNav onHome={() => navigate("/")} />
       {/* Header — parks just under the fixed Navbar (64px bar + 1px border).
           The loading/error states already offset with pt-24; this view didn't,
-          so the header sat behind the navbar. */}
+          so the header sat behind the navbar. It is the ticket's identity card:
+          white panel, hairline, soft elevation under the sticky bar. */}
       <div
-        className="sticky top-[65px] z-10 border-b"
-        style={{ background: "#0F1920", borderColor: "rgba(255,255,255,0.08)" }}
+        className="sticky top-0 z-10 border-b"
+        style={{ background: P.card, borderColor: P.border, boxShadow: P.shadow }}
       >
         <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6">
           <Link
             href="/tickets"
             className="mb-2 inline-flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
-            style={{ color: "#9BAEBB" }}
+            style={{ color: P.muted }}
           >
             <ArrowLeft size={14} />
             Back to Tickets
@@ -368,12 +396,23 @@ export default function TicketThread() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <h1
-                className="truncate text-lg font-bold sm:text-xl"
-                style={{ color: "#F4F8FB" }}
-              >
-                {data.subject}
-              </h1>
+              {/* Designed moment — the ticket itself, once, beside the subject.
+                  This page is a support ticket; the stub says so before a word
+                  of the thread is read. */}
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: P.accentTint }}
+                >
+                  <TicketStub className="w-7 h-7" />
+                </span>
+                <h1
+                  className="font-display min-w-0 truncate text-lg font-black sm:text-xl"
+                  style={{ color: P.text }}
+                >
+                  {data.subject}
+                </h1>
+              </div>
               <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
@@ -384,7 +423,7 @@ export default function TicketThread() {
                 </span>
                 <span
                   className="rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wider"
-                  style={{ background: "rgba(59,167,255,0.12)", color: "#3BA7FF" }}
+                  style={{ background: P.accentTint, color: P.accentDeep }}
                 >
                   {CATEGORY_LABEL[data.category] || data.category}
                 </span>
@@ -394,7 +433,7 @@ export default function TicketThread() {
                 >
                   {pr.label}
                 </span>
-                <span className="text-xs" style={{ color: "#637784" }}>
+                <span className="text-xs" style={{ color: P.faint }}>
                   #{data.ticketId.slice(0, 8)}
                 </span>
               </div>
@@ -409,9 +448,9 @@ export default function TicketThread() {
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide transition-all disabled:opacity-50"
                 style={{
                   background: "transparent",
-                  border: "1.5px solid #ef4444",
-                  color: "#ef4444",
-                  boxShadow: "0 3px 0 0 rgba(239,68,68,0.3)",
+                  border: `1.5px solid ${P.bad}`,
+                  color: P.bad,
+                  boxShadow: "0 6px 16px rgba(255,90,77,.28)",
                 }}
               >
                 <XCircle size={14} />
@@ -435,20 +474,20 @@ export default function TicketThread() {
               >
                 {msg.sender === "system" ? (
                   <div className="flex items-center justify-center gap-2 py-4">
-                    <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+                    <div className="h-px flex-1" style={{ background: P.border }} />
                     <span
                       className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs"
-                      style={{ background: "#18242D", color: "#637784" }}
+                      style={{ background: P.band, color: P.muted, border: `1px solid ${P.border}` }}
                     >
                       <Shield size={12} />
                       {msg.text}
                     </span>
-                    <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+                    <div className="h-px flex-1" style={{ background: P.border }} />
                   </div>
                 ) : (
                   <div
                     className="py-5"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ borderBottom: `1px solid ${P.border}` }}
                   >
                     {/* Post header */}
                     <div className="mb-3 flex items-start gap-3">
@@ -459,23 +498,25 @@ export default function TicketThread() {
                         </div>
                         <span
                           className="mt-0.5 text-xs"
-                          style={{ color: "#637784" }}
+                          style={{ color: P.faint }}
                         >
                           {relativeTime(msg.timestamp)} · {formatFull(msg.timestamp)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Post content */}
+                    {/* Post content — break-words: unbroken URLs or pasted
+                        strings from a ticket would otherwise blow past the
+                        post column at any viewport */}
                     <div
-                      className="mb-3 text-[15px] leading-[1.7] sm:pl-15"
-                      style={{ color: "#D1D5DB" }}
+                      className="mb-3 text-[15px] leading-[1.7] sm:pl-15 break-words"
+                      style={{ color: P.text }}
                     >
                       {msg.text.split("\n").map((line, li) => {
                         let html = line
                           .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
                           .replace(/_(.+?)_/g, "<i>$1</i>")
-                          .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:#3BA7FF;font-weight:600;text-decoration:none">$1</a>')
+                          .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" style="color:#0a84ff;font-weight:600;text-decoration:none">$1</a>')
                           .replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin-top:8px" />');
                         return (
                           <p key={li} className={li > 0 ? "mt-3" : ""}>
@@ -490,22 +531,22 @@ export default function TicketThread() {
                       className="flex items-center gap-4 sm:pl-15"
                     >
                       <button
-                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-                        style={{ color: "#637784" }}
+                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
+                        style={{ color: P.muted }}
                       >
                         <AlertTriangle size={13} />
                         Report
                       </button>
                       <button
-                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-                        style={{ color: "#637784" }}
+                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
+                        style={{ color: P.muted }}
                       >
                         <Quote size={13} />
                         Quote
                       </button>
                       <button
-                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-                        style={{ color: "#3BA7FF" }}
+                        className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
+                        style={{ color: P.accentDeep }}
                         onClick={() => {
                           textareaRef.current?.focus();
                           setReply((prev) => prev + `> ${msg.text.split("\n")[0]}\n\n`);
@@ -524,63 +565,66 @@ export default function TicketThread() {
         </div>
       </div>
 
-      {/* Reply editor — offset above MobileBottomNav on mobile only
-          (nav is md:hidden and ~68px + safe-area tall). */}
+      {/* Reply editor — sticks to the viewport bottom. It previously offset
+          itself by 68px "above MobileBottomNav", but that component is dead
+          code and never renders, so the editor floated over an empty gap. */}
       {data.status !== "closed" && (
         <div
-          className="sticky bottom-[calc(68px_+_env(safe-area-inset-bottom,0px))] md:bottom-0 border-t"
-          style={{ background: "#0F1920", borderColor: "rgba(255,255,255,0.08)" }}
+          className="sticky bottom-0 z-10 border-t"
+          style={{ background: P.band, borderColor: P.border, paddingBottom: "env(safe-area-inset-bottom,0px)" }}
         >
           <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
+            {/* §4 input: white field, emphasized hairline, blue focus glow */}
             <div
-              className="overflow-hidden rounded-2xl"
-              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+              className="overflow-hidden rounded-2xl transition-shadow focus-within:ring-4 focus-within:ring-[#2f8cff]/25"
+              style={{ background: P.card, border: `1px solid ${P.borderStrong}` }}
             >
-              {/* Toolbar */}
+              {/* Toolbar — wraps for the same reason: icon row plus the
+                  ⌘+Enter hint is ~277px, which breaks under text scaling */}
               <div
-                className="flex items-center justify-between px-4 py-2.5"
-                style={{ background: "#151B27", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5"
+                style={{ background: P.band, borderBottom: `1px solid ${P.border}` }}
               >
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => wrapSelection("**", "**")}
-                    className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                    style={{ color: "#9BAEBB" }}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+                    style={{ color: P.muted }}
                   >
                     <Bold size={16} />
                   </button>
                   <button
                     onClick={() => wrapSelection("_", "_")}
-                    className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                    style={{ color: "#9BAEBB" }}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+                    style={{ color: P.muted }}
                   >
                     <Italic size={16} />
                   </button>
-                  <div className="h-4 w-px" style={{ background: "rgba(255,255,255,0.1)" }} />
+                  <div className="h-4 w-px" style={{ background: P.borderStrong }} />
                   <button
                     onClick={insertLink}
-                    className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                    style={{ color: "#9BAEBB" }}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+                    style={{ color: P.muted }}
                   >
                     <LinkIcon size={16} />
                   </button>
                   <button
                     onClick={insertImage}
-                    className="rounded-lg p-1.5 transition-colors hover:bg-white/5"
-                    style={{ color: "#9BAEBB" }}
+                    className="rounded-lg p-1.5 transition-colors hover:bg-white/10"
+                    style={{ color: P.muted }}
                   >
                     <ImageIcon size={16} />
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px]" style={{ color: "#637784" }}>
+                  <span className="text-[11px]" style={{ color: P.faint }}>
                     ⌘ + Enter to send
                   </span>
                 </div>
               </div>
 
               {/* Textarea */}
-              <div className="relative" style={{ background: "#131C23" }}>
+              <div className="relative" style={{ background: P.card }}>
                 <textarea
                   ref={textareaRef}
                   value={reply}
@@ -589,26 +633,27 @@ export default function TicketThread() {
                   placeholder="Write your reply..."
                   rows={4}
                   className="w-full resize-none bg-transparent px-4 py-3 text-[15px] leading-relaxed outline-none placeholder:opacity-40"
-                  style={{ color: "#F4F8FB", minHeight: 120 }}
+                  style={{ color: P.text, minHeight: 120 }}
                 />
               </div>
 
-              {/* Bottom bar */}
+              {/* Bottom bar — wraps: Attach + Preview + Send Reply needed
+                  ~335px and overflowed every phone below ~380px */}
               <div
-                className="flex items-center justify-between px-4 py-2.5"
-                style={{ background: "#151B27", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+                className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5"
+                style={{ background: P.band, borderTop: `1px solid ${P.border}` }}
               >
                 <div className="flex items-center gap-3">
                   <button
-                    className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-                    style={{ color: "#637784" }}
+                    className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
+                    style={{ color: P.muted }}
                   >
                     <Paperclip size={14} />
                     Attach files
                   </button>
                   <button
-                    className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:brightness-125"
-                    style={{ color: "#637784" }}
+                    className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:underline"
+                    style={{ color: P.muted }}
                   >
                     <Eye size={14} />
                     Preview
@@ -619,18 +664,21 @@ export default function TicketThread() {
                   whileTap={{ scale: 0.97 }}
                   onClick={handleSend}
                   disabled={!reply.trim() || sendMutation.isPending}
-                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black transition-all disabled:opacity-40"
                   style={{
-                    background: "#3BA7FF",
+                    background: P.accentDeep,
                     color: "#fff",
-                    boxShadow: "0 4px 0 0 #1a6bbf",
+                    boxShadow: "0 6px 16px rgba(10,110,255,.35)",
                   }}
                 >
                   {sendMutation.isPending ? (
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
+                    <motion.span
+                      className="inline-flex"
+                      animate={{ scale: [1, 1.16, 1] }}
+                      transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}
+                    >
+                      <RBstar size={16} color="#fff" />
+                    </motion.span>
                   ) : (
                     <Send size={16} />
                   )}
@@ -641,6 +689,7 @@ export default function TicketThread() {
           </div>
         </div>
       )}
+      <SiteFooter />
     </div>
   );
 }

@@ -55,7 +55,7 @@ function Field({
         style={{
           background: "rgba(255,255,255,0.07)",
           border: `1.5px solid ${error ? "rgba(248,113,113,0.6)" : focused ? "#3BA7FF" : "rgba(196,181,253,0.2)"}`,
-          boxShadow: focused ? "0 0 0 3px rgba(59,167,255,0.1)" : "none",
+          boxShadow: focused ? "0 0 0 3px rgba(47,140,255,0.1)" : "none",
         }}>
         {icon && <span style={{ color: "#3BA7FF", flexShrink: 0 }}>{icon}</span>}
         <input
@@ -328,7 +328,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           {}
           <div className="p-4 pb-3 text-center">
             <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-              style={{ background: "#3BA7FF", boxShadow: "0 0 20px rgba(59,167,255,0.4)" }}>
+              style={{ background: "#3BA7FF", boxShadow: "0 0 20px rgba(47,140,255,0.4)" }}>
               <MessageSquare size={22} color="white" />
             </div>
             <h3 className="text-base font-extrabold text-white mb-1">Connect with Claim Team</h3>
@@ -356,7 +356,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               type="email"
               error={formErrors.contactEmail}
             />
-            <div className="rounded-xl p-3" style={{ background: "rgba(59,167,255,0.1)", border: "1px solid rgba(196,181,253,0.12)" }}>
+            <div className="rounded-xl p-3" style={{ background: "rgba(47,140,255,0.1)", border: "1px solid rgba(196,181,253,0.12)" }}>
               <p className="text-[10px] leading-relaxed" style={{ color: "#a78bfa" }}>
                 📧 A confirmation will be sent to your email when the claim team joins. You can close this chat and return any time.
               </p>
@@ -402,7 +402,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
             <p className="text-[10px]" style={{ color: "#4a3a6b" }}>Usually responds within 2–5 minutes</p>
             {nextSlotAt && (
               <div className="mt-2 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold"
-                style={{ background: "rgba(59,167,255,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
+                style={{ background: "rgba(47,140,255,0.12)", border: "1px solid rgba(196,181,253,0.2)", color: "#a78bfa" }}>
                 <Clock size={11} />
                 <span>Opens at {nextSlotAt} GMT+3</span>
                 <span className="font-mono opacity-70">({fmtSlotCountdown(nextSlotAt)})</span>
@@ -418,7 +418,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         <div className="flex flex-col h-full">
           {}
           {agentName && (
-            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ borderColor: "rgba(196,181,253,0.08)", background: "rgba(59,167,255,0.08)" }}>
+            <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ borderColor: "rgba(196,181,253,0.08)", background: "rgba(47,140,255,0.08)" }}>
               <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#3BA7FF" }}>
                 <Star size={9} fill="white" color="white" />
               </div>
@@ -452,7 +452,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
           {}
           {(step === "ended" || step === "claimed") && (
             <div className="px-4 py-3 text-center" style={{ borderTop: "1px solid rgba(196,181,253,0.08)" }}>
-              <div className="rounded-xl p-3" style={{ background: step === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(59,167,255,0.1)", border: `1px solid ${step === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(196,181,253,0.12)"}` }}>
+              <div className="rounded-xl p-3" style={{ background: step === "claimed" ? "rgba(34,197,94,0.1)" : "rgba(47,140,255,0.1)", border: `1px solid ${step === "claimed" ? "rgba(34,197,94,0.25)" : "rgba(196,181,253,0.12)"}` }}>
                 {step === "claimed" ? (
                   <>
                     <CheckCheck size={16} color="#4ade80" className="mx-auto mb-1" />
@@ -493,7 +493,7 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
                   onClick={handleSend}
                   disabled={!input.trim() || sending}
                   className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: input.trim() ? "#3BA7FF" : "rgba(59,167,255,0.15)" }}
+                  style={{ background: input.trim() ? "#3BA7FF" : "rgba(47,140,255,0.15)" }}
                 >
                   <Send size={14} color="white" />
                 </motion.button>
@@ -525,12 +525,12 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
               height: 480,
               background: "#110025",
               border: "1.5px solid rgba(196,181,253,0.18)",
-              boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,167,255,0.15)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(47,140,255,0.15)",
             }}
           >
             {}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-              style={{ background: "rgba(59,167,255,0.35)", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
+              style={{ background: "rgba(47,140,255,0.35)", borderBottom: "1px solid rgba(196,181,253,0.1)" }}>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#3BA7FF" }}>
                   <Star size={13} fill="white" color="white" />
@@ -563,11 +563,11 @@ export default function ClaimChat({ orderEmail = "" }: ClaimChatProps) {
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.5, type: "spring", stiffness: 280, damping: 20 }}
-        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(59,167,255,0.7)" }}
+        whileHover={{ scale: 1.1, boxShadow: "0 0 30px rgba(47,140,255,0.7)" }}
         whileTap={{ scale: 0.92 }}
         onClick={() => { setOpen(o => !o); if (!open && step === "idle") setStep("form"); }}
         className="fixed bottom-6 right-4 z-[300] w-14 h-14 rounded-full flex items-center justify-center shadow-2xl"
-        style={{ background: "#3BA7FF", boxShadow: "0 4px 24px rgba(59,167,255,0.55)" }}
+        style={{ background: "#3BA7FF", boxShadow: "0 4px 24px rgba(47,140,255,0.55)" }}
       >
         {}
         {hasUnread && (

@@ -1,36 +1,39 @@
 import { useState, useMemo, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
-import { Shield, Zap, Headphones } from "lucide-react";
+import { Search, X, Play } from "lucide-react";
 import { useLocation } from "wouter";
-import {
-  IconCart, IconCreditCard, IconRocket,
-  IconSearch, IconClose, IconStar,
-} from "@/components/SiteIcons";
-import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
+import { RBstar } from "@/components/Art";
+import { C, Reveal, TopNav, SiteFooter } from "./Home";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
+const A = "/rogoat/";
+const SC = "/scene/";
+
+/* floating-prop helpers: P = shared classes (only from lg up, where there is free space beside the centred text) */
+const P = "bgf absolute hidden lg:block";
+const f = (width: string, rise: string, dur: string, delay = "0s") =>
+  ({ width, "--bf": rise, "--bd": dur, "--bl": delay } as CSSProperties);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   BROWSE GAMES — dark navy marketplace, same system as the homepage.
+   Real games from the API, real reviews, one hero 3D render, one blue CTA.
+   ══════════════════════════════════════════════════════════════════════════ */
 
 type ShopGame = {
   _id: string; name: string; slug: string;
-  gradient: { from: string; to: string };
-  imageUrl?: string; bgImageUrl?: string; active?: boolean; productCount?: number;
+  gradient?: { from: string; to: string };
+  imageUrl?: string; active?: boolean; productCount?: number;
 };
 
-const steps = [
-  { icon: IconCart, number: "01", title: "Choose your items", description: "Select the game you want, browse the matching collection, and pick the item you need.", image: "/step-choose.png" },
-  { icon: IconCreditCard, number: "02", title: "Secure Checkout", description: "Complete your purchase through our secure checkout — we accept all major cards and PayPal with 256-bit SSL encryption.", image: "/step-checkout.png" },
-  { icon: IconRocket, number: "03", title: "Fast Delivery", description: "Our team delivers your items in minutes — just provide your Roblox username after checkout and we'll trade or gift them to you instantly.", image: "/step-delivery.png" },
-];
+type Review = { name: string; rating: number; comment: string; submittedAt: string };
 
-/* Shown only until the real reviews arrive (backend cold start). If fewer
-   than 3 real reviews come back we keep these rather than flash an empty
-   carousel — but they are never presented as live data. */
-const fallbackReviews = [
-  { initials: "D", name: "Dawn Hughes", country: "United States", stars: 5, text: "Cheap: the prices were much cheaper than other adopt me stores. Easy: it's idiot proof, all you do is join and it gives you your items instantly. Good service: every time I had an issue they responded really quickly." },
-  { initials: "M", name: "Max Rivera", country: "United Kingdom", stars: 5, text: "Super fast delivery! Got my items within minutes. The support team was also really helpful when I had questions about my order." },
-  { initials: "S", name: "Sara K", country: "Canada", stars: 5, text: "Best place to buy Roblox items hands down. Trusted sellers, fair prices, and the whole process was smooth from start to finish." },
+/* Same three steps as the homepage — one explanation, never contradicting. */
+const steps = [
+  { n: "1", t: "Find your favourite Roblox item", d: "Select your desired item from the Roblox world" },
+  { n: "2", t: "Payment method", d: "Check out and pay with your favourite payment method" },
+  { n: "3", t: "Successfully", d: "Confirm your username and receive your items in-game" },
 ];
-const avatarColors = ["#EA580C", "#15803D", "#2563EB"];
 
 export default function BrowseGames() {
   const [, navigate] = useLocation();
@@ -38,25 +41,18 @@ export default function BrowseGames() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [reviewIndex, setReviewIndex] = useState(0);
-  const [reviews, setReviews] = useState(fallbackReviews);
-  const stats = usePublicStats();
+  const [reviews, setReviews] = useState<Review[]>([]);
 
-  /* Retry — the backend sleeps on Render and can take ~30s to wake. The old
-     code fell back to a hardcoded list of 9 games that don't exist on the
-     store, so every card led to a 404. Better to show the real empty state. */
+  /* Retry — the backend sleeps on Render and can take ~30s to wake. */
   useEffect(() => {
     let alive = true;
     async function attempt(round: number) {
       try {
         const res = await fetch(`${BACKEND}/api/games?active=true`);
         const d = await res.json();
-        const fetched: ShopGame[] = d.data?.games || [];
+        const fetched: ShopGame[] = d?.data?.games || [];
         if (!alive) return;
-        if (fetched.length > 0) {
-          setGames(fetched);
-          setLoading(false);
-          return;
-        }
+        if (fetched.length > 0) { setGames(fetched); setLoading(false); return; }
         if (round < 3) setTimeout(() => attempt(round + 1), 800 * round);
         else setLoading(false);
       } catch {
@@ -69,29 +65,27 @@ export default function BrowseGames() {
     return () => { alive = false; };
   }, []);
 
-  /* Real reviews, same source the homepage uses */
+  /* Real reviews only — no invented testimonials, ever. */
   useEffect(() => {
+    let alive = true;
     fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
       .then(r => r.json())
       .then(data => {
+        if (!alive) return;
         const raw = data?.data?.reviews;
-        if (Array.isArray(raw) && raw.length >= 3) {
+        if (Array.isArray(raw) && raw.length > 0) {
           setReviews(raw.map((r: { name: string; rating: number; comment: string; submittedAt: string }) => ({
-            initials: r.name.charAt(0).toUpperCase(),
-            name: r.name,
-            country: r.submittedAt
-              ? `${Math.floor((Date.now() - new Date(r.submittedAt).getTime()) / 86400000)} days ago`
-              : "Recently",
-            stars: r.rating,
-            text: r.comment,
+            name: r.name, rating: r.rating, comment: r.comment, submittedAt: r.submittedAt,
           })));
         }
       })
       .catch(() => {});
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
-    const t = setInterval(() => setReviewIndex(i => (i + 1) % reviews.length), 3500);
+    if (reviews.length < 2) return;
+    const t = setInterval(() => setReviewIndex(i => (i + 1) % reviews.length), 4000);
     return () => clearInterval(t);
   }, [reviews.length]);
 
@@ -101,273 +95,370 @@ export default function BrowseGames() {
     return games.filter(g => g.name.toLowerCase().includes(q));
   }, [games, search]);
 
+  const current = reviews[reviewIndex];
+
   return (
-    <main style={{ background: "#131C23", minHeight: "100vh" }}>
+    <main className="relative min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif", overflowX: "hidden" }}>
+      {/* same background glows as the homepage */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(900px 700px at 0% 0%,#19284a,transparent 70%)," +
+            "radial-gradient(800px 700px at 100% 12%,#1b2c4f,transparent 70%)," +
+            "radial-gradient(700px 600px at 100% 40%,#1a2a4d,transparent 70%)," +
+            "radial-gradient(600px 700px at 100% 75%,#14203c,transparent 70%)," +
+            "#121a2e",
+        }}
+      />
 
-      {/* ═══ HERO + GAMES (one continuous section) ═══ */}
-      <section className="relative overflow-hidden">
+      <div className="relative z-10">
+        <TopNav onHome={() => navigate("/")} />
 
-        {/* Radial glow at top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 100% 100% at 50% 0%, rgba(59,167,255,0.15) 0%, rgba(59,167,255,0.05) 40%, transparent 70%)" }} />
-
-        <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-24 sm:pt-32 lg:pt-40 pb-8 max-w-5xl mx-auto text-center">
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-[32px] sm:text-[42px] lg:text-[50px] font-extrabold leading-[1.05] tracking-tight"
-            style={{ color: "#F4F8FB" }}
-          >
-            BROWSE OUR <span style={{ color: "#3BA7FF" }}>GAMES</span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="mt-4 text-sm sm:text-base lg:text-lg max-w-xl mx-auto leading-relaxed"
-            style={{ color: "#9BAEBB" }}
-          >
-            Items, boosts and services across every catalog we carry.
-          </motion.p>
-
-          {/* Search bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="relative max-w-[640px] mx-auto mt-10"
-          >
-            <div className="flex items-center gap-3 px-5 h-[52px] rounded-xl"
-              style={{ background: "#1C2A34", border: "1px solid #2C414E" }}>
-              <IconSearch size={18} color="#637784" className="flex-shrink-0 pointer-events-none" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search game"
-                className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: "#F4F8FB" }}
-              />
-              {search && (
-                <button onClick={() => setSearch("")} className="flex-shrink-0">
-                  <IconClose size={14} color="#637784" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="flex items-center justify-center gap-8 sm:gap-12 mt-10 flex-wrap"
-          >
-            {[
-              { icon: <Shield size={16} color="white" />, title: "100%", sub: "Secure" },
-              { icon: <Zap size={16} color="white" />, title: "Instant", sub: "Delivery" },
-              { icon: <Headphones size={16} color="white" />, title: "24/7", sub: "Support" },
-            ].map((b, i) => (
-              <div key={i} className="flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "#3BA7FF", boxShadow: "0 4px 14px rgba(59,167,255,0.3)" }}>
-                  {b.icon}
-                </div>
-                <div>
-                  <b className="block text-sm font-bold" style={{ color: "#F4F8FB" }}>{b.title}</b>
-                  <span className="block text-xs" style={{ color: "#9BAEBB" }}>{b.sub}</span>
-                </div>
+        {/* ════════════════════════════════════════════════════════════
+            HERO — immersive floating scene + glass games panel.
+            Centre: tag, headline, search, paginated game tiles.
+            Edges: floating props (clouds/islands/gems) that frame it.
+        ════════════════════════════════════════════════════════════ */}
+        <section className="relative overflow-hidden">
+          {/* Floating props — crisp, fully inside the hero (nothing cut off), only where there is free space beside the centred text */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 z-0 flex justify-center">
+            <style>{`
+              @keyframes bgFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--bf,-12px))}}
+              .bgf{animation:bgFloat var(--bd,8s) ease-in-out infinite;animation-delay:var(--bl,0s);will-change:transform}
+              @media (prefers-reduced-motion:reduce){.bgf{animation:none}}
+            `}</style>
+            <div className="relative w-full max-w-[1680px] h-full">
+              {/* clouds — a dark shadow is overlaid ON each cloud (masked to its shape) so it blends into the navy */}
+              <div className={`${P} bottom-[-52px] left-[-2vw]`} style={f("clamp(210px,20vw,330px)", "-12px", "11s")}>
+                <img src={`${SC}cloud2.png`} alt="" className="w-full select-none" draggable={false} />
+                <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(4,9,22,0) 40%,rgba(4,9,22,.55) 100%)", WebkitMaskImage: `url(${SC}cloud2.png)`, maskImage: `url(${SC}cloud2.png)`, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }} />
               </div>
-            ))}
-          </motion.div>
-        </div>
+              <div className={`${P} bottom-[-52px] right-[-2vw]`} style={f("clamp(210px,20vw,330px)", "-12px", "11s", "-4s")}>
+                <img src={`${SC}cloud4.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "scaleX(-1)" }} />
+                <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(4,9,22,0) 40%,rgba(4,9,22,.55) 100%)", WebkitMaskImage: `url(${SC}cloud4.png)`, maskImage: `url(${SC}cloud4.png)`, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }} />
+              </div>
+              <div className={`${P} top-[16px] left-[23vw]`} style={f("clamp(90px,8vw,130px)", "-9px", "9s", "-1s")}>
+                <img src={`${SC}cloud1.png`} alt="" className="w-full select-none" draggable={false} />
+                <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(4,9,22,0) 45%,rgba(4,9,22,.45) 100%)", WebkitMaskImage: `url(${SC}cloud1.png)`, maskImage: `url(${SC}cloud1.png)`, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }} />
+              </div>
+              <div className={`${P} top-[16px] right-[23vw]`} style={f("clamp(90px,8vw,130px)", "-9px", "9s", "-5s")}>
+                <img src={`${SC}cloud3.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "scaleX(-1)" }} />
+                <span aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg,rgba(4,9,22,0) 45%,rgba(4,9,22,.45) 100%)", WebkitMaskImage: `url(${SC}cloud3.png)`, maskImage: `url(${SC}cloud3.png)`, WebkitMaskSize: "100% 100%", maskSize: "100% 100%", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat" }} />
+              </div>
 
-        {/* ═══ GAMES GRID (same section, no separator) ═══ */}
-        <div className="relative z-10 px-6 sm:px-10 lg:px-16 pt-4 pb-20 max-w-6xl mx-auto">
+              {/* islands — mirror pair, identical size + top */}
+              <div className={`${P} top-[18px] left-[1vw]`} style={f("clamp(190px,18vw,300px)", "-15px", "8s")}>
+                <img src={`${SC}island_new.png`} alt="" className="w-full select-none" draggable={false} style={{ filter: "drop-shadow(0 28px 34px rgba(0,0,0,.5))" }} />
+              </div>
+              <div className={`${P} top-[18px] right-[1vw]`} style={f("clamp(190px,18vw,300px)", "-15px", "8s", "-3s")}>
+                <img src={`${SC}island_new.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "scaleX(-1)", filter: "drop-shadow(0 28px 34px rgba(0,0,0,.5))" }} />
+              </div>
 
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-square rounded-2xl animate-pulse"
-                  style={{ background: "#1C2A34", border: "1px solid #2C414E" }} />
-              ))}
+              {/* small props — lifted ABOVE the cloud line so nothing sits on the clouds */}
+              <div className={`${P} bottom-[272px] right-[3.5vw]`} style={f("clamp(60px,6vw,92px)", "-14px", "5s", "-1s")}>
+                <img src={`${SC}coin.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "rotate(-12deg)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.4))" }} />
+              </div>
+              <div className={`${P} bottom-[196px] left-[7vw]`} style={f("clamp(64px,6vw,100px)", "-16px", "5.5s")}>
+                <img src={`${SC}gem_g.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "rotate(-10deg)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.4))" }} />
+              </div>
+              <div className={`${P} bottom-[196px] right-[7vw]`} style={f("clamp(64px,6vw,100px)", "-16px", "5.5s", "-2.5s")}>
+                <img src={`${SC}gem_b.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "rotate(10deg)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.4))" }} />
+              </div>
+              <div className={`${P} bottom-[168px] left-[14vw]`} style={f("clamp(78px,7.5vw,120px)", "-13px", "7s", "-1.5s")}>
+                <img src={`${SC}crate.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "rotate(6deg)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.4))" }} />
+              </div>
+              <div className={`${P} bottom-[168px] right-[14vw]`} style={f("clamp(78px,7.5vw,120px)", "-13px", "7s", "-4.5s")}>
+                <img src={`${SC}gift.png`} alt="" className="w-full select-none" draggable={false} style={{ transform: "rotate(-6deg)", filter: "drop-shadow(0 14px 18px rgba(0,0,0,.4))" }} />
+              </div>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-lg font-bold" style={{ color: "#F4F8FB" }}>No games found</p>
-              <p className="text-sm mt-1" style={{ color: "#9BAEBB" }}>Try a different search term.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-              {filtered.map((game, i) => (
-                <motion.div
-                  key={game._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-30px" }}
-                  transition={{ delay: 0.03 + i * 0.04, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.35)" }}
-                  onClick={() => navigate("/game/" + game.slug)}
-                  className="relative rounded-2xl overflow-hidden group cursor-pointer"
-                  style={{ background: "#1C2A34", border: "1px solid #2C414E", aspectRatio: "1 / 1" }}
-                >
-                  <div className="relative w-full h-full overflow-hidden">
-                    {game.imageUrl ? (
-                      <img src={game.imageUrl} alt={game.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    ) : (
-                      <div className="absolute inset-0 transition-transform duration-500 group-hover:scale-110"
-                        style={{ background: game.gradient?.from || "#3BA7FF" }} />
-                    )}
-                    {/* Overlay */}
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 50%, rgba(0,0,0,0.65) 100%)" }} />
-                    {/* Game name */}
-                    <div className="absolute top-4 left-4 right-4">
-                      <p className="text-lg font-black leading-tight drop-shadow-lg" style={{ color: "white" }}>{game.name}</p>
-                      {game.productCount != null && (
-                        <p className="text-xs font-bold mt-1 drop-shadow-md" style={{ color: "rgba(255,255,255,0.7)" }}>{game.productCount} items</p>
-                      )}
-                    </div>
-                    {/* Shop Now */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="py-2.5 rounded-xl text-xs font-extrabold text-center text-white transition-all duration-300"
-                        style={{ background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.2)", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                        Shop Now
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ═══ HOW IT WORKS ═══ */}
-      <section className="relative py-20 overflow-hidden" style={{ background: "#131C23" }}>
-        <div className="relative z-10 px-6 sm:px-10 lg:px-16 max-w-6xl mx-auto">
-          <div className="mb-10">
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#F4F8FB", letterSpacing: "-0.025em" }}>
-              How It <span style={{ color: "#3BA7FF" }}>Works</span>
-            </h2>
-            <p className="mt-2 text-sm" style={{ color: "#9BAEBB" }}>Three easy steps and your items are on their way.</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ delay: 0.05 + i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="relative rounded-2xl overflow-hidden group"
-                style={{ background: "#1C2A34", border: "1px solid #2C414E" }}
+
+          {/* Centred hero content */}
+          <div className="relative z-10 max-w-[1096px] mx-auto px-4 sm:px-5 pt-16 sm:pt-24 pb-20 sm:pb-28 flex flex-col items-center text-center">
+            <Reveal>
+              <span
+                className="inline-block px-6 py-[7px] rounded-full text-[12px] font-semibold"
+                style={{ background: "#1f2f52", border: "1px solid #2c3d66", letterSpacing: ".14em", color: "#c9d3f0" }}
               >
-                {(step as { image?: string }).image ? (
-                  <div className="relative w-full overflow-hidden flex items-center justify-center p-5">
-                    <img src={(step as { image: string }).image} alt={step.title} className="w-full h-auto max-h-48 object-contain" />
-                  </div>
-                ) : (
-                  <div className="relative p-6">
-                    <span className="absolute top-4 right-5 text-[64px] font-black leading-none select-none pointer-events-none"
-                      style={{ color: "rgba(59,167,255,0.06)" }}>{step.number}</span>
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                      style={{ background: "#3BA7FF", boxShadow: "0 4px 14px rgba(59,167,255,0.27)" }}>
-                      <step.icon size={20} color="white" />
-                    </div>
-                  </div>
-                )}
-                <div className="p-6 pt-0">
-                  <span className="text-xs font-black uppercase tracking-widest" style={{ color: "#3BA7FF" }}>{step.number}</span>
-                  <h3 className="font-display font-bold text-lg mt-1 mb-2" style={{ color: "#F4F8FB" }}>{step.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "#9BAEBB" }}>{step.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+                EXPLORE GAME WORLDS
+              </span>
+            </Reveal>
 
-      {/* ═══ REVIEWS ═══ */}
-      <section className="relative py-20 overflow-hidden" style={{ background: "#131C23" }}>
-        <div className="relative z-10 px-6 sm:px-10 lg:px-16 max-w-6xl mx-auto">
-          <div className="mb-10">
-            <h2 className="font-display text-3xl sm:text-4xl font-extrabold" style={{ color: "#F4F8FB", letterSpacing: "-0.025em" }}>
-              {stats ? (
-                <>
-                  Trusted By <span style={{ color: "#3BA7FF" }}>{formatCount(stats.customers)}</span>{" "}
-                  {stats.customers === 1 ? "Customer" : "Customers"}
-                </>
-              ) : (
-                <>Trusted By Our <span style={{ color: "#3BA7FF" }}>Customers</span></>
-              )}
-            </h2>
-          </div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col sm:flex-row items-center gap-8 sm:gap-10"
-          >
-            {/* Mascot */}
-            <div className="flex-shrink-0 flex flex-col items-center text-center">
-              <div className="w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
-                <img src="/review-mascot.png" alt="" className="w-full h-full object-contain" />
+            <Reveal>
+              <h1 className="font-mont text-[38px] leading-[1.08] sm:text-[52px] font-bold mt-5" style={{ color: C.text, letterSpacing: "-0.5px" }}>
+                Browse our
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.06}>
+              <div
+                className="inline-block mt-3 px-9 py-3.5 rounded-[14px] font-mont text-[30px] sm:text-[34px] font-bold text-white select-none"
+                style={{
+                  background: "linear-gradient(180deg,#1c8cff,#0a62e6)",
+                  boxShadow: "0 7px 0 #0848a8, 0 12px 24px rgba(10,110,255,.35), 0 0 0 3px rgba(255,255,255,.9)",
+                  transform: "rotate(-2.2deg)",
+                }}
+              >
+                Games
               </div>
-              <h3 className="font-display text-lg sm:text-xl font-extrabold mt-3" style={{ color: "#F4F8FB", letterSpacing: "-0.02em" }}>
-                Real Players, <span style={{ color: "#3BA7FF" }}>Real Reviews</span>
-              </h3>
-              <p className="text-xs mt-1.5 max-w-[200px]" style={{ color: "#9BAEBB" }}>
-                {stats && stats.reviews > 0
-                  ? `${formatCount(stats.reviews)} verified reviews from real buyers.`
-                  : "Verified reviews from real buyers."}
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <p className="mt-3 text-[15px] max-w-[520px]" style={{ color: C.muted }}>
+                Pick a game and get your items delivered straight to your account.
               </p>
-            </div>
+            </Reveal>
 
-            {/* Rotating review */}
-            <div className="flex-1 w-full">
-              <motion.div
-                key={reviewIndex}
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="rounded-xl p-6"
-                style={{ background: "#18242D", border: "1px solid #2C414E" }}
+            {/* Search — slim dark pill, filters the games below */}
+            <Reveal delay={0.16} className="w-full max-w-[440px] mt-7">
+              <div
+                className="flex items-center gap-3 px-4 h-[48px] rounded-full mx-auto transition-shadow focus-within:ring-4 focus-within:ring-[#0a84ff]/25"
+                style={{ background: "#1f2f52", border: "1px solid #2c3d66" }}
               >
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(reviews[reviewIndex]?.stars ?? 5)].map((_, i) => <IconStar key={i} size={14} color="#FBBF24" />)}
+                <Search size={17} color="#8ea0cf" className="flex-shrink-0 pointer-events-none" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search a game"
+                  className="flex-1 bg-transparent outline-none text-sm"
+                  style={{ color: C.text }}
+                />
+                {search && (
+                  <button onClick={() => setSearch("")} className="flex-shrink-0" aria-label="Clear search">
+                    <X size={15} color="#8ea0cf" />
+                  </button>
+                )}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            ALL GAMES — blue cards (homepage style), real games, search-filtered.
+        ════════════════════════════════════════════════════════════ */}
+        <section className="relative">
+          <div className="max-w-[1096px] mx-auto px-4 sm:px-5 py-14">
+            <Reveal>
+              <h2 className="font-mont text-[26px] sm:text-[32px] font-bold text-center" style={{ color: C.text }}>
+                All games
+              </h2>
+              <p className="text-center text-[13.5px] mt-2" style={{ color: C.muted }}>
+                {loading ? "Loading the catalog…" : `${filtered.length} ${filtered.length === 1 ? "game" : "games"} available`}
+              </p>
+            </Reveal>
+
+            <div className="mt-8">
+              {loading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="rounded-[18px] animate-pulse" style={{ background: "linear-gradient(180deg,#1c2e4f,#1a2848)", border: `1px solid ${C.border}`, aspectRatio: "1 / 1", animationDelay: `${i * 80}ms` }} />
+                  ))}
                 </div>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: "#F4F8FB" }}>
-                  &ldquo;{reviews[reviewIndex]?.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                    style={{ background: avatarColors[reviewIndex % avatarColors.length] }}>
-                    {reviews[reviewIndex]?.initials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold" style={{ color: "#F4F8FB" }}>{reviews[reviewIndex]?.name}</p>
-                    <p className="text-xs" style={{ color: "#9BAEBB" }}>{reviews[reviewIndex]?.country}</p>
-                  </div>
+              ) : filtered.length === 0 ? (
+                <div className="rounded-[18px] py-16 text-center" style={{ background: "linear-gradient(180deg,#1c2e4f,#1a2848)", border: `1px solid ${C.border}` }}>
+                  <p className="text-[15px] font-semibold" style={{ color: C.text }}>
+                    {search ? "No games match your search." : "No games available yet."}
+                  </p>
+                  <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>
+                    {search ? "Try a different name." : "New catalogs are added regularly — check back soon."}
+                  </p>
                 </div>
-              </motion.div>
-              {/* Dots */}
-              <div className="flex items-center gap-1.5 mt-4">
-                {reviews.map((_, i) => (
-                  <button key={i} onClick={() => setReviewIndex(i)}
-                    className="rounded-full transition-all duration-300"
-                    style={{ width: i === reviewIndex ? 20 : 7, height: 7, background: i === reviewIndex ? "#3BA7FF" : "#2C414E" }}
-                  />
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {filtered.map((game, i) => (
+                    <Reveal key={game._id} delay={Math.min(i, 6) * 0.05}>
+                      <button
+                        onClick={() => navigate(`/game/${game.slug}`)}
+                        aria-label={`Browse ${game.name}`}
+                        className="group relative w-full text-left rounded-[18px] overflow-hidden focus:outline-none transition-transform duration-300 hover:-translate-y-1.5"
+                        style={{
+                          background: "linear-gradient(180deg,#1c2e4f,#1a2848)",
+                          border: `1px solid ${C.border}`,
+                          aspectRatio: "1 / 1",
+                        }}
+                      >
+                        <div className="relative w-full h-full overflow-hidden">
+                          {game.imageUrl ? (
+                            <img
+                              src={game.imageUrl}
+                              alt={game.name}
+                              loading="lazy"
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : (
+                            <span
+                              className="absolute inset-0 flex items-center justify-center text-5xl font-mont font-bold text-white select-none"
+                              style={{ background: game.gradient?.from || C.blue }}
+                            >
+                              {game.name.charAt(0)}
+                            </span>
+                          )}
+                          {/* legibility scrim */}
+                          <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,.35) 0%, transparent 35%, transparent 55%, rgba(0,0,0,.72) 100%)" }} />
+                          <div className="absolute top-3.5 left-3.5 right-3.5">
+                            <p className="text-[17px] font-mont font-bold leading-tight" style={{ color: "#fff" }}>{game.name}</p>
+                            {game.productCount != null && (
+                              <p className="text-[11px] font-semibold mt-0.5" style={{ color: "rgba(255,255,255,.75)" }}>
+                                {game.productCount} items
+                              </p>
+                            )}
+                          </div>
+                          <div className="absolute bottom-3.5 left-3.5 right-3.5">
+                            <div
+                              className="py-2 rounded-[10px] text-[11px] font-bold text-center text-white transition-transform duration-300 group-hover:-translate-y-0.5"
+                              style={{ background: "linear-gradient(90deg,#0a84ff,#0a50d6)", boxShadow: "0 4px 12px rgba(0,0,0,.3)" }}
+                            >
+                              Shop Now
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            HOW IT WORKS — full layout: steps left, video + mascot right.
+        ════════════════════════════════════════════════════════════ */}
+        <section className="relative">
+          <div className="max-w-[1096px] mx-auto px-4 sm:px-5 py-14 grid lg:grid-cols-[1fr_640px] gap-12 items-center">
+            {/* Steps */}
+            <div>
+              <Reveal>
+                <h2 className="font-mont text-[26px] sm:text-[31px] font-bold" style={{ color: C.text }}>
+                  How does RBstars work?
+                </h2>
+                <p className="text-[13.5px] mt-2" style={{ color: C.muted }}>Three easy steps and your items are on their way.</p>
+              </Reveal>
+              <div className="relative mt-9 ml-[15px]">
+                <div className="absolute left-[15px] top-2 bottom-2 w-px border-l border-dashed" style={{ borderColor: "#3a4a78" }} />
+                {steps.map((s, i) => (
+                  <Reveal key={s.n} delay={i * 0.1} className="relative pl-[45px] mb-8 last:mb-0">
+                    <span
+                      className="absolute left-0 top-[-4px] w-[30px] h-[30px] rounded-full grid place-items-center text-[13px] font-bold text-white"
+                      style={{ background: "linear-gradient(180deg,#1c8cff,#0a62e6)", border: "2px solid #fff" }}
+                    >
+                      {s.n}
+                    </span>
+                    <div className="text-[16px] font-medium pt-1" style={{ color: C.text }}>{s.t}</div>
+                    <div className="text-[13px] mt-1.5" style={{ color: C.muted }}>{s.d}</div>
+                  </Reveal>
                 ))}
               </div>
             </div>
-          </motion.div>
-        </div>
-      </section>
+
+            {/* Video thumbnail + mascot */}
+            <Reveal delay={0.15} className="flex items-end justify-center gap-5">
+              <img
+                src={`${A}IMG_1278.png`}
+                alt=""
+                aria-hidden
+                className="hidden sm:block w-[180px] shrink-0 select-none"
+              />
+              <div
+                className="relative w-full max-w-[430px] overflow-hidden"
+                style={{
+                  aspectRatio: "510 / 336",
+                  border: "3px solid #1385ff",
+                  borderRadius: 28,
+                  boxShadow: "0 0 40px rgba(19,133,255,.3)",
+                }}
+              >
+                <img
+                  src={`${A}IMG_1282.jpg`}
+                  alt="How RBstars delivery works"
+                  className="absolute inset-[5px] w-[calc(100%-10px)] h-[calc(100%-10px)] object-cover"
+                  style={{ borderRadius: 22 }}
+                />
+                <span className="absolute inset-[5px]" style={{ background: "rgba(0,0,0,.4)", borderRadius: 22 }} />
+                <span className="absolute inset-0 grid place-items-center" aria-hidden>
+                  <span
+                    className="w-[64px] h-[64px] rounded-full grid place-items-center text-white"
+                    style={{ background: "rgba(10,132,255,.92)", boxShadow: "0 8px 24px rgba(10,110,255,.5)" }}
+                  >
+                    <Play size={26} fill="#fff" />
+                  </span>
+                </span>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════════════════════════
+            REVIEWS — real reviews only, dark cards, auto-rotating.
+        ════════════════════════════════════════════════════════════ */}
+        {reviews.length > 0 && current && (
+          <section className="relative">
+            <div className="max-w-[1096px] mx-auto px-4 sm:px-5 py-14">
+              <Reveal className="text-center">
+                <h2 className="font-mont text-[26px] sm:text-[32px] font-bold" style={{ color: C.text }}>
+                  Rated by <span style={{ color: C.greenBright }}>real players</span>
+                </h2>
+                <p className="text-[13.5px] mt-2" style={{ color: C.muted }}>Left after a delivery, on the order they bought.</p>
+              </Reveal>
+
+              <div className="mt-8 max-w-[640px] mx-auto">
+                <motion.div
+                  key={reviewIndex}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-[18px] p-6 sm:p-7"
+                  style={{ background: "linear-gradient(180deg,#1c2e4f,#1a2848)", border: `1px solid ${C.border}` }}
+                >
+                  <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${current.rating} out of 5`}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <RBstar key={i} size={17} color={i < current.rating ? C.starOn : C.starOff} />
+                    ))}
+                  </div>
+                  <p className="text-[15px] leading-relaxed mb-5" style={{ color: C.text }}>
+                    &ldquo;{current.comment}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="w-10 h-10 rounded-full inline-flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                      style={{ background: "linear-gradient(135deg,#2f3de0,#4a63ff)", color: "#fff" }}
+                    >
+                      {current.name.charAt(0).toUpperCase()}
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: C.text }}>{current.name}</p>
+                      <p className="text-[11px]" style={{ color: C.muted }}>
+                        {current.submittedAt
+                          ? new Date(current.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                          : "Verified purchase"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {reviews.length > 1 && (
+                  <div className="flex items-center justify-center gap-1.5 mt-5">
+                    {reviews.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setReviewIndex(i)}
+                        aria-label={`Review ${i + 1}`}
+                        className="rounded-full transition-all duration-300"
+                        style={{ width: i === reviewIndex ? 20 : 7, height: 7, background: i === reviewIndex ? C.blue : C.borderStrong }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <SiteFooter />
+      </div>
     </main>
   );
 }

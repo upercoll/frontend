@@ -331,29 +331,6 @@
   pointer-events: none;
 }
 
-/* ── Glare sweep ── */
-@keyframes glareSweep {
-  0%   { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
-  8%   { opacity: 1; }
-  45%  { opacity: 0.7; }
-  55%  { opacity: 0; transform: translateX(220%) skewX(-18deg); }
-  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
-}
-.rb-glare {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 0;
-  width: 55%;
-  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.30) 50%, transparent 75%);
-  animation: glareSweep 3.6s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 10;
-}
-.rb-glare-d1 { animation-delay: 0.9s; }
-.rb-glare-d2 { animation-delay: 1.8s; }
-.rb-glare-d3 { animation-delay: 2.7s; }
-.rb-glare-d4 { animation-delay: 0s; }
-
 /* ── Line grid utility ── */
 .dot-grid {
   background-image:
@@ -362,45 +339,60 @@
   background-size: 44px 44px;
 }
 
-/* ── Line grid for dark/hero sections ── */
-.line-grid-dark {
-  background-image:
-    linear-gradient(rgba(165,180,252,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(165,180,252,0.045) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-
 /* ── Display / accent font ── */
 .font-display {
   font-family: var(--app-font-display);
 }
-
-/* ── Gradient text utilities ── */
-.gradient-text {
-  background: linear-gradient(135deg, #3BA7FF 0%, #5CB8FF 50%, #3BA7FF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.font-mont {
+  font-family: 'Montserrat', 'Inter', sans-serif;
 }
 
-.gradient-text-purple {
-  background: linear-gradient(135deg, #3BA7FF 0%, #5CB8FF 60%, #3BA7FF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ── Design system motion: review marquee + hero float ─────────────────── */
+@keyframes rg-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.rg-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.rg-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: rg-marquee 46s linear infinite;
+}
+.rg-marquee:hover .rg-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes rg-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.rg-float {
+  animation: rg-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rg-marquee-track,
+  .rg-float {
+    animation: none;
+  }
 }
 
-/* ── Blue glare (for light/white card surfaces) ── */
-.rb-glare-indigo {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 0;
-  width: 55%;
-  background: linear-gradient(105deg, transparent 25%, rgba(59,167,255,0.13) 50%, transparent 75%);
-  animation: glareSweep 4.2s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 10;
+/* ── Scene prop float — per-element distance/duration/delay via CSS vars ── */
+@keyframes propFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(var(--pf, -14px)); }
 }
+.pf {
+  animation: propFloat var(--pfd, 7s) ease-in-out infinite;
+  animation-delay: var(--pfl, 0s);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf { animation: none; }
+}
+
 @keyframes yt-trust-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ── 3D depth button (solid color + hard offset shadow) ── */
@@ -494,4 +486,50 @@ input[type="range"]::-moz-range-thumb {
   .announce-split { flex-direction: row; }
   .announce-split > :first-child { flex: 1 1 38%; }
   .announce-split > :last-child { flex: 1 1 62%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RBstars visual system — motion + texture
+   Three motions only, each one meaning something:
+     drift = the parcel is travelling, bob = you're waiting on it,
+     pulse = "delivered" just landed. Nothing moves for decoration.
+   ═══════════════════════════════════════════════════════════════════ */
+@keyframes rbDrift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(9px); } }
+@keyframes rbBob   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes rbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+.rb-drift { animation: rbDrift 2.6s ease-in-out infinite; }
+.rb-bob   { animation: rbBob 3.2s ease-in-out infinite; }
+.rb-pulse {
+  animation: rbPulse 1.9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Brand texture: tiny sparkles + micro crosses, tiled. Stars are RBstars —
+   this is a brand field, not a generic dot grid. Hero only, very quiet. */
+.rb-starfield {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104' height='104' viewBox='0 0 104 104'%3E%3Cpath d='M26 16c1.6 7 1.6 7 8.6 8.6-7 1.6-7 1.6-8.6 8.6-1.6-7-1.6-7-8.6-8.6 7-1.6 7-1.6 8.6-8.6z' fill='%233BA7FF' fill-opacity='.3'/%3E%3Cpath d='M74 60h4.5v5.5H85v4.5h-6.5V75.5H74V70h-5.5v-4.5H74z' fill='%23FFB020' fill-opacity='.35'/%3E%3Cpath d='M26 76h3v4h4v3h-4v4h-3v-4h-4v-3h4z' fill='%233BA7FF' fill-opacity='.22'/%3E%3C/svg%3E");
+  background-size: 104px 104px;
+  background-repeat: repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rb-drift, .rb-bob, .rb-pulse { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RLGLOW — the storefront page surface (DESIGN_SYSTEM.md).
+   Flat navy `#111a2b` + two soft blurred blue lights, so the dark is
+   never flat and never pure black. Applied to the page root INSTEAD of
+   an inline `background: P.bg` (inline would reset background-image).
+   Matches GamePage/ProductPage/Home exactly, so every route reads as
+   one continuous space when you navigate between them.
+   ═══════════════════════════════════════════════════════════════════ */
+.rglow {
+  background-color: #111a2b;
+  background-image:
+    radial-gradient(900px 600px at 0% 0%,  #1a2b52, transparent 70%),
+    radial-gradient(800px 650px at 100% 22%, #15264a, transparent 70%);
+  background-repeat: no-repeat;
 }

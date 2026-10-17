@@ -4,6 +4,8 @@ import { Menu, X, Star, User, ShoppingCart, LogOut, Edit3, ChevronDown, ShieldCh
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { P } from "@/lib/storefront";
+import { RBstar } from "@/components/Art";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -21,8 +23,8 @@ interface NavbarProps {
 
 /* ── Desktop nav link ───────────────────────────────────── */
 function DesktopNavLink({
-  label, onClick, lightMode,
-}: { label: string; onClick: () => void; lightMode: boolean }) {
+  label, onClick,
+}: { label: string; onClick: () => void }) {
   return (
     <motion.button
       whileHover={{ scale: 1.03 }}
@@ -30,13 +32,11 @@ function DesktopNavLink({
       onClick={onClick}
       className="px-3 py-1.5 rounded-full text-sm font-semibold transition-colors duration-200"
       style={{
-        color: lightMode ? "#1C2A34" : "rgba(255,255,255,0.85)",
+        color: P.text,
         background: "transparent",
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.background = lightMode
-          ? "rgba(59,167,255,0.08)"
-          : "rgba(255,255,255,0.1)";
+        e.currentTarget.style.background = P.accentTint;
       }}
       onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
     >
@@ -45,6 +45,8 @@ function DesktopNavLink({
   );
 }
 
+/* `dark` is still passed by App.tsx but is no longer read anywhere — the
+   storefront is permanently light. Keep the prop accepted. */
 export default function Navbar({ dark = false }: NavbarProps) {
   const [scrolled,      setScrolled]      = useState(false);
   const [menuOpen,      setMenuOpen]      = useState(false);
@@ -144,8 +146,6 @@ export default function Navbar({ dark = false }: NavbarProps) {
     }
   }
 
-  const lightMode = false;
-
   return (
     <>
       <motion.header
@@ -153,7 +153,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md"
-        style={{ background: "#131C23", borderBottom: "1px solid #2C414E" }}
+        style={{ background: "rgba(27,39,69,0.86)", borderBottom: `1px solid ${P.border}` }}
       >
         {/* Main nav bar */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -167,10 +167,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={() => setMenuOpen(true)}
                 className="md:hidden flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-200"
-                style={lightMode
-                  ? { borderColor: "rgba(59,167,255,0.25)", color: "#3BA7FF", background: "rgba(59,167,255,0.04)" }
-                  : { borderColor: "rgba(255,255,255,0.3)", color: "white" }
-                }
+                style={{ borderColor: "rgba(47,140,255,0.25)", color: P.accentDeep, background: P.accentTint }}
               >
                 <Menu size={20} />
               </motion.button>
@@ -184,8 +181,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
 
               {/* Desktop nav links */}
               <nav className="hidden md:flex items-center gap-0.5 ml-4">
-                <DesktopNavLink label="How It Works" onClick={scrollToHowItWorks} lightMode={lightMode} />
-                <DesktopNavLink label="Rewards" onClick={() => navigate("/profile")} lightMode={lightMode} />
+                <DesktopNavLink label="How It Works" onClick={scrollToHowItWorks} />
+                <DesktopNavLink label="Rewards" onClick={() => navigate("/profile")} />
 
                 {/* Games dropdown */}
                 <div ref={gamesDropdownRef} className="relative">
@@ -196,12 +193,12 @@ export default function Navbar({ dark = false }: NavbarProps) {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200"
                     style={{
                       background: location.startsWith("/game/")
-                        ? "rgba(59,167,255,0.15)"
-                        : "rgba(255,255,255,0.07)",
+                        ? P.accentTint
+                        : P.band,
                       border: location.startsWith("/game/")
-                        ? "1px solid rgba(59,167,255,0.3)"
-                        : "1px solid rgba(255,255,255,0.12)",
-                      color: location.startsWith("/game/") ? "#3BA7FF" : "rgba(255,255,255,0.85)",
+                        ? "1px solid rgba(47,140,255,0.3)"
+                        : `1px solid ${P.border}`,
+                      color: location.startsWith("/game/") ? P.accentDeep : P.text,
                     }}
                   >
                     {/* Current game's art instead of a static "?" — swaps as you
@@ -215,14 +212,14 @@ export default function Navbar({ dark = false }: NavbarProps) {
                           <span
                             className="w-5 h-5 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0"
                             style={{
-                              background: current ? current.gradient?.from : "rgba(255,255,255,0.08)",
-                              border: current ? "1px solid rgba(255,255,255,0.28)" : "none",
+                              background: current ? current.gradient?.from : P.band,
+                              border: current ? "1px solid rgba(47,140,255,0.3)" : `1px solid ${P.border}`,
                             }}
                           >
                             {current?.imageUrl ? (
                               <img src={current.imageUrl} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-[10px] font-black" style={{ color: current ? "#fff" : "rgba(255,255,255,0.5)" }}>
+                              <span className="text-[10px] font-black" style={{ color: current ? "#fff" : P.faint }}>
                                 {current ? current.name.charAt(0) : "?"}
                               </span>
                             )}
@@ -244,7 +241,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                         exit={{ opacity: 0, y: 8, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                         className="absolute left-0 top-full mt-2 w-72 rounded-2xl p-2 z-50"
-                        style={{ background: "#131C23", border: "1px solid #2C414E", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
+                        style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}
                       >
                         {/* Search inside dropdown */}
                         <div className="relative px-2 pt-1 pb-2">
@@ -255,17 +252,22 @@ export default function Navbar({ dark = false }: NavbarProps) {
                             placeholder="Search games..."
                             autoFocus
                             className="w-full pl-9 pr-3 py-2 rounded-xl text-sm font-medium outline-none"
-                            style={{ background: "#1C2A34", border: "1px solid #2C414E", color: "#F4F8FB" }}
+                            style={{ background: P.band, border: `1px solid ${P.borderStrong}`, color: P.text }}
                           />
-                          <svg className="absolute left-4.5 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#637784" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg className="absolute left-4.5 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={P.faint} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
                           </svg>
                         </div>
                         {/* Game list */}
                         <div className="max-h-64 overflow-y-auto">
                           {gamesLoading ? (
-                            <div className="flex items-center justify-center py-8">
-                              <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#2C414E", borderTopColor: "#3BA7FF" }} />
+                            <div className="flex flex-col items-center justify-center gap-2 py-8">
+                              {/* Brand mark instead of a ring spinner — §5 loading state */}
+                              <motion.div animate={{ scale: [1, 1.16, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}>
+                                <RBstar size={34} color={P.accent} />
+                              </motion.div>
+                              <p className="text-xs font-bold" style={{ color: P.muted }}>Loading games…</p>
                             </div>
                           ) : (
                             (() => {
@@ -273,24 +275,24 @@ export default function Navbar({ dark = false }: NavbarProps) {
                                 ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
                                 : games;
                               if (filtered.length === 0) {
-                                return <p className="text-center text-xs py-6" style={{ color: "#637784" }}>No games found</p>;
+                                return <p className="text-center text-xs py-6" style={{ color: P.faint }}>No games found</p>;
                               }
                               return filtered.map(game => (
                                 <motion.button
                                   key={game._id}
-                                  whileHover={{ backgroundColor: "rgba(59,167,255,0.1)" }}
+                                  whileHover={{ backgroundColor: P.accentTint }}
                                   onClick={() => { setGamesOpen(false); setGameSearch(""); navigate("/game/" + game.slug); }}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors"
                                 >
                                   <div className="w-8 h-8 rounded-lg flex-shrink-0 overflow-hidden"
-                                    style={{ background: game.gradient?.from || "#3BA7FF" }}>
+                                    style={{ background: game.gradient?.from || P.accent }}>
                                     {game.imageUrl && <img src={game.imageUrl} alt="" className="w-full h-full object-cover" />}
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="text-sm font-bold truncate" style={{ color: "#F4F8FB" }}>{game.name}</p>
-                                    <p className="text-[10px] font-medium" style={{ color: "#637784" }}>Browse items</p>
+                                    <p className="text-sm font-bold truncate" style={{ color: P.text }}>{game.name}</p>
+                                    <p className="text-[10px] font-medium" style={{ color: P.faint }}>Browse items</p>
                                   </div>
-                                  <ArrowRight size={12} color="#637784" className="ml-auto shrink-0 opacity-0 group-hover:opacity-100" />
+                                  <ArrowRight size={12} color={P.faint} className="ml-auto shrink-0 opacity-0 group-hover:opacity-100" />
                                 </motion.button>
                               ));
                             })()
@@ -312,7 +314,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: supportOpen ? "#3BA7FF" : "rgba(255,255,255,0.85)",
+                    color: supportOpen ? P.accentDeep : P.text,
                   }}
                 >
                   <MessageSquare size={15} />
@@ -330,10 +332,10 @@ export default function Navbar({ dark = false }: NavbarProps) {
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                       className="absolute right-0 top-full mt-2 w-56 rounded-2xl p-2 z-50"
-                      style={{ background: "#131C23", border: "1px solid #2C414E", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
+                      style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}
                     >
                       <motion.button
-                        whileHover={{ backgroundColor: "rgba(59,167,255,0.1)" }}
+                        whileHover={{ backgroundColor: P.accentTint }}
                         onClick={() => {
                           setSupportOpen(false);
                           navigate("/claim-chat");
@@ -344,13 +346,13 @@ export default function Navbar({ dark = false }: NavbarProps) {
                           <img src="/chat-icon.png" alt="" className="w-6 h-6 object-contain" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold" style={{ color: "#F4F8FB" }}>Claim Chat</p>
-                          <p className="text-[10px]" style={{ color: "#637784" }}>Deliver your order items</p>
+                          <p className="text-sm font-bold" style={{ color: P.text }}>Claim Chat</p>
+                          <p className="text-[10px]" style={{ color: P.faint }}>Deliver your order items</p>
                         </div>
                       </motion.button>
-                      <div className="h-px my-1" style={{ background: "rgba(255,255,255,0.06)" }} />
+                      <div className="h-px my-1" style={{ background: P.border }} />
                       <motion.button
-                        whileHover={{ backgroundColor: "rgba(59,167,255,0.1)" }}
+                        whileHover={{ backgroundColor: P.accentTint }}
                         onClick={() => {
                           setSupportOpen(false);
                           navigate("/tickets");
@@ -361,8 +363,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
                           <img src="/IMG_0732.png" alt="" className="w-6 h-6 object-contain" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold" style={{ color: "#F4F8FB" }}>Tickets</p>
-                          <p className="text-[10px]" style={{ color: "#637784" }}>Get help with any issue</p>
+                          <p className="text-sm font-bold" style={{ color: P.text }}>Tickets</p>
+                          <p className="text-[10px]" style={{ color: P.faint }}>Get help with any issue</p>
                         </div>
                       </motion.button>
                     </motion.div>
@@ -383,23 +385,20 @@ export default function Navbar({ dark = false }: NavbarProps) {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setProfileOpen(o => !o)}
                     className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full transition-all duration-200"
-                    style={lightMode
-                      ? { background: "rgba(59,167,255,0.08)", border: "1.5px solid rgba(59,167,255,0.22)" }
-                      : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.18)" }
-                    }
+                    style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.22)" }}
                   >
                     <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
-                      style={{ background: "#1C2A34" }}>
+                      style={{ background: P.band }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={13} color="white" />
+                        : <User size={13} color={P.muted} />
                       }
                     </div>
-                    <span className="text-[13px] font-bold max-w-[90px] truncate" style={{ color: lightMode ? "#131C23" : "white" }}>
+                    <span className="text-[13px] font-bold max-w-[90px] truncate" style={{ color: P.text }}>
                       {user.displayName}
                     </span>
                     <motion.div animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                      <ChevronDown size={13} color={lightMode ? "#1C2A34" : "rgba(255,255,255,0.6)"} />
+                      <ChevronDown size={13} color={P.text} />
                     </motion.div>
                   </motion.button>
 
@@ -411,19 +410,19 @@ export default function Navbar({ dark = false }: NavbarProps) {
                         exit={{ opacity: 0, y: 8, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
                         className="absolute right-0 top-full mt-2 w-52 rounded-2xl p-2 z-50"
-                        style={{ background: "#1a1730", border: "1.5px solid rgba(59,167,255,0.15)", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}
+                        style={{ background: P.card, border: `1.5px solid ${P.border}`, boxShadow: P.shadow }}
                       >
                         <div className="px-3 py-2.5 mb-1">
-                          <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
-                          <p className="text-[11px]" style={{ color: "#3BA7FF" }}>@{user.robloxUsername}</p>
+                          <p className="text-sm font-extrabold truncate" style={{ color: P.text }}>{user.displayName}</p>
+                          <p className="text-[11px]" style={{ color: P.accentDeep }}>@{user.robloxUsername}</p>
                         </div>
-                        <div className="h-px mb-1" style={{ background: "rgba(59,167,255,0.1)" }} />
+                        <div className="h-px mb-1" style={{ background: P.border }} />
                         <ProfileDropdownItem icon={<Edit3 size={14} />} label="Edit Profile"
                           onClick={() => { setProfileOpen(false); navigate("/profile"); }} />
                         {/* Customers never have an admin panel — the old
                             user.isAdmin check referenced a field that doesn't
                             exist on CustomerUser, so this was dead code. */}
-                        <div className="h-px my-1" style={{ background: "rgba(59,167,255,0.1)" }} />
+                        <div className="h-px my-1" style={{ background: P.border }} />
                         <ProfileDropdownItem icon={<LogOut size={14} />} label="Sign Out"
                           onClick={() => { logout(); setProfileOpen(false); }} danger />
                       </motion.div>
@@ -437,10 +436,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => openAuthModal("login")}
                   className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all"
-                  style={lightMode
-                    ? { background: "rgba(59,167,255,0.08)", border: "1.5px solid rgba(59,167,255,0.22)", color: "#1C2A34" }
-                    : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)", color: "white" }
-                  }
+                  style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.22)", color: P.text }}
                 >
                   <User size={14} /> Log In
                 </motion.button>
@@ -448,11 +444,11 @@ export default function Navbar({ dark = false }: NavbarProps) {
 
               {/* Desktop Shop Now CTA */}
               <motion.button
-                whileHover={{ scale: 1.05, boxShadow: "0 8px 28px rgba(79,70,229,0.5)" }}
+                whileHover={{ scale: 1.05, boxShadow: P.shadow }}
                 whileTap={{ scale: 0.96 }}
                 onClick={goToShop}
                 className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold text-white"
-                style={{ background: "#3BA7FF" }}
+                style={{ background: P.accentDeep }}
               >
                 <ShoppingCart size={14} /> Shop Now
               </motion.button>
@@ -466,18 +462,15 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileTap={{ scale: 0.92 }}
                 onClick={openCart}
                 className="relative w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-200"
-                style={lightMode
-                  ? { background: "rgba(59,167,255,0.07)", border: "1.5px solid rgba(59,167,255,0.18)" }
-                  : { background: "rgba(255,255,255,0.1)", border: "1.5px solid rgba(255,255,255,0.2)" }
-                }
+                style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.18)" }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke={lightMode ? "#1C2A34" : "white"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="9" cy="20" r="1.5" fill="#3BA7FF"/>
-                  <circle cx="17" cy="20" r="1.5" fill="#3BA7FF"/>
-                  <circle cx="10" cy="8.5" r="1" fill={lightMode ? "#1C2A34" : "white"}/>
-                  <circle cx="14.5" cy="8.5" r="1" fill={lightMode ? "#1C2A34" : "white"}/>
-                  <path d="M10 11c.8.8 3.2.8 4 0" stroke={lightMode ? "#1C2A34" : "white"} strokeWidth="1.2" strokeLinecap="round"/>
+                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke={P.text} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="9" cy="20" r="1.5" fill={P.accent}/>
+                  <circle cx="17" cy="20" r="1.5" fill={P.accent}/>
+                  <circle cx="10" cy="8.5" r="1" fill={P.text}/>
+                  <circle cx="14.5" cy="8.5" r="1" fill={P.text}/>
+                  <path d="M10 11c.8.8 3.2.8 4 0" stroke={P.text} strokeWidth="1.2" strokeLinecap="round"/>
                 </svg>
                 <AnimatePresence>
                   {totalItems > 0 && (
@@ -486,7 +479,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                       initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
                       className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white"
-                      style={{ background: "#dc2626", boxShadow: "0 0 8px rgba(220,38,38,0.6)" }}
+                      style={{ background: P.accentDeep, boxShadow: P.shadow }}
                     >
                       {totalItems > 9 ? "9+" : totalItems}
                     </motion.span>
@@ -505,8 +498,12 @@ export default function Navbar({ dark = false }: NavbarProps) {
             key="drawer"
             initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
-            style={{ background: "#131C23" }}
+            /* Scrollable: on a landscape phone the drawer's stacked sections
+               (~620px) exceed the viewport, and an `overflow-hidden` drawer
+               clips the auth block — including the only Log Out button —
+               somewhere the user can never reach. */
+            className="fixed inset-0 z-[60] flex flex-col overflow-y-auto overscroll-contain"
+            style={{ background: P.card }}
           >
             {/* Drawer header */}
             <div className="flex items-center justify-between px-5 pt-12 pb-6 flex-shrink-0">
@@ -519,9 +516,9 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
                 onClick={() => setMenuOpen(false)}
                 className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)" }}
+                style={{ background: P.band, border: `1px solid ${P.border}` }}
               >
-                <X size={18} color="white" />
+                <X size={18} color={P.text} />
               </motion.button>
             </div>
 
@@ -531,7 +528,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={goToShop}
                 className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
-                style={{ background: "#3BA7FF" }}
+                style={{ background: P.accentDeep }}
               >
                 <ShoppingCart size={16} /> Browse Shop
               </motion.button>
@@ -539,7 +536,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
 
             {/* Section label */}
             <div className="px-5 mb-3 flex-shrink-0">
-              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: "rgba(59,167,255,0.5)" }}>
+              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: P.accentDeep }}>
                 Rewards
               </p>
             </div>
@@ -550,23 +547,23 @@ export default function Navbar({ dark = false }: NavbarProps) {
               <motion.button
                 whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}
                 onClick={() => { setMenuOpen(false); navigate("/profile"); }}
-                className="w-full py-3.5 rounded-xl font-bold text-white flex items-center gap-3 text-left"
-                style={{ background: "rgba(59,167,255,0.14)", border: "1px solid rgba(59,167,255,0.3)" }}
+                className="w-full py-3.5 rounded-xl font-bold flex items-center gap-3 text-left"
+                style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.3)", color: P.text }}
               >
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#3BA7FF" }}>
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: P.accentDeep }}>
                   <Gift size={15} color="white" />
                 </span>
                 <span className="flex-1">
                   <span className="block text-sm font-bold">Rewards</span>
-                  <span className="block text-[10px] font-medium" style={{ color: "#9BAEBB" }}>Spin the wheel — win up to 30% OFF</span>
+                  <span className="block text-[10px] font-medium" style={{ color: P.muted }}>Spin the wheel — win up to 30% OFF</span>
                 </span>
-                <ArrowRight size={15} color="#3BA7FF" />
+                <ArrowRight size={15} color={P.accentDeep} />
               </motion.button>
             </div>
 
             {/* Support section */}
             <div className="px-5 mb-3 flex-shrink-0">
-              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: "rgba(59,167,255,0.5)" }}>
+              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: P.accentDeep }}>
                 Support
               </p>
             </div>
@@ -577,13 +574,13 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   setMenuOpen(false);
                   navigate("/claim-chat");
                 }}
-                className="w-full py-3 rounded-xl font-bold text-white flex items-center gap-3 text-left"
-                style={{ background: "rgba(59,167,255,0.1)", border: "1px solid rgba(59,167,255,0.2)" }}
+                className="w-full py-3 rounded-xl font-bold flex items-center gap-3 text-left"
+                style={{ background: P.accentTint, border: "1px solid rgba(47,140,255,0.2)", color: P.text }}
               >
                 <img src="/chat-icon.png" alt="" className="w-6 h-6 object-contain" />
                 <div>
                   <p className="text-sm font-bold">Claim Chat</p>
-                  <p className="text-[10px]" style={{ color: "#637784" }}>Deliver your order items</p>
+                  <p className="text-[10px]" style={{ color: P.faint }}>Deliver your order items</p>
                 </div>
               </motion.button>
               <motion.button
@@ -592,39 +589,39 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   setMenuOpen(false);
                   navigate("/tickets");
                 }}
-                className="w-full py-3 rounded-xl font-bold text-white flex items-center gap-3 text-left"
-                style={{ background: "rgba(255,197,61,0.08)", border: "1px solid rgba(255,197,61,0.2)" }}
+                className="w-full py-3 rounded-xl font-bold flex items-center gap-3 text-left"
+                style={{ background: "rgba(255,197,61,0.08)", border: "1px solid rgba(255,197,61,0.2)", color: P.text }}
               >
                 <img src="/IMG_0732.png" alt="" className="w-6 h-6 object-contain" />
                 <div>
                   <p className="text-sm font-bold">Tickets</p>
-                  <p className="text-[10px]" style={{ color: "#637784" }}>Get help with any issue</p>
+                  <p className="text-[10px]" style={{ color: P.faint }}>Get help with any issue</p>
                 </div>
               </motion.button>
             </div>
 
             {/* Auth section */}
-            <div className="px-5 pb-8 flex-shrink-0 border-t" style={{ borderColor: "rgba(59,167,255,0.1)", paddingTop: 16 }}>
+            <div className="px-5 pb-8 flex-shrink-0 border-t" style={{ borderColor: P.border, paddingTop: 16 }}>
               {user ? (
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 px-3 py-3 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }}>
+                  <div className="flex items-center gap-3 px-3 py-3 rounded-2xl" style={{ background: P.band }}>
                     <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
-                      style={{ background: "#1C2A34" }}>
+                      style={{ background: P.band }}>
                       {user.robloxAvatarUrl
                         ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={16} color="white" />
+                        : <User size={16} color={P.muted} />
                       }
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-extrabold text-white truncate">{user.displayName}</p>
-                      <p className="text-[11px]" style={{ color: "#3BA7FF" }}>@{user.robloxUsername}</p>
+                      <p className="text-sm font-extrabold truncate" style={{ color: P.text }}>{user.displayName}</p>
+                      <p className="text-[11px]" style={{ color: P.accentDeep }}>@{user.robloxUsername}</p>
                     </div>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     onClick={() => { logout(); setMenuOpen(false); }}
                     className="w-full py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2"
-                    style={{ background: "rgba(248,113,113,0.1)", border: "1.5px solid rgba(248,113,113,0.2)", color: "#fca5a5" }}
+                    style={{ background: P.badTint, border: "1.5px solid rgba(248,113,113,0.2)", color: P.bad }}
                   >
                     <LogOut size={14} /> Sign Out
                   </motion.button>
@@ -634,8 +631,8 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   data-testid="button-menu-login"
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={() => { setMenuOpen(false); openAuthModal("login"); }}
-                  className="w-full py-3.5 rounded-full font-bold text-white flex items-center justify-center gap-2"
-                  style={{ background: "#1C2A34" }}
+                  className="w-full py-3.5 rounded-full font-bold flex items-center justify-center gap-2"
+                  style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.3)", color: P.accentDeep }}
                 >
                   <User size={16} /> Log In
                 </motion.button>
@@ -653,10 +650,10 @@ function ProfileDropdownItem({
 }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
   return (
     <motion.button
-      whileHover={{ backgroundColor: danger ? "rgba(248,113,113,0.08)" : "rgba(59,167,255,0.15)" }}
+      whileHover={{ backgroundColor: danger ? P.badTint : P.accentTint }}
       onClick={onClick}
       className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left"
-      style={{ color: danger ? "#fca5a5" : "#3BA7FF" }}
+      style={{ color: danger ? P.bad : P.accentDeep }}
     >
       {icon}{label}
     </motion.button>

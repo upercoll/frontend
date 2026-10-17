@@ -617,7 +617,7 @@ export default function Products() {
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Key Features <span className="text-[var(--pn-text-3)] font-normal">(comma-separated, shown as a checklist)</span></label>
-                    <input value={form.features} onChange={e => setF("features", e.target.value)} className={inputCls} style={inpStyle} placeholder="Instant trade, Untradeable-safe, Limited stock" />
+                    <input value={form.features} onChange={e => setF("features", e.target.value)} className={inputCls} style={inpStyle} placeholder="Verified seller, Untradeable-safe, Limited stock" />
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Tags <span className="text-[var(--pn-text-3)] font-normal">(comma-separated)</span></label>

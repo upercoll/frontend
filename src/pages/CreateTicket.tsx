@@ -1,7 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { RBstar, TicketStub } from "@/components/Art";
+import { P } from "@/lib/storefront";
+import { TopNav, SiteFooter } from "./Home";
 import {
   ArrowLeft,
   Bold,
@@ -28,15 +32,20 @@ import {
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
+/* Colours the customer can write with. This set was tuned for a dark editor:
+   "White" and a bright #FACC15 Yellow both read on black. The editor is white
+   now, so White would erase whatever was typed and four others fell under
+   3:1 — every value is re-cut to stay legible on white while keeping its
+   label honest. "White" is dropped outright: there is no dark surface left
+   in this editor to use it on. */
 const COLORS = [
-  { value: "#F4F8FB", label: "White" },
-  { value: "#9BAEBB", label: "Gray" },
-  { value: "#3BA7FF", label: "Blue" },
-  { value: "#00B06F", label: "Green" },
-  { value: "#EF4444", label: "Red" },
-  { value: "#FACC15", label: "Yellow" },
-  { value: "#A78BFA", label: "Purple" },
-  { value: "#FB923C", label: "Orange" },
+  { value: "#a9b3d3", label: "Gray" },
+  { value: "#0a84ff", label: "Blue" },
+  { value: "#5fe08e", label: "Green" },
+  { value: "#ff5a4d", label: "Red" },
+  { value: "#A16207", label: "Yellow" },
+  { value: "#7C3AED", label: "Purple" },
+  { value: "#C2410C", label: "Orange" },
 ];
 
 export default function CreateTicket() {
@@ -120,14 +129,14 @@ export default function CreateTicket() {
         title={title}
         onClick={onClick}
         className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors cursor-pointer"
-        style={{ color: "#9BAEBB" }}
+        style={{ color: P.muted }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = "rgba(59,167,255,0.15)";
-          e.currentTarget.style.color = "#F4F8FB";
+          e.currentTarget.style.background = P.accentTint;
+          e.currentTarget.style.color = P.text;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.background = "transparent";
-          e.currentTarget.style.color = "#9BAEBB";
+          e.currentTarget.style.color = P.muted;
         }}
       >
         {children}
@@ -136,24 +145,30 @@ export default function CreateTicket() {
   }
 
   function ToolbarDivider() {
-    return <div className="w-px h-5 mx-1" style={{ background: "#2C414E" }} />;
+    return <div className="w-px h-5 mx-1" style={{ background: P.borderStrong }} />;
   }
 
   return (
-    <main style={{ background: "#131C23", minHeight: "100vh" }}>
+    <main className="rglow" style={{ minHeight: "100vh" }}>
+      <TopNav onHome={() => navigate("/")} />
       <style>{`
+        .ticket-field::placeholder { color: ${P.faint}; }
+        /* Same blue focus ring the inputs use — the wrapper carries its border
+           inline, so the ring is what lights up while the message has focus. */
+        .ticket-editor { transition: box-shadow .2s ease; }
+        .ticket-editor:focus-within { box-shadow: 0 0 0 4px rgba(47,140,255,0.25); }
         .ticket-editor [contenteditable] {
           outline: none;
           min-height: 340px;
           padding: 18px;
-          color: #F4F8FB;
+          color: ${P.text};
           font-size: 15px;
           line-height: 1.7;
-          background: #0C141B;
+          background: ${P.card};
         }
         .ticket-editor [contenteditable]:empty::before {
           content: attr(data-placeholder);
-          color: #637784;
+          color: ${P.faint};
           pointer-events: none;
         }
         .ticket-editor [contenteditable] b,
@@ -166,14 +181,14 @@ export default function CreateTicket() {
         .ticket-editor [contenteditable] ul { list-style: disc; padding-left: 24px; }
         .ticket-editor [contenteditable] ol { list-style: decimal; padding-left: 24px; }
         .ticket-editor [contenteditable] blockquote {
-          border-left: 3px solid #3BA7FF;
+          border-left: 3px solid ${P.accent};
           padding-left: 12px;
           margin: 8px 0;
-          color: #9BAEBB;
+          color: ${P.muted};
         }
         .ticket-editor [contenteditable] pre {
-          background: #0C141B;
-          border: 1px solid #2C414E;
+          background: ${P.band};
+          border: 1px solid ${P.borderStrong};
           border-radius: 8px;
           padding: 12px;
           font-family: monospace;
@@ -184,46 +199,53 @@ export default function CreateTicket() {
         .ticket-editor [contenteditable] h2 { font-size: 18px; font-weight: 600; margin: 6px 0; }
         .ticket-editor [contenteditable] hr {
           border: none;
-          border-top: 1px solid #2C414E;
+          border-top: 1px solid ${P.borderStrong};
           margin: 12px 0;
         }
-        .ticket-editor [contenteditable] a { color: #3BA7FF; text-decoration: underline; }
+        .ticket-editor [contenteditable] a { color: ${P.accentDeep}; text-decoration: underline; }
         .ticket-editor [contenteditable] img { max-width: 100%; border-radius: 8px; }
       `}</style>
 
-      <div className="max-w-[780px] mx-auto px-4 pt-28 pb-12">
+      <div className="max-w-[780px] mx-auto px-4 pt-10 pb-12">
         <Link
           href="/tickets"
-          className="inline-flex items-center gap-1.5 text-sm font-medium mb-6 transition-colors no-underline"
-          style={{ color: "#637784" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#3BA7FF")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#637784")}
+          className="inline-flex items-center gap-1.5 text-sm font-medium mb-5 transition-colors no-underline"
+          style={{ color: P.faint }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = P.accentDeep)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = P.faint)}
         >
           <ArrowLeft size={16} />
           Back to Tickets
         </Link>
 
-        <h1
-          className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2"
-          style={{ color: "#F4F8FB" }}
-        >
-          Create ticket
-        </h1>
-        <p className="text-sm mb-6" style={{ color: "#9BAEBB" }}>
-          Tell us what's going on and we'll help you out
-        </p>
+        {/* Designed moment (head): the object this page is about — a support
+            ticket stub — then the honest instruction copy. Once, up top. */}
+        <div className="flex items-center gap-4 mb-6">
+          <TicketStub className="w-16 h-16 flex-shrink-0" />
+          <div className="min-w-0">
+            <h1
+              className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-1"
+              style={{ color: P.text }}
+            >
+              Create ticket
+            </h1>
+            <p className="text-sm" style={{ color: P.muted }}>
+              Tell us what's going on and we'll help you out
+            </p>
+          </div>
+        </div>
 
         <div
-          className="card-depth rounded-2xl overflow-hidden"
-          style={{ background: "#1C2A34", border: "1px solid #2C414E" }}
+          className="rounded-2xl overflow-hidden"
+          style={{ background: P.card, border: `1px solid ${P.border}`, boxShadow: P.shadow }}
         >
           {error && (
             <div
-              className="mx-5 mt-5 rounded-lg px-4 py-3 text-sm font-semibold"
+              className="mx-5 mt-5 rounded-xl px-4 py-3 text-sm font-semibold"
               style={{
-                background: "rgba(239,68,68,0.12)",
-                border: "1px solid #EF4444",
-                color: "#EF4444",
+                background: P.badTint,
+                border: `1px solid ${P.bad}`,
+                color: P.bad,
               }}
             >
               {error}
@@ -235,24 +257,22 @@ export default function CreateTicket() {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Title..."
-            className="w-full text-[16px] outline-none font-medium"
+            className="ticket-field w-full px-3.5 h-11 rounded-xl text-base font-medium outline-none transition-shadow focus:ring-4 focus:ring-[#2f8cff]/25"
             style={{
               margin: "22px 22px 18px",
-              padding: "14px 16px",
-              background: "#0C141B",
-              border: "1px solid #2C414E",
-              borderRadius: 12,
-              color: "#F4F8FB",
+              background: P.card,
+              border: `1px solid ${P.borderStrong}`,
+              color: P.text,
             }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "#3BA7FF")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "#2C414E")}
+            onFocus={(e) => (e.currentTarget.style.borderColor = P.accent)}
+            onBlur={(e) => (e.currentTarget.style.borderColor = P.borderStrong)}
           />
 
           <div
             className="ticket-editor"
             style={{
               margin: "0 22px 22px",
-              border: "1px solid #2C414E",
+              border: `1px solid ${P.borderStrong}`,
               borderRadius: 12,
               overflow: "hidden",
             }}
@@ -261,8 +281,8 @@ export default function CreateTicket() {
               className="flex items-center justify-between flex-wrap"
               style={{
                 padding: "12px 16px",
-                borderBottom: "1px solid #2C414E",
-                background: "#1C2A34",
+                borderBottom: `1px solid ${P.border}`,
+                background: P.band,
               }}
             >
               <div className="flex items-center gap-1 flex-wrap">
@@ -346,9 +366,9 @@ export default function CreateTicket() {
                     <div
                       className="absolute top-full left-0 mt-2 p-3 rounded-xl flex gap-2 flex-wrap z-50"
                       style={{
-                        background: "#1C2A34",
-                        border: "1px solid #2C414E",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+                        background: P.card,
+                        border: `1px solid ${P.borderStrong}`,
+                        boxShadow: P.shadow,
                         width: 180,
                       }}
                     >
@@ -360,7 +380,7 @@ export default function CreateTicket() {
                           className="w-6 h-6 rounded-full cursor-pointer border-2 transition-transform hover:scale-110"
                           style={{
                             background: c.value,
-                            borderColor: "transparent",
+                            borderColor: P.borderStrong,
                           }}
                           onClick={() => {
                             execCmd("foreColor", c.value);
@@ -392,67 +412,61 @@ export default function CreateTicket() {
           </div>
 
           {/* Name field */}
-          <div className="flex" style={{ borderTop: "1px solid #2C414E" }}>
-            <div className="flex-[0_0_46%] p-6 flex flex-col items-end justify-center gap-[52px]">
-              <div className="text-right">
-                <div style={{ color: "#F4F8FB", fontSize: 15 }}>Name:</div>
-                <div style={{ color: "#637784", fontSize: 14, marginTop: 2 }}>
+          <div className="flex flex-col sm:flex-row" style={{ borderTop: `1px solid ${P.border}` }}>
+            <div className="sm:flex-[0_0_46%] p-6 pb-0 sm:pb-6 flex flex-col items-start sm:items-end justify-center gap-[52px]">
+              <div className="text-left sm:text-right">
+                <div style={{ color: P.text, fontSize: 15 }}>Name:</div>
+                <div style={{ color: P.muted, fontSize: 14, marginTop: 2 }}>
                   Required
                 </div>
               </div>
             </div>
             <div
-              className="flex-1 p-6 pl-0 flex flex-col justify-center"
-              style={{ borderLeft: "1px solid #2C414E" }}
+              className="flex-1 p-6 pt-3 sm:pt-6 sm:pl-0 flex flex-col justify-center border-t sm:border-t-0 sm:border-l"
+              style={{ borderColor: P.border }}
             >
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full outline-none"
+                className="ticket-field w-full px-3.5 h-10 rounded-xl text-sm outline-none transition-shadow focus:ring-4 focus:ring-[#2f8cff]/25"
                 style={{
-                  background: "#0C141B",
-                  border: "1px solid #2C414E",
-                  borderRadius: 8,
-                  padding: "14px 16px",
-                  color: "#F4F8FB",
-                  fontSize: 15,
+                  background: P.card,
+                  border: `1px solid ${P.borderStrong}`,
+                  color: P.text,
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#3BA7FF")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#2C414E")}
+                onFocus={(e) => (e.currentTarget.style.borderColor = P.accent)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = P.borderStrong)}
               />
             </div>
           </div>
 
           {/* Email field */}
-          <div className="flex" style={{ borderTop: "1px solid #2C414E" }}>
-            <div className="flex-[0_0_46%] p-6 flex flex-col items-end justify-center gap-[52px]">
-              <div className="text-right">
-                <div style={{ color: "#F4F8FB", fontSize: 15 }}>Email:</div>
-                <div style={{ color: "#637784", fontSize: 14, marginTop: 2 }}>
+          <div className="flex flex-col sm:flex-row" style={{ borderTop: `1px solid ${P.border}` }}>
+            <div className="sm:flex-[0_0_46%] p-6 pb-0 sm:pb-6 flex flex-col items-start sm:items-end justify-center gap-[52px]">
+              <div className="text-left sm:text-right">
+                <div style={{ color: P.text, fontSize: 15 }}>Email:</div>
+                <div style={{ color: P.muted, fontSize: 14, marginTop: 2 }}>
                   Required
                 </div>
               </div>
             </div>
             <div
-              className="flex-1 p-6 pl-0 flex flex-col justify-center"
-              style={{ borderLeft: "1px solid #2C414E" }}
+              className="flex-1 p-6 pt-3 sm:pt-6 sm:pl-0 flex flex-col justify-center border-t sm:border-t-0 sm:border-l"
+              style={{ borderColor: P.border }}
             >
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full outline-none"
+                className="ticket-field w-full px-3.5 h-10 rounded-xl text-sm outline-none transition-shadow focus:ring-4 focus:ring-[#2f8cff]/25"
                 style={{
-                  background: "#0C141B",
-                  border: "1px solid #2C414E",
-                  borderRadius: 8,
-                  padding: "14px 16px",
-                  color: "#F4F8FB",
-                  fontSize: 15,
+                  background: P.card,
+                  border: `1px solid ${P.borderStrong}`,
+                  color: P.text,
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = "#3BA7FF")}
-                onBlur={(e) => (e.currentTarget.style.borderColor = "#2C414E")}
+                onFocus={(e) => (e.currentTarget.style.borderColor = P.accent)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = P.borderStrong)}
               />
             </div>
           </div>
@@ -460,21 +474,28 @@ export default function CreateTicket() {
           {/* Submit */}
           <div
             className="flex justify-center"
-            style={{ borderTop: "1px solid #2C414E", padding: 20 }}
+            style={{ borderTop: `1px solid ${P.border}`, padding: 20 }}
           >
             <button
               type="button"
               onClick={handleSubmit}
               disabled={isPending}
-              className="btn-3d"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black cursor-pointer transition-transform active:translate-y-0.5"
               style={{
-                background: "#3BA7FF",
+                background: P.accentDeep,
                 color: "#fff",
+                boxShadow: "0 6px 16px rgba(10,110,255,.35)",
                 opacity: isPending ? 0.55 : 1,
               }}
             >
               {isPending ? (
-                <span className="animate-spin inline-block w-4 h-4 border-2 border-t-transparent rounded-full" />
+                <motion.span
+                  className="inline-flex"
+                  animate={{ scale: [1, 1.16, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }}
+                >
+                  <RBstar size={16} color="#fff" />
+                </motion.span>
               ) : (
                 <Send size={16} />
               )}
@@ -483,6 +504,7 @@ export default function CreateTicket() {
           </div>
         </div>
       </div>
+      <SiteFooter />
     </main>
   );
 }

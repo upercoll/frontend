@@ -19,7 +19,12 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       "/api": {
-        target: "http://localhost:4000",
+        /* Local backend by default. Set API_PROXY to the deployed backend
+           (API_PROXY=https://backend-fj5a.onrender.com) to run against live
+           data — the app then calls /api same-origin and the proxy adds the
+           Host header, which avoids the CORS block the real backend applies
+           to localhost. */
+        target: process.env.API_PROXY || "http://localhost:4000",
         changeOrigin: true,
       },
     },

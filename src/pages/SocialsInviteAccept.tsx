@@ -115,7 +115,7 @@ export default function SocialsInviteAccept() {
                 style={{ background: "#0C141B", border: "1.5px solid #2C414E", color: "#F4F8FB" }} />
               <button type="button" onClick={sendCode} disabled={loading || codeSent}
                 className="px-4 py-3 rounded-xl text-sm font-semibold disabled:opacity-50 transition-all whitespace-nowrap"
-                style={{ background: codeSent ? "rgba(34,197,94,0.15)" : "rgba(59,167,255,0.15)", border: `1px solid ${codeSent ? "#22C55E" : "#3BA7FF"}`, color: codeSent ? "#22C55E" : "#3BA7FF" }}>
+                style={{ background: codeSent ? "rgba(34,197,94,0.15)" : "rgba(47,140,255,0.15)", border: `1px solid ${codeSent ? "#22C55E" : "#3BA7FF"}`, color: codeSent ? "#22C55E" : "#3BA7FF" }}>
                 {codeSent ? "Sent ✓" : loading ? "..." : "Send Code"}
               </button>
             </div>
@@ -145,7 +145,7 @@ export default function SocialsInviteAccept() {
 
           <motion.button type="submit" disabled={loading}
             className="w-full py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 disabled:opacity-60"
-            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(59,167,255,0.3)" }}>
+            style={{ background: "#3BA7FF", boxShadow: "0 4px 0 #1a6bbf, 0 6px 16px rgba(47,140,255,0.3)" }}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
             Activate Account
           </motion.button>
