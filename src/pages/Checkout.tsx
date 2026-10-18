@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
+import { useCurrency, usePrice } from "@/context/CurrencyContext";
 import { useAuth } from "@/context/AuthContext";
 import { RBstar, ItemTileGlyph, MailboxGlyph } from "@/components/Art";
 import { TopNav, SiteFooter } from "./Home";
@@ -334,6 +335,7 @@ type PromoState = { code: string; type: "percent" | "fixed"; value: number } | n
 
 function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApply: (p: PromoState) => void; onRemove: () => void }) {
   const [code, setCode] = useState("");
+  const fmt = usePrice();
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [showGiftCards, setShowGiftCards] = useState(false);
@@ -388,7 +390,7 @@ function PromoInput({ applied, onApply, onRemove }: { applied: PromoState; onApp
           <Check size={14} color={P.good} />
           <span className="text-sm font-extrabold" style={{ color: P.text }}>{applied.code}</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: P.badTint, color: P.bad }}>
-            {applied.type === "percent" ? `-${applied.value}%` : `-$${applied.value}`}
+            {applied.type === "percent" ? `-${applied.value}%` : `-${fmt(applied.value)}`}
           </span>
         </div>
         <button onClick={onRemove}><X size={14} color={P.muted} /></button>
@@ -670,6 +672,9 @@ const COUNTRIES = [
 
 export default function Checkout() {
   const { items, totalPrice, clearCart, removeItem } = useCart();
+  /* Display currency. Stripe always charges the USD total — converted figures
+     are a convenience, and the summary says so wherever they appear. */
+  const { fmt, converted, currency } = useCurrency();
   const [, navigate] = useLocation();
   const { user, openAuthModal } = useAuth();
 
@@ -1343,7 +1348,7 @@ export default function Checkout() {
                     <div className="flex-1 min-w-0">
                       <p className="text-base font-semibold truncate" style={{ color: P.text }}>{item.name}</p>
                     </div>
-                    <span className="text-base font-extrabold flex-shrink-0" style={{ color: P.text }}>${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="text-base font-extrabold flex-shrink-0" style={{ color: P.text }}>{fmt(item.price * item.quantity)}</span>
                   </motion.div>
                 ))}
               </div>
@@ -1360,17 +1365,25 @@ export default function Checkout() {
                     {tax.label} ({tax.rate}%)
                   </span>
                   <span className="text-sm font-bold" style={{ color: P.text }}>
-                    ${taxAmount.toFixed(2)}
+                    {fmt(taxAmount)}
                   </span>
                 </div>
               )}
 
-              {/* Total */}
+              {/* Total — in the display currency, with the amount that actually
+                  leaves the card spelled out underneath whenever they differ. */}
               <div className="flex items-center justify-between py-5" style={{ borderTop: `1px solid ${P.border}` }}>
                 <span className="text-2xl font-extrabold" style={{ color: P.text }}>Total</span>
-                <div className="text-right flex items-baseline gap-1.5">
-                  <span className="text-sm font-semibold" style={{ color: P.faint }}>USD</span>
-                  <span className="text-3xl font-extrabold" style={{ color: P.text }}>${finalTotal.toFixed(2)}</span>
+                <div className="text-right">
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span className="text-sm font-semibold" style={{ color: P.faint }}>{converted ? currency.code : "USD"}</span>
+                    <span className="text-3xl font-extrabold" style={{ color: P.text }}>{fmt(finalTotal)}</span>
+                  </div>
+                  {converted && (
+                    <p className="text-[11px] mt-1" style={{ color: P.faint }}>
+                      You'll be charged ${finalTotal.toFixed(2)} USD
+                    </p>
+                  )}
                 </div>
               </div>
 

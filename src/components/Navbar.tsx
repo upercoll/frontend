@@ -6,6 +6,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { P } from "@/lib/storefront";
 import { RBstar } from "@/components/Art";
+import CurrencyMenu from "@/components/CurrencyMenu";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -442,6 +443,13 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 </motion.button>
               )}
 
+              {/* Display currency — the same control the footer uses, driven
+                  by one context, so both always agree. Display only: the
+                  card is charged in USD. */}
+              <div className="hidden md:block">
+                <CurrencyMenu variant="nav" direction="down" />
+              </div>
+
               {/* Desktop Shop Now CTA */}
               <motion.button
                 whileHover={{ scale: 1.05, boxShadow: P.shadow }}
@@ -598,6 +606,16 @@ export default function Navbar({ dark = false }: NavbarProps) {
                   <p className="text-[10px]" style={{ color: P.faint }}>Get help with any issue</p>
                 </div>
               </motion.button>
+            </div>
+
+            {/* Currency — display only; the card is always charged in USD */}
+            <div className="px-5 mb-3 flex-shrink-0">
+              <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: P.accentDeep }}>
+                Currency
+              </p>
+            </div>
+            <div className="px-5 mb-6 flex-shrink-0">
+              <CurrencyMenu />
             </div>
 
             {/* Auth section */}

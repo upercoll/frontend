@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TopNav, SiteFooter } from "./Home";
+import { usePrice } from "@/context/CurrencyContext";
 import { RBstar } from "@/components/Art";
 import ProductCard from "@/components/ProductCard";
 import PageLoader from "@/components/PageLoader";
@@ -166,6 +167,8 @@ export default function GamePage() {
   const { slug } = useParams<{ slug: string }>();
   const [, navigate] = useLocation();
   const { addItem } = useCart();
+  /* Display currency for the price filter label — filtering stays in USD. */
+  const fmt = usePrice();
 
   const [gameInfo, setGameInfo] = useState<ApiGame | null>(null);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -297,7 +300,7 @@ export default function GamePage() {
               <h4 style={{ marginTop: 10 }}>MAX PRICE</h4>
               <div className="rg">
                 <input type="range" min={1} max={priceCeil} step={0.5} value={maxP} onChange={e => setMaxP(+e.target.value)} />
-                <span>${maxP.toFixed(2)}</span>
+                <span>{fmt(maxP)}</span>
               </div>
               <button className="clr" onClick={clearFilters}>Clear filters</button>
             </div>

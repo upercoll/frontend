@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tag, ShoppingCart, Check, Ban } from "lucide-react";
 import { P } from "@/lib/storefront";
+import { usePrice } from "@/context/CurrencyContext";
 
 /* ── Product card ─────────────────────────────────────────────────────────
    Reference layout: lit media panel + "save" chip + best-sellers chip +
@@ -51,6 +52,8 @@ export default function ProductCard({
   const soldOut = !!p.outOfStock;
   const accent = p.accent || P.accent;
   const [added, setAdded] = useState(false);
+  /* Display currency only — the stored price stays USD and so does the charge. */
+  const fmt = usePrice();
 
   return (
     <motion.article
@@ -175,7 +178,7 @@ export default function ProductCard({
 
         <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
           <b className="font-mont text-[19px] font-bold leading-none" style={{ color: P.good }}>
-            ${p.price.toFixed(2)}
+            {fmt(p.price)}
           </b>
           {onSale && !soldOut && (
             <span
@@ -187,7 +190,7 @@ export default function ProductCard({
           )}
           {onSale && (
             <s className="text-[12px] font-semibold" style={{ color: P.faint }}>
-              ${p.originalPrice!.toFixed(2)}
+              {fmt(p.originalPrice!)}
             </s>
           )}
         </div>

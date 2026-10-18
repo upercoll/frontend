@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Lock, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useLocation } from "wouter";
 import { RBstar, ItemTileGlyph } from "@/components/Art";
 
@@ -26,6 +27,8 @@ const CartGlyph = ({ s = 18 }: { s?: number }) => (
 
 export default function CartDrawer() {
   const { items, removeItem, updateQty, totalItems, totalPrice, isOpen, closeCart } = useCart();
+  /* Display currency; the cart total handed to Stripe stays USD. */
+  const { fmt, converted, rates } = useCurrency();
   const [, navigate] = useLocation();
   const [checking, setChecking] = useState(false);
 
@@ -134,7 +137,7 @@ export default function CartDrawer() {
                           <div className="crt-info">
                             <p className="crt-nm" title={item.name}>{item.name}</p>
                             <div className="crt-pr">
-                              <b>${item.price.toFixed(2)}</b>
+                              <b>{fmt(item.price)}</b>
                               {item.originalPrice && item.originalPrice > item.price && (
                                 <s>${item.originalPrice.toFixed(2)}</s>
                               )}
@@ -153,7 +156,7 @@ export default function CartDrawer() {
                                   <Plus size={13} strokeWidth={2.8} />
                                 </button>
                               </div>
-                              <span className="crt-lt">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="crt-lt">{fmt(item.price * item.quantity)}</span>
                             </div>
                           </div>
                         </motion.div>
@@ -168,19 +171,27 @@ export default function CartDrawer() {
                 <div className="crt-ft">
                   <div className="crt-line">
                     <span>Subtotal · {totalItems} {totalItems === 1 ? "item" : "items"}</span>
-                    <b>${totalPrice.toFixed(2)}</b>
+                    <b>{fmt(totalPrice)}</b>
                   </div>
                   {savings > 0 && (
                     <div className="crt-line save">
                       <span>You saved</span>
-                      <b>+${savings.toFixed(2)}</b>
+                      <b>+{fmt(savings)}</b>
                     </div>
                   )}
 
                   <div className="crt-total">
                     <span>Total</span>
-                    <b>${totalPrice.toFixed(2)}</b>
+                    <b>{fmt(totalPrice)}</b>
                   </div>
+
+                  {/* Converted display prices are a convenience; the amount
+                      actually taken from the card is USD. */}
+                  {converted && (
+                    <p className="crt-usd-note">
+                      ≈ ${totalPrice.toFixed(2)} USD charged · rates from {rates.date ?? "today"}
+                    </p>
+                  )}
 
                   <button className="crt-go" onClick={handleCheckout} disabled={checking}>
                     {checking ? "Processing…" : <>Checkout <ArrowRight size={18} strokeWidth={2.6} /></>}
@@ -275,6 +286,7 @@ const crtCSS = `
 .crt-go:hover:not(:disabled){filter:brightness(1.08)}.crt-go:active:not(:disabled){transform:scale(.985)}
 .crt-go:disabled{opacity:.72;cursor:progress}
 .crt-secure{margin-top:11px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#8a97ba}
+.crt-usd-note{margin-top:7px;text-align:center;font-size:11px;color:#8a97ba}
 
 @media(max-width:460px){.crt{width:100vw;border-radius:0;border-left:0}}
 @media(prefers-reduced-motion:reduce){.crt-star{animation:none}}

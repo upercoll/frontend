@@ -3,13 +3,15 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Store, PackageSearch, ShoppingBag, UserPlus, LogIn,
   ChevronRight, Star, Plus, Minus, Box, Wallet, Users, Zap,
-  ShoppingCart, ShieldCheck, Instagram, Twitter, Youtube, Music2, MessageCircle, Play,
+  ShoppingCart, ShieldCheck, Play,
   Menu, X, LifeBuoy, ChevronDown, Gamepad2, Gift, MessageSquare,
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { RBstar } from "@/components/Art";
+import CurrencyMenu from "@/components/CurrencyMenu";
+import { LIVE_SOCIALS } from "@/lib/socialLinks";
 import ProductCard, { ProductCardSkeleton, type CardProduct } from "@/components/ProductCard";
 import { fetchLiveStats, fetchActivity, groupNum, type LiveStats, type StoreActivity, type ActivityGame } from "@/lib/liveStats";
 import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
@@ -454,8 +456,11 @@ export function TopNav({ onHome }: { onHome: () => void }) {
 
         {/* Right cluster */}
         <div className="flex items-center gap-2 ml-auto">
-          <img src={`${A}flag.png`} alt="English" className="hidden sm:block w-7 h-7 rounded-full object-cover" />
-          <img src={`${A}usd.png`} alt="USD" className="hidden sm:block w-7 h-7 rounded-full object-cover" />
+          {/* Display currency. Replaces two static flag/currency images that
+              404'd and did nothing — this opens a real menu, converts every
+              price on the site from live rates, and persists the choice. The
+              card is still charged in USD, which the menu states. */}
+          <CurrencyMenu variant="nav" direction="down" />
 
           {/* Cart stays reachable even though the global nav is hidden on home */}
           <button
@@ -584,6 +589,15 @@ export function TopNav({ onHome }: { onHome: () => void }) {
                   <Gamepad2 size={17} color="#8ea0cf" /> {game.name}
                 </button>
               ))}
+            </div>
+            {/* Display currency — same control, one shared context */}
+            <div>
+              <p className="px-5 pt-4 pb-1 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: C.faint }}>
+                Currency
+              </p>
+              <div className="px-5 pb-4 pt-1">
+                <CurrencyMenu direction="down" />
+              </div>
             </div>
           </motion.nav>
         )}
@@ -1431,6 +1445,42 @@ function SeoText() {
 
 /* ── Footer (reference footer, RBstars branding) ───────────────────────── */
 
+/* Link columns, restricted to routes that exist in the router. Anything the
+   reference design listed that this app doesn't have was removed rather than
+   pointed somewhere approximate. */
+const FOOTER_COLUMNS: Array<{ h: string; links: Array<{ label: string; href: string }> }> = [
+  {
+    h: "SHOP",
+    links: [
+      { label: "All games", href: "/browse" },
+      { label: "Store home", href: "/" },
+    ],
+  },
+  {
+    h: "SUPPORT",
+    links: [
+      { label: "Help Centre", href: "/tickets" },
+      { label: "Open a ticket", href: "/tickets/new" },
+      { label: "Claim Chat", href: "/claim-chat" },
+    ],
+  },
+  {
+    h: "ACCOUNT",
+    links: [
+      { label: "My profile", href: "/profile" },
+      { label: "Checkout", href: "/checkout" },
+    ],
+  },
+  {
+    h: "LEGAL",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Refund Policy", href: "/refunds" },
+      { label: "Terms of Use", href: "/terms" },
+    ],
+  },
+];
+
 export function SiteFooter() {
   const col = "flex flex-col gap-2.5";
   const h6 = "text-[14px] font-semibold mb-1.5";
@@ -1439,8 +1489,9 @@ export function SiteFooter() {
   return (
     <footer className="relative" style={{ background: C.footerBg, marginTop: 20 }}>
       <div className="max-w-[1096px] mx-auto px-5 pt-12 pb-8">
-        {/* Brand + columns */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+        {/* Brand + columns — 2 + 4 = 6 tracks, so the four link columns land
+            on one row at md+ instead of stranding the last one underneath. */}
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-2">
               <img src="/rb-logo.png" alt="RBstars" className="w-8 h-8 rounded-full object-cover" />
@@ -1448,73 +1499,53 @@ export function SiteFooter() {
             </div>
           </div>
 
-          <div className={col}>
-            <h6 className={h6} style={{ color: C.text }}>ABOUT</h6>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/tickets/new")}>Blog</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/tickets/new")}>Help Center</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/browse")}>Backpack</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/checkout")}>Deposit</button>
-          </div>
-
-          <div className={col}>
-            <h6 className={h6} style={{ color: C.text }}>PROFILE</h6>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/profile")}>Personal</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/profile")}>Area Trade</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/profile")}>History</button>
-            <button className={a} style={{ color: "#b3bbd2", background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0 }} onClick={() => window.location.assign("/profile")}>Bonus</button>
-          </div>
-
-          <div className={col}>
-            <h6 className={h6} style={{ color: C.text }}>TERMS</h6>
-            <span className={a} style={{ color: "#b3bbd2", cursor: "pointer" }}>Privacy Policy</span>
-            <span className={a} style={{ color: "#b3bbd2", cursor: "pointer" }}>Refund Policy</span>
-            <span className={a} style={{ color: "#b3bbd2", cursor: "pointer" }}>Tearms of Use</span>
-            <span className={a} style={{ color: "#b3bbd2", cursor: "pointer" }}>Settings</span>
-          </div>
-        </div>
-
-        {/* Language + currency */}
-        <div className="flex items-center gap-3 mt-9">
-          <span
-            className="h-8 pl-2 pr-2.5 rounded-full inline-flex items-center gap-2 text-[13px] font-semibold"
-            style={{ background: "#1f2b4a", color: "#aab4d4" }}
-          >
-            <img src={`${A}flag.png`} alt="" className="w-5 h-5 rounded-full object-cover" /> English
-            <ChevronRight size={13} style={{ transform: "rotate(90deg)", color: "#8ea0cf" }} />
-          </span>
-          <span
-            className="h-8 pl-2 pr-2.5 rounded-full inline-flex items-center gap-2 text-[13px] font-semibold"
-            style={{ background: "#1f2b4a", color: "#aab4d4" }}
-          >
-            <img src={`${A}usd.png`} alt="" className="w-5 h-5 rounded-full object-cover" /> USD
-            <ChevronRight size={13} style={{ transform: "rotate(90deg)", color: "#8ea0cf" }} />
-          </span>
-        </div>
-
-        {/* Socials — wraps: five icon+label pairs at 15px need ~500px, which
-            overflowed every phone and horizontally scrolled every page that
-            renders SiteFooter without its own overflow guard. */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-7">
-          {[
-            { icon: Instagram, label: "Instagram", color: "#aab4d4" },
-            { icon: Twitter, label: "x.com", color: "#aab4d4" },
-            { icon: Youtube, label: "YouTube", color: "#aab4d4" },
-            { icon: MessageCircle, label: "Discord", color: "#2f7dff" },
-            { icon: Music2, label: "TikTok", color: "#aab4d4" },
-          ].map((s) => (
-            <span key={s.label} className="flex items-center gap-2.5 text-[15px] cursor-pointer transition-opacity hover:opacity-80" style={{ color: s.color }}>
-              <s.icon size={20} fill={s.label === "Discord" ? "#2f7dff" : undefined} /> {s.label}
-            </span>
+          {/* Every destination here is a real route. The reference layout had
+              Blog / Backpack / Deposit / Area Trade / Bonus / Settings, none of
+              which exist in this app — those are gone rather than pointed at
+              whatever page happened to be nearby. */}
+          {FOOTER_COLUMNS.map((c) => (
+            <div className={col} key={c.h}>
+              <h6 className={h6} style={{ color: C.text }}>{c.h}</h6>
+              {c.links.map((l) => (
+                <Link key={l.href + l.label} href={l.href} className={a} style={{ color: "#b3bbd2" }}>
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
+
+        {/* Currency picker — converts display prices using live rates. The
+            card is always charged in USD, which the menu states outright. */}
+        <div className="flex items-center gap-3 mt-9">
+          <CurrencyMenu />
+        </div>
+
+        {/* Socials — rendered only for profiles we actually have a link for,
+            so there is nothing on this row that leads nowhere. */}
+        {LIVE_SOCIALS.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mt-7">
+            {LIVE_SOCIALS.map((s) => (
+              <a
+                key={s.label}
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 text-[15px] transition-opacity hover:opacity-80"
+                style={{ color: s.color || "#aab4d4" }}
+              >
+                <s.icon size={20} fill={s.color ? "currentColor" : undefined} /> {s.label}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Legal */}
         <div className="mt-8 pt-6 space-y-2.5" style={{ borderTop: "1px solid #1d2744" }}>
           <p className="text-[10.5px] leading-[1.7] max-w-[1100px]" style={{ color: "#9aa8cb" }}>
-            RBstars is owned and operated by Virtual Asset Empire Ltd, HE 412509, 13 Kypranoros Str.,
-            Evi Building, 1st Floor, Office 102, 1061 Nicosia, Cyprus. Payments and other services may be
-            provided by external companies.
-            Contact us at support@rbstars.gg or via Live Chat.
+            RBstars is an independent store selling digital items for Roblox games. We are not affiliated with,
+            endorsed by or sponsored by Roblox Corporation or any game developer. Payments are processed
+            securely by Stripe; we never see or store full card details.
           </p>
           <p className="text-[10.5px]" style={{ color: "#9aa8cb" }}>© 2026 RBstars | All Rights Reserved.</p>
         </div>

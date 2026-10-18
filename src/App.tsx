@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { SiteModeProvider } from "@/context/SiteModeContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
+import { PrivacyPolicy, RefundPolicy, TermsOfUse } from "@/pages/Legal";
 import CartDrawer from "@/components/CartDrawer";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -143,10 +145,12 @@ function StorefrontRouter() {
   const isHome = location === "/";
   const isBrowse = location === "/browse";
   const isTickets = location.startsWith("/tickets");
+  // Policy pages render their own TopNav + SiteFooter, like the shop pages.
+  const isLegal = location === "/privacy" || location === "/refunds" || location === "/terms";
 
   return (
     <>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && <Navbar />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && !isLegal && <Navbar />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
@@ -160,9 +164,13 @@ function StorefrontRouter() {
         <Route path="/tickets/:ticketId" component={TicketThread} />
         <Route path="/tickets" component={TicketList} />
         <Route path="/profile" component={ProfilePage} />
+        {/* Policy pages the footer links to — real destinations, not anchors. */}
+        <Route path="/privacy" component={PrivacyPolicy} />
+        <Route path="/refunds" component={RefundPolicy} />
+        <Route path="/terms" component={TermsOfUse} />
         <Route component={NotFound} />
       </Switch>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && <Footer />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && !isLegal && <Footer />}
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
@@ -427,10 +435,12 @@ function App() {
         <TooltipProvider>
           <AdminAuthProvider>
             <AdminSocketProvider>
-              <WouterRouter>
-                <RootRouter />
-              </WouterRouter>
-              <Toaster />
+              <CurrencyProvider>
+                <WouterRouter>
+                  <RootRouter />
+                </WouterRouter>
+                <Toaster />
+              </CurrencyProvider>
             </AdminSocketProvider>
           </AdminAuthProvider>
         </TooltipProvider>

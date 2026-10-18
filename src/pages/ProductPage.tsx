@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { Check, ShoppingCart, Zap, Share2, Mail, Lock, Minus, Plus, ChevronRight, AlertTriangle, History, Headphones } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { usePrice } from "@/context/CurrencyContext";
 import { TopNav, SiteFooter } from "./Home";
 import { RBstar } from "@/components/Art";
 import PageLoader from "@/components/PageLoader";
@@ -49,6 +50,8 @@ export default function ProductPage() {
   const params = useParams();
   const [, navigate] = useLocation();
   const { addItem, items, updateQty, openCart } = useCart();
+  /* Display currency — stored prices and Stripe charges stay USD. */
+  const fmt = usePrice();
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -97,7 +100,7 @@ export default function ProductPage() {
 
   useEffect(() => { if (product) { try { const ids = JSON.parse(localStorage.getItem("rbstars_recently_viewed") || "[]").filter((i: string) => i !== product._id); ids.unshift(product._id); localStorage.setItem("rbstars_recently_viewed", JSON.stringify(ids.slice(0, 20))); } catch {} } }, [product?._id]);
 
-  const savings = product?.originalPrice && !product.outOfStock ? (product.originalPrice - product.price).toFixed(2) : null;
+  const savings = product?.originalPrice && !product.outOfStock ? product.originalPrice - product.price : null;
   const noticeText = product?.notice?.text?.trim() || "";
   const noticeRequired = !!product?.notice?.required && !!noticeText;
   const buyLocked = noticeRequired && !noticeAck;
@@ -230,10 +233,10 @@ export default function ProductPage() {
             <div className="it-pr">
               <div className="it-price">
                 <small>Best price</small>
-                <b>${product.price.toFixed(2)}{product.originalPrice && <s>${product.originalPrice.toFixed(2)}</s>}</b>
+                <b>{fmt(product.price)}{product.originalPrice && <s>{fmt(product.originalPrice)}</s>}</b>
               </div>
               {savings && (
-                <div className="it-cb"><small>You save</small><span>+${savings}</span></div>
+                <div className="it-cb"><small>You save</small><span>+{fmt(savings)}</span></div>
               )}
             </div>
 
@@ -324,7 +327,7 @@ export default function ProductPage() {
                       {p.imageUrl ? <img src={p.imageUrl} alt="" /> : <RBstar size={30} color="#8ea0cf" />}
                     </div>
                     <div className="meta" onClick={() => navigate(`/product/${p._id}`)}>
-                      <b>${p.price.toFixed(2)}</b><small>{p.name}</small>
+                      <b>{fmt(p.price)}</b><small>{p.name}</small>
                     </div>
                     <button aria-label="Add to cart" onClick={() => quickAdd(p)}><Ic n="cart" s={19} /></button>
                   </div>
@@ -346,7 +349,7 @@ export default function ProductPage() {
                 <button key={p._id} className="it-mini" style={{ ["--c" as any]: accentFor(typeof p.category === "object" ? (p.category as ApiCategory)._id : p.category) } as React.CSSProperties} onClick={() => navigate(`/product/${p._id}`)}>
                   <i className="bar" />
                   {p.imageUrl ? <img src={p.imageUrl} alt={p.name} loading="lazy" /> : <span className="ph"><RBstar size={44} color="#8ea0cf" /></span>}
-                  <div className="n" title={p.name}>{p.name}</div><div className="p">${p.price.toFixed(2)}</div>
+                  <div className="n" title={p.name}>{p.name}</div><div className="p">{fmt(p.price)}</div>
                 </button>
               ))}
             </div>
@@ -364,7 +367,7 @@ export default function ProductPage() {
                 <button key={p._id} className="it-mini" style={{ ["--c" as any]: accentFor(typeof p.category === "object" ? (p.category as ApiCategory)._id : p.category) } as React.CSSProperties} onClick={() => navigate(`/product/${p._id}`)}>
                   <i className="bar" />
                   {p.imageUrl ? <img src={p.imageUrl} alt={p.name} loading="lazy" /> : <span className="ph"><RBstar size={44} color="#8ea0cf" /></span>}
-                  <div className="n" title={p.name}>{p.name}</div><div className="p">${p.price.toFixed(2)}</div>
+                  <div className="n" title={p.name}>{p.name}</div><div className="p">{fmt(p.price)}</div>
                 </button>
               ))}
             </div>
