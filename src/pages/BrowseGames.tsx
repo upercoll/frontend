@@ -1,10 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
 import type { CSSProperties } from "react";
-import { motion } from "framer-motion";
 import { Search, X, Play } from "lucide-react";
 import { useLocation } from "wouter";
-import { RBstar } from "@/components/Art";
-import { C, Reveal, TopNav, SiteFooter } from "./Home";
+import { C, Reveal, TopNav, SiteFooter, Testimonials } from "./Home";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 const A = "/rogoat/";
@@ -26,8 +24,6 @@ type ShopGame = {
   imageUrl?: string; active?: boolean; productCount?: number;
 };
 
-type Review = { name: string; rating: number; comment: string; submittedAt: string };
-
 /* Same three steps as the homepage — one explanation, never contradicting. */
 const steps = [
   { n: "1", t: "Find your favourite Roblox item", d: "Select your desired item from the Roblox world" },
@@ -40,8 +36,6 @@ export default function BrowseGames() {
   const [games, setGames] = useState<ShopGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [reviewIndex, setReviewIndex] = useState(0);
-  const [reviews, setReviews] = useState<Review[]>([]);
 
   /* Retry — the backend sleeps on Render and can take ~30s to wake. */
   useEffect(() => {
@@ -65,37 +59,11 @@ export default function BrowseGames() {
     return () => { alive = false; };
   }, []);
 
-  /* Real reviews only — no invented testimonials, ever. */
-  useEffect(() => {
-    let alive = true;
-    fetch(`${BACKEND}/api/claims/public-reviews?limit=20`)
-      .then(r => r.json())
-      .then(data => {
-        if (!alive) return;
-        const raw = data?.data?.reviews;
-        if (Array.isArray(raw) && raw.length > 0) {
-          setReviews(raw.map((r: { name: string; rating: number; comment: string; submittedAt: string }) => ({
-            name: r.name, rating: r.rating, comment: r.comment, submittedAt: r.submittedAt,
-          })));
-        }
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-
-  useEffect(() => {
-    if (reviews.length < 2) return;
-    const t = setInterval(() => setReviewIndex(i => (i + 1) % reviews.length), 4000);
-    return () => clearInterval(t);
-  }, [reviews.length]);
-
   const filtered = useMemo(() => {
     if (!search.trim()) return games;
     const q = search.toLowerCase();
     return games.filter(g => g.name.toLowerCase().includes(q));
   }, [games, search]);
-
-  const current = reviews[reviewIndex];
 
   return (
     <main className="relative min-h-screen" style={{ background: C.bg, color: C.text, fontFamily: "'Inter', system-ui, sans-serif", overflowX: "hidden" }}>
@@ -392,70 +360,10 @@ export default function BrowseGames() {
         </section>
 
         {/* ════════════════════════════════════════════════════════════
-            REVIEWS — real reviews only, dark cards, auto-rotating.
+            REVIEWS — the homepage band, reused verbatim (Testimonials).
+            The old single-card rotator lived here.
         ════════════════════════════════════════════════════════════ */}
-        {reviews.length > 0 && current && (
-          <section className="relative">
-            <div className="max-w-[1096px] mx-auto px-4 sm:px-5 py-14">
-              <Reveal className="text-center">
-                <h2 className="font-mont text-[26px] sm:text-[32px] font-bold" style={{ color: C.text }}>
-                  Rated by <span style={{ color: C.greenBright }}>real players</span>
-                </h2>
-                <p className="text-[13.5px] mt-2" style={{ color: C.muted }}>Left after a delivery, on the order they bought.</p>
-              </Reveal>
-
-              <div className="mt-8 max-w-[640px] mx-auto">
-                <motion.div
-                  key={reviewIndex}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-[18px] p-6 sm:p-7"
-                  style={{ background: "linear-gradient(180deg,#1c2e4f,#1a2848)", border: `1px solid ${C.border}` }}
-                >
-                  <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${current.rating} out of 5`}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <RBstar key={i} size={17} color={i < current.rating ? C.starOn : C.starOff} />
-                    ))}
-                  </div>
-                  <p className="text-[15px] leading-relaxed mb-5" style={{ color: C.text }}>
-                    &ldquo;{current.comment}&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-10 h-10 rounded-full inline-flex items-center justify-center flex-shrink-0 text-sm font-bold"
-                      style={{ background: "linear-gradient(135deg,#2f3de0,#4a63ff)", color: "#fff" }}
-                    >
-                      {current.name.charAt(0).toUpperCase()}
-                    </span>
-                    <div>
-                      <p className="text-sm font-bold" style={{ color: C.text }}>{current.name}</p>
-                      <p className="text-[11px]" style={{ color: C.muted }}>
-                        {current.submittedAt
-                          ? new Date(current.submittedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                          : "Verified purchase"}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {reviews.length > 1 && (
-                  <div className="flex items-center justify-center gap-1.5 mt-5">
-                    {reviews.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setReviewIndex(i)}
-                        aria-label={`Review ${i + 1}`}
-                        className="rounded-full transition-all duration-300"
-                        style={{ width: i === reviewIndex ? 20 : 7, height: 7, background: i === reviewIndex ? C.blue : C.borderStrong }}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
+        <Testimonials />
 
         <SiteFooter />
       </div>
