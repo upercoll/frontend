@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { Check, ShoppingCart, Zap, Share2, Mail, Lock, Minus, Plus, ChevronRight, AlertTriangle, History, Headphones } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { usePrice } from "@/context/CurrencyContext";
+import { effectiveStock, isSoldOut } from "@/lib/stock";
 import { TopNav, SiteFooter } from "./Home";
 import { RBstar } from "@/components/Art";
 import PageLoader from "@/components/PageLoader";
@@ -49,7 +50,7 @@ const Spark = ({ s }: { s: number }) => (
 export default function ProductPage() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { addItem, items, updateQty, openCart } = useCart();
+  const { addItem, items, openCart } = useCart();
   /* Display currency — stored prices and Stripe charges stay USD. */
   const fmt = usePrice();
   const [product, setProduct] = useState<ApiProduct | null>(null);
@@ -113,24 +114,35 @@ export default function ProductPage() {
 
   const rarity = product?.outOfStock ? "Sold out" : product?.bestSeller ? "Best Seller" : product?.featured ? "Featured" : "In Stock";
 
+  /* One payload builder so "add" and "fast buy" can never drift apart. The
+     stock cap travels with the item — see lib/stock.ts. */
+  function cartPayload(p: ApiProduct) {
+    return {
+      id: p._id, name: p.name, price: p.price, originalPrice: p.originalPrice,
+      gradient: [p.gradient?.from || "#0a84ff", p.gradient?.to || "#121a2e"] as [string, string],
+      image: p.imageUrl, game: p.game, bgImageUrl: gameBgImageUrl,
+      stock: effectiveStock(p),
+    };
+  }
   function add() {
-    if (!product || product.outOfStock || buyLocked) return;
-    addItem({ id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: [product.gradient?.from || "#0a84ff", product.gradient?.to || "#121a2e"], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl });
-    const existing = items.find(i => i.id === product._id)?.quantity ?? 0;
-    if (quantity > 1) updateQty(product._id, existing + quantity);
-    setJustAdded(true); setTimeout(() => setJustAdded(false), 1400); say("Added to cart"); openCart();
+    if (!product || isSoldOut(product) || buyLocked) return;
+    const { added, clamped } = addItem(cartPayload(product), quantity);
+    if (added <= 0) { say(`No more stock — ${product.name} is fully in your cart`); return; }
+    setJustAdded(true); setTimeout(() => setJustAdded(false), 1400);
+    say(clamped ? `Added ${added} — that's all we have in stock` : "Added to cart");
+    openCart();
   }
   function buyNow() {
-    if (!product || product.outOfStock || buyLocked) return;
-    addItem({ id: product._id, name: product.name, price: product.price, originalPrice: product.originalPrice, gradient: [product.gradient?.from || "#0a84ff", product.gradient?.to || "#121a2e"], image: product.imageUrl, game: product.game, bgImageUrl: gameBgImageUrl });
-    const existing = items.find(i => i.id === product._id)?.quantity ?? 0;
-    if (quantity > 1) updateQty(product._id, existing + quantity);
+    if (!product || isSoldOut(product) || buyLocked) return;
+    addItem(cartPayload(product), quantity);
     navigate("/checkout");
   }
   function quickAdd(p: ApiProduct) {
-    if (p.outOfStock) return;
-    addItem({ id: p._id, name: p.name, price: p.price, originalPrice: p.originalPrice, gradient: [p.gradient?.from || "#0a84ff", p.gradient?.to || "#121a2e"], image: p.imageUrl, game: p.game });
-    say("Added to cart"); openCart();
+    if (isSoldOut(p)) return;
+    const { added, clamped } = addItem(cartPayload(p), 1);
+    if (added <= 0) { say(`No more stock — ${p.name} is fully in your cart`); return; }
+    say(clamped ? `Added — that's all we have of ${p.name}` : "Added to cart");
+    openCart();
   }
   const share = () => { navigator.clipboard?.writeText(window.location.href); say("Link copied"); };
 
@@ -154,8 +166,13 @@ export default function ProductPage() {
     );
   }
 
-  const rawCap = product.onHand ?? product.stock;
-  const unlimited = rawCap == null || rawCap < 0;
+  /* Total units that exist (the lib/stock.ts rule), and how many of those are
+     still buyable once what is already sitting in the cart is taken off — the
+     stepper used to cap on the total, so "max" could double-count. */
+  const stockCap = effectiveStock(product);
+  const inCart = items.find((i) => i.id === product._id)?.quantity ?? 0;
+  const remaining = stockCap === null ? null : Math.max(0, stockCap - inCart);
+  const unlimited = stockCap === null;
   const accentStyle = { ["--c" as any]: accent } as React.CSSProperties;
 
   return (
@@ -192,7 +209,7 @@ export default function ProductPage() {
             {!product.outOfStock && (
               <span className="it-stock">
                 <i className={unlimited ? "dot inf" : "dot"} />
-                {unlimited ? "Unlimited stock" : `${rawCap.toLocaleString("en-US")} in stock`}
+                {unlimited ? "Unlimited stock" : `${stockCap!.toLocaleString("en-US")} in stock`}
               </span>
             )}
 
@@ -240,24 +257,33 @@ export default function ProductPage() {
               )}
             </div>
 
-            {/* Quantity */}
+            {/* Quantity — capped on what is still available, so the page and
+                the cart can never disagree about how many are left. */}
             {!product.outOfStock && (
               <div className="it-qty">
                 <span>Quantity</span>
                 <div className="it-stepper">
                   <button onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}><Minus size={15} strokeWidth={2.6} /></button>
                   <b>{quantity}</b>
-                  <button onClick={() => setQuantity(q => q + 1)} disabled={!unlimited && quantity >= rawCap}><Plus size={15} strokeWidth={2.6} /></button>
+                  <button onClick={() => setQuantity(q => q + 1)} disabled={!unlimited && quantity >= remaining!} aria-label="Increase quantity"><Plus size={15} strokeWidth={2.6} /></button>
                 </div>
                 <div className="it-quick">
                   {[1, 3, 5].map(n => (
-                    <button key={n} className={quantity === n ? "on" : ""} disabled={!unlimited && n > rawCap} onClick={() => setQuantity(n)}>{n}×</button>
+                    <button key={n} className={quantity === n ? "on" : ""} disabled={!unlimited && n > remaining!} onClick={() => setQuantity(n)}>{n}×</button>
                   ))}
-                  {!unlimited && rawCap > 0 && (
-                    <button className={quantity === rawCap ? "on" : ""} onClick={() => setQuantity(rawCap)}>Max</button>
+                  {!unlimited && remaining! > 0 && (
+                    <button className={quantity === remaining ? "on" : ""} onClick={() => setQuantity(remaining!)}>Max</button>
                   )}
                 </div>
-                <em>{unlimited ? "Unlimited stock" : `${rawCap} available`}</em>
+                <em>
+                  {unlimited
+                    ? "Unlimited stock"
+                    : remaining === 0
+                      ? "All of it is already in your cart"
+                      : inCart > 0
+                        ? `${remaining} more available · ${inCart} in cart`
+                        : `${remaining} available`}
+                </em>
               </div>
             )}
 
@@ -459,7 +485,7 @@ const itCSS = `
 .it-quick button.on{background:#0a5ec4;border-color:#1b86ff;color:#fff}
 .it-quick button:disabled{opacity:.35;cursor:not-allowed}
 
-.it-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.it-btns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:22px}
 .it-btn{height:56px;border:0;border-radius:13px;color:#fff;font:800 16.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;transition:filter .18s,transform .12s}
 .it-btn:hover:not(:disabled){filter:brightness(1.08)}.it-btn:active:not(:disabled){transform:scale(.985)}.it-btn:disabled{opacity:.45;cursor:not-allowed}
 .it-btn.fast{background:linear-gradient(180deg,#2090f4,#0d58c4);box-shadow:0 6px 18px rgba(10,90,220,.4)}
@@ -518,7 +544,7 @@ const itCSS = `
 .it-shead{display:flex;align-items:center;gap:14px}.it-shead .ic{width:42px;height:42px;border-radius:12px;background:rgba(239,68,68,.16);color:#ff5a4d;display:grid;place-items:center}
 .it-shead .ic.hist{background:rgba(47,140,255,.16);color:#4f9bff}
 .it-shead h3{font:700 20px Montserrat,Inter,sans-serif}.it-shead a{margin-left:auto;color:#8ea0cf;font-size:15px;display:flex;align-items:center;gap:4px;cursor:pointer}.it-shead a:hover{color:#fff}
-.it-rail{margin-top:16px;padding:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid #223153;display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#2f8cff #17223d}
+.it-rail{margin-top:16px;padding:16px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid #223153;display:flex;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#2f8cff #17223d}
 .it-rail::-webkit-scrollbar{height:6px}.it-rail::-webkit-scrollbar-thumb{background:#2f8cff;border-radius:4px}.it-rail::-webkit-scrollbar-track{background:#17223d;border-radius:4px}
 .it-mini{position:relative;flex:none;width:150px;height:180px;scroll-snap-align:start;border-radius:12px;background:#1b2745;border:1px solid #2a3a60;cursor:pointer;transition:.2s;text-align:left;color:#fff;padding:0}
 .it-mini:hover{transform:translateY(-4px);border-color:var(--c);box-shadow:0 12px 22px rgba(0,0,0,.4)}
@@ -530,14 +556,18 @@ const itCSS = `
 .it-mob .it-btn{height:50px;flex:1}.it-mob .it-btn.cart{flex:none;width:56px}
 .it-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);padding:12px 22px;border-radius:12px;background:#17223d;border:1px solid #4f86e8;box-shadow:0 12px 28px rgba(0,0,0,.45);font:600 15px Inter,sans-serif;opacity:0;pointer-events:none;transition:.25s;z-index:50}.it-toast.show{opacity:1;transform:translate(-50%,0)}
 
-@media(max-width:1180px){.it-wrap{grid-template-columns:1fr}.it-stage{height:400px}.it-offers{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:1180px){.it-wrap{grid-template-columns:minmax(0,1fr)}.it-stage{height:400px}.it-offers{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:820px){
   .it-stage{height:288px}
   .it-stage img{width:168px;max-height:196px}
   .it-burst{width:74px;height:74px;left:12px;top:11px}.it-burst b{font-size:20px}.it-burst small{font-size:8.5px}
-  .it-offers{grid-template-columns:1fr}.it-h1{font-size:25px}.it-mob{display:flex}.it-page{padding-bottom:96px}
+  /* "More like this" — swipeable snap rail on phones, not a tall stack */
+  .it-offers{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
+  .it-offers::-webkit-scrollbar{display:none}
+  .it-offers>*{flex:0 0 82%;scroll-snap-align:start}
+  .it-h1{font-size:25px}.it-mob{display:flex}.it-page{padding-bottom:96px}
   .it-btn{height:50px;font-size:15px;gap:6px}.it-btn.share{height:44px}
-  .it-det{padding:18px 18px 16px;grid-template-columns:1fr}.it-band{grid-template-columns:1fr}
+  .it-det{padding:18px 18px 16px;grid-template-columns:minmax(0,1fr)}.it-band{grid-template-columns:minmax(0,1fr)}
   .it-pr{flex-wrap:wrap}.it-price b{letter-spacing:-.8px}
   .it-shead{flex-wrap:wrap;gap:10px}.it-shead h3{font-size:18px;min-width:0}.it-shead .ic{width:36px;height:36px}.it-shead a{margin-left:auto;font-size:14px}
 }

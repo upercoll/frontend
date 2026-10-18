@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Lock, ArrowRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useCurrency } from "@/context/CurrencyContext";
+import { effectiveStock } from "@/lib/stock";
 import { useLocation } from "wouter";
 import { RBstar, ItemTileGlyph } from "@/components/Art";
 
@@ -48,7 +49,13 @@ export default function CartDrawer() {
     [items]
   );
 
+  /* Items that sold out while they sat in the cart. They cannot be bought, so
+     name them here instead of letting the payment step reject the order. */
+  const soldOutItems = useMemo(() => items.filter((i) => effectiveStock(i) === 0), [items]);
+  const blocked = soldOutItems.length > 0;
+
   function handleCheckout() {
+    if (blocked) return;
     setChecking(true);
     setTimeout(() => { setChecking(false); closeCart(); navigate("/checkout"); }, 400);
   }
@@ -111,6 +118,11 @@ export default function CartDrawer() {
                   <AnimatePresence initial={false}>
                     {items.map(item => {
                       const accent = item.gradient?.[0] || "#2f8cff";
+                      /* Stock is re-read from the item so the drawer tells the
+                         truth even after inventory dropped post-add. */
+                      const cap = effectiveStock(item);
+                      const soldOut = cap === 0;
+                      const atCap = cap !== null && item.quantity >= cap;
                       return (
                         <motion.div
                           key={item.id}
@@ -152,12 +164,23 @@ export default function CartDrawer() {
                                   <Minus size={13} strokeWidth={2.8} />
                                 </button>
                                 <b>{item.quantity}</b>
-                                <button onClick={() => updateQty(item.id, item.quantity + 1)} aria-label="Increase quantity">
+                                <button
+                                  onClick={() => updateQty(item.id, item.quantity + 1)}
+                                  disabled={atCap}
+                                  aria-label={atCap ? `All ${cap} in stock are already in the cart` : "Increase quantity"}
+                                >
                                   <Plus size={13} strokeWidth={2.8} />
                                 </button>
                               </div>
                               <span className="crt-lt">{fmt(item.price * item.quantity)}</span>
                             </div>
+
+                            {/* Stock truth: why the "+" went dead, or that the
+                                item sold out after it was added. */}
+                            {soldOut && <p className="crt-stock out">Out of stock — remove it to check out</p>}
+                            {!soldOut && atCap && cap !== null && cap <= 5 && (
+                              <p className="crt-stock">Only {cap} in stock — that's all we have</p>
+                            )}
                           </div>
                         </motion.div>
                       );
@@ -193,7 +216,15 @@ export default function CartDrawer() {
                     </p>
                   )}
 
-                  <button className="crt-go" onClick={handleCheckout} disabled={checking}>
+                  {blocked && (
+                    <p className="crt-stock out">
+                      {soldOutItems.length === 1
+                        ? `"${soldOutItems[0].name}" just sold out — remove it to continue.`
+                        : `${soldOutItems.length} items just sold out — remove them to continue.`}
+                    </p>
+                  )}
+
+                  <button className="crt-go" onClick={handleCheckout} disabled={checking || blocked}>
                     {checking ? "Processing…" : <>Checkout <ArrowRight size={18} strokeWidth={2.6} /></>}
                   </button>
 
@@ -255,6 +286,8 @@ const crtCSS = `
 .crt-step button{width:36px;height:36px;border:0;background:none;color:#c9d3f0;cursor:pointer;display:grid;place-items:center;transition:.15s}
 .crt-step button:hover:not(:disabled){color:#fff;background:#1f2f52}.crt-step button:disabled{opacity:.35;cursor:not-allowed}
 .crt-step b{width:36px;text-align:center;font:700 14px Inter,sans-serif}
+.crt-stock{margin:6px 0 0;font:600 11px Inter,sans-serif;color:#f2792e}
+.crt-stock.out{color:#ff8a80}
 .crt-lt{font:700 17px Inter,sans-serif;color:#fff}
 
 /* empty state */
@@ -284,7 +317,7 @@ const crtCSS = `
   display:flex;align-items:center;justify-content:center;gap:9px;
   background:linear-gradient(180deg,#0a84ff,#0a50d6);box-shadow:0 8px 20px rgba(10,90,220,.4);transition:filter .18s,transform .12s}
 .crt-go:hover:not(:disabled){filter:brightness(1.08)}.crt-go:active:not(:disabled){transform:scale(.985)}
-.crt-go:disabled{opacity:.72;cursor:progress}
+.crt-go:disabled{opacity:.72;cursor:not-allowed}
 .crt-secure{margin-top:11px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#8a97ba}
 .crt-usd-note{margin-top:7px;text-align:center;font-size:11px;color:#8a97ba}
 

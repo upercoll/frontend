@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Tag, ShoppingCart, Check, Ban } from "lucide-react";
 import { P } from "@/lib/storefront";
 import { usePrice } from "@/context/CurrencyContext";
+import { useCart } from "@/context/CartContext";
+import { effectiveStock, isSoldOut } from "@/lib/stock";
 
 /* ── Product card ─────────────────────────────────────────────────────────
    Reference layout: lit media panel + "save" chip + best-sellers chip +
@@ -33,6 +35,10 @@ export type CardProduct = {
   category?: string;
   bestSeller?: boolean;
   outOfStock?: boolean;
+  /** legacy stock field — kept only as a fallback, see lib/stock.ts */
+  stock?: number | null;
+  /** live physical inventory; this is the number that decides availability */
+  onHand?: number | null;
 };
 
 export default function ProductCard({
@@ -49,11 +55,20 @@ export default function ProductCard({
   const onSale = typeof p.originalPrice === "number" && p.originalPrice > p.price;
   const save = onSale ? p.originalPrice! - p.price : 0;
   const off = onSale ? Math.round((1 - p.price / p.originalPrice!) * 100) : 0;
-  const soldOut = !!p.outOfStock;
+  const soldOut = isSoldOut(p);
   const accent = p.accent || P.accent;
   const [added, setAdded] = useState(false);
   /* Display currency only — the stored price stays USD and so does the charge. */
   const fmt = usePrice();
+
+  /* How much of this item the cart already holds. The button stops at the
+     real limit and says so, instead of quietly adding nothing. */
+  const { items } = useCart();
+  const cap = effectiveStock(p);
+  const inCart = items.find((i) => i.id === p.id)?.quantity ?? 0;
+  const remaining = cap === null ? null : Math.max(0, cap - inCart);
+  const atCap = !soldOut && remaining === 0;
+  const lowStock = !soldOut && !atCap && remaining !== null && remaining <= 5;
 
   return (
     <motion.article
@@ -199,33 +214,50 @@ export default function ProductCard({
             lines up regardless of how many lines its title takes */}
         <div className="flex-1 min-h-3" />
 
+        {/* Real scarcity, only when it is actually scarce. */}
+        {lowStock && (
+          <p className="mt-2 text-[11.5px] font-semibold" style={{ color: "#f2792e" }}>
+            Only {remaining} left
+          </p>
+        )}
+
         <button
           type="button"
-          disabled={soldOut}
+          disabled={soldOut || atCap}
           onClick={(e) => {
             e.stopPropagation();
-            if (soldOut) return;
+            if (soldOut || atCap) return;
             onAdd?.(p);
             setAdded(true);
             setTimeout(() => setAdded(false), 1400);
           }}
-          aria-label={`Add ${p.name} to cart`}
+          aria-label={
+            soldOut
+              ? `${p.name} is sold out`
+              : atCap
+                ? `All ${cap} of ${p.name} are already in your cart`
+                : `Add ${p.name} to cart`
+          }
           className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-[11px] px-3 py-[13px] text-[13.5px] font-bold transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745] disabled:cursor-not-allowed disabled:hover:brightness-100"
           style={{
-            background: soldOut
+            background: soldOut || atCap
               ? P.band
               : added
                 ? P.good
                 : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
-            border: soldOut ? `1px solid ${P.border}` : "none",
-            color: soldOut ? P.faint : added ? "#08240f" : "#fff",
-            boxShadow: soldOut || added ? "none" : P.shadowSoft,
+            border: soldOut || atCap ? `1px solid ${P.border}` : "none",
+            color: soldOut || atCap ? P.faint : added ? "#08240f" : "#fff",
+            boxShadow: soldOut || atCap || added ? "none" : P.shadowSoft,
             fontFamily: "Inter, system-ui, sans-serif",
           }}
         >
           {soldOut ? (
             <>
               <Ban size={15} strokeWidth={2.6} /> Sold out
+            </>
+          ) : atCap ? (
+            <>
+              <Check size={15} strokeWidth={2.6} /> All {cap} in cart
             </>
           ) : added ? (
             <>

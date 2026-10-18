@@ -10,6 +10,7 @@ import {
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { useCurrency, usePrice } from "@/context/CurrencyContext";
+import { effectiveStock, isSoldOut } from "@/lib/stock";
 import { useAuth } from "@/context/AuthContext";
 import { RBstar, ItemTileGlyph, MailboxGlyph } from "@/components/Art";
 import { TopNav, SiteFooter } from "./Home";
@@ -671,7 +672,7 @@ const COUNTRIES = [
 ];
 
 export default function Checkout() {
-  const { items, totalPrice, clearCart, removeItem } = useCart();
+  const { items, totalPrice, clearCart, removeItem, updateQty } = useCart();
   /* Display currency. Stripe always charges the USD total — converted figures
      are a convenience, and the summary says so wherever they appear. */
   const { fmt, converted, currency } = useCurrency();
@@ -972,11 +973,60 @@ export default function Checkout() {
     return e;
   }
 
+  /* Stock moves while a cart sits open. Re-read it right before Stripe is
+     touched: a sold-out item blocks the order by name, and an oversold
+     quantity is cut back to what is actually left. Fails open — if stock
+     can't be read here the server still validates before any charge. */
+  async function recheckStock(): Promise<string | null> {
+    const results = await Promise.all(
+      items.map(async (i) => {
+        try {
+          const r = await fetch(`${BACKEND_URL}/api/products/${i.id}`);
+          const d = await r.json();
+          return { item: i, product: d?.data ?? null };
+        } catch {
+          return { item: i, product: null };
+        }
+      }),
+    );
+
+    const soldOut: string[] = [];
+    const adjusted: string[] = [];
+    for (const { item, product } of results) {
+      if (!product) continue;
+      if (isSoldOut(product)) { soldOut.push(item.name); continue; }
+      const cap = effectiveStock(product);
+      if (cap !== null && item.quantity > cap) {
+        updateQty(item.id, cap);
+        adjusted.push(`${item.name} → ${cap}`);
+      }
+    }
+
+    if (soldOut.length) {
+      const them = soldOut.length > 1;
+      return `${soldOut.join(", ")} sold out while in your cart — remove ${them ? "them" : "it"} to continue.`;
+    }
+    if (adjusted.length) {
+      return `Quantity cut back to what is in stock: ${adjusted.join(", ")}. Check the new total, then pay again.`;
+    }
+    return null;
+  }
+
   async function doProcessPayment() {
     // Guard BEFORE any await — a second click in the burst window used to
     // create a second PaymentIntent.
     if (submittingRef.current) return;
     submittingRef.current = true;
+
+    // Nothing else runs until the cart is known to be buyable.
+    setLoading(true);
+    const stockProblem = await recheckStock();
+    if (stockProblem) {
+      submittingRef.current = false;
+      setLoading(false);
+      setErrors({ payment: stockProblem });
+      return;
+    }
 
     // Read through the ref: this callback may have been created before the
     // register-through-checkout login finished, which used to fall back to the
@@ -989,7 +1039,6 @@ export default function Checkout() {
     const cartPayload = items.map((i) => ({ id: i.id, quantity: i.quantity }));
 
     // Disable the button before the 320ms burst, not after it.
-    setLoading(true);
     setBurst(true);
     await new Promise((r) => setTimeout(r, 320));
     setBurst(false);

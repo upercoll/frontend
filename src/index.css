@@ -533,3 +533,27 @@ input[type="range"]::-moz-range-thumb {
     radial-gradient(800px 650px at 100% 22%, #15264a, transparent 70%);
   background-repeat: no-repeat;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE ITEM CAROUSELS
+   Every product rail/grid becomes a horizontal snap scroller below
+   640px so phones can swipe through items instead of stacking a long
+   column. Desktop (≥640px) keeps the exact grid it always had — every
+   rule here lives inside a max-width media query.
+   `overscroll-behavior-x: contain` stops a horizontal swipe from
+   scrolling the whole page sideways (the half-white-page feel).
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+  .pop-rail {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0 10px;
+    scrollbar-width: none;
+  }
+  .pop-rail::-webkit-scrollbar { display: none; }
+  .pop-rail > * { flex: 0 0 62%; scroll-snap-align: start; }
+}

@@ -14,6 +14,7 @@ import CurrencyMenu from "@/components/CurrencyMenu";
 import { LIVE_SOCIALS } from "@/lib/socialLinks";
 import ProductCard, { ProductCardSkeleton, type CardProduct } from "@/components/ProductCard";
 import { fetchLiveStats, groupNum, type LiveStats } from "@/lib/liveStats";
+import { effectiveStock, isSoldOut } from "@/lib/stock";
 import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 import { usePublicReviews, timeAgo, type PublicReview } from "@/hooks/usePublicReviews";
 
@@ -68,6 +69,8 @@ type ApiProduct = {
   gradient?: { from: string; to: string };
   game: string;
   stock?: number;
+  /** live physical inventory — the number that decides availability */
+  onHand?: number;
   bestSeller?: boolean;
   outOfStock?: boolean;
 };
@@ -459,8 +462,12 @@ export function TopNav({ onHome }: { onHome: () => void }) {
           {/* Display currency. Replaces two static flag/currency images that
               404'd and did nothing — this opens a real menu, converts every
               price on the site from live rates, and persists the choice. The
-              card is still charged in USD, which the menu states. */}
-          <CurrencyMenu variant="nav" direction="down" />
+              card is still charged in USD, which the menu states. Phones get
+              it from the hamburger drawer + footer instead — the top bar
+              would overflow a 320px screen with it inline. */}
+          <div className="hidden sm:block">
+            <CurrencyMenu variant="nav" direction="down" />
+          </div>
 
           {/* Cart stays reachable even though the global nav is hidden on home */}
           <button
@@ -616,8 +623,10 @@ function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="max-w-[1096px] mx-auto px-5 pt-12 sm:pt-16 pb-14 grid lg:grid-cols-2 gap-10 items-center">
-        {/* Left — headline, sticker, description, CTA */}
-        <div>
+        {/* Left — headline, sticker, description, CTA. On phones this whole
+            block centers itself (matching the Browse hero) and the artwork
+            below is dropped, so the heading is the first thing on screen. */}
+        <div className="text-center sm:text-left">
           <Reveal>
             <h1 className="font-mont text-[40px] leading-[1.1] sm:text-[51px] font-bold" style={{ color: C.text, letterSpacing: "-0.5px" }}>
               Buy Cheapest
@@ -640,7 +649,7 @@ function Hero() {
           </Reveal>
 
           <Reveal delay={0.14}>
-            <p className="mt-5 text-[14.5px] leading-[1.65] max-w-[480px]" style={{ color: C.muted }}>
+            <p className="mt-5 text-[14.5px] leading-[1.65] max-w-[480px] mx-auto sm:mx-0" style={{ color: C.muted }}>
               Buy your favourite weapons, knives, pets, and more in Jailbreak
               with ease. RBstars delivers your items straight to your in-game
               mailbox once your order is confirmed.
@@ -648,7 +657,7 @@ function Hero() {
           </Reveal>
 
           <Reveal delay={0.2}>
-            <div className="mt-7 flex items-center gap-5 flex-wrap">
+            <div className="mt-7 flex items-center gap-5 flex-wrap justify-center sm:justify-start">
               <button
                 onClick={() => navigate("/browse")}
                 className="h-[44px] px-6 rounded-full inline-flex items-center gap-3.5 text-[14.5px] font-bold transition-transform hover:-translate-y-0.5 active:translate-y-0"
@@ -674,8 +683,9 @@ function Hero() {
           </Reveal>
         </div>
 
-        {/* Right — hero artwork */}
-        <Reveal delay={0.15} className="relative">
+        {/* Right — hero artwork. Hidden on phones: the heading should be the
+            whole first screen there, the way the Browse hero reads. */}
+        <Reveal delay={0.15} className="relative hidden sm:block">
           <div className="rg-float">
             <img
               src={`${A}IMG_1261.png`}
@@ -782,7 +792,7 @@ function PopularItems({
         {/* Product cards */}
         <div className="mt-6">
           {loadingProducts ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="pop-rail grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {Array.from({ length: 5 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
@@ -793,7 +803,7 @@ function PopularItems({
               <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>New stock shows up here as soon as it lands.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="pop-rail grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {shown.map((p, i) => (
                 <ProductCard
                   key={p._id}
@@ -810,6 +820,8 @@ function PopularItems({
                         : ["#0a84ff", "#121a2e"],
                       image: p.imageUrl || p.images?.[0],
                       game: p.game,
+                      /* the cart caps itself on this — see lib/stock.ts */
+                      stock: effectiveStock(p),
                     })
                   }
                   product={{
@@ -819,7 +831,15 @@ function PopularItems({
                     originalPrice: p.originalPrice,
                     imageUrl: p.imageUrl || p.images?.[0],
                     bestSeller: p.bestSeller,
-                    outOfStock: p.outOfStock || (typeof p.stock === "number" && p.stock <= 0),
+                    stock: p.stock,
+                    onHand: p.onHand,
+                    /* The old check read `stock`, which drifts away from the
+                       real count and marked stocked items as unavailable. */
+                    outOfStock: isSoldOut({
+                      stock: p.stock ?? null,
+                      onHand: p.onHand ?? null,
+                      outOfStock: p.outOfStock,
+                    }),
                   }}
                 />
               ))}

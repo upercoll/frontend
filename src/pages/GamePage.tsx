@@ -8,6 +8,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { TopNav, SiteFooter } from "./Home";
 import { usePrice } from "@/context/CurrencyContext";
+import { effectiveStock, isSoldOut } from "@/lib/stock";
 import { RBstar } from "@/components/Art";
 import ProductCard from "@/components/ProductCard";
 import PageLoader from "@/components/PageLoader";
@@ -30,6 +31,8 @@ interface Product {
   id: string; name: string; price: number; originalPrice?: number;
   outOfStock?: boolean; stock?: number; imageUrl?: string; categoryId?: string;
   featured?: boolean; bestSeller?: boolean; gradient?: [string, string];
+  /** live physical inventory — stock is the legacy field, see lib/stock.ts */
+  onHand?: number;
 }
 interface ApiCategory { _id: string; name: string; slug: string; icon?: string; game: string; }
 interface ApiGame { _id: string; name: string; slug: string; gradient?: { from: string; to: string }; imageUrl?: string; bgImageUrl?: string; }
@@ -153,6 +156,8 @@ function Card({ p, idx, accent, catName, navigate, onAdd }: {
         imageUrl: p.imageUrl,
         bestSeller: p.bestSeller,
         outOfStock: p.outOfStock,
+        stock: p.stock,
+        onHand: p.onHand,
         /* card reads these off the product, not as component props —
            passing them at the top level compiles but is silently dropped */
         accent,
@@ -208,7 +213,15 @@ export default function GamePage() {
           id: p._id as string, name: p.name as string, price: p.price as number,
           originalPrice: p.originalPrice as number | undefined,
           stock: p.stock as number | undefined,
-          outOfStock: p.outOfStock === true || (p.stock as number) === 0,
+          onHand: p.onHand as number | undefined,
+          /* Sold out means the admin flag, or genuinely nothing on hand. This
+             used to read `stock`, which goes stale — items with real stock
+             (14 on hand, stock=0) were showing as unavailable. */
+          outOfStock: isSoldOut({
+            stock: typeof p.stock === "number" ? p.stock : null,
+            onHand: typeof p.onHand === "number" ? p.onHand : null,
+            outOfStock: p.outOfStock === true,
+          }),
           imageUrl: p.imageUrl as string | undefined,
           categoryId: typeof p.category === "object" && p.category !== null ? (p.category as { _id: string })._id : p.category as string,
           featured: p.featured as boolean, bestSeller: p.bestSeller as boolean,
@@ -258,7 +271,14 @@ export default function GamePage() {
 
   function handleAdd(p: Product) {
     if (p.outOfStock) return;
-    addItem({ id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice, gradient: p.gradient || ["#0a84ff", "#121a2e"], image: p.imageUrl, game: slug, bgImageUrl: gameInfo?.bgImageUrl });
+    addItem({
+      id: p.id, name: p.name, price: p.price, originalPrice: p.originalPrice,
+      gradient: p.gradient || ["#0a84ff", "#121a2e"], image: p.imageUrl, game: slug,
+      bgImageUrl: gameInfo?.bgImageUrl,
+      /* carried so the cart can cap the "+" — the card tells the user when
+         something was cut back to available stock */
+      stock: effectiveStock(p),
+    });
   }
 
   if (loading) {
@@ -458,7 +478,7 @@ const mkCSS = `
 /* grid */
 /* grid — 5 up: the new card carries a CTA, so 6 across the 1180px wrap
    would squeeze it to 184px (the reference sits at 236px) */
-.mk-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:15px;margin-top:15px;padding-bottom:20px}
+.mk-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:15px;margin-top:15px;padding-bottom:20px}
 
 /* category group heading */
 .mk-group{margin-top:34px}
@@ -475,8 +495,11 @@ const mkCSS = `
 .mk-empty{grid-column:1/-1;text-align:center;padding:70px 0;color:#9aa8cb;display:flex;flex-direction:column;align-items:center;gap:10px}
 .mk-empty p{font-size:16px}
 
-@media(max-width:1100px){.mk-grid{grid-template-columns:repeat(4,1fr)}.mk-slide h2{font-size:32px;white-space:normal;padding:0 72px;line-height:1.05}.mk-art{display:none}}
-@media(max-width:900px){.mk-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.mk-grid{grid-template-columns:repeat(2,1fr)}.mk-slide h2{font-size:22px;white-space:normal;padding:0 56px}.mk-cta{height:44px;font-size:15px;padding:0 22px}.mk-search{width:100%}.mk-banner{height:176px}}
+@media(max-width:1100px){.mk-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.mk-slide h2{font-size:32px;white-space:normal;padding:0 72px;line-height:1.05}.mk-art{display:none}}
+@media(max-width:900px){.mk-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.mk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-slide h2{font-size:22px;white-space:normal;padding:0 56px}.mk-cta{height:44px;font-size:15px;padding:0 22px}.mk-search{width:100%}.mk-banner{height:176px}}
+/* Phones: the market grid becomes a swipeable snap rail (one full card +
+   a peek) instead of a long 2-col stack. Desktop keeps the grid above. */
+@media(max-width:639px){.mk-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:10px;scrollbar-width:none}.mk-grid::-webkit-scrollbar{display:none}.mk-grid>*{flex:0 0 55%;scroll-snap-align:start}}
 @media(prefers-reduced-motion:reduce){.mk-slide{transition:none}}
 `;
