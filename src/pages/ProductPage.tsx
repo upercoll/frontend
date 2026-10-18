@@ -38,6 +38,7 @@ const PATHS: Record<string, string> = {
   flame: '<path d="M12 2c1 4 5 6 5 11a5 5 0 01-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10z" fill="currentColor"/>',
   tag: '<path d="M4 20L14 10l5-6-1 7-6 5z"/><path d="M4 20l4-4"/>', chev: '<path d="M9 6l6 6-6 6"/>',
   cube: '<path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M3 7l9 5 9-5M12 12v10"/>',
+  minus: '<path d="M5 12h14"/>', plus: '<path d="M12 5v14M5 12h14"/>',
 };
 const Ic = ({ n, s = 20, className }: { n: string; s?: number; className?: string }) => (
   <svg className={className} width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: PATHS[n] }} />
@@ -46,11 +47,30 @@ const Spark = ({ s }: { s: number }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c.7 6.5 3.5 9.3 12 12-8.5 2.7-11.3 5.5-12 12-.7-6.5-3.5-9.3-12-12 8.5-2.7 11.3-5.5 12-12z" /></svg>
 );
 
+/* One-line stock marker for the small rail cards — same vocabulary as the
+   checkout and the big cards (green healthy / amber low / grey gone), scaled
+   down to a dot + a word so it fits the 180px tile without crowding. */
+function MiniStock({ p }: { p: ApiProduct }) {
+  const cap = effectiveStock(p);
+  const soldOut = isSoldOut(p);
+  const low = !soldOut && cap !== null && cap <= 5;
+  const color = soldOut ? "#8ea0cf" : low ? "#f2792e" : "#5fe08e";
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-3 text-[10.5px] font-semibold"
+      style={{ color }}
+    >
+      <i className="block h-[5px] w-[5px] rounded-full shrink-0" style={{ background: color }} />
+      {soldOut ? "Sold out" : cap === null ? "In stock" : low ? `Only ${cap} left` : "In stock"}
+    </span>
+  );
+}
+
 /* ── Page ──────────────────────────────────────────────────────────────── */
 export default function ProductPage() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { addItem, items, openCart } = useCart();
+  const { addItem, items, openCart, updateQty } = useCart();
   /* Display currency — stored prices and Stripe charges stay USD. */
   const fmt = usePrice();
   const [product, setProduct] = useState<ApiProduct | null>(null);
@@ -347,17 +367,50 @@ export default function ProductPage() {
             <>
               <h3 className="it-sh3"><span className="ic"><Ic n="cube" s={20} /></span>More like this <span className="n">{similarProducts.length}</span></h3>
               <div className="it-offers">
-                {similarProducts.slice(0, 8).map(p => (
-                  <div className="it-offer" key={p._id} style={{ ["--c" as any]: accentFor(typeof p.category === "object" ? (p.category as ApiCategory)._id : p.category) } as React.CSSProperties}>
-                    <div className="th" onClick={() => navigate(`/product/${p._id}`)}>
-                      {p.imageUrl ? <img src={p.imageUrl} alt="" /> : <RBstar size={30} color="#8ea0cf" />}
+                {similarProducts.slice(0, 8).map(p => {
+                  const cap = effectiveStock(p);
+                  const inCart = items.find(i => i.id === p._id)?.quantity ?? 0;
+                  const soldOutCard = isSoldOut(p);
+                  const low = !soldOutCard && cap !== null && cap - inCart <= 5;
+                  const atCapCard = !soldOutCard && cap !== null && inCart >= cap;
+                  return (
+                    <div className="it-offer" key={p._id} style={{ ["--c" as any]: accentFor(typeof p.category === "object" ? (p.category as ApiCategory)._id : p.category) } as React.CSSProperties}>
+                      <div className="th" onClick={() => navigate(`/product/${p._id}`)}>
+                        {p.imageUrl ? <img src={p.imageUrl} alt="" /> : <RBstar size={30} color="#8ea0cf" />}
+                      </div>
+                      <div className="meta" onClick={() => navigate(`/product/${p._id}`)}>
+                        <b>{fmt(p.price)}</b><small>{p.name}</small>
+                        {/* same stock vocabulary as the checkout + the big cards */}
+                        <em
+                          className="not-italic inline-flex items-center gap-1.5 text-[10.5px] font-semibold"
+                          style={{ color: soldOutCard ? "#8ea0cf" : low ? "#f2792e" : "#5fe08e", marginTop: 3 }}
+                        >
+                          <i className="block h-[5px] w-[5px] rounded-full" style={{ background: soldOutCard ? "#8ea0cf" : low ? "#f2792e" : "#5fe08e" }} />
+                          {soldOutCard ? "Sold out" : cap === null ? "In stock" : low ? `Only ${cap - inCart} left` : `In stock · ${cap - inCart}`}
+                        </em>
+                      </div>
+                      {inCart > 0 ? (
+                        /* compact stepper — you already have some */
+                        <div className="it-offer-step" style={{ background: "#16213c", border: "1px solid #38497a", borderRadius: 11, display: "flex", alignItems: "center", overflow: "hidden", flex: "none" }}>
+                          <button aria-label="Remove one from cart" onClick={() => updateQty(p._id, inCart - 1)} style={{ width: 32, height: 40, borderRadius: 0, background: "transparent", border: 0, color: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
+                            <Ic n="minus" s={15} />
+                          </button>
+                          <b style={{ minWidth: 24, textAlign: "center", font: "700 13px Inter,sans-serif", color: "#fff" }}>{inCart}</b>
+                          <button
+                            aria-label={atCapCard ? "That's all the stock we have" : "Add another"}
+                            disabled={atCapCard}
+                            onClick={() => { if (!atCapCard) updateQty(p._id, inCart + 1); }}
+                            style={{ width: 32, height: 40, borderRadius: 0, border: 0, cursor: atCapCard ? "not-allowed" : "pointer", display: "grid", placeItems: "center", background: atCapCard ? "transparent" : "linear-gradient(180deg,#2f8cff,#0a84ff)", color: atCapCard ? "#5a6890" : "#fff" }}
+                          >
+                            <Ic n="plus" s={15} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button aria-label="Add to cart" disabled={soldOutCard} onClick={() => quickAdd(p)} style={{ opacity: soldOutCard ? 0.5 : 1, cursor: soldOutCard ? "not-allowed" : "pointer" }}><Ic n="cart" s={19} /></button>
+                      )}
                     </div>
-                    <div className="meta" onClick={() => navigate(`/product/${p._id}`)}>
-                      <b>{fmt(p.price)}</b><small>{p.name}</small>
-                    </div>
-                    <button aria-label="Add to cart" onClick={() => quickAdd(p)}><Ic n="cart" s={19} /></button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
@@ -376,6 +429,7 @@ export default function ProductPage() {
                   <i className="bar" />
                   {p.imageUrl ? <img src={p.imageUrl} alt={p.name} loading="lazy" /> : <span className="ph"><RBstar size={44} color="#8ea0cf" /></span>}
                   <div className="n" title={p.name}>{p.name}</div><div className="p">{fmt(p.price)}</div>
+                  <MiniStock p={p} />
                 </button>
               ))}
             </div>
@@ -394,6 +448,7 @@ export default function ProductPage() {
                   <i className="bar" />
                   {p.imageUrl ? <img src={p.imageUrl} alt={p.name} loading="lazy" /> : <span className="ph"><RBstar size={44} color="#8ea0cf" /></span>}
                   <div className="n" title={p.name}>{p.name}</div><div className="p">{fmt(p.price)}</div>
+                  <MiniStock p={p} />
                 </button>
               ))}
             </div>
@@ -420,7 +475,7 @@ export default function ProductPage() {
 /* ── Styles (ported from the reference, tuned to our navy) ─────────────── */
 const itCSS = `
 .it-page{position:relative;min-height:100vh;color:#fff;font-family:Inter,system-ui,sans-serif;
-  background:radial-gradient(900px 600px at 0% 0%,#1a2b52,transparent 70%),radial-gradient(800px 700px at 100% 25%,#15264a,transparent 70%),#111a2b;padding:24px 20px 40px}
+  background:radial-gradient(900px 600px at 0% 0%,#1a2b52,transparent 70%),radial-gradient(800px 700px at 100% 25%,#15264a,transparent 70%),#111a2b;padding:24px 20px 0}
 .it-page *{box-sizing:border-box}.it-page button{font-family:inherit}
 /* Header sits flush to the top and spans the full width (cancels the page padding) */
 .it-page>header{margin:-24px -20px 0}

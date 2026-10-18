@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Tag, ShoppingCart, Check, Ban } from "lucide-react";
+import { Tag, ShoppingCart, Check, Ban, Minus, Plus } from "lucide-react";
 import { P } from "@/lib/storefront";
 import { usePrice } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
@@ -63,7 +63,7 @@ export default function ProductCard({
 
   /* How much of this item the cart already holds. The button stops at the
      real limit and says so, instead of quietly adding nothing. */
-  const { items } = useCart();
+  const { items, updateQty } = useCart();
   const cap = effectiveStock(p);
   const inCart = items.find((i) => i.id === p.id)?.quantity ?? 0;
   const remaining = cap === null ? null : Math.max(0, cap - inCart);
@@ -98,7 +98,9 @@ export default function ProductCard({
         }}
       />
 
-      {/* ── Media panel ── */}
+      {/* ── Media ── The stage is a tint wash, not a nested box: no border,
+          no inner card. The item art floats directly on the card surface so
+          the card reads as one object instead of a box inside a box. */}
       <button
         type="button"
         onClick={() => onNavigate?.(p.id)}
@@ -110,7 +112,6 @@ export default function ProductCard({
              The reference used a full blue gradient wash; ours keeps the
              surface flat and lets the art carry the colour. */
           background: `radial-gradient(ellipse 66% 50% at 50% 64%, color-mix(in srgb, ${accent} 26%, transparent), transparent 70%), linear-gradient(165deg, ${P.stage}, #121c33)`,
-          border: `1px solid ${P.border}`,
         }}
       >
         {/* item art */}
@@ -214,61 +215,118 @@ export default function ProductCard({
             lines up regardless of how many lines its title takes */}
         <div className="flex-1 min-h-3" />
 
-        {/* Real scarcity, only when it is actually scarce. */}
-        {lowStock && (
-          <p className="mt-2 text-[11.5px] font-semibold" style={{ color: "#f2792e" }}>
-            Only {remaining} left
-          </p>
-        )}
-
-        <button
-          type="button"
-          disabled={soldOut || atCap}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (soldOut || atCap) return;
-            onAdd?.(p);
-            setAdded(true);
-            setTimeout(() => setAdded(false), 1400);
-          }}
-          aria-label={
-            soldOut
-              ? `${p.name} is sold out`
-              : atCap
-                ? `All ${cap} of ${p.name} are already in your cart`
-                : `Add ${p.name} to cart`
-          }
-          className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-[11px] px-3 py-[13px] text-[13.5px] font-bold transition-[filter,transform] duration-150 hover:brightness-110 active:scale-[.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745] disabled:cursor-not-allowed disabled:hover:brightness-100"
-          style={{
-            background: soldOut || atCap
-              ? P.band
-              : added
-                ? P.good
-                : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
-            border: soldOut || atCap ? `1px solid ${P.border}` : "none",
-            color: soldOut || atCap ? P.faint : added ? "#08240f" : "#fff",
-            boxShadow: soldOut || atCap || added ? "none" : P.shadowSoft,
-            fontFamily: "Inter, system-ui, sans-serif",
-          }}
+        {/* Stock — every card says where it stands, same vocabulary the
+            checkout uses. Green when healthy, amber when it's running out,
+            grey when it's gone. */}
+        <p
+          className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-semibold"
+          style={{ color: soldOut ? P.faint : lowStock ? "#f2792e" : P.good }}
         >
+          <i
+            className="block h-[6px] w-[6px] shrink-0 rounded-full"
+            style={{ background: soldOut ? P.faint : lowStock ? "#f2792e" : P.good }}
+          />
+          {soldOut ? "Sold out" : cap === null ? "In stock" : lowStock ? `Only ${remaining} left` : `In stock · ${remaining} left`}
+        </p>
+
+        {/* ── CTA ── One slot, three states: Add → Added (flash) → stepper.
+            The slot keeps a fixed height so the morph never reflows the
+            card, and every colour/background change eases instead of
+            snapping. Once you own one, the control becomes − N + so the
+            card always tells you what's already in the cart. */}
+        <div className="relative mt-3 h-[44px]">
           {soldOut ? (
-            <>
+            <button
+              type="button"
+              disabled
+              aria-label={`${p.name} is sold out`}
+              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold"
+              style={{ background: P.band, border: `1px solid ${P.border}`, color: P.faint, cursor: "not-allowed" }}
+            >
               <Ban size={15} strokeWidth={2.6} /> Sold out
-            </>
-          ) : atCap ? (
-            <>
-              <Check size={15} strokeWidth={2.6} /> All {cap} in cart
-            </>
+            </button>
           ) : added ? (
-            <>
-              <Check size={15} strokeWidth={3} /> Added
-            </>
+            /* the flash — same shape as everything else, so the morph into
+               the stepper below reads as one control changing its mind */
+            <motion.div
+              initial={{ scale: 0.96 }}
+              animate={{ scale: [0.96, 1.03, 1] }}
+              transition={{ duration: 0.42, ease: [0.34, 1.56, 0.64, 1] }}
+              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold"
+              style={{ background: P.good, color: "#08240f", boxShadow: `0 6px 18px rgba(95,224,142,.32)` }}
+            >
+              <Check size={16} strokeWidth={3} /> Added
+            </motion.div>
+          ) : inCart > 0 ? (
+            /* the stepper — you already have some, take more or take less */
+            <div
+              className="flex h-full w-full items-stretch overflow-hidden rounded-[11px]"
+              style={{ background: P.band, border: `1px solid ${P.borderStrong}` }}
+            >
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); updateQty(p.id, inCart - 1); }}
+                aria-label={`Remove one ${p.name} from cart`}
+                className="grid w-[46px] shrink-0 place-items-center transition-colors"
+                style={{ color: P.text }}
+                onMouseEnter={(ev) => (ev.currentTarget.style.background = "rgba(47,140,255,.14)")}
+                onMouseLeave={(ev) => (ev.currentTarget.style.background = "transparent")}
+              >
+                <Minus size={15} strokeWidth={3} />
+              </button>
+              <span
+                className="grid flex-1 place-items-center border-x text-[13.5px] font-bold"
+                style={{ borderColor: P.borderStrong, color: P.text }}
+              >
+                {inCart} in cart
+              </span>
+              <button
+                type="button"
+                disabled={atCap}
+                onClick={(e) => { e.stopPropagation(); if (!atCap) updateQty(p.id, inCart + 1); }}
+                aria-label={atCap ? `All ${cap} of ${p.name} are already in your cart` : `Add another ${p.name}`}
+                className="grid w-[46px] shrink-0 place-items-center transition-colors disabled:cursor-not-allowed"
+                style={{ color: atCap ? P.faint : "#fff", background: atCap ? "transparent" : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})` }}
+                onMouseEnter={(ev) => { if (!atCap) ev.currentTarget.style.filter = "brightness(1.12)"; }}
+                onMouseLeave={(ev) => (ev.currentTarget.style.filter = "none")}
+              >
+                <Plus size={15} strokeWidth={3} />
+              </button>
+            </div>
           ) : (
-            <>
-              <ShoppingCart size={15} strokeWidth={2.6} /> Add to Cart
-            </>
+            /* first add */
+            <button
+              type="button"
+              disabled={atCap}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (atCap) return;
+                onAdd?.(p);
+                setAdded(true);
+                setTimeout(() => setAdded(false), 950);
+              }}
+              aria-label={atCap ? `All ${cap} of ${p.name} are already in your cart` : `Add ${p.name} to cart`}
+              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold transition-[filter,transform,background-color,color] duration-300 hover:brightness-110 active:scale-[.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745] disabled:cursor-not-allowed disabled:hover:brightness-100"
+              style={{
+                background: atCap ? P.band : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
+                border: atCap ? `1px solid ${P.border}` : "none",
+                color: atCap ? P.faint : "#fff",
+                boxShadow: atCap ? "none" : P.shadowSoft,
+                fontFamily: "Inter, system-ui, sans-serif",
+              }}
+            >
+              {atCap ? (
+                <>
+                  <Check size={15} strokeWidth={2.6} /> All {cap} in cart
+                </>
+              ) : (
+                <>
+                  <ShoppingCart size={15} strokeWidth={2.6} /> Add to Cart
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </div>
       </div>
     </motion.article>
   );

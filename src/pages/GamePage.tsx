@@ -6,7 +6,7 @@ import {
   Apple, Gem, Star,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { TopNav, SiteFooter } from "./Home";
+import { TopNav, SiteFooter, Testimonials } from "./Home";
 import { usePrice } from "@/context/CurrencyContext";
 import { effectiveStock, isSoldOut } from "@/lib/stock";
 import { RBstar } from "@/components/Art";
@@ -408,6 +408,10 @@ export default function GamePage() {
         )}
       </div>
 
+      {/* Same reviews band the homepage runs — the store's real buyer
+          reviews, not a separate game-flavoured variant. */}
+      <Testimonials />
+
       <SiteFooter />
     </div>
   );
@@ -420,7 +424,9 @@ const mkCSS = `
 .mk-page *{box-sizing:border-box}
 /* Header sits flush to the top and spans the full width (cancels the page padding) */
 .mk-page>header{margin:-24px -20px 0}
-.mk-wrap{max-width:1180px;margin:0 auto}
+/* The banner used to sit flush against the header (nav bottom = banner top,
+   measured at 65/65) which read as one glued block. This is the seam. */
+.mk-wrap{max-width:1180px;margin:0 auto;padding-top:22px}
 
 /* banner */
 .mk-banner{position:relative;height:188px;border-radius:20px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.35)}

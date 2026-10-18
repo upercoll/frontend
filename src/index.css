@@ -535,6 +535,23 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   WIDE-SCREEN CONTAINER
+   Content is 1096px everywhere below 1536px, so every existing page
+   is byte-identical to what shipped before this class existed. At
+   ≥1536px it opens to 1280px: on a wide monitor the old 1096px column
+   left ~400px of empty gutter on each side and the page read as a
+   narrow centered strip. One class, one breakpoint, no visual change
+   at any width people were already happy with.
+   ═══════════════════════════════════════════════════════════════════ */
+.wide-wrap {
+  max-width: 1096px;
+  margin-inline: auto;
+}
+@media (min-width: 1536px) {
+  .wide-wrap { max-width: 1280px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    MOBILE ITEM CAROUSELS
    Every product rail/grid becomes a horizontal snap scroller below
    640px so phones can swipe through items instead of stacking a long

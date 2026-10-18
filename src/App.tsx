@@ -22,6 +22,7 @@ import PaymentSuccess from "@/pages/PaymentSuccess";
 import AutoDelivery from "@/pages/AutoDelivery";
 import ClaimChatPage from "@/pages/ClaimChatPage";
 import ProfilePage from "@/pages/ProfilePage";
+import OrdersPage from "@/pages/Orders";
 import BrowseGames from "@/pages/BrowseGames";
 import NotFound from "@/pages/not-found";
 import TicketList from "@/pages/TicketList";
@@ -141,6 +142,7 @@ function StorefrontRouter() {
   const isAutoDelivery = location === "/auto-delivery";
   const isClaimChat = location === "/claim-chat";
   const isProfile = location === "/profile";
+  const isOrders = location === "/orders";
 
   const isHome = location === "/";
   const isBrowse = location === "/browse";
@@ -150,7 +152,7 @@ function StorefrontRouter() {
 
   return (
     <>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && !isLegal && <Navbar />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isTickets && !isLegal && <Navbar />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
@@ -164,13 +166,15 @@ function StorefrontRouter() {
         <Route path="/tickets/:ticketId" component={TicketThread} />
         <Route path="/tickets" component={TicketList} />
         <Route path="/profile" component={ProfilePage} />
+        {/* Track Order's real home — the buyer's own orders + claim chats. */}
+        <Route path="/orders" component={OrdersPage} />
         {/* Policy pages the footer links to — real destinations, not anchors. */}
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/refunds" component={RefundPolicy} />
         <Route path="/terms" component={TermsOfUse} />
         <Route component={NotFound} />
       </Switch>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isTickets && !isLegal && <Footer />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isTickets && !isLegal && <Footer />}
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />

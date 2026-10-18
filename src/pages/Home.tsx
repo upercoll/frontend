@@ -4,7 +4,7 @@ import {
   Store, PackageSearch, ShoppingBag, UserPlus, LogIn,
   ChevronRight, Star, Plus, Minus, Box, Wallet, Users, Zap,
   ShoppingCart, ShieldCheck, Play,
-  Menu, X, LifeBuoy, ChevronDown, Gamepad2, Gift, MessageSquare,
+  Menu, X, LifeBuoy, ChevronDown, Gamepad2, Gift, MessageSquare, Search,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useCart } from "@/context/CartContext";
@@ -196,6 +196,13 @@ export function TopNav({ onHome }: { onHome: () => void }) {
   /* close the mobile menu whenever the route changes */
   useEffect(() => { setMenuOpen(false); }, [location]);
 
+  /* The game you're standing in right now (inside /game/:slug) — the Games
+     trigger wears its icon + name so the header always shows where you are. */
+  const hereGame = (() => {
+    const m = location.match(/^\/game\/([^/?]+)/);
+    return m ? games.find(g => g.slug === decodeURIComponent(m[1])) || null : null;
+  })();
+
   /* Any click outside the nav closes whichever category is open */
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -251,20 +258,11 @@ export function TopNav({ onHome }: { onHome: () => void }) {
       className="relative z-20 border-b"
       style={{ borderColor: C.border, background: "rgba(15,23,42,0.94)" }}
     >
-      {/* The store's own inventory bleeding off both edges behind the nav.
-          The WRAPPER does the clipping — the header itself must not, or the
-          Games/Support dropdowns below would be cut off. Very wide screens
-          only: the six-link nav needs the room. Decorative, not focusable. */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <img src="/item-star.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, right: "2%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-        <img src="/item-gem.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, right: "10%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-        <img src="/item-crystals.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, right: "18%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-        <img src="/item-controller.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, left: "2%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-        <img src="/item-sword.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, left: "10%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-        <img src="/item-heart.png" alt="" className="absolute hidden 2xl:block" style={{ width: 72, height: 72, left: "18%", top: -6, filter: "drop-shadow(0 3px 8px rgba(0,0,0,.4))" }} />
-      </div>
+      {/* The floating item art that used to bleed off both edges here is
+          gone on request — the header is the header, the content is the
+          content, and at wide widths they now share the same width. */}
 
-      <div className="relative z-10 max-w-[1096px] mx-auto px-4 sm:px-5 py-3 flex items-center gap-2">
+      <div className="relative z-10 wide-wrap mx-auto px-4 sm:px-5 py-3 flex items-center gap-2">
         {/* Brand */}
         <button onClick={onHome} className="flex items-center gap-2 shrink-0 focus:outline-none" aria-label="RBstars home">
           <img src="/rb-logo.png" alt="RBstars" className="w-8 h-8 rounded-full object-cover" />
@@ -326,7 +324,9 @@ export function TopNav({ onHome }: { onHome: () => void }) {
 
           <span className="w-px self-stretch my-1.5" style={{ background: C.border }} aria-hidden="true" />
 
-          {/* GAMES — a switcher, not a link list: search, then jump shops */}
+          {/* GAMES — a switcher, not a link list: search, then jump shops.
+              When you're inside a game, the trigger becomes that game (its
+              icon + name) so the header always says where you are. */}
           <div className="relative">
             <button
               className={linkCls}
@@ -335,7 +335,12 @@ export function TopNav({ onHome }: { onHome: () => void }) {
               aria-expanded={openMenu === "games"}
               aria-haspopup="true"
             >
-              <Gamepad2 size={15} color="#8ea0cf" /> Games
+              {hereGame ? (
+                <span className="w-[18px] h-[18px] rounded-md shrink-0 overflow-hidden grid place-items-center" style={{ background: hereGame.gradient?.from || C.blue }}>
+                  {hereGame.imageUrl && <img src={hereGame.imageUrl} alt="" className="w-full h-full object-cover" />}
+                </span>
+              ) : <Gamepad2 size={15} color="#8ea0cf" />}
+              {hereGame ? hereGame.name : "Games"}
               <motion.div animate={{ rotate: openMenu === "games" ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown size={12} />
               </motion.div>
@@ -393,7 +398,9 @@ export function TopNav({ onHome }: { onHome: () => void }) {
                           </span>
                           <span className="min-w-0">
                             <span className="block text-sm font-bold truncate" style={{ color: C.text }}>{game.name}</span>
-                            <span className="block text-[10px] font-medium" style={{ color: C.faint }}>Browse items</span>
+                            <span className="block text-[10px] font-medium" style={{ color: hereGame?._id === game._id ? C.blue : C.faint }}>
+                              {hereGame?._id === game._id ? "You're here" : "Browse items"}
+                            </span>
                           </span>
                           <ChevronRight size={12} color={C.faint} className="ml-auto shrink-0 opacity-0 group-hover:opacity-100" />
                         </button>
@@ -448,8 +455,8 @@ export function TopNav({ onHome }: { onHome: () => void }) {
                   <MenuItem
                     icon={<PackageSearch size={16} color="#8ea0cf" />}
                     title="Track Order"
-                    note="See what's been delivered"
-                    onClick={() => { setOpenMenu(null); navigate("/profile"); }}
+                    note="Delivery progress + claim chats"
+                    onClick={() => { setOpenMenu(null); navigate("/orders"); }}
                   />
                 </motion.div>
               )}
@@ -557,7 +564,7 @@ export function TopNav({ onHome }: { onHome: () => void }) {
                 items: [
                   { icon: MessageSquare, label: "Claim Chat",  act: () => navigate("/claim-chat") },
                   { icon: LifeBuoy,      label: "Tickets",     act: () => navigate("/tickets") },
-                  { icon: PackageSearch, label: "Track Order", act: () => navigate("/profile") },
+                  { icon: PackageSearch, label: "Track Order", act: () => navigate("/orders") },
                 ],
               },
             ].map(group => (
@@ -622,7 +629,7 @@ function Hero() {
   const liveRating = pub && pub.reviews > 0 && pub.rating > 0 ? pub : null;
   return (
     <section className="relative overflow-hidden">
-      <div className="max-w-[1096px] mx-auto px-5 pt-12 sm:pt-16 pb-14 grid lg:grid-cols-2 gap-10 items-center">
+      <div className="wide-wrap mx-auto px-5 pt-12 sm:pt-16 pb-14 grid lg:grid-cols-2 gap-10 items-center">
         {/* Left — headline, sticker, description, CTA. On phones this whole
             block centers itself (matching the Browse hero) and the artwork
             below is dropped, so the heading is the first thing on screen. */}
@@ -701,35 +708,33 @@ function Hero() {
 }
 
 /* ── Payment methods ───────────────────────────────────────────────────── */
+/* These used to occupy their own band under the hero. They now live in the
+   footer — same wordmarks, scaled to sit on the legal row's tier. */
 
-function PaymentRow() {
+export function PaymentMethods() {
   const methods = ["VISA", "Mastercard", "PayPal", "G Pay", "Apple Pay", "Discover"];
   return (
-    <section className="relative">
-      <div className="max-w-[1096px] mx-auto px-5 pb-16">
-        <Reveal>
-          <p className="text-[13px] leading-relaxed" style={{ color: "#e6ebfb" }}>
-            Pay with your favourite <span style={{ color: "#62c4f5" }}>payment methods</span> like this below:
-          </p>
-          <div className="flex items-center gap-7 flex-wrap mt-4">
-            {methods.map((m) => (
-              <span key={m} className="font-mont text-[17px] font-bold italic inline-flex items-center gap-1.5" style={{ color: "#aab3cf" }}>
-                {m === "Apple Pay" ? (
-                  <>
-                    <svg className="h-[20px] w-auto" viewBox="0 0 384 512" fill="currentColor" aria-hidden>
-                      <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-                    </svg>
-                    Pay
-                  </>
-                ) : (
-                  m
-                )}
-              </span>
-            ))}
-          </div>
-        </Reveal>
+    <div className="mt-7">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: C.faint }}>
+        Pay with
+      </p>
+      <div className="flex items-center gap-x-6 gap-y-3 flex-wrap">
+        {methods.map((m) => (
+          <span key={m} className="font-mont text-[14px] font-bold italic inline-flex items-center gap-1.5" style={{ color: "#aab3cf" }}>
+            {m === "Apple Pay" ? (
+              <>
+                <svg className="h-[16px] w-auto" viewBox="0 0 384 512" fill="currentColor" aria-hidden>
+                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                </svg>
+                Pay
+              </>
+            ) : (
+              m
+            )}
+          </span>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -748,22 +753,42 @@ function PopularItems({
   onNavigate: (to: string) => void;
 }) {
   const [activeGame, setActiveGame] = useState("");
+  /* Name filter for the grid below — sits to the left of the game tabs.
+     Searching widens the cap so a real search isn't limited to 5 hits. */
+  const [q, setQ] = useState("");
   const { addItem } = useCart();
-  const shown = products.slice(0, 5);
+  const query = q.trim().toLowerCase();
+  const matched = query
+    ? products.filter(p => p.name.toLowerCase().includes(query))
+    : products;
+  const shown = matched.slice(0, query ? 10 : 5);
   const gameName = games.find(g => g.slug === activeGame)?.name || games[0]?.name || "items";
 
   return (
     <section id="popular" className="relative scroll-mt-20">
-      <div className="max-w-[1096px] mx-auto px-5 py-16">
+      <div className="wide-wrap mx-auto px-5 py-16">
         <Reveal>
           <h2 className="font-mont text-[28px] sm:text-[32px] font-bold text-center" style={{ color: C.text }}>
             Popular items
           </h2>
         </Reveal>
 
-        {/* Game tabs */}
+        {/* Search + game tabs — the search sits to the left of the game
+            buttons and filters the cards underneath by name. */}
         <Reveal delay={0.08}>
           <div className="flex items-center gap-2.5 flex-wrap justify-center mt-5">
+            <div className="relative">
+              <Search size={14} color={C.faint} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                placeholder="Search items..."
+                aria-label="Search items"
+                className="h-9 w-[180px] pl-8 pr-3 rounded-full text-[12.5px] font-medium outline-none transition-colors focus:border-[#1b86ff]"
+                style={{ background: C.card, border: `1px solid ${C.border}`, color: C.text }}
+              />
+            </div>
             {loadingGames || games.length === 0 ? (
               <span className="h-9 w-[120px] rounded-full" style={{ background: C.card, border: `1px solid ${C.border}` }} />
             ) : (
@@ -799,8 +824,14 @@ function PopularItems({
             </div>
           ) : shown.length === 0 ? (
             <div className="rounded-[18px] py-14 text-center" style={{ background: C.card, border: `1px solid ${C.border}` }}>
-              <p className="text-[15px] font-semibold" style={{ color: C.text }}>No items listed yet.</p>
-              <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>New stock shows up here as soon as it lands.</p>
+              <p className="text-[15px] font-semibold" style={{ color: C.text }}>
+                {query ? `Nothing matches “${q.trim()}”.` : "No items listed yet."}
+              </p>
+              <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>
+                {query
+                  ? "Try part of the item's name — seeds, vehicles, tools."
+                  : "New stock shows up here as soon as it lands."}
+              </p>
             </div>
           ) : (
             <div className="pop-rail grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -968,7 +999,7 @@ function Stats() {
         className="absolute left-0 top-1/2 -translate-y-1/2 w-[340px] opacity-70 select-none pointer-events-none hidden min-[1100px]:block"
         style={{ mixBlendMode: "lighten" }}
       />
-      <div className="max-w-[1096px] mx-auto px-5 py-16 grid sm:grid-cols-3 gap-10">
+      <div className="wide-wrap mx-auto px-5 py-16 grid sm:grid-cols-3 gap-10">
         {tiles.map((s, i) => (
           <StatTile
             key={s.label}
@@ -997,7 +1028,7 @@ const STEPS = [
 function HowItWorks() {
   return (
     <section className="relative">
-      <div className="max-w-[1096px] mx-auto px-5 py-16 grid lg:grid-cols-[1fr_640px] gap-12 items-center">
+      <div className="wide-wrap mx-auto px-5 py-16 grid lg:grid-cols-[1fr_640px] gap-12 items-center">
         {/* Steps */}
         <div>
           <Reveal>
@@ -1099,7 +1130,7 @@ function Features() {
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] opacity-70 select-none pointer-events-none hidden min-[1100px]:block"
         style={{ mixBlendMode: "lighten" }}
       />
-      <div className="max-w-[1096px] mx-auto px-5 py-16 grid sm:grid-cols-3 gap-5">
+      <div className="wide-wrap mx-auto px-5 py-16 grid sm:grid-cols-3 gap-5">
         {FEATURES.map((f, i) => (
           <Reveal key={f.title} delay={i * 0.08}>
             <div
@@ -1183,7 +1214,7 @@ function ReviewCard({ r }: { r: PublicReview }) {
   );
 }
 
-function Testimonials() {
+export function Testimonials() {
   /* Canonical storefront figures: GET /api/settings/public-stats (customers,
      rating, review count) and GET /api/claims/public-reviews (the reviews
      themselves). Both are the store's real numbers — a missing value renders
@@ -1201,7 +1232,7 @@ function Testimonials() {
 
   return (
     <section id="reviews" className="relative scroll-mt-20">
-      <div className="max-w-[1096px] mx-auto px-5 py-16">
+      <div className="wide-wrap mx-auto px-5 py-16">
         <Reveal className="text-center">
           <h2 className="font-mont text-[26px] sm:text-[34px] font-bold leading-tight" style={{ color: C.text }}>
             {stats && stats.customers > 0 ? (
@@ -1252,7 +1283,7 @@ function Faq() {
         aria-hidden
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[400px] h-auto opacity-80 select-none pointer-events-none hidden min-[1100px]:block"
       />
-      <div className="max-w-[1096px] mx-auto px-5 py-16">
+      <div className="wide-wrap mx-auto px-5 py-16">
         <div className="max-w-[627px] mx-auto">
           <Reveal>
             <h2 className="font-mont text-[28px] sm:text-[36px] font-bold text-center" style={{ color: C.text }}>
@@ -1315,7 +1346,7 @@ function Faq() {
 function SeoText() {
   return (
     <section className="relative">
-      <div className="max-w-[1096px] mx-auto px-5 py-16">
+      <div className="wide-wrap mx-auto px-5 py-16">
         <div className="max-w-[1100px]">
           {SEO_BLOCKS.map((b, i) => (
             <Reveal key={b.h} delay={i * 0.06} className="mb-7 last:mb-0">
@@ -1374,7 +1405,7 @@ export function SiteFooter() {
 
   return (
     <footer className="relative" style={{ background: C.footerBg, marginTop: 20 }}>
-      <div className="max-w-[1096px] mx-auto px-5 pt-12 pb-8">
+      <div className="wide-wrap mx-auto px-5 pt-12 pb-8">
         {/* Brand + columns — 2 + 4 = 6 tracks, so the four link columns land
             on one row at md+ instead of stranding the last one underneath. */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
@@ -1426,8 +1457,10 @@ export function SiteFooter() {
           </div>
         )}
 
-        {/* Legal */}
-        <div className="mt-8 pt-6 space-y-2.5" style={{ borderTop: "1px solid #1d2744" }}>
+        {/* Legal — payment wordmarks sit on this tier too, since this is the
+            block that talks about how you pay. */}
+        <PaymentMethods />
+        <div className="mt-7 pt-6 space-y-2.5" style={{ borderTop: "1px solid #1d2744" }}>
           <p className="text-[10.5px] leading-[1.7] max-w-[1100px]" style={{ color: "#9aa8cb" }}>
             RBstars is an independent store selling digital items for Roblox games. We are not affiliated with,
             endorsed by or sponsored by Roblox Corporation or any game developer. Payments are processed
@@ -1511,7 +1544,8 @@ export default function Home() {
       <div className="relative z-10">
         <TopNav onHome={scrollToPopular} />
         <Hero />
-        <PaymentRow />
+        {/* Payment methods used to sit here as their own band — they live in
+            the footer now, which is where people look for them. */}
         <PopularItems
           games={games}
           loadingGames={gamesLoading}

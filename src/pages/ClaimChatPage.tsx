@@ -381,6 +381,44 @@ export default function ClaimChatPage() {
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  /* Deep link: /claim-chat?room=<roomId> (from My Orders) drops straight into
+     that claim conversation — no form, no localStorage pick-up. The URL wins
+     over any stored session; the transcript comes from the public session
+     status endpoint (unguessable roomId, same data it already returned). */
+  useEffect(() => {
+    let room: string | null = null;
+    try { room = new URLSearchParams(window.location.search).get("room"); } catch { room = null; }
+    if (!room) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch(`${BACKEND}/api/claims/${encodeURIComponent(room)}/status`);
+        const data = await resp.json();
+        if (cancelled || !resp.ok || !data?.data) return;
+        const s = data.data;
+        setRoomId(s.roomId);
+        if (s.robloxUsername) setRobloxUser(s.robloxUsername);
+        if (s.delivererName) setAgentName(s.delivererName);
+        setMessages((Array.isArray(s.messages) ? s.messages : []).map((m: {
+          _id?: string; sender: string; text: string; senderName?: string; timestamp: string;
+        }) => ({
+          id: m._id || makeId(),
+          sender: m.sender as Message["sender"],
+          text: m.text,
+          senderName: m.senderName || "Unknown",
+          timestamp: new Date(m.timestamp),
+        })));
+        setStep(
+          s.status === "claimed" ? "claimed"
+            : s.status === "ended" ? "ended"
+              : s.status === "active" ? "active"
+                : "waiting",
+        );
+      } catch { /* unknown room — leave the normal flow untouched */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
