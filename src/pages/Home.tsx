@@ -13,7 +13,7 @@ import { RBstar } from "@/components/Art";
 import CurrencyMenu from "@/components/CurrencyMenu";
 import { LIVE_SOCIALS } from "@/lib/socialLinks";
 import ProductCard, { ProductCardSkeleton, type CardProduct } from "@/components/ProductCard";
-import { fetchLiveStats, fetchActivity, groupNum, type LiveStats, type StoreActivity, type ActivityGame } from "@/lib/liveStats";
+import { fetchLiveStats, groupNum, type LiveStats } from "@/lib/liveStats";
 import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 import { usePublicReviews, timeAgo, type PublicReview } from "@/hooks/usePublicReviews";
 
@@ -1115,140 +1115,6 @@ function Features() {
   );
 }
 
-/* ── Delivery activity ──────────────────────────────────────────────────── */
-/* Real completed deliveries: how many orders went out today, plus each game's
-   live inventory and lifetime sales from GET /api/stats/activity. No PII, no
-   invented counters — if there is nothing real to show, the band hides. */
-
-function useActivity() {
-  const [act, setAct] = useState<StoreActivity | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    fetchActivity().then((a) => { if (!alive) return; if (a) setAct(a); else setFailed(true); });
-    return () => { alive = false; };
-  }, []);
-  return { act, failed };
-}
-
-function ActivityCard({ g, navigate }: { g: ActivityGame; navigate: (u: string) => void }) {
-  const soldPct = g.sold + g.inStock > 0 ? Math.round((g.sold / (g.sold + g.inStock)) * 100) : 0;
-  return (
-    <button
-      type="button"
-      onClick={() => navigate(`/game/${g.slug}`)}
-      className="group relative shrink-0 w-[218px] h-[146px] rounded-[12px] p-3 mr-4 overflow-hidden text-left transition-transform hover:-translate-y-1"
-      style={{ background: "#1e2849", border: `1px solid ${C.borderSoft}`, fontSize: 12 }}
-      aria-label={`Open ${g.name}`}
-    >
-      {g.imageUrl ? (
-        <img
-          src={g.imageUrl}
-          alt=""
-          aria-hidden
-          className="absolute left-3 top-3 w-[26px] h-[26px] rounded-full object-cover"
-          style={{ background: g.gradient ? `linear-gradient(135deg,${g.gradient.from},${g.gradient.to})` : "#0f1730" }}
-        />
-      ) : (
-        <span
-          className="absolute left-3 top-3 w-[26px] h-[26px] rounded-full grid place-items-center"
-          style={{ background: g.gradient ? `linear-gradient(135deg,${g.gradient.from},${g.gradient.to})` : "#0f1730" }}
-        >
-          <Gamepad2 size={13} color="#fff" />
-        </span>
-      )}
-
-      <div className="absolute left-[44px] right-[56px] top-3 text-[11.5px] font-bold text-white leading-tight truncate">{g.name}</div>
-      <div className="absolute left-[44px] right-[56px] top-[26px] text-[8.5px] truncate" style={{ color: "#9aa6c8" }}>{g.items} items</div>
-
-      <span
-        className="absolute right-2 top-[13px] rounded-full px-2 py-0.5 text-[8.5px]"
-        style={{ border: "1px solid #2faa63", background: "#0f3a33", color: C.greenBright }}
-      >
-        LIVE
-      </span>
-
-      <div className="absolute left-3 right-3 top-[44px] flex gap-3">
-        <div>
-          <div className="text-[17px] font-mont font-bold leading-none" style={{ color: C.greenBright }}>{groupNum(g.inStock)}</div>
-          <div className="text-[8.5px] mt-1" style={{ color: "#9aa6c8" }}>in stock</div>
-        </div>
-        <div>
-          <div className="text-[17px] font-mont font-bold leading-none" style={{ color: C.text }}>{groupNum(g.sold)}</div>
-          <div className="text-[8.5px] mt-1" style={{ color: "#9aa6c8" }}>sold</div>
-        </div>
-      </div>
-
-      <div className="absolute left-3 right-3 bottom-3">
-        <div className="h-[5px] rounded-full overflow-hidden" style={{ background: "#16203c" }}>
-          <div className="h-full rounded-full" style={{ width: `${soldPct}%`, background: C.greenBright }} />
-        </div>
-        <div className="mt-1.5 text-[8.5px] flex items-center gap-1" style={{ color: "#9aa6c8" }}>
-          <PackageSearch size={9} /> Live inventory from the store
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function DeliveryBand() {
-  const { act, failed } = useActivity();
-  const [, navigate] = useLocation();
-
-  /* nothing real to show — drop the band rather than inventing a count */
-  if (failed || !act) return null;
-  const feed = act.games.filter((g) => g.inStock > 0 || g.sold > 0);
-  if (feed.length === 0 && act.deliveredAllTime === 0) return null;
-
-  const todayLine = act.ordersToday > 0
-    ? `${groupNum(act.ordersToday)} order${act.ordersToday === 1 ? "" : "s"} delivered today`
-    : `${groupNum(act.deliveredAllTime)} orders delivered`;
-
-  const itemsLine = act.itemsDeliveredToday > 0
-    ? `${groupNum(act.itemsDeliveredToday)} item${act.itemsDeliveredToday === 1 ? "" : "s"}`
-    : null;
-
-  return (
-    <section id="delivery-activity" className="relative scroll-mt-20">
-      <div className="max-w-[1096px] mx-auto px-5 pb-16">
-        <Reveal className="text-center">
-          <h2 className="font-mont text-[26px] sm:text-[34px] font-bold leading-tight" style={{ color: C.text }}>
-            Orders <span style={{ color: C.greenBright }}>Delivered</span>
-          </h2>
-          <span
-            className="inline-block mt-4 h-[26px] px-3.5 rounded-full text-[11.5px] font-semibold"
-            style={{ border: "1px solid #2faa63", background: "#0f3a33", color: C.greenBright }}
-          >
-            {todayLine}{itemsLine ? ` · ${itemsLine}` : ""}
-          </span>
-        </Reveal>
-
-        {feed.length > 0 && (
-          <div className="rg-marquee mt-8">
-            <div className="rg-marquee-track py-1">
-              {[...feed, ...feed].map((g, i) => (
-                <ActivityCard key={`${g.slug}-${i}`} g={g} navigate={navigate} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <Reveal delay={0.1}>
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={() => navigate("/browse")}
-              className="h-[44px] px-8 rounded-full inline-flex items-center justify-center gap-2.5 text-[14px] font-bold text-white transition-transform hover:-translate-y-0.5"
-              style={{ background: "linear-gradient(90deg,#0a84ff,#0a50d6)", boxShadow: "0 6px 18px rgba(10,110,255,.35)" }}
-            >
-              <PackageSearch size={17} /> Browse all games <ChevronRight size={16} />
-            </button>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
 /* ── Reviews ──────────────────────────────────────────────────────────── */
 /* Real buyer reviews from the store's own review system — buyers leave a
    1–5 rating and a comment after their claim session (ClaimSession.feedback),
@@ -1637,7 +1503,6 @@ export default function Home() {
         <HowItWorks />
         <Features />
         <Testimonials />
-        <DeliveryBand />
         <Faq />
         <SeoText />
         <SiteFooter />
