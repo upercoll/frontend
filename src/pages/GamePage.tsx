@@ -14,6 +14,7 @@ import ProductCard from "@/components/ProductCard";
 import PageLoader from "@/components/PageLoader";
 import { useCart } from "@/context/CartContext";
 import { fetchPublicContent, visibleBanners } from "@/lib/publicContent";
+import { byShape, type ImageShape } from "@/lib/storefront";
 import type { PublicContent } from "@/lib/publicContent";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
@@ -33,6 +34,8 @@ interface Product {
   featured?: boolean; bestSeller?: boolean; gradient?: [string, string];
   /** live physical inventory — stock is the legacy field, see lib/stock.ts */
   onHand?: number;
+  /** card media framing — square / vertical / horizontal (lib/storefront.ts) */
+  imageShape?: ImageShape;
 }
 interface ApiCategory { _id: string; name: string; slug: string; icon?: string; game: string; }
 interface ApiGame { _id: string; name: string; slug: string; gradient?: { from: string; to: string }; imageUrl?: string; bgImageUrl?: string; }
@@ -154,6 +157,7 @@ function Card({ p, idx, accent, catName, navigate, onAdd }: {
         price: p.price,
         originalPrice: p.originalPrice,
         imageUrl: p.imageUrl,
+        imageShape: p.imageShape,
         bestSeller: p.bestSeller,
         outOfStock: p.outOfStock,
         stock: p.stock,
@@ -223,6 +227,10 @@ export default function GamePage() {
             outOfStock: p.outOfStock === true,
           }),
           imageUrl: p.imageUrl as string | undefined,
+          imageShape:
+            p.imageShape === "vertical" || p.imageShape === "horizontal"
+              ? (p.imageShape as ImageShape)
+              : "square",
           categoryId: typeof p.category === "object" && p.category !== null ? (p.category as { _id: string })._id : p.category as string,
           featured: p.featured as boolean, bestSeller: p.bestSeller as boolean,
         }));
@@ -264,7 +272,10 @@ export default function GamePage() {
       sort === "hi" ? b.price - a.price :
       sort === "name" ? a.name.localeCompare(b.name) :
       (Number(!!b.bestSeller) - Number(!!a.bestSeller)) || (Number(!!b.featured) - Number(!!a.featured)) || b.name.localeCompare(a.name));
-    return out;
+    /* Group like image shapes together (squares, then horizontal, then
+       vertical) so wide/tall cards don't zig-zag through the grid. Stable —
+       the chosen sort order is preserved inside each shape group. */
+    return byShape(out);
   }, [products, cat, q, sort, inStockOnly, onSale, maxP]);
 
   const clearFilters = () => { setInStockOnly(false); setOnSale(false); setMaxP(Math.ceil(products.reduce((m, x) => Math.max(m, x.price), 0) || 10)); };

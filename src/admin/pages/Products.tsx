@@ -11,7 +11,7 @@ import type { Product, Category, Game } from "../types";
 import ImageUpload from "../components/ImageUpload";
 import { PageHeader } from "../components/kit";
 
-type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; onHand: string; imageUrl: string };
+type BulkRow = { name: string; game: string; category: string; price: string; originalPrice: string; stock: string; onHand: string; imageUrl: string; imageShape: string };
 
 const DEFAULT_FORM = {
   name: "", description: "", game: "", category: "", price: "",
@@ -20,11 +20,30 @@ const DEFAULT_FORM = {
   // literally as "var(--pn-action)".
   originalPrice: "", gradFrom: "#3BA7FF", gradTo: "#131C23",
   imageUrl: "" as string | string[], images: [] as string[], features: "",
+  // How the store frames the card media: square / vertical / horizontal.
+  // Auto-detected from the cover image's real proportions after upload.
+  imageShape: "square" as "square" | "vertical" | "horizontal",
   notice: "", noticeRequired: false,
   variations: [] as { name: string; options: string }[],
   featured: false, bestSeller: false,
   stock: "-1", onHand: "-1", tags: "", active: true, outOfStock: false,
 };
+
+/* Image-shape choices + tiny preview glyphs. Square art keeps the classic
+   floating-on-stage look; vertical/horizontal fill a shape-matched panel so
+   tall or wide art is never squeezed into a square. */
+const SHAPE_OPTS = [
+  { value: "square" as const, label: "Square", w: 17, h: 17 },
+  { value: "horizontal" as const, label: "Horizontal", w: 24, h: 15 },
+  { value: "vertical" as const, label: "Vertical", w: 14, h: 21 },
+];
+
+function shapeFromRatio(w: number, h: number): "square" | "vertical" | "horizontal" {
+  const r = w / h;
+  if (r > 1.15) return "horizontal";
+  if (r < 0.87) return "vertical";
+  return "square";
+}
 
 const FILTER_TABS = [
   { label: "All", value: "" },
@@ -57,6 +76,8 @@ export default function Products() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [form, setForm] = useState(DEFAULT_FORM);
+  /* Once the owner clicks a shape by hand, later uploads stop overwriting it. */
+  const [shapeTouched, setShapeTouched] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDropOpen, setBulkDropOpen] = useState(false);
   const [editingStock, setEditingStock] = useState<{ id: string; value: string } | null>(null);
@@ -64,7 +85,7 @@ export default function Products() {
   const [editingOnHand, setEditingOnHand] = useState<{ id: string; value: string } | null>(null);
   const [onHandSaving, setOnHandSaving] = useState<string | null>(null);
   const [bulkQueue, setBulkQueue] = useState<BulkRow[]>([]);
-  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "" });
+  const [bulkDraft, setBulkDraft] = useState<BulkRow>({ name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "", imageShape: "square" });
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [bulkResult, setBulkResult] = useState<{ total: number; errors: { name: string; error: string }[] } | null>(null);
@@ -88,7 +109,7 @@ export default function Products() {
   const setF = (k: keyof typeof DEFAULT_FORM, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
   const openCreate = () => {
-    setForm(DEFAULT_FORM); setEditing(null); setFormError(""); setModal("create");
+    setForm(DEFAULT_FORM); setEditing(null); setFormError(""); setShapeTouched(false); setModal("create");
   };
 
   const openEdit = (p: Product) => {
@@ -99,13 +120,32 @@ export default function Products() {
       price: String(p.price), originalPrice: String(p.originalPrice || ""),
       gradFrom: p.gradient.from, gradTo: p.gradient.to,
       imageUrl: p.imageUrl || "", images: p.images || [], features: p.features?.join(", ") || "",
+      imageShape: p.imageShape || "square",
       notice: p.notice?.text || "", noticeRequired: !!p.notice?.required,
       variations: (p.variations || []).map(v => ({ name: v.name, options: v.options.join(", ") })),
       featured: p.featured, bestSeller: p.bestSeller,
       stock: String(p.stock), onHand: String(p.onHand ?? -1), tags: p.tags?.join(", ") || "",
       active: p.active !== false, outOfStock: p.outOfStock || false,
     });
-    setEditing(p); setFormError(""); setModal("edit");
+    setEditing(p); setFormError(""); setShapeTouched(false); setModal("edit");
+  };
+
+  /* Read a freshly-uploaded image's real proportions and pre-select the card
+     shape for it (wide art → horizontal, tall art → vertical, rest square).
+     naturalWidth is readable cross-origin, so R2 URLs work fine. A manual
+     shape click wins until the next image is uploaded. */
+  const detectShapeFromUrl = (url: string) => {
+    const img = new Image();
+    img.onload = () => {
+      if (!img.naturalWidth || !img.naturalHeight) return;
+      setForm(f => ({ ...f, imageShape: shapeFromRatio(img.naturalWidth, img.naturalHeight) }));
+    };
+    img.src = url;
+  };
+
+  const onCoverChange = (url: string | string[]) => {
+    setF("imageUrl", url);
+    if (typeof url === "string" && url && !shapeTouched) detectShapeFromUrl(url);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,6 +165,7 @@ export default function Products() {
       fd.append("gradient[from]", form.gradFrom);
       fd.append("gradient[to]", form.gradTo);
       if (typeof form.imageUrl === "string" && form.imageUrl) fd.append("imageUrl", form.imageUrl);
+      fd.append("imageShape", form.imageShape);
       if (form.images.length > 0) fd.append("images", JSON.stringify(form.images));
       if (form.features.trim()) fd.append("features", JSON.stringify(form.features.split(",").map(f => f.trim()).filter(Boolean)));
       // Notice + display-only variations travel as JSON, parsed/sanitized server-side.
@@ -199,7 +240,7 @@ export default function Products() {
     }
   };
 
-  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "" };
+  const EMPTY_DRAFT: BulkRow = { name: "", game: "", category: "", price: "", originalPrice: "", stock: "-1", onHand: "-1", imageUrl: "", imageShape: "square" };
 
   const addToQueue = () => {
     const { name, game, category, price } = bulkDraft;
@@ -224,6 +265,7 @@ export default function Products() {
         stock: parseInt(r.stock) || -1,
         onHand: parseInt(r.onHand) || -1,
         ...(r.imageUrl ? { imageUrl: r.imageUrl } : {}),
+        imageShape: r.imageShape || "square",
       }));
       const res = await adminApi.products.bulkCreate(payload);
       qc.invalidateQueries({ queryKey: ["panel-products"] });
@@ -609,7 +651,40 @@ export default function Products() {
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Product Image <span className="text-[var(--pn-text-3)] font-normal">(cover / thumbnail)</span></label>
-                    <ImageUpload value={form.imageUrl} onChange={url => setF("imageUrl", url)} folder="rbstars/products" />
+                    <ImageUpload value={form.imageUrl} onChange={onCoverChange} folder="rbstars/products" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className={labelCls} style={labelStyle}>Image Shape <span className="text-[var(--pn-text-3)] font-normal">(auto-detected from the cover — click to override)</span></label>
+                    <div className="flex gap-2">
+                      {SHAPE_OPTS.map(o => {
+                        const on = form.imageShape === o.value;
+                        return (
+                          <button
+                            key={o.value}
+                            type="button"
+                            data-shape={o.value}
+                            aria-pressed={on}
+                            onClick={() => { setF("imageShape", o.value); setShapeTouched(true); }}
+                            className="flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-colors"
+                            style={{
+                              background: on ? "var(--pn-action-tint)" : "var(--pn-surface-2)",
+                              border: `1.5px solid ${on ? "var(--pn-action)" : "var(--pn-border)"}`,
+                              color: on ? "var(--pn-action)" : "var(--pn-text-2)",
+                            }}
+                          >
+                            <span className="grid place-items-center w-8 h-8 rounded-md" style={{ background: "var(--pn-surface)", border: "1px solid var(--pn-border)" }}>
+                              <svg width={o.w} height={o.h} viewBox={`0 0 ${o.w} ${o.h}`} aria-hidden="true">
+                                <rect x="0.75" y="0.75" width={o.w - 1.5} height={o.h - 1.5} rx="2.5" fill="currentColor" opacity="0.9" />
+                              </svg>
+                            </span>
+                            {o.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] mt-1.5" style={{ color: "var(--pn-text-3)" }}>
+                      The store matches each card's media box to this shape and groups like shapes together, so wide or tall art is never squished.
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls} style={labelStyle}>Gallery Images <span className="text-[var(--pn-text-3)] font-normal">(shown on the product page)</span></label>
@@ -739,10 +814,29 @@ export default function Products() {
                       placeholder="On Hand (-1=∞)"
                       title="Physical quantity on hand (-1 = unlimited)"
                       className={inputCls} style={inpStyle} />
+                    <select value={bulkDraft.imageShape}
+                      onChange={e => setBulkDraft(d => ({ ...d, imageShape: e.target.value }))}
+                      title="How the store frames this product's card"
+                      className={inputCls} style={inpStyle}>
+                      <option value="square">Shape: Square</option>
+                      <option value="horizontal">Shape: Horizontal</option>
+                      <option value="vertical">Shape: Vertical</option>
+                    </select>
                     <div className="col-span-2">
                       <ImageUpload
                         value={bulkDraft.imageUrl}
-                        onChange={url => setBulkDraft(d => ({ ...d, imageUrl: url as string }))}
+                        onChange={url => {
+                          setBulkDraft(d => ({ ...d, imageUrl: url as string }));
+                          // same auto-detect as the single editor
+                          if (typeof url === "string" && url) {
+                            const img = new Image();
+                            img.onload = () => {
+                              if (!img.naturalWidth || !img.naturalHeight) return;
+                              setBulkDraft(d => ({ ...d, imageShape: shapeFromRatio(img.naturalWidth, img.naturalHeight) }));
+                            };
+                            img.src = url;
+                          }
+                        }}
                         folder="rbstars/products"
                         light
                       />

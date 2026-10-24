@@ -38,3 +38,39 @@ export const P = {
 };
 
 export type Palette = typeof P;
+
+/* ─── Product image shapes ───────────────────────────────────────────────────
+   Cover art comes in three proportions. Each card sizes its media box to the
+   shape (tall art gets a tall box, wide art a wide box) instead of squishing
+   everything into a square, and the market grid groups like shapes together.
+
+   Keep this in sync with the `imageShape` enum on the backend Product model. */
+export type ImageShape = "square" | "vertical" | "horizontal";
+
+/** Grid display order: squares first, then horizontal, then vertical.
+    Stable (Array.prototype.sort is stable) — any pre-existing order inside a
+    shape group (price, popularity, admin sort) is preserved. Index in this
+    array IS the sort rank, so it must start with "square". */
+export const SHAPES: ImageShape[] = ["square", "horizontal", "vertical"];
+
+/** Shape for an image from its real proportions (wide → horizontal,
+    tall → vertical, near-square → square). Same thresholds as the admin
+    panel's auto-detect so both ends always agree. */
+export function shapeFromRatio(w: number, h: number): ImageShape {
+  if (!w || !h) return "square";
+  const r = w / h;
+  if (r > 1.15) return "horizontal";
+  if (r < 0.87) return "vertical";
+  return "square";
+}
+
+/** Grid display order: squares first, then horizontal, then vertical.
+    Stable (Array.prototype.sort is stable) — any pre-existing order inside a
+    shape group (price, popularity, admin sort) is preserved. */
+export function byShape<T extends { imageShape?: string }>(items: T[]): T[] {
+  const rank = (s?: string): number => {
+    const i = SHAPES.indexOf((s || "square") as ImageShape);
+    return i < 0 ? 0 : i;
+  };
+  return [...items].sort((a, b) => rank(a.imageShape) - rank(b.imageShape));
+}

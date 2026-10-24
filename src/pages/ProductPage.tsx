@@ -20,6 +20,8 @@ interface ApiProduct {
   notice?: { text?: string; required?: boolean };
   variations?: { name: string; options: string[] }[];
   featured?: boolean; bestSeller?: boolean; tags?: string[];
+  /** card/stage media framing — square / vertical / horizontal */
+  imageShape?: "square" | "vertical" | "horizontal";
 }
 
 /* Rarity-style accent per category (colours rings, chips, borders). */
@@ -214,7 +216,11 @@ export default function ProductPage() {
           <div className="it-card it-stage" style={accentStyle}>
             <i className="sgrid" aria-hidden="true" />
             {product.imageUrl
-              ? <img src={product.imageUrl} alt={product.name} />
+              ? <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className={product.imageShape === "horizontal" ? "sh-h" : product.imageShape === "vertical" ? "sh-v" : undefined}
+                />
               : <RBstar size={120} color={accent} />}
             <span className="sp" style={{ right: 56, top: 42 }}><Spark s={34} /></span>
             <span className="sp" style={{ right: 40, top: 96, animationDelay: ".8s" }}><Spark s={22} /></span>
@@ -492,6 +498,10 @@ const itCSS = `
   -webkit-mask-image:radial-gradient(circle at 50% 46%,#000 16%,transparent 74%);
   mask-image:radial-gradient(circle at 50% 46%,#000 16%,transparent 74%)}
 .it-stage img{position:relative;width:214px;max-height:254px;object-fit:contain;filter:drop-shadow(0 16px 22px rgba(0,0,0,.45));animation:itFloat 5s ease-in-out infinite}
+/* Shape-framed stage art: wide art is shown wide, tall art tall — never
+   squeezed into the default square-ish slot (admin sets imageShape). */
+.it-stage img.sh-h{width:min(430px,86%);max-height:300px}
+.it-stage img.sh-v{width:min(250px,64%);max-height:338px}
 @keyframes itFloat{50%{transform:translateY(-9px)}}
 .it-stage .sp{position:absolute;color:#ffc933;animation:itTw 3s ease-in-out infinite;z-index:2}@keyframes itTw{50%{transform:scale(.7);opacity:.6}}
 
@@ -615,6 +625,10 @@ const itCSS = `
 @media(max-width:820px){
   .it-stage{height:288px}
   .it-stage img{width:168px;max-height:196px}
+  /* shape variants scaled down with the stage so they still fit on phones
+     (higher specificity than the base rule — must be re-capped here) */
+  .it-stage img.sh-h{width:min(340px,88%);max-height:214px}
+  .it-stage img.sh-v{width:min(200px,66%);max-height:252px}
   .it-burst{width:74px;height:74px;left:12px;top:11px}.it-burst b{font-size:20px}.it-burst small{font-size:8.5px}
   /* "More like this" — swipeable snap rail on phones, not a tall stack */
   .it-offers{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}

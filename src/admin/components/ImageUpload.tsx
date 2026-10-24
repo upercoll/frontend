@@ -19,6 +19,12 @@ interface ImageUploadProps {
   light?: boolean;
 }
 
+/* Safety net for URLs returned by the upload API: collapse any accidental
+   double slash after the host (never touches the protocol's `://`). The
+   backend normalizes too — this just means an upload can't come back as a
+   broken preview even if the API is running an older build. */
+const fixUrl = (u: string) => u.replace(/([^:])\/\//g, "$1/");
+
 export default function ImageUpload({
   value,
   onChange,
@@ -34,6 +40,10 @@ export default function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  /* URLs whose preview failed to load in this browser. A stored URL that 404s
+     (the old double-slash R2 bug) used to look like a successful upload with
+     a silent broken-image cross — now it gets a loud, explicit warning. */
+  const [broken, setBroken] = useState<Record<string, boolean>>({});
   const inputRef = useRef<HTMLInputElement>(null);
 
   const apiUrl = import.meta.env.VITE_API_URL || "";
@@ -60,7 +70,9 @@ export default function ImageUpload({
         let data: any = {};
         try { data = await res.json(); } catch {}
         if (!res.ok) throw new Error(data.message || data.detail || `Server error ${res.status}`);
-        const urls = data.data.files.map((f: { url: string }) => f.url);
+        const files = data?.data?.files;
+        if (!Array.isArray(files) || !files.length) throw new Error("Upload succeeded but the server returned no image URLs");
+        const urls = files.map((f: { url: string }) => fixUrl(f.url));
         const existing = Array.isArray(value) ? value : [];
         onChange([...existing, ...urls].slice(0, maxFiles));
       } else {
@@ -74,7 +86,9 @@ export default function ImageUpload({
         let data: any = {};
         try { data = await res.json(); } catch {}
         if (!res.ok) throw new Error(data.message || data.detail || `Server error ${res.status}`);
-        onChange(data.data.url);
+        const raw = data?.data?.url;
+        if (!raw || typeof raw !== "string") throw new Error("Upload succeeded but the server returned no image URL");
+        onChange(fixUrl(raw));
       }
     } catch (err: any) {
       const msg = err?.message && err.message !== "undefined" ? err.message : "Upload failed — please try again";
@@ -173,9 +187,23 @@ export default function ImageUpload({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="relative group aspect-square rounded-lg overflow-hidden border border-[var(--pn-border)]"
+                className={cn(
+                  "relative group aspect-square rounded-lg overflow-hidden border",
+                  broken[url] ? "border-[var(--pn-critical-line)]" : "border-[var(--pn-border)]"
+                )}
               >
-                <img src={url} className="w-full h-full object-cover" alt={`Upload ${i + 1}`} />
+                <img
+                  src={url}
+                  className="w-full h-full object-cover"
+                  alt={`Upload ${i + 1}`}
+                  onError={() => setBroken(b => ({ ...b, [url]: true }))}
+                  onLoad={() => setBroken(b => (b[url] ? { ...b, [url]: false } : b))}
+                />
+                {broken[url] && (
+                  <span className="absolute left-1.5 bottom-1.5 right-1.5 text-[10px] leading-tight font-semibold px-1.5 py-1 rounded bg-[var(--pn-critical-bg)] text-[var(--pn-critical-text)] border border-[var(--pn-critical-line)]">
+                    Failed to load — re-upload
+                  </span>
+                )}
                 <div className="absolute inset-0 pn-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <button
                     onClick={(e) => { e.stopPropagation(); removeImage(url); }}
@@ -187,6 +215,13 @@ export default function ImageUpload({
               </motion.div>
             ))}
           </AnimatePresence>
+        </div>
+      )}
+
+      {Object.values(broken).some(Boolean) && (
+        <div className="flex items-start gap-2 text-xs px-3 py-2 rounded-lg bg-[var(--pn-critical-bg)] border border-[var(--pn-critical-line)] text-[var(--pn-critical-text)]">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>One or more images failed to load — the link is broken. Re-upload them before saving, otherwise the product saves with a dead image.</span>
         </div>
       )}
     </div>

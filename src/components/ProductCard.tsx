@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Tag, ShoppingCart, Check, Ban, Minus, Plus } from "lucide-react";
-import { P } from "@/lib/storefront";
+import { P, type ImageShape } from "@/lib/storefront";
 import { usePrice } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
 import { effectiveStock, isSoldOut } from "@/lib/stock";
@@ -29,6 +29,10 @@ export type CardProduct = {
   price: number;
   originalPrice?: number;
   imageUrl?: string;
+  /** how the cover art is framed — square keeps the classic floating stage,
+      vertical/horizontal get a shape-matched panel so the art is never
+      squished (see lib/storefront.ts) */
+  imageShape?: ImageShape;
   /** category colour — tints the media panel glow + the hover glow */
   accent?: string;
   /** small muted line above the title (the shop grid's category label) */
@@ -57,6 +61,12 @@ export default function ProductCard({
   const off = onSale ? Math.round((1 - p.price / p.originalPrice!) * 100) : 0;
   const soldOut = isSoldOut(p);
   const accent = p.accent || P.accent;
+  /* Media framing per shape: square keeps the classic slightly-wide stage
+     (351 existing products live in it — changing it would restyle the whole
+     store); wide art gets a wide panel, tall art a tall one. The market grid
+     groups like shapes, so a row is almost always one height. */
+  const shape: ImageShape = p.imageShape || "square";
+  const mediaRatio = shape === "horizontal" ? "16 / 10" : shape === "vertical" ? "4 / 5" : "212 / 186";
   const [added, setAdded] = useState(false);
   /* Display currency only — the stored price stays USD and so does the charge. */
   const fmt = usePrice();
@@ -107,26 +117,38 @@ export default function ProductCard({
         aria-label={p.name}
         className="relative block w-full overflow-hidden rounded-[12px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745]"
         style={{
-          aspectRatio: "212 / 186",
+          aspectRatio: mediaRatio,
           /* flat navy stage + a single soft bloom in the item's own colour.
              The reference used a full blue gradient wash; ours keeps the
              surface flat and lets the art carry the colour. */
           background: `radial-gradient(ellipse 66% 50% at 50% 64%, color-mix(in srgb, ${accent} 26%, transparent), transparent 70%), linear-gradient(165deg, ${P.stage}, #121c33)`,
         }}
       >
-        {/* item art */}
+        {/* item art — square art floats on the stage (drop shadow + all);
+            vertical/horizontal art fills its shape-matched panel edge to
+            edge (object-cover crops, never distorts). */}
         {p.imageUrl ? (
-          <img
-            src={p.imageUrl}
-            alt={p.name}
-            loading="lazy"
-            className="absolute left-1/2 top-1/2 w-[68%] max-h-[74%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.07]"
-            style={{
-              filter: soldOut
-                ? "grayscale(.7) brightness(.75)"
-                : `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
-            }}
-          />
+          shape === "square" ? (
+            <img
+              src={p.imageUrl}
+              alt={p.name}
+              loading="lazy"
+              className="absolute left-1/2 top-1/2 w-[68%] max-h-[74%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.07]"
+              style={{
+                filter: soldOut
+                  ? "grayscale(.7) brightness(.75)"
+                  : `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
+              }}
+            />
+          ) : (
+            <img
+              src={p.imageUrl}
+              alt={p.name}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              style={{ filter: soldOut ? "grayscale(.7) brightness(.75)" : undefined }}
+            />
+          )
         ) : (
           <span
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mont text-[28px] font-bold"
@@ -145,6 +167,20 @@ export default function ProductCard({
           >
             <Tag size={12} strokeWidth={2.6} />
             Save ${save.toFixed(2)}
+          </span>
+        )}
+
+        {/* collectible corner sparkle — the sticker moment: best-seller
+            cards get a slow gold shimmer top-right (save chip owns top-left,
+            stock chip owns bottom-right, so this corner is always free). */}
+        {p.bestSeller && !soldOut && (
+          <span aria-hidden className="pk-sparkle absolute right-2.5 top-2.5 pointer-events-none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 2c1.2 6.4 2.4 7.6 8.8 8.8-6.4 1.2-7.6 2.4-8.8 8.8-1.2-6.4-2.4-7.6-8.8-8.8C9.6 9.6 10.8 8.4 12 2z"
+                fill="#FFC53D"
+              />
+            </svg>
           </span>
         )}
 

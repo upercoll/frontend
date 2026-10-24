@@ -111,6 +111,8 @@ export interface Product {
   category?: Category | string;
   imageUrl?: string;
   images?: string[];
+  /** how the cover art is framed on the store card: square / vertical / horizontal */
+  imageShape?: "square" | "vertical" | "horizontal";
   gradient?: { from: string; to: string };
   features?: string[];
   notice?: { text: string; required: boolean };
@@ -469,6 +471,9 @@ export const ALL_PERMISSIONS: { key: string; label: string; description: string;
   { key: "upload_images", label: "Upload Images", description: "Upload images to the media library", group: "Content" },
 
   { key: "manage_promos", label: "Manage Promos", description: "Create and manage promo codes", group: "Marketing" },
+
+  { key: "view_raffles", label: "View Raffles", description: "See live draws, entries, winners and settings", group: "Raffles" },
+  { key: "manage_raffles", label: "Manage Raffles", description: "Run draws early and change raffle settings", group: "Raffles" },
 
   { key: "view_claims", label: "View Claims", description: "View all claim sessions", group: "Claims" },
   { key: "claim_agent", label: "Claim Agent", description: "Answer and handle claim chats", group: "Claims" },
