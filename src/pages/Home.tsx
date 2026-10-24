@@ -1485,7 +1485,12 @@ export function SiteFooter() {
   const a = "text-[15px] transition-colors hover:text-white";
 
   return (
-    <footer className="relative" style={{ background: C.footerBg, marginTop: 20 }}>
+    /* No top margin: the footer used to sit 20px below the page, and that gap
+       showed the document background — a light strip between the navy page and
+       the navy footer (glaring on /tickets, where the page box ends exactly at
+       100vh). The footer's own pt-12 gives it all the breathing room it needs,
+       and #0e1527 against the page's #111a2b is boundary enough. */
+    <footer className="relative" style={{ background: C.footerBg }}>
       <div className="wide-wrap mx-auto px-5 pt-12 pb-8">
         {/* Brand + columns — 2 + 4 = 6 tracks, so the four link columns land
             on one row at md+ instead of stranding the last one underneath. */}

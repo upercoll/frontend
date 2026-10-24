@@ -175,13 +175,43 @@ export default function ProductPage() {
     return <PageLoader label="item" />;
   }
   if (notFound || !product) {
+    /* This branch returns before the page's <style> block below, so the
+       surface has to be inline: it used to render on the document background
+       (a white page between the navy header and the navy footer). */
     return (
-      <div className="it-page"><TopNav onHome={() => navigate("/")} />
-        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <div
+        style={{
+          position: "relative",
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          color: "#fff",
+          fontFamily: "Inter, system-ui, sans-serif",
+          background:
+            "radial-gradient(900px 600px at 0% 0%,#1a2b52,transparent 70%),radial-gradient(800px 700px at 100% 25%,#15264a,transparent 70%),#111a2b",
+        }}
+      >
+        <TopNav onHome={() => navigate("/")} />
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
           <RBstar size={44} color="#3c4f7d" />
-          <h1 className="text-xl font-bold">Product not found</h1>
+          <h1 className="text-xl font-bold" style={{ color: "#fff" }}>Product not found</h1>
           <p className="text-sm" style={{ color: "#a9b3d3" }}>This item may have been removed or is no longer available.</p>
-          <button onClick={() => navigate("/browse")} className="it-btn fast" style={{ padding: "0 24px", height: 48 }}>Browse Games</button>
+          <button
+            onClick={() => navigate("/browse")}
+            style={{
+              height: 48,
+              padding: "0 24px",
+              border: 0,
+              borderRadius: 12,
+              color: "#fff",
+              font: "800 15px Inter, system-ui, sans-serif",
+              cursor: "pointer",
+              background: "linear-gradient(180deg,#2090f4,#0d58c4)",
+              boxShadow: "0 6px 18px rgba(10,90,220,.4)",
+            }}
+          >
+            Browse Games
+          </button>
         </div>
         <SiteFooter />
       </div>
