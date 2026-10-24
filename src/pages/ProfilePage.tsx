@@ -446,7 +446,7 @@ export default function ProfilePage() {
                 className="font-display text-[32px] sm:text-[42px] lg:text-[50px] font-extrabold leading-[1.05] tracking-tight"
                 style={{ color: P.text }}
               >
-                PERSONEL <span style={{ color: P.accentDeep }}>PROFILE</span>
+                STORE <span style={{ color: P.accentDeep }}>PROFILE</span>
               </motion.h1>
             </div>
 
