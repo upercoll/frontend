@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { RBstar } from "@/components/Art";
 import CurrencyMenu from "@/components/CurrencyMenu";
+import UserAvatar from "@/components/UserAvatar";
 import { LIVE_SOCIALS } from "@/lib/socialLinks";
 import ProductCard, { ProductCardSkeleton, type CardProduct } from "@/components/ProductCard";
 import { fetchLiveStats, groupNum, type LiveStats } from "@/lib/liveStats";
@@ -513,13 +514,20 @@ export function TopNav({ onHome }: { onHome: () => void }) {
           </button>
 
           {user ? (
+            /* Logged in: the account control is the buyer's own face in a
+               ringed circle, not a generic login glyph — on phones the name
+               drops away and the avatar alone still says "you". */
             <button
               onClick={() => navigate("/profile")}
-              className="h-9 px-3 rounded-full inline-flex items-center gap-2 text-[12px] font-semibold transition-colors hover:bg-[#1f2b4a]"
-              style={{ border: `1px solid ${C.border}`, color: C.muted }}
+              title={user.displayName ? `${user.displayName} — your account` : "Your account"}
+              aria-label="Open your profile"
+              className="h-9 pl-1 pr-2 rounded-full inline-flex items-center gap-2 text-[12px] font-semibold transition-colors hover:bg-[#1f2b4a]"
+              style={{ color: C.muted }}
             >
-              <LogIn size={14} />
-              <span className="hidden sm:inline">{user.displayName?.split(" ")[0] || "Account"}</span>
+              <UserAvatar name={user.displayName} src={user.robloxAvatarUrl} size={28} />
+              <span className="hidden sm:inline max-w-[92px] truncate" style={{ color: C.text }}>
+                {user.displayName?.split(" ")[0] || "Account"}
+              </span>
             </button>
           ) : (
             <>
@@ -566,6 +574,27 @@ export function TopNav({ onHome }: { onHome: () => void }) {
           className="lg:hidden overflow-y-auto overscroll-contain max-h-[calc(100dvh-56px)] border-t"
           style={{ borderColor: C.border, background: "#0f1527" }}
         >
+            {/* Who you are — the drawer starts with your own circle so the
+                account is never a mystery on a phone, where the top bar has
+                room for the avatar but not the name. */}
+            {user && (
+              <button
+                onClick={() => { navigate("/profile"); setMenuOpen(false); }}
+                className="flex items-center gap-3 w-full px-5 py-3.5 text-left transition-colors hover:bg-[#1f2b4a]"
+                style={{ borderBottom: `1px solid ${C.border}` }}
+              >
+                <UserAvatar name={user.displayName} src={user.robloxAvatarUrl} size={36} />
+                <span className="min-w-0">
+                  <span className="block text-[14px] font-bold truncate" style={{ color: C.text }}>
+                    {user.displayName || "Your account"}
+                  </span>
+                  <span className="block text-[11px] truncate" style={{ color: C.faint }}>
+                    {user.robloxUsername ? `@${user.robloxUsername} · View profile` : "View profile"}
+                  </span>
+                </span>
+              </button>
+            )}
+
             {/* The same three categories, stacked — group labels stand in for
                 the dropdowns so the structure reads identically on any screen */}
             {[

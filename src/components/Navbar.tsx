@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { P } from "@/lib/storefront";
 import { RBstar } from "@/components/Art";
 import CurrencyMenu from "@/components/CurrencyMenu";
+import UserAvatar from "@/components/UserAvatar";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -388,13 +389,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
                     className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full transition-all duration-200"
                     style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.22)" }}
                   >
-                    <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
-                      style={{ background: P.band }}>
-                      {user.robloxAvatarUrl
-                        ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={13} color={P.muted} />
-                      }
-                    </div>
+                    <UserAvatar name={user.displayName} src={user.robloxAvatarUrl} size={28} ring={false} />
                     <span className="text-[13px] font-bold max-w-[90px] truncate" style={{ color: P.text }}>
                       {user.displayName}
                     </span>
@@ -626,13 +621,7 @@ export default function Navbar({ dark = false }: NavbarProps) {
               {user ? (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3 px-3 py-3 rounded-2xl" style={{ background: P.band }}>
-                    <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center"
-                      style={{ background: P.band }}>
-                      {user.robloxAvatarUrl
-                        ? <img src={user.robloxAvatarUrl} alt="" className="w-full h-full object-cover" />
-                        : <User size={16} color={P.muted} />
-                      }
-                    </div>
+                    <UserAvatar name={user.displayName} src={user.robloxAvatarUrl} size={36} ring={false} />
                     <div className="min-w-0">
                       <p className="text-sm font-extrabold truncate" style={{ color: P.text }}>{user.displayName}</p>
                       <p className="text-[11px]" style={{ color: P.accentDeep }}>@{user.robloxUsername}</p>
