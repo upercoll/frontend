@@ -4,7 +4,7 @@ import {
   Store, PackageSearch, ShoppingBag, UserPlus, LogIn,
   ChevronRight, Star, Plus, Minus, Box, Wallet, Users, Zap,
   ShoppingCart, ShieldCheck, Play,
-  Menu, X, LifeBuoy, ChevronDown, Gamepad2, Gift, MessageSquare, Search,
+  Menu, X, LifeBuoy, ChevronDown, Gamepad2, Gift, MessageSquare, Search, Ticket,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useCart } from "@/context/CartContext";
@@ -73,6 +73,8 @@ type ApiProduct = {
   onHand?: number;
   bestSeller?: boolean;
   outOfStock?: boolean;
+  /** card media framing — square / vertical / horizontal (lib/storefront.ts) */
+  imageShape?: "square" | "vertical" | "horizontal";
 };
 
 /* ── Fetch with backoff — Render sleeps and can take ~30s to wake ──────── */
@@ -414,6 +416,19 @@ export function TopNav({ onHome }: { onHome: () => void }) {
 
           <span className="w-px self-stretch my-1.5" style={{ background: C.border }} aria-hidden="true" />
 
+          {/* RAFFLE — a straight-through link (no dropdown), the one nav
+              item that wears the brand gold so it reads as a live event */}
+          <button
+            onClick={() => navigate("/raffle")}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-bold transition-colors hover:bg-[#241f10]"
+            style={{ color: "#FFC53D" }}
+            aria-label="Raffles"
+          >
+            <Ticket size={15} color="#FFC53D" /> Raffle
+          </button>
+
+          <span className="w-px self-stretch my-1.5" style={{ background: C.border }} aria-hidden="true" />
+
           {/* SUPPORT — the two ways to reach a human, plus order tracking */}
           <div className="relative">
             <button
@@ -483,7 +498,10 @@ export function TopNav({ onHome }: { onHome: () => void }) {
             className="relative w-9 h-9 rounded-full grid place-items-center transition-colors hover:bg-[#1f2b4a]"
             style={{ border: `1px solid ${C.border}`, color: C.muted }}
           >
-            <ShoppingBag size={16} />
+            {/* one small bounce each time something lands in the cart */}
+            <span key={totalItems} className={totalItems > 0 ? "pk-bump" : ""}>
+              <ShoppingBag size={16} />
+            </span>
             {totalItems > 0 && (
               <span
                 className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-1 rounded-full grid place-items-center text-[10px] font-bold text-white"
@@ -554,6 +572,7 @@ export function TopNav({ onHome }: { onHome: () => void }) {
               {
                 label: "Shop",
                 items: [
+                  { icon: Ticket, label: "Raffle", act: () => navigate("/raffle") },
                   { icon: Store, label: "Browse Items", act: () => navigate("/browse") },
                   { icon: Play,  label: "How It Works", act: scrollToHowItWorks },
                   { icon: Gift,  label: "Rewards",      act: () => navigate("/profile") },
@@ -679,7 +698,7 @@ function Hero() {
                     session) rather than decorative copy. With no reviews yet
                     nothing is claimed, so the badge is omitted. */}
                 {liveRating && (
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: "#aab4d4" }}>
+                  <div className="pk-twinkle flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: "#aab4d4" }}>
                     <Star size={15} fill={C.starOn} color={C.starOn} />
                     <span style={{ color: C.text }}>{liveRating.rating.toFixed(1)}</span>
                     <span>· Verified reviews</span>
@@ -861,6 +880,7 @@ function PopularItems({
                     price: p.price,
                     originalPrice: p.originalPrice,
                     imageUrl: p.imageUrl || p.images?.[0],
+                    imageShape: p.imageShape,
                     bestSeller: p.bestSeller,
                     stock: p.stock,
                     onHand: p.onHand,

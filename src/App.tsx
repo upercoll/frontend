@@ -23,6 +23,7 @@ import AutoDelivery from "@/pages/AutoDelivery";
 import ClaimChatPage from "@/pages/ClaimChatPage";
 import ProfilePage from "@/pages/ProfilePage";
 import OrdersPage from "@/pages/Orders";
+import RafflePage from "@/pages/Raffle";
 import BrowseGames from "@/pages/BrowseGames";
 import NotFound from "@/pages/not-found";
 import TicketList from "@/pages/TicketList";
@@ -72,6 +73,7 @@ import DeliveryTeam from "@/admin/pages/delivery/DeliveryTeam";
 import DeliveryMemberDetail from "@/admin/pages/delivery/DeliveryMemberDetail";
 
 import Promos from "@/admin/pages/Promos";
+import Raffles from "@/admin/pages/Raffles";
 import Settings from "@/admin/pages/Settings";
 import SiteModes from "@/admin/pages/SiteModes";
 import RoleView from "@/admin/pages/RoleView";
@@ -143,6 +145,7 @@ function StorefrontRouter() {
   const isClaimChat = location === "/claim-chat";
   const isProfile = location === "/profile";
   const isOrders = location === "/orders";
+  const isRaffle = location === "/raffle";
 
   const isHome = location === "/";
   const isBrowse = location === "/browse";
@@ -152,7 +155,7 @@ function StorefrontRouter() {
 
   return (
     <>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isTickets && !isLegal && <Navbar />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isRaffle && !isTickets && !isLegal && <Navbar />}
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/game/:slug" component={GamePage} />
@@ -168,13 +171,15 @@ function StorefrontRouter() {
         <Route path="/profile" component={ProfilePage} />
         {/* Track Order's real home — the buyer's own orders + claim chats. */}
         <Route path="/orders" component={OrdersPage} />
+        {/* Weekly / Monthly raffle — tickets from real spend. */}
+        <Route path="/raffle" component={RafflePage} />
         {/* Policy pages the footer links to — real destinations, not anchors. */}
         <Route path="/privacy" component={PrivacyPolicy} />
         <Route path="/refunds" component={RefundPolicy} />
         <Route path="/terms" component={TermsOfUse} />
         <Route component={NotFound} />
       </Switch>
-      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isTickets && !isLegal && <Footer />}
+      {!isHome && !isBrowse && !isGamePage && !isProductPage && !isCheckout && !isSuccess && !isAutoDelivery && !isClaimChat && !isProfile && !isOrders && !isRaffle && !isTickets && !isLegal && <Footer />}
       <CartDrawer />
       <AuthModal />
       <WelcomeModal />
@@ -262,6 +267,9 @@ function AdminRouter() {
       </Route>
       <Route path="/admin/promos">
         <AdminLayout><Promos /></AdminLayout>
+      </Route>
+      <Route path="/admin/raffles">
+        <AdminLayout><Raffles /></AdminLayout>
       </Route>
       <Route path="/admin/settings">
         <AdminLayout><Settings /></AdminLayout>

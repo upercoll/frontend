@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Package, MessageSquare, ArrowLeft, Star, Bot, Zap, Shield, Truck, Gift } from "lucide-react";
+import { Check, Package, MessageSquare, ArrowLeft, Star, Bot, Zap, Shield, Truck, Gift, Ticket } from "lucide-react";
 import { useLocation } from "wouter";
 import { useCart } from "@/context/CartContext";
 import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
@@ -219,6 +219,17 @@ export default function PaymentSuccess() {
                   <span className="text-xs font-bold" style={{ color: P.muted }}>Total Paid</span>
                   <span className="text-base font-extrabold" style={{ color: P.text }}>${order.total.toFixed(2)}</span>
                 </div>
+              )}
+
+              {/* Every paid dollar is a raffle ticket — close the loop right here */}
+              {order.total && Math.floor(order.total) >= 1 && (
+                <a href="/raffle" className="px-5 py-2.5 flex items-center gap-2 transition-colors"
+                  style={{ borderTop: `1px solid ${P.border}`, background: "rgba(255,197,61,0.06)" }}>
+                  <Ticket size={13} color={P.star} />
+                  <span className="text-[11px] font-bold" style={{ color: P.star }}>
+                    You earned {Math.floor(order.total)} raffle ticket{Math.floor(order.total) === 1 ? "" : "s"} — see if today is your lucky day
+                  </span>
+                </a>
               )}
 
               {order.email && (

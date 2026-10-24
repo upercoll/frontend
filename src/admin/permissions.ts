@@ -29,6 +29,8 @@ export const PERMISSION_UNLOCKS: Record<string, string[]> = {
   edit_site_content: ["Site Content", "Tutorials"],
   upload_images: ["Upload & delete images"],
   manage_promos: ["Promo Codes"],
+  view_raffles: ["Raffles (read)"],
+  manage_raffles: ["Run raffle draws", "Edit raffle settings", "Raffles"],
   view_claims: ["Claim Queue (read)"],
   claim_agent: ["Chat with customers", "Submit proof of delivery"],
   monitor_agents: ["Agent Monitor", "Open Chats", "Any claim session"],
@@ -76,6 +78,7 @@ export const PERMISSION_UNLOCKS: Record<string, string[]> = {
  */
 export const IMPLIED_BY: Record<string, string[]> = {
   manage_products: ["view_products", "create_products", "edit_products", "delete_products"],
+  manage_raffles: ["view_raffles"],
   manage_orders: ["view_orders", "update_order_status", "fulfill_orders", "refund_orders"],
   manage_games: ["view_games", "create_games", "edit_games", "delete_games"],
   manage_claims: ["view_claims", "claim_agent", "monitor_agents", "view_pod"],

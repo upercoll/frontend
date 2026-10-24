@@ -6,7 +6,7 @@ import {
   Settings, BarChart3, MessageSquare, FileCheck, Tag, PenSquare,
   ChevronLeft, ChevronRight, LogOut, Activity, Inbox, Eye, X,
   BookOpen, UserCircle, TrendingUp, Link2, ChevronDown, DollarSign,
-  Archive, ClipboardList, Clock, Video, Film, Truck, Bot, Sparkles, Megaphone, Rocket,
+  Archive, ClipboardList, Clock, Video, Film, Truck, Bot, Sparkles, Megaphone, Rocket, Ticket,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { useAdminSocket } from "../context/AdminSocketContext";
@@ -29,6 +29,7 @@ const ownerNav: NavItem[] = [
   { href: "/admin/customers", label: "Customers",        icon: UserCircle,      permission: "view_customers",    group: "Commerce" },
   { href: "/admin/products",  label: "Products",         icon: Package,         permission: "view_products",    group: "Commerce" },
   { href: "/admin/promos",    label: "Promo Codes",      icon: Tag,             permission: "manage_promos",    group: "Commerce" },
+  { href: "/admin/raffles",   label: "Raffles",          icon: Ticket,          permission: "view_raffles",     group: "Commerce" },
   { href: "/admin/games",     label: "Games & Categories", icon: Gamepad2,      permission: "view_games",       group: "Content" },
   { href: "/admin/claim-time", label: "Claim Time",        icon: Clock,         permission: "view_games",       group: "Content" },
   { href: "/admin/site-content", label: "Site Content", icon: PenSquare,       permission: "edit_site_content", group: "Content" },

@@ -288,6 +288,21 @@ export const adminApi = {
     delete: (id: string) => del(`/promos/${id}`),
   },
 
+  // Weekly / Monthly raffles — draws, entries and the auto schedule
+  raffles: {
+    summary: (type: string) => get<any>(`/raffles/summary?type=${type}`),
+    list: () => get<any>("/raffles"),
+    drawNow: (id: string) => post<any>(`/raffles/${id}/draw`),
+    addWinner: (id: string, data: { email: string; prize?: number }) =>
+      post<any>(`/raffles/${id}/winners`, data),
+    removeWinner: (id: string, email: string) =>
+      del<any>(`/raffles/${id}/winners/${encodeURIComponent(email)}`),
+    voidRaffle: (id: string) => post<any>(`/raffles/${id}/void`),
+    settings: () => get<any>("/raffles/settings"),
+    updateSettings: (data: any) => patch<any>("/raffles/settings", data),
+    ensure: () => post<any>("/raffles/ensure"),
+  },
+
   settings: {
     get: () => get<{ success: boolean; data: { settings: any } }>("/settings"),
     update: (data: any) => patch<{ success: boolean; data: { settings: any } }>("/settings", data),
