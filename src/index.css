@@ -605,5 +605,5 @@ input[type="range"]::-moz-range-thumb {
     scrollbar-width: none;
   }
   .pop-rail::-webkit-scrollbar { display: none; }
-  .pop-rail > * { flex: 0 0 52%; scroll-snap-align: start; }
+  .pop-rail > * { flex: 0 0 62%; scroll-snap-align: start; }
 }
