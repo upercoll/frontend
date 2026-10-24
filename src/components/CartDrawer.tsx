@@ -268,10 +268,19 @@ const crtCSS = `
 .crt-body::-webkit-scrollbar-track{background:#17223d;border-radius:4px}
 
 /* item card */
-.crt-item{position:relative;display:flex;gap:13px;padding:14px 13px 13px;border-radius:14px;overflow:hidden;
+/* item card — flex:NONE is load-bearing: .crt-body is a flex column and these
+   cards have overflow:hidden (min-height resolves to 0), so without it the
+   browser SHRINKS them below their content when the list is taller than the
+   body — the stepper row/line total got clipped ("everything fitted together").
+   Cards keep their natural height; .crt-body scrolls instead. */
+.crt-item{position:relative;flex:none;display:flex;gap:13px;padding:14px 13px 13px;border-radius:14px;overflow:hidden;
   background:linear-gradient(180deg,#222f4d,#1b2641);border:1px solid #2a3a60;transition:border-color .18s,box-shadow .18s}
 .crt-item::before{content:"";position:absolute;left:50%;top:0;width:46px;height:3px;margin-left:-23px;border-radius:0 0 3px 3px;background:var(--c)}
 .crt-item:hover{border-color:var(--c);box-shadow:0 10px 22px rgba(0,0,0,.35),0 0 16px color-mix(in srgb,var(--c) 26%,transparent)}
+/* sticker moment: a freshly added item pops into place (runs on mount only —
+   existing rows keep their DOM node, so quantities never re-trigger it) */
+@keyframes crtPop{0%{opacity:0;transform:translateY(10px) scale(.96)}62%{transform:translateY(0) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.crt-item{animation:crtPop .38s cubic-bezier(.2,.8,.3,1) both}
 .crt-rm{position:absolute;top:6px;right:6px;width:32px;height:32px;border-radius:9px;border:0;background:transparent;color:#6f7c99;cursor:pointer;display:grid;place-items:center;transition:.15s;z-index:2}
 .crt-rm:hover{background:rgba(239,68,68,.16);color:#ff5a4d}
 .crt-th{width:70px;height:70px;border-radius:12px;border:2px solid var(--c);background:color-mix(in srgb,var(--c) 14%,#16213c);display:grid;place-items:center;flex:none;overflow:hidden}
@@ -322,5 +331,5 @@ const crtCSS = `
 .crt-usd-note{margin-top:7px;text-align:center;font-size:11px;color:#8a97ba}
 
 @media(max-width:460px){.crt{width:100vw;border-radius:0;border-left:0}}
-@media(prefers-reduced-motion:reduce){.crt-star{animation:none}}
+@media(prefers-reduced-motion:reduce){.crt-star,.crt-item{animation:none}}
 `;

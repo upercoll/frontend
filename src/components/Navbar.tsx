@@ -472,14 +472,17 @@ export default function Navbar({ dark = false }: NavbarProps) {
                 className="relative w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-200"
                 style={{ background: P.accentTint, border: "1.5px solid rgba(47,140,255,0.18)" }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke={P.text} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <circle cx="9" cy="20" r="1.5" fill={P.accent}/>
-                  <circle cx="17" cy="20" r="1.5" fill={P.accent}/>
-                  <circle cx="10" cy="8.5" r="1" fill={P.text}/>
-                  <circle cx="14.5" cy="8.5" r="1" fill={P.text}/>
-                  <path d="M10 11c.8.8 3.2.8 4 0" stroke={P.text} strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
+                {/* one small bounce each time something lands in the cart */}
+                <span key={totalItems} className={totalItems > 0 ? "pk-bump" : ""}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke={P.text} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <circle cx="9" cy="20" r="1.5" fill={P.accent}/>
+                    <circle cx="17" cy="20" r="1.5" fill={P.accent}/>
+                    <circle cx="10" cy="8.5" r="1" fill={P.text}/>
+                    <circle cx="14.5" cy="8.5" r="1" fill={P.text}/>
+                    <path d="M10 11c.8.8 3.2.8 4 0" stroke={P.text} strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                </span>
                 <AnimatePresence>
                   {totalItems > 0 && (
                     <motion.span
