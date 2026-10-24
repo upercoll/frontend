@@ -765,10 +765,9 @@ export function PaymentMethods() {
    a product arrived without imageUrl.) */
 
 function PopularItems({
-  games, loadingGames, products, loadingProducts, onNavigate,
+  games, loadingGames, onNavigate,
 }: {
   games: ShopGame[]; loadingGames: boolean;
-  products: ApiProduct[]; loadingProducts: boolean;
   onNavigate: (to: string) => void;
 }) {
   const [activeGame, setActiveGame] = useState("");
@@ -777,11 +776,44 @@ function PopularItems({
   const [q, setQ] = useState("");
   const { addItem } = useCart();
   const query = q.trim().toLowerCase();
+  /* The tab that's actually in effect: the visitor's pick, else the first
+     game in the list (that's the one the UI highlights). */
+  const gameSlug = activeGame || games[0]?.slug || "";
+
+  /* Products follow the active tab. The list used to be fetched once (global
+     best sellers) and only the highlight moved when a game was picked, so
+     every tab showed the same first game's items. Each tab now loads its own
+     game's best sellers; `alive` drops a late response from a tab the
+     visitor already left. */
+  const [products, setProducts] = useState<ApiProduct[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  useEffect(() => {
+    if (!gameSlug) return;
+    let alive = true;
+    setLoadingProducts(true);
+    (async () => {
+      const url = `${BACKEND}/api/products?game=${encodeURIComponent(gameSlug)}&sort=-salesCount&limit=10`;
+      for (let round = 1; round <= 3; round++) {
+        try {
+          const res = await fetch(url);
+          const d = await res.json();
+          if (d?.success && Array.isArray(d.data)) {
+            if (alive) { setProducts(d.data); setLoadingProducts(false); }
+            return;
+          }
+        } catch { /* keep going */ }
+        if (round < 3) await new Promise(r => setTimeout(r, 800 * round));
+      }
+      if (alive) { setProducts([]); setLoadingProducts(false); }
+    })();
+    return () => { alive = false; };
+  }, [gameSlug]);
+
   const matched = query
     ? products.filter(p => p.name.toLowerCase().includes(query))
     : products;
   const shown = matched.slice(0, query ? 10 : 5);
-  const gameName = games.find(g => g.slug === activeGame)?.name || games[0]?.name || "items";
+  const gameName = games.find(g => g.slug === gameSlug)?.name || "items";
 
   return (
     <section id="popular" className="relative scroll-mt-20">
@@ -844,7 +876,7 @@ function PopularItems({
           ) : shown.length === 0 ? (
             <div className="rounded-[18px] py-14 text-center" style={{ background: C.card, border: `1px solid ${C.border}` }}>
               <p className="text-[15px] font-semibold" style={{ color: C.text }}>
-                {query ? `Nothing matches “${q.trim()}”.` : "No items listed yet."}
+                {query ? `Nothing matches “${q.trim()}”.` : `No ${gameName} items listed yet.`}
               </p>
               <p className="text-[13px] mt-1.5" style={{ color: C.muted }}>
                 {query
@@ -1520,27 +1552,6 @@ export default function Home() {
 
   useEffect(() => { loadGames(); }, [loadGames]);
 
-  /* ── popular products — real items from the API ── */
-  const [products, setProducts] = useState<ApiProduct[]>([]);
-  const [popLoading, setPopLoading] = useState(true);
-
-  const loadPopular = useCallback(async () => {
-    setPopLoading(true);
-    const url = `${BACKEND}/api/products?sort=-salesCount&limit=12`;
-    for (let round = 1; round <= 3; round++) {
-      try {
-        const res = await fetch(url);
-        const d = await res.json();
-        if (d?.success && Array.isArray(d.data)) { setProducts(d.data); setPopLoading(false); return; }
-      } catch { /* keep going */ }
-      if (round < 3) await new Promise(r => setTimeout(r, 800 * round));
-    }
-    setProducts([]);
-    setPopLoading(false);
-  }, []);
-
-  useEffect(() => { loadPopular(); }, [loadPopular]);
-
   const scrollToPopular = () => {
     document.getElementById("popular")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -1569,8 +1580,6 @@ export default function Home() {
         <PopularItems
           games={games}
           loadingGames={gamesLoading}
-          products={products}
-          loadingProducts={popLoading}
           onNavigate={navigate}
         />
         <Stats />

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, X, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
@@ -204,12 +204,21 @@ export default function ImageUpload({
                     Failed to load — re-upload
                   </span>
                 )}
-                <div className="absolute inset-0 pn-scrim opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {/* Hover action bar. NOT .pn-scrim: that class is a fixed,
+                    full-viewport dialog layer, which made this look like a
+                    stray red cross floating over the page. Local overlay,
+                    neutral control — removing an image should never look
+                    like an error. */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center justify-center">
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); removeImage(url); }}
-                    className="w-8 h-8 rounded-full bg-[var(--pn-critical)] flex items-center justify-center"
+                    aria-label={`Remove image ${i + 1}`}
+                    title="Remove image"
+                    className="h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-black/70"
+                    style={{ background: "rgba(15,23,42,0.82)", border: "1px solid rgba(255,255,255,0.28)" }}
                   >
-                    <X className="w-4 h-4 text-[var(--pn-text)]" />
+                    <Trash2 className="w-3.5 h-3.5" /> Remove
                   </button>
                 </div>
               </motion.div>
