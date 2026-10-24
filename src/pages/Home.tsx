@@ -913,6 +913,12 @@ function PopularItems({
                     originalPrice: p.originalPrice,
                     imageUrl: p.imageUrl || p.images?.[0],
                     imageShape: p.imageShape,
+                    /* The card tints its surface with the item's own colour.
+                       The home grid has no category accent to hand, so the
+                       product's stored gradient (the one its art was drawn
+                       against) gives each card its colour — same source the
+                       cart thumbnail already uses. */
+                    accent: p.gradient?.from,
                     bestSeller: p.bestSeller,
                     stock: p.stock,
                     onHand: p.onHand,

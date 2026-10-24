@@ -517,6 +517,6 @@ const mkCSS = `
 @media(max-width:760px){.mk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mk-slide h2{font-size:22px;white-space:normal;padding:0 56px}.mk-cta{height:44px;font-size:15px;padding:0 22px}.mk-search{width:100%}.mk-banner{height:176px}}
 /* Phones: the market grid becomes a swipeable snap rail (one full card +
    a peek) instead of a long 2-col stack. Desktop keeps the grid above. */
-@media(max-width:639px){.mk-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:10px;scrollbar-width:none}.mk-grid::-webkit-scrollbar{display:none}.mk-grid>*{flex:0 0 55%;scroll-snap-align:start}}
+@media(max-width:639px){.mk-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding-bottom:10px;scrollbar-width:none}.mk-grid::-webkit-scrollbar{display:none}.mk-grid>*{flex:0 0 50%;scroll-snap-align:start}}
 @media(prefers-reduced-motion:reduce){.mk-slide{transition:none}}
 `;

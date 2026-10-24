@@ -1,27 +1,28 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Tag, ShoppingCart, Check, Ban, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Check, Ban, Minus, Plus } from "lucide-react";
 import { P, type ImageShape } from "@/lib/storefront";
-import { usePrice } from "@/context/CurrencyContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { useCart } from "@/context/CartContext";
 import { effectiveStock, isSoldOut } from "@/lib/stock";
 
 /* ── Product card ─────────────────────────────────────────────────────────
-   Reference layout: lit media panel + "save" chip + best-sellers chip +
-   title + price/discount row + full-width Add to Cart.
+   Tall "collectible" card, built 1:1 from the reference:
+     · portrait 164 / 288 silhouette, small radius, no inner boxes
+     · the item's colour washes the top of the surface and fades into the
+       card body (color-mix, not a decorative gradient wash)
+     · a 1px gradient hairline runs the full outline — the reference's
+       signature edge — drawn with a mask so it never covers the art
+     · the art floats free, centred, with a soft contact shadow
+     · name → sub line → hairline divider → price row with a currency coin
+   Everything is our navy palette, our type and our motion.
 
-   Re-skinned to the storefront's RoGoat language rather than the reference's:
-     · Outfit → Montserrat (title/price) + Inter (body/button), our fonts
-     · the loud blue media panel → a navy stage lit by the item's own
-       category colour, so all the colour still comes from the 3D art
-     · price stays green (green = price everywhere else on the site)
-     · discount chip is amber, not red — red means "problem" here
-     · best-sellers diamond is brand gold, not green
-
-   Responsive by construction: the card is fluid (the grid sets its width),
-   the media box uses aspect-ratio instead of a fixed 190px, type is clamped,
-   and every chip/badge is absolutely positioned inside an overflow-hidden
-   panel so nothing can escape on a narrow phone. */
+   The reference has no CTA, so the Add to Cart lives where it costs the
+   silhouette nothing: a floating action button inside the art, bottom-right.
+   It is an icon at rest, opens into a labelled pill on card hover, flashes
+   green on add, and becomes a − / + stepper once the cart holds the item —
+   the same three states the old full-width button had, in a fraction of the
+   space, so the reference proportions stay intact. */
 
 export type CardProduct = {
   id: string;
@@ -29,13 +30,14 @@ export type CardProduct = {
   price: number;
   originalPrice?: number;
   imageUrl?: string;
-  /** how the cover art is framed — square keeps the classic floating stage,
-      vertical/horizontal get a shape-matched panel so the art is never
-      squished (see lib/storefront.ts) */
+  /** how the cover art is framed — square keeps the classic floating art,
+      vertical/horizontal get a shape-matched frame so art is never squished
+      (see lib/storefront.ts) */
   imageShape?: ImageShape;
-  /** category colour — tints the media panel glow + the hover glow */
+  /** category colour — tints the card surface, the hairline and the glow */
   accent?: string;
-  /** small muted line above the title (the shop grid's category label) */
+  /** small muted line above the title (kept for callers; the sub line now
+      carries live stock instead) */
   category?: string;
   bestSeller?: boolean;
   outOfStock?: boolean;
@@ -44,6 +46,44 @@ export type CardProduct = {
   /** live physical inventory; this is the number that decides availability */
   onHand?: number | null;
 };
+
+/* Price → { symbol, main, frac } with the exact same Intl rules the rest of
+   the site prices with, so the coin can hold the real currency symbol and the
+   decimals can sit back in muted type (the reference's "$ 46 .00" rhythm).
+   Anything the runtime can't split falls back to the plain formatted string. */
+function splitMoney(
+  value: number,
+  code: string,
+  decimals: number,
+): { symbol: string; main: string; frac: string } {
+  try {
+    const parts = new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: code,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).formatToParts(value);
+    let symbol = "";
+    let main = "";
+    let frac = "";
+    for (const part of parts) {
+      if (part.type === "currency") symbol = part.value;
+      else if (part.type === "integer" || part.type === "group") {
+        if (!frac) main += part.value;
+      } else if (part.type === "decimal" || part.type === "fraction") frac += part.value;
+    }
+    if (!main) main = value.toFixed(decimals);
+    return { symbol: symbol || "$", main, frac };
+  } catch {
+    return { symbol: "$", main: value.toFixed(decimals), frac: "" };
+  }
+}
+
+/* Card surface. Deliberately darker than the shared `P.card` (#1b2745): the
+   card just has to hold the art, so the art does the lighting. The accent wash
+   still lands on the top of the card, which keeps the reference's tinted crown
+   without the whole tile reading as a pale slab. */
+const SURFACE = "#141d31";
 
 export default function ProductCard({
   product: p,
@@ -57,21 +97,17 @@ export default function ProductCard({
   onAdd?: (p: CardProduct) => void;
 }) {
   const onSale = typeof p.originalPrice === "number" && p.originalPrice > p.price;
-  const save = onSale ? p.originalPrice! - p.price : 0;
   const off = onSale ? Math.round((1 - p.price / p.originalPrice!) * 100) : 0;
   const soldOut = isSoldOut(p);
   const accent = p.accent || P.accent;
-  /* Media framing per shape: square keeps the classic slightly-wide stage
-     (351 existing products live in it — changing it would restyle the whole
-     store); wide art gets a wide panel, tall art a tall one. The market grid
-     groups like shapes, so a row is almost always one height. */
   const shape: ImageShape = p.imageShape || "square";
-  const mediaRatio = shape === "horizontal" ? "16 / 10" : shape === "vertical" ? "4 / 5" : "212 / 186";
   const [added, setAdded] = useState(false);
-  /* Display currency only — the stored price stays USD and so does the charge. */
-  const fmt = usePrice();
 
-  /* How much of this item the cart already holds. The button stops at the
+  /* Display currency only — the stored price stays USD and so does the charge. */
+  const { currency, convert } = useCurrency();
+  const money = splitMoney(convert(p.price), currency.code, currency.decimals);
+
+  /* How much of this item the cart already holds. The stepper stops at the
      real limit and says so, instead of quietly adding nothing. */
   const { items, updateQty } = useCart();
   const cap = effectiveStock(p);
@@ -79,6 +115,15 @@ export default function ProductCard({
   const remaining = cap === null ? null : Math.max(0, cap - inCart);
   const atCap = !soldOut && remaining === 0;
   const lowStock = !soldOut && !atCap && remaining !== null && remaining <= 5;
+  const stockColor = soldOut ? P.faint : lowStock ? "#f2792e" : P.good;
+
+  const addToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (atCap) return;
+    onAdd?.(p);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 950);
+  };
 
   return (
     <motion.article
@@ -88,279 +133,274 @@ export default function ProductCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.05 }}
-      className="group relative flex flex-col w-full rounded-[18px] p-3 transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1.5"
+      className="group relative flex w-full flex-col overflow-hidden px-3 pb-3 pt-4 transition-transform duration-300 hover:-translate-y-1.5"
       style={{
-        background: P.card,
-        border: `1px solid ${P.border}`,
-        boxShadow: P.shadow,
-        opacity: soldOut ? 0.72 : 1,
+        aspectRatio: "164 / 258",
+        borderRadius: 14,
+        background: `linear-gradient(180deg, color-mix(in srgb, ${accent} 16%, ${SURFACE}) 0%, ${SURFACE} 52%)`,
+        /* At rest the card is just surface — no frame, no glow. The accent
+           edge and the bloom are rewards for hovering, nothing else. */
+        opacity: soldOut ? 0.78 : 1,
       }}
     >
-      {/* Category accent on hover — the shop grid's signature move
-          (border + glow in the group's colour). An overlay rather than a
-          :hover on the card itself, so it never fights the inline base
-          border/shadow for specificity. */}
+      {/* gradient hairline — the reference edge, hover only. Masked to the 1px
+          frame so it outlines the card instead of tinting the art behind it. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[18px] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 z-30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
-          boxShadow: `inset 0 0 0 1px ${accent}, 0 0 24px color-mix(in srgb, ${accent} 38%, transparent)`,
+          borderRadius: 14,
+          padding: 1,
+          background: `linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 52%, transparent) 42%, rgba(255,255,255,.06) 100%)`,
+          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+          WebkitMaskComposite: "xor",
+          mask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+          maskComposite: "exclude",
         }}
       />
 
-      {/* ── Media ── The stage is a tint wash, not a nested box: no border,
-          no inner card. The item art floats directly on the card surface so
-          the card reads as one object instead of a box inside a box. */}
-      <button
-        type="button"
-        onClick={() => onNavigate?.(p.id)}
-        aria-label={p.name}
-        className="relative block w-full overflow-hidden rounded-[12px] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745]"
+      {/* hover bloom in the item's own colour — our signature move, kept.
+          Glow only: the gradient hairline above is the single border, so the
+          hover state doesn't read as a double frame. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
-          aspectRatio: mediaRatio,
-          /* flat navy stage + a single soft bloom in the item's own colour.
-             The reference used a full blue gradient wash; ours keeps the
-             surface flat and lets the art carry the colour. */
-          background: `radial-gradient(ellipse 66% 50% at 50% 64%, color-mix(in srgb, ${accent} 26%, transparent), transparent 70%), linear-gradient(165deg, ${P.stage}, #121c33)`,
+          borderRadius: 14,
+          boxShadow: `0 0 24px color-mix(in srgb, ${accent} 34%, transparent)`,
         }}
-      >
-        {/* item art — square art floats on the stage (drop shadow + all);
-            vertical/horizontal art fills its shape-matched panel edge to
-            edge (object-cover crops, never distorts). */}
-        {p.imageUrl ? (
-          shape === "square" ? (
-            <img
-              src={p.imageUrl}
-              alt={p.name}
-              loading="lazy"
-              className="absolute left-1/2 top-1/2 w-[68%] max-h-[74%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.07]"
-              style={{
-                filter: soldOut
-                  ? "grayscale(.7) brightness(.75)"
-                  : `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
-              }}
-            />
-          ) : (
-            <img
-              src={p.imageUrl}
-              alt={p.name}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-              style={{ filter: soldOut ? "grayscale(.7) brightness(.75)" : undefined }}
-            />
-          )
-        ) : (
-          <span
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-mont text-[28px] font-bold"
-            style={{ color: P.borderStrong }}
-          >
-            RB
-          </span>
-        )}
+      />
 
-        {/* save chip — top-left, green (green = value on this site).
-            Hidden when sold out: an item you can't buy has nothing to save. */}
+      {/* ── Art ─────────────────────────────────────────────────────────── */}
+      <div className="relative z-10 min-h-0 flex-1">
+        <button
+          type="button"
+          onClick={() => onNavigate?.(p.id)}
+          aria-label={p.name}
+          className="absolute inset-0 flex items-center justify-center rounded-[10px] px-1.5 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141d31]"
+        >
+          {p.imageUrl ? (
+            shape === "square" ? (
+              /* square art floats free — drop shadow, no frame (reference) */
+              <img
+                src={p.imageUrl}
+                alt={p.name}
+                loading="lazy"
+                className="max-h-[90%] w-[82%] object-contain transition-transform duration-500 group-hover:scale-[1.07]"
+                style={{
+                  filter: soldOut
+                    ? "grayscale(.7) brightness(.75)"
+                    : `drop-shadow(0 12px 16px rgba(0,0,0,.5))`,
+                }}
+              />
+            ) : (
+              /* photos keep their own frame so a screenshot never looks
+                 squished inside a tall card */
+              <img
+                src={p.imageUrl}
+                alt={p.name}
+                loading="lazy"
+                className={
+                  shape === "horizontal"
+                    ? "max-h-[86%] w-full rounded-[9px] object-contain transition-transform duration-500 group-hover:scale-[1.04]"
+                    : "h-full max-h-[94%] w-auto max-w-full rounded-[9px] object-contain transition-transform duration-500 group-hover:scale-[1.04]"
+                }
+                style={{
+                  border: shape === "horizontal" ? "1px solid rgba(255,255,255,.08)" : undefined,
+                  filter: soldOut
+                    ? "grayscale(.7) brightness(.75)"
+                    : `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
+                }}
+              />
+            )
+          ) : (
+            /* no artwork (most of the live catalogue) — a lit plate + the RB
+               monogram reads as an intentional placeholder, not a broken img */
+            <>
+              <span
+                aria-hidden
+                className="absolute aspect-square w-[56%] rounded-full blur-2xl"
+                style={{ background: accent, opacity: 0.22 }}
+              />
+              <span
+                className="relative font-mont text-[34px] font-bold leading-none tracking-tight"
+                style={{ color: "rgba(255,255,255,.34)" }}
+              >
+                RB
+              </span>
+            </>
+          )}
+        </button>
+
+        {/* discount — top-left, green (green = value on this site) */}
         {onSale && !soldOut && (
           <span
-            className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-[7px] px-2 py-[5px] text-[11px] font-bold"
+            className="pointer-events-none absolute left-0 top-0 inline-flex items-center rounded-[7px] px-1.5 py-[3px] text-[11px] font-bold"
             style={{ background: P.good, color: "#08240f" }}
           >
-            <Tag size={12} strokeWidth={2.6} />
-            Save ${save.toFixed(2)}
+            -{off}%
           </span>
         )}
 
-        {/* collectible corner sparkle — the sticker moment: best-seller
-            cards get a slow gold shimmer top-right (save chip owns top-left,
-            stock chip owns bottom-right, so this corner is always free). */}
+        {/* best-seller sparkle — top-right, gold, slowly shimmering */}
         {p.bestSeller && !soldOut && (
-          <span aria-hidden className="pk-sparkle absolute right-2.5 top-2.5 pointer-events-none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <span aria-hidden className="pk-sparkle pointer-events-none absolute right-0 top-0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
               <path
                 d="M12 2c1.2 6.4 2.4 7.6 8.8 8.8-6.4 1.2-7.6 2.4-8.8 8.8-1.2-6.4-2.4-7.6-8.8-8.8C9.6 9.6 10.8 8.4 12 2z"
-                fill="#FFC53D"
+                fill={P.star}
               />
             </svg>
           </span>
         )}
 
-        {/* best sellers chip — bottom-right, brand gold diamond. Diagonally
-            opposite the save chip, so the two can never collide at any width.
-            (A full-width "sold out" bar used to own this corner and did
-            collide with it — stock is now carried by the button instead.) */}
-        {p.bestSeller && (
-          <span
-            className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-[7px] px-2 py-[5px] text-[10.5px] font-semibold"
-            style={{ background: "rgba(10,16,30,.86)", border: `1px solid ${P.borderStrong}`, color: "#fff" }}
-          >
-            <i
-              className="block h-[7px] w-[7px] rotate-45"
-              style={{ background: P.star }}
-            />
-            Best Sellers
-          </span>
-        )}
-      </button>
-
-      {/* ── Info ── */}
-      <div className="flex flex-1 flex-col px-0.5 pt-3.5">
-        {p.category && (
-          <div
-            className="mb-1 text-[12.5px] leading-[17px]"
-            style={{ color: P.faint }}
-          >
-            {p.category}
-          </div>
-        )}
-        <h3
-          className="font-mont text-[15px] font-bold leading-snug text-white"
-          title={p.name}
-          style={{
-            /* two lines then ellipsis: a long item name must not push the
-               price/button out of the card on a 2-col phone grid */
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            overflowWrap: "anywhere",
-          }}
-        >
-          {p.name}
-        </h3>
-
-        <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-          <b className="font-mont text-[19px] font-bold leading-none" style={{ color: P.good }}>
-            {fmt(p.price)}
-          </b>
-          {onSale && !soldOut && (
-            <span
-              className="rounded-[6px] border px-[7px] py-[3px] text-[11px] font-semibold leading-none"
-              style={{ background: P.warnTint, borderColor: "rgba(245,158,11,.45)", color: P.warn }}
-            >
-              -{off}%
-            </span>
-          )}
-          {onSale && (
-            <s className="text-[12px] font-semibold" style={{ color: P.faint }}>
-              {fmt(p.originalPrice!)}
-            </s>
-          )}
-        </div>
-
-        {/* spacer pushes the CTA to the bottom so every card in a row
-            lines up regardless of how many lines its title takes */}
-        <div className="flex-1 min-h-3" />
-
-        {/* Stock — every card says where it stands, same vocabulary the
-            checkout uses. Green when healthy, amber when it's running out,
-            grey when it's gone. */}
-        <p
-          className="mt-2 inline-flex items-center gap-1.5 text-[11.5px] font-semibold"
-          style={{ color: soldOut ? P.faint : lowStock ? "#f2792e" : P.good }}
-        >
-          <i
-            className="block h-[6px] w-[6px] shrink-0 rounded-full"
-            style={{ background: soldOut ? P.faint : lowStock ? "#f2792e" : P.good }}
-          />
-          {soldOut ? "Sold out" : cap === null ? "In stock" : lowStock ? `Only ${remaining} left` : `In stock · ${remaining} left`}
-        </p>
-
-        {/* ── CTA ── One slot, three states: Add → Added (flash) → stepper.
-            The slot keeps a fixed height so the morph never reflows the
-            card, and every colour/background change eases instead of
-            snapping. Once you own one, the control becomes − N + so the
-            card always tells you what's already in the cart. */}
-        <div className="relative mt-3 h-[44px]">
+        {/* ── CTA ─────────────────────────────────────────────────────────
+            Floating in the art, bottom-right. Three states, one shape:
+            add (icon → labelled pill on card hover), added (green flash),
+            and − N + once the cart holds some. Nothing reflows the card. */}
+        <div className="absolute bottom-0 right-0 z-20">
           {soldOut ? (
-            <button
-              type="button"
-              disabled
-              aria-label={`${p.name} is sold out`}
-              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold"
-              style={{ background: P.band, border: `1px solid ${P.border}`, color: P.faint, cursor: "not-allowed" }}
+            <span
+              className="inline-flex h-[30px] items-center gap-1.5 rounded-full px-2.5 text-[10.5px] font-semibold backdrop-blur-md"
+              style={{ background: "rgba(9,15,28,.82)", border: `1px solid ${P.border}`, color: P.faint }}
             >
-              <Ban size={15} strokeWidth={2.6} /> Sold out
-            </button>
-          ) : added ? (
-            /* the flash — same shape as everything else, so the morph into
-               the stepper below reads as one control changing its mind */
-            <motion.div
-              initial={{ scale: 0.96 }}
-              animate={{ scale: [0.96, 1.03, 1] }}
-              transition={{ duration: 0.42, ease: [0.34, 1.56, 0.64, 1] }}
-              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold"
-              style={{ background: P.good, color: "#08240f", boxShadow: `0 6px 18px rgba(95,224,142,.32)` }}
-            >
-              <Check size={16} strokeWidth={3} /> Added
-            </motion.div>
-          ) : inCart > 0 ? (
+              <Ban size={12} strokeWidth={2.6} /> Sold out
+            </span>
+          ) : inCart > 0 && !added ? (
             /* the stepper — you already have some, take more or take less */
             <div
-              className="flex h-full w-full items-stretch overflow-hidden rounded-[11px]"
-              style={{ background: P.band, border: `1px solid ${P.borderStrong}` }}
+              className="flex h-[34px] items-stretch overflow-hidden rounded-full backdrop-blur-md"
+              style={{
+                background: "rgba(9,15,28,.86)",
+                border: `1px solid ${P.borderStrong}`,
+                boxShadow: `0 8px 18px rgba(0,0,0,.35)`,
+              }}
             >
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); updateQty(p.id, inCart - 1); }}
                 aria-label={`Remove one ${p.name} from cart`}
-                className="grid w-[46px] shrink-0 place-items-center transition-colors"
+                className="grid w-[30px] shrink-0 place-items-center transition-colors hover:bg-white/10"
                 style={{ color: P.text }}
-                onMouseEnter={(ev) => (ev.currentTarget.style.background = "rgba(47,140,255,.14)")}
-                onMouseLeave={(ev) => (ev.currentTarget.style.background = "transparent")}
               >
-                <Minus size={15} strokeWidth={3} />
+                <Minus size={13} strokeWidth={3} />
               </button>
               <span
-                className="grid flex-1 place-items-center border-x text-[13.5px] font-bold"
-                style={{ borderColor: P.borderStrong, color: P.text }}
+                className="grid min-w-[26px] place-items-center px-1 text-[12.5px] font-bold tabular-nums"
+                style={{ color: P.text }}
               >
-                {inCart} in cart
+                {inCart}
               </span>
               <button
                 type="button"
                 disabled={atCap}
                 onClick={(e) => { e.stopPropagation(); if (!atCap) updateQty(p.id, inCart + 1); }}
                 aria-label={atCap ? `All ${cap} of ${p.name} are already in your cart` : `Add another ${p.name}`}
-                className="grid w-[46px] shrink-0 place-items-center transition-colors disabled:cursor-not-allowed"
-                style={{ color: atCap ? P.faint : "#fff", background: atCap ? "transparent" : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})` }}
-                onMouseEnter={(ev) => { if (!atCap) ev.currentTarget.style.filter = "brightness(1.12)"; }}
+                className="grid w-[30px] shrink-0 place-items-center transition-[filter,background-color] disabled:cursor-not-allowed"
+                style={{
+                  color: atCap ? P.faint : "#fff",
+                  background: atCap ? "transparent" : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
+                }}
+                onMouseEnter={(ev) => { if (!atCap) ev.currentTarget.style.filter = "brightness(1.14)"; }}
                 onMouseLeave={(ev) => (ev.currentTarget.style.filter = "none")}
               >
-                <Plus size={15} strokeWidth={3} />
+                <Plus size={13} strokeWidth={3} />
               </button>
             </div>
           ) : (
-            /* first add */
             <button
               type="button"
               disabled={atCap}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (atCap) return;
-                onAdd?.(p);
-                setAdded(true);
-                setTimeout(() => setAdded(false), 950);
-              }}
+              onClick={addToCart}
               aria-label={atCap ? `All ${cap} of ${p.name} are already in your cart` : `Add ${p.name} to cart`}
-              className="flex h-full w-full items-center justify-center gap-2 rounded-[11px] px-3 text-[13.5px] font-bold transition-[filter,transform,background-color,color] duration-300 hover:brightness-110 active:scale-[.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1b2745] disabled:cursor-not-allowed disabled:hover:brightness-100"
+              className="flex h-[34px] items-center overflow-hidden rounded-full pl-[9px] pr-[9px] backdrop-blur-md transition-[filter,transform,padding] duration-300 hover:brightness-110 active:scale-[.96] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#141d31] disabled:cursor-not-allowed"
               style={{
-                background: atCap ? P.band : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
-                border: atCap ? `1px solid ${P.border}` : "none",
-                color: atCap ? P.faint : "#fff",
-                boxShadow: atCap ? "none" : P.shadowSoft,
-                fontFamily: "Inter, system-ui, sans-serif",
+                background: added
+                  ? P.good
+                  : atCap
+                    ? "rgba(9,15,28,.86)"
+                    : `linear-gradient(180deg, ${P.accent}, ${P.accentDeep})`,
+                border: added
+                  ? "1px solid rgba(255,255,255,.3)"
+                  : atCap
+                    ? `1px solid ${P.border}`
+                    : "1px solid rgba(255,255,255,.16)",
+                color: added ? "#08240f" : atCap ? P.faint : "#fff",
+                boxShadow: added
+                  ? "0 8px 20px rgba(95,224,142,.4)"
+                  : atCap
+                    ? "none"
+                    : P.shadowSoft,
               }}
             >
-              {atCap ? (
-                <>
-                  <Check size={15} strokeWidth={2.6} /> All {cap} in cart
-                </>
-              ) : (
-                <>
-                  <ShoppingCart size={15} strokeWidth={2.6} /> Add to Cart
-                </>
-              )}
+              {added ? <Check size={15} strokeWidth={3} /> : atCap ? <Ban size={14} strokeWidth={2.6} /> : <ShoppingCart size={14} strokeWidth={2.6} />}
+              {/* the label is the reward for hovering the card — on touch it
+                  stays an icon, which is all a 150px-wide card has room for */}
+              <span
+                className={
+                  "overflow-hidden whitespace-nowrap text-[12px] font-bold transition-[max-width,padding] duration-300 " +
+                  (added
+                    ? "max-w-[86px] pl-1.5"
+                    : "max-w-0 pl-0 group-hover:max-w-[86px] group-hover:pl-1.5")
+                }
+              >
+                {added ? "Added" : atCap ? "In cart" : "Add to cart"}
+              </span>
             </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Info ────────────────────────────────────────────────────────── */}
+      <div className="relative z-10 mt-3 shrink-0 text-center">
+        <h3
+          className="font-mont text-[14.5px] font-bold leading-[1.25] text-white"
+          title={p.name}
+          style={{
+            /* fixed two-line block: every card in a row keeps its divider and
+               price on the same baseline, and a long Roblox name is never
+               silently cut to one word */
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: "2.5em",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {p.name}
+        </h3>
+
+        <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color: stockColor }}>
+          <i className="block h-[5px] w-[5px] shrink-0 rounded-full" style={{ background: stockColor }} />
+          {soldOut ? "Sold out" : cap === null ? "In stock" : lowStock ? `Only ${remaining} left` : `${remaining} in stock`}
+        </p>
+
+        {/* hairline divider — the reference's quiet rhythm break */}
+        <div
+          aria-hidden
+          className="mx-auto my-2.5 h-px w-[78%]"
+          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent)" }}
+        />
+
+        {/* price row: currency coin + bold amount + muted decimals */}
+        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+          <span
+            className="grid h-[21px] min-w-[21px] shrink-0 place-items-center rounded-full px-1 text-[10.5px] font-bold leading-none text-white"
+            style={{
+              background: P.accentDeep,
+              boxShadow: "0 0 0 3px rgba(47,140,255,.16)",
+            }}
+          >
+            {money.symbol}
+          </span>
+          <b className="font-mont text-[16px] font-bold leading-none" style={{ color: P.text }}>
+            {money.main}
+          </b>
+          {money.frac && (
+            <small className="text-[11px] font-semibold leading-none" style={{ color: P.faint }}>
+              {money.frac}
+            </small>
           )}
         </div>
       </div>
@@ -368,20 +408,22 @@ export default function ProductCard({
   );
 }
 
-/** Skeleton shown while the grid loads — same box as the real card. */
+/** Skeleton shown while the grid loads — same tall box as the real card. */
 export function ProductCardSkeleton() {
   return (
     <div
-      className="w-full animate-pulse rounded-[18px] p-3"
-      style={{ background: P.card, border: `1px solid ${P.border}` }}
+      className="w-full animate-pulse px-3 pb-3 pt-3.5"
+      style={{
+        aspectRatio: "164 / 258",
+        borderRadius: 14,
+        background: SURFACE,
+      }}
     >
-      <div className="w-full rounded-[12px]" style={{ aspectRatio: "212 / 186", background: P.stage }} />
-      <div className="mt-3.5 h-4 w-3/4 rounded" style={{ background: P.stage }} />
-      <div className="mt-2 h-3.5 w-1/2 rounded" style={{ background: P.stage }} />
-      <div
-        className="mt-4 h-[42px] w-full rounded-[11px]"
-        style={{ background: P.stage }}
-      />
+      <div className="h-[74%] w-full rounded-[10px]" style={{ background: P.stage }} />
+      <div className="mx-auto mt-3 h-3.5 w-3/4 rounded" style={{ background: P.stage }} />
+      <div className="mx-auto mt-2 h-2.5 w-1/2 rounded" style={{ background: P.stage }} />
+      <div className="mx-auto mt-4 h-px w-[78%]" style={{ background: P.border }} />
+      <div className="mx-auto mt-3 h-4 w-1/3 rounded" style={{ background: P.stage }} />
     </div>
   );
 }
