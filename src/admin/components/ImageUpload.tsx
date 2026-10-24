@@ -70,9 +70,13 @@ export default function ImageUpload({
         let data: any = {};
         try { data = await res.json(); } catch {}
         if (!res.ok) throw new Error(data.message || data.detail || `Server error ${res.status}`);
-        const files = data?.data?.files;
-        if (!Array.isArray(files) || !files.length) throw new Error("Upload succeeded but the server returned no image URLs");
-        const urls = files.map((f: { url: string }) => fixUrl(f.url));
+        /* NB: do not name this `files` — that shadowed the `files` parameter a
+           few lines above (`files.forEach`), which is a temporal dead zone and
+           threw "Cannot access 'files' before initialization" (minified: 'H')
+           on every multi-image / gallery upload. */
+        const uploaded = data?.data?.files;
+        if (!Array.isArray(uploaded) || !uploaded.length) throw new Error("Upload succeeded but the server returned no image URLs");
+        const urls = uploaded.map((f: { url: string }) => fixUrl(f.url));
         const existing = Array.isArray(value) ? value : [];
         onChange([...existing, ...urls].slice(0, maxFiles));
       } else {
