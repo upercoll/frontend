@@ -93,7 +93,6 @@ export default function ProductCard({
         background: P.card,
         border: `1px solid ${P.border}`,
         boxShadow: P.shadow,
-        opacity: soldOut ? 0.72 : 1,
       }}
     >
       {/* Category accent on hover — the shop grid's signature move
@@ -135,9 +134,12 @@ export default function ProductCard({
               loading="lazy"
               className="absolute left-1/2 top-1/2 w-[68%] max-h-[74%] -translate-x-1/2 -translate-y-1/2 object-contain transition-transform duration-500 group-hover:scale-[1.07]"
               style={{
-                filter: soldOut
-                  ? "grayscale(.7) brightness(.75)"
-                  : `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
+                /* Never dim the art. A sold-out item used to get
+                   grayscale(.7) brightness(.75), and since almost the whole
+                   catalogue is out of stock that turned the entire shop grey.
+                   Stock state is carried by the chip on the stage and the
+                   disabled button instead. */
+                filter: `drop-shadow(0 10px 14px rgba(0,0,0,.45))`,
               }}
             />
           ) : (
@@ -146,7 +148,6 @@ export default function ProductCard({
               alt={p.name}
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-              style={{ filter: soldOut ? "grayscale(.7) brightness(.75)" : undefined }}
             />
           )
         ) : (
@@ -167,6 +168,20 @@ export default function ProductCard({
           >
             <Tag size={12} strokeWidth={2.6} />
             Save ${save.toFixed(2)}
+          </span>
+        )}
+
+        {/* sold-out chip — top-left, where the save chip would sit (save is
+            hidden when there is nothing to buy, so they never collide).
+            This replaces the old dimming: the art keeps its real colour and
+            the stage says the state in words instead. */}
+        {soldOut && (
+          <span
+            className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-[7px] px-2 py-[5px] text-[11px] font-bold"
+            style={{ background: "rgba(8, 13, 26, .82)", border: `1px solid ${P.borderStrong}`, color: "#fff" }}
+          >
+            <Ban size={11} strokeWidth={2.8} />
+            Sold out
           </span>
         )}
 
