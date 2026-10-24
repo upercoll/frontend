@@ -164,9 +164,12 @@ export default function Products() {
       if (form.originalPrice) fd.append("originalPrice", form.originalPrice);
       fd.append("gradient[from]", form.gradFrom);
       fd.append("gradient[to]", form.gradTo);
-      if (typeof form.imageUrl === "string" && form.imageUrl) fd.append("imageUrl", form.imageUrl);
+      /* Images must travel on EVERY save, including when cleared: skipping
+         empty values left the old cover/gallery on the product, so removing an
+         image and saving silently did nothing. */
+      fd.append("imageUrl", typeof form.imageUrl === "string" ? form.imageUrl : "");
       fd.append("imageShape", form.imageShape);
-      if (form.images.length > 0) fd.append("images", JSON.stringify(form.images));
+      fd.append("images", JSON.stringify(form.images));
       if (form.features.trim()) fd.append("features", JSON.stringify(form.features.split(",").map(f => f.trim()).filter(Boolean)));
       // Notice + display-only variations travel as JSON, parsed/sanitized server-side.
       fd.append("notice", JSON.stringify({ text: form.notice.trim(), required: form.noticeRequired }));
