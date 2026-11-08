@@ -7,6 +7,7 @@ import { usePublicStats, formatCount } from "@/hooks/usePublicStats";
 import { P } from "@/lib/storefront";
 import { RBstar, MailboxGlyph } from "@/components/Art";
 import { TopNav, SiteFooter } from "./Home";
+import { isAutoGame } from "@/lib/autoGames";
 
 const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL as string) || "";
 
@@ -44,7 +45,7 @@ export default function PaymentSuccess() {
   const [claimOpened, setClaimOpened] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [paymentFailed, setPaymentFailed] = useState(false);
-  const isAutoOnlyGame = order?.game === "grow-a-garden-2";
+  const isAutoOnlyGame = !!order?.game && isAutoGame(order.game);
   const [delivered, setDelivered] = useState<boolean>(() => {
     try {
       const o = loadOrder();

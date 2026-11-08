@@ -10,6 +10,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { P } from "@/lib/storefront";
 import { RBstar, SpeechBubble } from "@/components/Art";
+import { isAutoGame } from "@/lib/autoGames";
 
 interface Message {
   id: string;
@@ -226,8 +227,8 @@ export default function SupportChat() {
     } catch {}
     return null;
   })();
-  // Grow A Garden 2 is fully automated — the manual Claim Chat is hidden for it.
-  const isAutoOnlyGame = gameSlug === "grow-a-garden-2";
+  // Auto-only games are fulfilled by the bot — the manual Claim Chat is hidden.
+  const isAutoOnlyGame = isAutoGame(gameSlug);
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<ChatMode>(null);
 

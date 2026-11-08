@@ -9,9 +9,9 @@ import { useAuth } from "@/context/AuthContext";
 import { P } from "@/lib/storefront";
 import { TopNav } from "./Home";
 import { RBstar, MailboxGlyph, DeliveryScene } from "@/components/Art";
+import { isAutoGame, autoGameLabel } from "@/lib/autoGames";
 
 const BACKEND = (import.meta.env.VITE_BACKEND_URL as string) || "";
-const AUTO_ONLY_GAME = "grow-a-garden-2";
 
 interface LastOrder {
   orderRef: string;
@@ -31,8 +31,8 @@ interface SessionInfo {
 
 type Step = "username" | "instructions" | "delivering" | "delivered";
 
-const DELIVERY_INSTRUCTIONS = [
-  "Join Grow A Garden 2 on the Roblox account matching the username you entered.",
+const deliveryInstructions = (gameName: string) => [
+  `Join ${gameName} on the Roblox account matching the username you entered.`,
   "Stay inside the server — our bot will find you and deliver your items automatically.",
   "Make sure your in-game privacy settings allow receiving gifts.",
   "Delivery usually takes 1-3 minutes. Do not leave the server until you see the delivered confirmation.",
@@ -195,10 +195,10 @@ export default function AutoDelivery() {
     setCreateError(null);
   }
 
-  const isGAG2 = !order?.game || order.game === AUTO_ONLY_GAME;
+  const autoSupported = !order?.game || isAutoGame(order.game);
   const progressIdx = step === "username" ? 0 : step === "instructions" ? 1 : step === "delivering" ? 2 : 3;
 
-  if (!isGAG2) {
+  if (!autoSupported) {
     return (
       <div className="min-h-screen rglow">
       <TopNav onHome={() => navigate("/")} />
@@ -212,7 +212,7 @@ export default function AutoDelivery() {
               style={{ background: P.warnTint, border: "1px solid rgba(245,158,11,0.45)" }}>
               <AlertTriangle size={24} color={P.warn} />
             </div>
-            <p className="text-lg font-extrabold" style={{ color: P.text }}>Auto Delivery Only for Grow A Garden 2</p>
+            <p className="text-lg font-extrabold" style={{ color: P.text }}>Auto Delivery is not available for this game</p>
             <p className="text-sm" style={{ color: P.muted }}>
               This order is for a different game. Please use the Claim Chat to connect with a delivery agent.
             </p>
@@ -345,7 +345,7 @@ export default function AutoDelivery() {
                         against the white card instead of darkening it. */}
                     <div className="space-y-2.5 rounded-2xl p-3"
                       style={{ background: P.band, border: `1px solid ${P.border}` }}>
-                      {DELIVERY_INSTRUCTIONS.map((line, i) => (
+                      {deliveryInstructions(autoGameLabel(order?.game)).map((line, i) => (
                         <div key={i} className="flex items-start gap-3 rounded-xl p-3"
                           style={{ background: P.card, border: `1px solid ${P.border}` }}>
                           <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
